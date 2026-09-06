@@ -265,3 +265,29 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   transition:transform .16s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .sw.on{background:var(--accent)}
 .sw.on span{transform:translateX(17px)}
+
+/* ── baris menu: aksi + tombol info ── */
+.pop-baris{display:flex;align-items:stretch}
+.pop-baris .pop-i{flex:1;min-width:0}
+.pop-info{width:38px;flex:none;display:grid;place-items:center;color:var(--faint);
+  opacity:.55;transition:.12s var(--ease);border-radius:var(--r-sm)}
+.pop-info:hover,.pop-info:active{opacity:1;color:var(--accent);background:var(--sunken)}
+.pop-info .bi{width:16px;height:16px;stroke-width:1.7}
+
+/* keterangan singkat di kepala menu kelompok */
+.pop-note{padding:0 13px 9px;margin:-2px 0 4px;font-size:12px;line-height:1.5;
+  color:var(--muted);border-bottom:1px solid var(--border)}
+
+/* ── panel penjelasan ── */
+.pop-h{display:flex;align-items:center;gap:8px}
+.pop-back{width:24px;height:24px;display:grid;place-items:center;margin:-2px 0 -2px -4px;
+  border-radius:6px;color:var(--muted)}
+.pop-back:hover{background:var(--sunken);color:var(--text)}
+.pop-back .bi{width:15px;height:15px;stroke-width:2}
+.help{padding:4px 14px 14px}
+.help-apa{font-size:14px;line-height:1.55;color:var(--text);margin:0 0 12px}
+.help-b{margin-bottom:11px}
+.help-l{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:3px}
+.help-b p{margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
+.help-go{width:100%;justify-content:center;margin-top:4px}

@@ -10,8 +10,24 @@ import { linkMenu }  from '../menus/link.js';
 import { calloutMenu } from '../menus/callout.js';
 import { snap } from '../editor/history.js';
 import { tersembunyi, getar } from './prefs.js';
+import { HELP, HELP_GRUP } from './help.js';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
+
+/* Menu yang sedang terbuka — dipakai tombol kembali dari panel penjelasan. */
+let menuTerakhir = null;
+
+/* Ganti isi popup tanpa memindahkan posisinya. */
+export function gantiIsiPop(html) {
+  const p = document.getElementById('pop');
+  if (!p) return;
+  p.innerHTML = html;
+}
+
+export function kembaliKeMenu() {
+  if (!menuTerakhir) return;
+  gantiIsiPop(menuTerakhir.g ? groupMenu(menuTerakhir.g) : menuTerakhir.html);
+}
 
 export function renderBar() {
   const box = document.querySelector('.mech-in');
@@ -48,14 +64,32 @@ function groupMenu(g) {
   const BLK = { p:'b-p', h:'b-h1', h2:'b-h2', h3:'b-h3', quote:'b-quote',
                 code:'b-code', cal:'b-cal', li:'b-li', ol:'b-ol', todo:'b-todo' };
   return `<div class="pop-h">${grp.title}</div>` +
+    (HELP_GRUP[g] ? `<p class="pop-note">${HELP_GRUP[g]}</p>` : '') +
     grp.items.map(it => {
       const cls = BLK[it.m];
       const on  = cls && b && b.classList.contains(cls);
-      return `<button class="pop-i${on ? ' on' : ''}" data-m="${it.m}">
-        <svg class="ico"><use href="#${it.ikon}"/></svg>${it.nama}
-        ${it.kunci ? `<span class="k">${it.kunci}</span>` : ''}
-      </button>`;
+      return `<div class="pop-baris">
+        <button class="pop-i${on ? ' on' : ''}" data-m="${it.m}">
+          <svg class="ico"><use href="#${it.ikon}"/></svg>${it.nama}
+          ${it.kunci ? `<span class="k">${it.kunci}</span>` : ''}
+        </button>
+        ${HELP[it.m] ? `<button class="pop-info" data-info="${it.m}" title="Apa ini?" aria-label="Penjelasan ${it.nama}">
+          <svg class="bi"><use href="#i-help"/></svg></button>` : ''}
+      </div>`;
     }).join('');
+}
+
+/* Panel penjelasan satu mekanik. */
+export function helpPanel(m) {
+  const h = HELP[m];
+  if (!h) return '';
+  return `<div class="pop-h"><button class="pop-back" data-helpback><svg class="bi"><use href="#i-back"/></svg></button>${h.nama}</div>
+    <div class="help">
+      <p class="help-apa">${h.apa}</p>
+      <div class="help-b"><span class="help-l">Cara pakai</span><p>${h.cara}</p></div>
+      ${h.tahu ? `<div class="help-b"><span class="help-l">Perlu tahu</span><p>${h.tahu}</p></div>` : ''}
+      <button class="btn btn-pri help-go" data-m="${m}">Gunakan sekarang</button>
+    </div>`;
 }
 
 function jalankan(m, btn) {
@@ -79,6 +113,28 @@ function bindBar() {
   document.querySelectorAll('.mb').forEach(btn => {
     /* jangan biarkan tombol merebut fokus -> keyboard tak terbuka & caret aman */
     btn.addEventListener('mousedown', e => e.preventDefault());
+
+    /* Tekan lama pada tombol datar = buka penjelasannya.
+       Tombol kelompok tidak perlu, penjelasannya sudah ada di dalam menu. */
+    if (btn.dataset.m && HELP[btn.dataset.m]) {
+      let timer = null, lama = false;
+      const mulai = () => {
+        lama = false;
+        timer = setTimeout(() => {
+          lama = true;
+          getar(14);
+          menuTerakhir = null;
+          openPop(helpPanel(btn.dataset.m), btn);
+        }, 480);
+      };
+      const batal = () => clearTimeout(timer);
+      btn.addEventListener('pointerdown', mulai);
+      btn.addEventListener('pointerup', batal);
+      btn.addEventListener('pointerleave', batal);
+      btn.addEventListener('pointercancel', batal);
+      /* klik biasa dibatalkan kalau ternyata tekan lama */
+      btn.addEventListener('click', e => { if (lama) { e.stopImmediatePropagation(); lama = false; } }, true);
+    }
     btn.addEventListener('click', () => {
       getar();
       if (btn.dataset.g) {
@@ -88,6 +144,7 @@ function bindBar() {
         focusKeep();
         ensureCaret();
         btn.classList.add('open');
+        menuTerakhir = { g: btn.dataset.g };
         return openPop(groupMenu(btn.dataset.g), btn);
       }
       jalankan(btn.dataset.m, btn);

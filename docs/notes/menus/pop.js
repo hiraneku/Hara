@@ -42,6 +42,23 @@ export function bindPop() {
     const cl = e.target.closest('[data-cal]');
     if (cl) { focusKeep(); ensureCaret(); setCallout(cl.dataset.cal); closeAll(); return; }
 
+    /* tombol info -> tampilkan penjelasan */
+    const inf = e.target.closest('[data-info]');
+    if (inf) {
+      getar();
+      import('../bar/render.js').then(({ helpPanel, gantiIsiPop }) => {
+        gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
+      });
+      return;
+    }
+    /* kembali dari penjelasan ke daftar */
+    const bk = e.target.closest('[data-helpback]');
+    if (bk) {
+      getar();
+      import('../bar/render.js').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      return;
+    }
+
     /* item dari menu kelompok */
     const gm = e.target.closest('[data-m]');
     if (gm) {
