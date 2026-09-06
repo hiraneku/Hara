@@ -541,34 +541,104 @@ let tt;function toast(m){const t=document.getElementById('toast');
 /* ════════ MESIN EDITOR ════════ */
 const pop=document.getElementById('pop');
 let savedRange=null;
+let savedPos=null;   /* {bi,start,end} — kursor sbg offset karakter, tahan perubahan DOM */
+
+function textLen(n){return (n.textContent||'').replace(/\u200b/g,'').length;}
+function offsetIn(block,container,offset){
+  let total=0,done=false;
+  (function walk(n){
+    if(done)return;
+    if(n===container&&n.nodeType===1){
+      for(let i=0;i<offset&&i<n.childNodes.length;i++)total+=textLen(n.childNodes[i]);
+      done=true;return;
+    }
+    if(n.nodeType===3){
+      if(n===container){total+=(n.data.slice(0,offset)||'').replace(/\u200b/g,'').length;done=true;return;}
+      total+=n.data.replace(/\u200b/g,'').length;return;
+    }
+    for(const c of Array.from(n.childNodes)){walk(c);if(done)return;}
+  })(block);
+  return total;
+}
+function pointAt(block,off){
+  let rem=off,res=null;
+  (function walk(n){
+    if(res)return;
+    if(n.nodeType===3){
+      const len=n.data.replace(/\u200b/g,'').length;
+      if(rem<=len){
+        let real=0,cnt=0;
+        while(real<n.data.length&&cnt<rem){if(n.data[real]!=='\u200b')cnt++;real++;}
+        while(real<n.data.length&&n.data[real]==='\u200b')real++;
+        res={node:n,offset:real};return;
+      }
+      rem-=len;return;
+    }
+    for(const c of Array.from(n.childNodes)){walk(c);if(res)return;}
+  })(block);
+  if(!res){
+    let last=block,guard=0;
+    while(last.lastChild&&guard++<50)last=last.lastChild;
+    res=last.nodeType===3?{node:last,offset:last.data.length}
+                         :{node:block,offset:block.childNodes.length};
+  }
+  return res;
+}
 
 const docEl=()=>document.querySelector('.ed-doc');
 function curBlock(){
   const d=docEl();if(!d)return null;
   const fb=()=>d.lastElementChild||d.firstElementChild;
-  const sel=getSelection();
-  let r=null;
-  if(sel.rangeCount&&d.contains(sel.getRangeAt(0).startContainer))r=sel.getRangeAt(0);
-  else if(savedRange&&d.contains(savedRange.startContainer))r=savedRange;
-  if(!r)return fb();
-  let n=r.startContainer;
-  if(n.nodeType===3)n=n.parentNode;
-  while(n&&n.parentNode!==d)n=n.parentNode;
-  return n||fb();
+  const s=getSelection();
+  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)){
+    let n=s.getRangeAt(0).startContainer;
+    if(n.nodeType===3)n=n.parentNode;
+    while(n&&n.parentNode!==d)n=n.parentNode;
+    if(n)return n;
+  }
+  if(savedPos&&d.children[savedPos.bi])return d.children[savedPos.bi];
+  return fb();
 }
-function saveSel(){const s=getSelection();
-  if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))savedRange=s.getRangeAt(0).cloneRange();}
+function saveSel(){
+  const d=docEl();if(!d)return;
+  const s=getSelection();if(!s.rangeCount)return;
+  const r=s.getRangeAt(0);
+  if(!d.contains(r.startContainer))return;
+  const blocks=Array.from(d.children);
+  let blk=r.startContainer;
+  if(blk.nodeType===3)blk=blk.parentNode;
+  while(blk&&blk.parentNode!==d)blk=blk.parentNode;
+  const bi=blocks.indexOf(blk);
+  if(bi<0)return;
+  savedPos={bi,
+    start:offsetIn(blk,r.startContainer,r.startOffset),
+    end:offsetIn(blk,r.endContainer,r.endOffset)};
+  savedRange=r.cloneRange();
+}
 function restoreSel(focus){
   const d=docEl();if(!d)return null;
-  if(focus)d.focus();
+  if(focus)d.focus({preventScroll:true});
   const s=getSelection();
-  /* kursor yang SEDANG hidup selalu diutamakan; savedRange hanya cadangan
-     saat fokus sudah pindah (mis. menekan tombol di bar) */
-  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))return s.getRangeAt(0);
-  if(savedRange&&d.contains(savedRange.startContainer)){
-    s.removeAllRanges();s.addRange(savedRange);return savedRange;}
-  const b=d.lastElementChild||d.firstElementChild;
-  if(!b)return null;
+  /* 1. kursor hidup menang — KECUALI kalau ia runtuh sementara savedPos
+        menyimpan rentang (focus() kerap meruntuhkan seleksi) */
+  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)){
+    const live=s.getRangeAt(0);
+    const hadRange=savedPos&&savedPos.start!==savedPos.end;
+    if(!(live.collapsed&&hadRange))return live;
+  }
+  /* 2. pulihkan dari offset tersimpan */
+  if(savedPos){
+    const blk=d.children[savedPos.bi];
+    if(blk){
+      const p1=pointAt(blk,savedPos.start),p2=pointAt(blk,savedPos.end);
+      const r=document.createRange();
+      try{r.setStart(p1.node,p1.offset);r.setEnd(p2.node,p2.offset);}
+      catch(e){r.selectNodeContents(blk);r.collapse(false);}
+      s.removeAllRanges();s.addRange(r);savedRange=r.cloneRange();return r;
+    }
+  }
+  /* 3. terakhir: akhir blok terakhir */
+  const b=d.lastElementChild||d.firstElementChild;if(!b)return null;
   const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
   s.removeAllRanges();s.addRange(r);savedRange=r.cloneRange();return r;
 }
@@ -766,6 +836,11 @@ function wrapSel(tag,cls){
 const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
 function setBlock(cls,force){
   restoreSel(false);const b=curBlock();if(!b)return;
+  /* rekam posisi kursor SEKARANG, sebelum DOM blok diubah */
+  let _off=null;
+  {const sl=getSelection();
+   if(sl.rangeCount&&b.contains(sl.getRangeAt(0).startContainer))
+     _off=offsetIn(b,sl.getRangeAt(0).startContainer,sl.getRangeAt(0).startOffset);}
   /* klik tombol yang sama -> kembali ke paragraf biasa */
   if(!force&&cls!=='b-p'&&b.classList.contains(cls))cls='b-p';
   const wasTodo=b.classList.contains('b-todo');
@@ -777,7 +852,16 @@ function setBlock(cls,force){
     box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
     b.insertBefore(box,b.firstChild);
   }
-  placeCaretEnd(b);updateCount();syncMarkBtns();
+  keepCaret(b,_off);updateCount();syncMarkBtns();
+}
+/* pertahankan posisi kursor setelah blok berubah */
+function keepCaret(b,want){
+  const d=docEl();if(!d)return;
+  const off=(want!==null&&want!==undefined)?want:textLen(b);
+  const p=pointAt(b,Math.min(off,textLen(b)));
+  const r=document.createRange();
+  try{r.setStart(p.node,p.offset);r.collapse(true);}catch(e){r.selectNodeContents(b);r.collapse(false);}
+  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
 }
 function placeCaretEnd(b){
   const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
@@ -950,13 +1034,11 @@ document.querySelectorAll('.mb').forEach(b=>{
   });
   b.onclick=()=>{
     const m=b.dataset.m;
-    const d=docEl();
-    if(d&&document.activeElement!==d){
-      d.focus({preventScroll:true});
-      if(savedRange&&d.contains(savedRange.startContainer)){
-        const sl=getSelection();sl.removeAllRanges();sl.addRange(savedRange);
-      }
-    }
+    const d=docEl();if(!d)return;
+    /* pulihkan kursor ke posisi terakhir SEBELUM aksi apa pun.
+       tanpa ini caret jatuh ke offset 0 -> "Halo" jadi "aloH" */
+    d.focus({preventScroll:true});
+    restoreSel(false);
     if(m==='slash'){openPop(menus.slash,b);return;}
     if(m==='wl'){openPop(wlMenu(),b);return;}
     if(m==='tag'){openPop(menus.tag,b);return;}
@@ -980,6 +1062,7 @@ document.querySelectorAll('.mb').forEach(b=>{
 pop.addEventListener('pointerdown',e=>e.preventDefault());
 pop.addEventListener('click',e=>{
   const t=e.target.closest('[data-blk],[data-ins],[data-wl]');if(!t)return;
+  const dd=docEl();if(dd){dd.focus({preventScroll:true});restoreSel(false);}
   if(t.dataset.blk==='hr'){const bl=curBlock();if(bl){
       const hr=document.createElement('div');hr.className='b-div';hr.contentEditable='false';bl.after(hr);
       const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';hr.after(nb);
