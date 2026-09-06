@@ -369,7 +369,7 @@ function onBody(el){const n=findNote(openId);
 
 const cbx=(on,i)=>`<button class="cbx ${on?'on':''}" onclick="tick(this,${i})"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
 const grip='<button class="blk-h" title="Seret untuk memindahkan blok"><svg class="ico"><use href="#i-grip"/></svg></button>';
-const B=(cls,inner)=>`<div class="blk">${grip}<div class="${cls}">${inner}</div></div>`;
+const B=(cls,inner)=>`<div class="${cls}">${inner}</div>`;
 
 /* isi catatan sambutan — memperagakan tiap mekanik */
 const welcomeBody=`
@@ -389,8 +389,8 @@ ${B('b-quote','Yang dirender hanya blok yang terlihat. Catatan satu juta kata pu
 ${B('b-code','1.000.000 kata  ≈  6 MB\\nKuota IndexedDB  ≈  ratusan MB – beberapa GB')}
 ${B('b-h2','Menyematkan blok lain')}
 ${B('b-p','Sematan ditulis <code class="ic">![[Catatan#^blok]]</code> dan isinya tampil langsung:')}
-<div class="blk">${grip}<div class="emb"><div class="emb-h"><svg class="ico"><use href="#i-link"/></svg>Ide Produk › blok ^a12f</div>
-<div class="b-p" style="font-size:15px">Menang di HP, bukan menang di jumlah fitur.</div></div></div>
+<div class="emb"><div class="emb-h"><svg class="ico"><use href="#i-link"/></svg>Ide Produk › blok ^a12f</div>
+<div class="b-p" style="font-size:15px">Menang di HP, bukan menang di jumlah fitur.</div></div>
 ${B('b-div','')}
 ${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
@@ -540,6 +540,7 @@ let tt;function toast(m){const t=document.getElementById('toast');
 
 /* ════════ MESIN EDITOR ════════ */
 const pop=document.getElementById('pop');
+const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
 let savedRange=null;
 let savedPos=null;   /* {bi,start,end} — kursor sbg offset karakter, tahan perubahan DOM */
 
@@ -593,8 +594,16 @@ function curBlock(){
   if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)){
     let n=s.getRangeAt(0).startContainer;
     if(n.nodeType===3)n=n.parentNode;
-    while(n&&n.parentNode!==d)n=n.parentNode;
-    if(n)return n;
+    /* naik sampai anak langsung .ed-doc, TAPI kalau ketemu elemen blok
+       sungguhan lebih dulu, pakai itu (hindari mengubah pembungkus) */
+    let real=null;
+    while(n&&n!==d){
+      if(n.classList&&BLOCKCLS.some(c=>n.classList.contains(c)))real=n;
+      if(n.parentNode===d)break;
+      n=n.parentNode;
+    }
+    if(real)return real;
+    if(n&&n!==d)return n;
   }
   if(savedPos&&d.children[savedPos.bi])return d.children[savedPos.bi];
   return fb();
@@ -833,7 +842,6 @@ function wrapSel(tag,cls){
   if(MARKS[m])return toggleMark(m);
 }
 /* ── ubah jenis blok ── */
-const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
 function setBlock(cls,force){
   restoreSel(false);const b=curBlock();if(!b)return;
   /* rekam posisi kursor SEKARANG, sebelum DOM blok diubah */
