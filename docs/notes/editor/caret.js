@@ -17,7 +17,7 @@ export function nearestEditable(el){
   while(n&&!editable(n)) n=n.previousElementSibling;
   if(n) return n;
   const nb=document.createElement('div'); nb.className='b-p';
-  nb.appendChild(document.createElement('br'));
+  
   d.appendChild(nb); return nb;
 }
 export function curBlock(){
@@ -89,30 +89,22 @@ function blokKosong(node){
   return (node.textContent||'').replace(/[\u200b\u00a0]/g,'')==='';
 }
 export function caretEnd(node){
-  /* blok kosong hanya berisi <br> pengganjal. Menaruh caret SESUDAH <br>
-     membuat huruf pertama jatuh ke baris berikutnya ("Halo" -> "aloH").
-     Ganti <br> dgn text node kosong supaya caret benar-benar di dalam teks. */
-  if(node.childNodes.length===0){
-    node.appendChild(document.createElement('br'));
+  if(!node) return;
+  if(node.classList&&node.classList.contains('b-div')){
+    const t=nearestEditable(node); if(t&&t!==node) return caretEnd(t);
+    return;
   }
-  const only=blokKosong(node);
-  if(only){
-    /* blok kosong: <br> DIPERTAHANKAN supaya tinggi baris tetap ada,
-       tapi caret ditaruh di TEXT NODE nyata sebelum <br>. Caret berbasis
-       elemen membuat huruf pertama loncat ("Halo" -> "aloH"). */
-    /* buang semua text node kosong sisa penempatan caret sebelumnya */
+  /* Blok kosong: JANGAN pakai <br> pengganjal. <br> adalah pemaksa baris
+     baru — huruf pertama yang diketik sebelum <br> tampak terdorong ke
+     baris kedua ("Halo" -> "aloH"). Tinggi baris sudah dijamin CSS
+     (.ed-doc>* { min-height }), jadi <br> tidak diperlukan sama sekali. */
+  if(blokKosong(node)){
+    Array.from(node.querySelectorAll(':scope > br')).forEach(br=>br.remove());
     Array.from(node.childNodes).forEach(n=>{
       if(n.nodeType===3 && n.data==='') n.remove();
     });
-    /* pastikan ada tepat satu <br> dan ia anak TERAKHIR */
-    const brs=Array.from(node.querySelectorAll(':scope > br'));
-    brs.slice(1).forEach(x=>x.remove());
-    let br=brs[0];
-    if(!br){ br=document.createElement('br'); }
-    node.appendChild(br);
-    /* caret di text node tepat SEBELUM <br> */
     const t=document.createTextNode('');
-    node.insertBefore(t,br);
+    node.appendChild(t);
     const r=document.createRange(); r.setStart(t,0); r.collapse(true);
     const s=sel(); s.removeAllRanges(); s.addRange(r);
     return;

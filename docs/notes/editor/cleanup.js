@@ -27,18 +27,10 @@ export function cleanup(){
         if(n.nodeType===3 && n.data==='' && n!==anc) n.remove();
       });
     }
-    if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
-      const s2=sel();
-      const inside=s2&&s2.anchorNode&&b.contains(s2.anchorNode);
-      if(inside){
-        /* Caret sedang di blok kosong. <br> WAJIB berada di belakang caret,
-           bukan di depannya — kalau di depan, huruf pertama terdorong ke
-           baris berikutnya dan tampak pindah ke akhir ("Halo" -> "aloH"). */
-        const br=b.querySelector(':scope > br');
-        if(br && br!==b.lastChild) b.appendChild(br);
-        return;
-      }
-      if(b.innerHTML!=='<br>') b.innerHTML='<br>';
+    if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img')){
+      /* Blok kosong tidak perlu <br> — tingginya dijaga CSS.
+         Menyisipkan <br> justru membuat huruf pertama loncat. */
+      Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
     }
   });
 }

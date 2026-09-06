@@ -24,10 +24,13 @@
 .b-p{font-size:16px;line-height:1.65}
 .ed-doc{outline:none;min-height:50vh}
 .ed-doc>*{position:relative;padding:3px 0}
+/* blok kosong tetap punya tinggi & bisa diketuk, tanpa perlu <br> */
+.ed-doc>*:not(.b-div){min-height:1.65em}
+.ed-doc>.b-code{min-height:1.6em}
 .ed-doc>*:first-child:last-child:empty::before,
 .ed-doc>[data-ph]:only-child:empty::before{content:attr(data-ph);color:var(--faint)}
 .ed-doc .b-code{margin:6px 0}
-.ed-doc .b-todo{align-items:flex-start}
+
 .mech-top{display:flex;align-items:center;gap:10px;padding:6px 12px 2px}
 .counter{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11.5px;
   color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -38,17 +41,19 @@
   font-size:16px;line-height:1.65}
 .b-code{background:var(--sunken);border-radius:var(--r-sm);padding:12px 14px;font-family:var(--mono);
   font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
-.b-todo{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.65}
-.b-li{display:flex;gap:10px;font-size:16px;line-height:1.65}
-.b-li::before{content:'•';color:var(--faint);flex:none}
+.b-todo{position:relative;padding-left:29px;font-size:16px;line-height:1.65}
+.b-li{position:relative;padding-left:22px;font-size:16px;line-height:1.65}
+.b-li::before{content:'•';color:var(--faint);position:absolute;left:4px;top:3px;
+  pointer-events:none;user-select:none}
 .b-cal{background:var(--accent-weak);border-left:2.5px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;
   padding:12px 14px;font-size:15px;line-height:1.6}
 .b-cal .t{font-weight:600;color:var(--accent);font-size:13px;display:flex;align-items:center;gap:7px;margin-bottom:4px}
 .ed-doc .b-cal{margin:6px 0}
 .ed-doc .b-div{cursor:default;height:1px;background:var(--border);margin:16px 0;padding:0}
 .b-div{height:1px;background:var(--border);margin:18px 0}
-.cbx{width:19px;height:19px;border:1.5px solid var(--border-strong);border-radius:999px;flex:none;
-  display:grid;place-items:center;margin-top:3px;transition:.12s var(--ease)}
+.cbx{width:19px;height:19px;border:1.5px solid var(--border-strong);border-radius:999px;
+  display:grid;place-items:center;transition:.12s var(--ease);
+  position:absolute;left:0;top:6px}
 .cbx:hover{border-color:var(--accent)}
 .cbx.on{background:var(--accent);border-color:var(--accent)}
 .cbx svg{width:11px;height:11px;stroke:#fff;stroke-width:2.5;fill:none;opacity:0;
@@ -180,9 +185,9 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .pop-row .btn{flex:1;justify-content:center}
 
 /* ── daftar bernomor ── */
-.b-ol{display:flex;gap:10px;font-size:16px;line-height:1.65}
-.b-ol::before{content:attr(data-n);color:var(--faint);flex:none;min-width:1.3em;
-  font-variant-numeric:tabular-nums}
+.b-ol{position:relative;padding-left:30px;font-size:16px;line-height:1.65}
+.b-ol::before{content:attr(data-n);color:var(--faint);position:absolute;left:2px;top:3px;
+  font-variant-numeric:tabular-nums;pointer-events:none;user-select:none}
 
 /* ── callout bertipe ──
    warna diambil dari data-cal; default (tanpa jenis) tetap hijau aksen */

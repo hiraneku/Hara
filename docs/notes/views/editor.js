@@ -12,7 +12,7 @@ const n=findNote(state.openId)||state.notes[0];
  const inner = saved!==undefined&&saved!==null&&saved!==''
    ? saved
    : (n.welcome ? welcomeBody
-     : `<div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"><br></div>`);
+     : `<div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"></div>`);
  const body=`<div class="ed-doc" contenteditable="true" spellcheck="false">${inner}</div>`;
  return `<div class="ed">
   <input class="ed-t" value="${esc(n.t)}" placeholder="Judul">

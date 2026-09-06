@@ -68,7 +68,7 @@ export function clearFormat(){
     b.style.paddingLeft='';
     b.innerHTML='';
     if(teks){ b.appendChild(document.createTextNode(teks)); caretEnd(b); }
-    else { b.appendChild(document.createElement('br')); caretEnd(b); }
+    else { caretEnd(b); }
   }
   ensureCaret();
   refresh();
