@@ -439,7 +439,7 @@ notes:()=>`<div class="page">
 editor:()=>{const n=findNote(openId)||notes[0];
  if(!n)return `<div class="empty"><h3>Catatan tidak ada</h3><p>Mungkin sudah dihapus.</p>
    <button class="btn btn-sec" data-go="notes">Ke daftar catatan</button></div>`;
- const body=n.welcome?welcomeBody
+ const body=n.welcome?`<div class="ed-doc" contenteditable="true" spellcheck="false">${welcomeBody}</div>`
   :`<div class="ed-doc" contenteditable="true" spellcheck="false"><div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"><br></div></div>`;
  return `<div class="ed">
   <input class="ed-t" value="${n.t.replace(/"/g,'&quot;')}" placeholder="Judul" oninput="onTitle(this)">
@@ -542,12 +542,16 @@ let savedRange=null;
 const docEl=()=>document.querySelector('.ed-doc');
 function curBlock(){
   const d=docEl();if(!d)return null;
+  const fb=()=>d.lastElementChild||d.firstElementChild;
   const sel=getSelection();
-  if(!sel.rangeCount)return d.firstElementChild;
-  let n=sel.getRangeAt(0).startContainer;
+  let r=null;
+  if(sel.rangeCount&&d.contains(sel.getRangeAt(0).startContainer))r=sel.getRangeAt(0);
+  else if(savedRange&&d.contains(savedRange.startContainer))r=savedRange;
+  if(!r)return fb();
+  let n=r.startContainer;
   if(n.nodeType===3)n=n.parentNode;
   while(n&&n.parentNode!==d)n=n.parentNode;
-  return n||d.firstElementChild;
+  return n||fb();
 }
 function saveSel(){const s=getSelection();
   if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))savedRange=s.getRangeAt(0).cloneRange();}
@@ -555,8 +559,13 @@ function restoreSel(){
   const d=docEl();if(!d)return null;
   d.focus();
   const s=getSelection();
-  if(savedRange){s.removeAllRanges();s.addRange(savedRange);return savedRange;}
-  return s.rangeCount?s.getRangeAt(0):null;
+  if(savedRange&&d.contains(savedRange.startContainer)){
+    s.removeAllRanges();s.addRange(savedRange);return savedRange;}
+  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))return s.getRangeAt(0);
+  const b=d.lastElementChild||d.firstElementChild;
+  if(!b)return null;
+  const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
+  s.removeAllRanges();s.addRange(r);savedRange=r.cloneRange();return r;
 }
 function caretAfter(node){
   const r=document.createRange();r.setStartAfter(node);r.collapse(true);
@@ -708,7 +717,6 @@ function wlMenu(){
 /* mousedown: cegah editor kehilangan fokus */
 document.querySelectorAll('.mb').forEach(b=>{
   b.addEventListener('mousedown',e=>e.preventDefault());
-  b.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
   b.onclick=()=>{
     const m=b.dataset.m;
     if(m==='slash'){openPop(menus.slash,b);return;}
@@ -746,6 +754,10 @@ document.addEventListener('input',e=>{
   else if(e.target.classList&&e.target.classList.contains('ed-t'))updateCount();
 });
 document.addEventListener('keyup',e=>{if(inDoc(e.target))saveSel();});
+document.addEventListener('selectionchange',()=>{
+  const s=getSelection();
+  if(s.rangeCount&&inDoc(s.getRangeAt(0).startContainer.parentElement||s.getRangeAt(0).startContainer))saveSel();
+});
 document.addEventListener('mouseup',e=>{
   if(e.target.closest&&e.target.closest('.ed-doc'))saveSel();
 });
