@@ -188,6 +188,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   transition:.12s var(--ease);font-family:var(--mono);white-space:nowrap}
 .mb:hover,.mb:active{background:var(--sunken);color:var(--text)}
 .mb.acc{color:var(--accent)}
+.mb.active{background:var(--accent-weak);color:var(--accent)}
+.mb.active:hover{background:var(--accent-weak)}
 .mb-sep{width:1px;background:var(--border);margin:6px 5px;flex:none}
 .mech-lbl{font-size:10.5px;color:var(--faint);padding:0 10px 6px;letter-spacing:.04em}
 
@@ -322,7 +324,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
     <button class="mb acc" data-m="slash">/</button><div class="mb-sep"></div>
     <button class="mb" data-m="h">H1</button><button class="mb" data-m="h2">H2</button>
     <button class="mb" data-m="b"><b>B</b></button><button class="mb" data-m="i"><i>I</i></button>
-    <button class="mb" data-m="hl">==</button><div class="mb-sep"></div>
+    <button class="mb" data-m="hl">==</button><button class="mb" data-m="strike"><s>S</s></button><div class="mb-sep"></div>
     <button class="mb acc" data-m="wl">[[</button><button class="mb acc" data-m="tag">#</button><div class="mb-sep"></div>
     <button class="mb" data-m="todo">☐</button><button class="mb" data-m="li">•</button>
     <button class="mb" data-m="code">&lt;/&gt;</button><button class="mb" data-m="quote">"</button>
@@ -517,7 +519,7 @@ function go(v){
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
   document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
-  closeAll();savedRange=null;updateCount();
+  closeAll();savedRange=null;pending.clear();updateCount();syncMarkBtns();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
@@ -571,15 +573,124 @@ function caretAfter(node){
   const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
 }
 
-/* ── bungkus seleksi dengan elemen inline ── */
-function wrapSel(tag,cls){
+/* ════════ MARK (bold/italic/dll) — bisa di-toggle & digabung ════════ */
+const MARKS={b:['b',''],i:['i',''],s:['s',''],hl:['span','hl'],code:['code','ic']};
+const MARKSEL={b:'b,strong',i:'i,em',s:'s',hl:'.hl',code:'code.ic'};
+let pending=new Set();
+
+function mkMark(m){const [t,c]=MARKS[m];const e=document.createElement(t);if(c)e.className=c;return e;}
+/* mark apa saja yang sedang membungkus kursor */
+function marksAt(node){
+  const set=new Set();const d=docEl();if(!d)return set;
+  let n=node;if(n&&n.nodeType===3)n=n.parentNode;
+  while(n&&n!==d){
+    const t=(n.tagName||'').toLowerCase();
+    if(t==='b'||t==='strong')set.add('b');
+    if(t==='i'||t==='em')set.add('i');
+    if(t==='s')set.add('s');
+    if(n.classList){if(n.classList.contains('hl'))set.add('hl');
+      if(n.classList.contains('ic'))set.add('code');}
+    n=n.parentNode;
+  }
+  return set;
+}
+function hostFor(m,node){
+  const d=docEl();let n=node;if(n&&n.nodeType===3)n=n.parentNode;
+  while(n&&n!==d){if(n.matches&&n.matches(MARKSEL[m]))return n;n=n.parentNode;}
+  return null;
+}
+/* status tombol mengikuti posisi kursor */
+function syncMarkBtns(){
+  const s=getSelection();
+  let act=new Set();
+  if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))
+    act=marksAt(s.getRangeAt(0).startContainer);
+  pending.forEach(m=>act.add(m));
+  Object.keys(MARKS).forEach(m=>{
+    const btn=document.querySelector('.mb[data-m="'+m+'"]');
+    if(btn)btn.classList.toggle('active',act.has(m));
+  });
+}
+/* buang mark m dari sebuah fragment */
+function stripMark(frag,m){
+  frag.querySelectorAll&&Array.from(frag.querySelectorAll(MARKSEL[m])).forEach(e=>{
+    while(e.firstChild)e.parentNode.insertBefore(e.firstChild,e);e.remove();});
+}
+function toggleMark(m){
   const r=restoreSel();if(!r)return;
-  const el=document.createElement(tag);if(cls)el.className=cls;
-  if(r.collapsed){el.textContent='teks';r.insertNode(el);
-    const nr=document.createRange();nr.selectNodeContents(el);
-    getSelection().removeAllRanges();getSelection().addRange(nr);}
-  else{el.appendChild(r.extractContents());r.insertNode(el);caretAfter(el);}
-  saveSel();updateCount();
+  const on=marksAt(r.startContainer).has(m);
+
+  if(!r.collapsed){
+    if(on){ /* MATIKAN pada teks terpilih */
+      const host=hostFor(m,r.startContainer);
+      if(host){
+        const pre=document.createRange();pre.selectNodeContents(host);pre.setEnd(r.startContainer,r.startOffset);
+        const post=document.createRange();post.selectNodeContents(host);post.setStart(r.endContainer,r.endOffset);
+        const preF=pre.cloneContents(),midF=r.cloneContents(),postF=post.cloneContents();
+        stripMark(midF,m);
+        const frag=document.createDocumentFragment();
+        if(preF.textContent.replace(/\u200b/g,'')){const a=host.cloneNode(false);a.appendChild(preF);frag.appendChild(a);}
+        const mid=document.createElement('span');mid.setAttribute('data-tmp','1');mid.appendChild(midF);
+        frag.appendChild(mid);
+        if(postF.textContent.replace(/\u200b/g,'')){const c=host.cloneNode(false);c.appendChild(postF);frag.appendChild(c);}
+        host.replaceWith(frag);
+        /* buka bungkus sementara, lalu pulihkan seleksi memakai node nyata */
+        const kids=Array.from(mid.childNodes);
+        const parent=mid.parentNode;
+        kids.forEach(k=>parent.insertBefore(k,mid));
+        mid.remove();
+        if(kids.length){
+          const nr=document.createRange();
+          nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
+          getSelection().removeAllRanges();getSelection().addRange(nr);
+        }
+      }
+    }else{ /* NYALAKAN pada teks terpilih */
+      const el=mkMark(m);
+      const f=r.extractContents();stripMark(f,m);el.appendChild(f);
+      r.insertNode(el);
+      if(el.firstChild){
+        const nr=document.createRange();
+        nr.setStartBefore(el.firstChild);nr.setEndAfter(el.lastChild);
+        getSelection().removeAllRanges();getSelection().addRange(nr);
+      }
+    }
+    saveSel();
+  }else{
+    /* kursor saja: nyalakan/matikan untuk ketikan berikutnya */
+    if(pending.has(m)){        /* sedang menyala tapi belum diketik -> matikan */
+      pending.delete(m);
+      cleanEmpty();syncMarkBtns();updateCount();return;
+    }
+    if(on){
+      const host=hostFor(m,r.startContainer);
+      if(host){ /* keluar dari format */
+        const sp=document.createTextNode('\u200b');
+        host.after(sp);
+        const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
+        getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();
+      }
+      pending.delete(m);
+    }else{
+      pending.add(m);
+    }
+  }
+  cleanEmpty();syncMarkBtns();updateCount();
+}
+/* ketikan berikutnya dibungkus mark yang sedang menyala */
+function applyPending(txt){
+  const r=restoreSel();if(!r)return false;
+  let inner=document.createTextNode(txt);
+  let node=inner;
+  pending.forEach(m=>{const e=mkMark(m);e.appendChild(node);node=e;});
+  r.deleteContents();r.insertNode(node);
+  const nr=document.createRange();nr.setStart(inner,inner.length);nr.collapse(true);
+  getSelection().removeAllRanges();getSelection().addRange(nr);
+  pending.clear();saveSel();return true;
+}
+function wrapSel(tag,cls){
+  const m=cls==='hl'?'hl':(cls==='ic'?'code':tag);
+  if(MARKS[m])return toggleMark(m);
 }
 /* ── ubah jenis blok ── */
 const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo'];
@@ -637,9 +748,9 @@ function cleanEmpty(){
   const d=docEl();if(!d)return;
   const sel=getSelection();
   const caretIn=sel.rangeCount?sel.getRangeAt(0).startContainer:null;
+  /* buang bungkus inline yang isinya kosong */
   d.querySelectorAll(INLINE_SEL).forEach(el=>{
-    const t=el.textContent.replace(/\u200b/g,'');
-    if(t!=='')return;
+    if(el.textContent.replace(/[\u200b\u00a0]/g,'')!=='')return;
     if(caretIn&&el.contains(caretIn)){
       const sp=document.createTextNode('\u200b');
       el.after(sp);
@@ -648,10 +759,19 @@ function cleanEmpty(){
     }
     el.remove();
   });
-  /* blok kosong: pastikan tetap punya <br> agar bisa diketik lagi */
+  /* blok yang benar-benar kosong: reset total, hilangkan SEMUA sisa format */
   Array.from(d.children).forEach(b=>{
-    if(!b.textContent.replace(/\u200b/g,'')&&!b.querySelector('br,img,.cbx'))
-      b.appendChild(document.createElement('br'));
+    const t=b.textContent.replace(/[\u200b\u00a0\s]/g,'');
+    if(t==='' && !b.querySelector('img')){
+      const hasCbx=b.querySelector('.cbx');
+      if(b.innerHTML!=='<br>'&&!hasCbx){
+        b.innerHTML='<br>';
+        if(caretIn&&b.contains(caretIn)){
+          const r=document.createRange();r.setStart(b,0);r.collapse(true);
+          sel.removeAllRanges();sel.addRange(r);saveSel();
+        }
+      }
+    }
   });
 }
 /* Backspace tepat di batas elemen inline -> keluar dari format, bukan mengetik di dalamnya */
@@ -715,15 +835,18 @@ function autoFormat(){
 /* ════════ PENGHITUNG HURUF ════════ */
 function updateCount(){
   const el=document.getElementById('count');if(!el)return;
-  const d=docEl();const t=document.querySelector('.ed-t');
+  const d=docEl();
   if(!d){el.style.display='none';return;}
   el.style.display='flex';
-  const body=(d.innerText!==undefined?d.innerText:d.textContent||'').replace(/\u200b/g,'');
-  const chars=body.length+((t&&t.value)?t.value.length:0);
-  const words=body.trim()?body.trim().split(/\s+/).length:0;
-  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span>${words.toLocaleString('id')} kata`;
+  /* hanya ISI catatan — judul tidak dihitung */
+  let body=(d.innerText!==undefined?d.innerText:d.textContent||'');
+  body=body.replace(/\u200b/g,'').replace(/\u00a0/g,' ');
+  const clean=body.replace(/\s+$/,'').replace(/^\s+/,'');
+  const chars=clean.length;
+  const words=clean?clean.split(/\s+/).filter(x=>x.length).length:0;
+  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span><b>${words.toLocaleString('id')}</b> kata`;
   const n=findNote(openId);
-  if(n){n.ex=body.trim().slice(0,80);}
+  if(n)n.ex=clean.slice(0,80);
 }
 
 /* ════════ BAR MEKANIK ════════ */
@@ -757,7 +880,8 @@ document.querySelectorAll('.mb').forEach(b=>{
     const act={
       h:()=>setBlock('b-h1'),h2:()=>setBlock('b-h2'),quote:()=>setBlock('b-quote'),
       code:()=>setBlock('b-code'),todo:()=>setBlock('b-todo'),li:()=>setBlock('b-li'),
-      b:()=>wrapSel('b'),i:()=>wrapSel('i'),hl:()=>wrapSel('span','hl'),
+      b:()=>toggleMark('b'),i:()=>toggleMark('i'),hl:()=>toggleMark('hl'),
+      strike:()=>toggleMark('s'),
       in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel();}},
       out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel();}},
     }[m];
@@ -785,14 +909,23 @@ document.addEventListener('input',e=>{
   if(inDoc(e.target)){autoFormat();cleanEmpty();updateCount();}
   else if(e.target.classList&&e.target.classList.contains('ed-t'))updateCount();
 });
-document.addEventListener('keyup',e=>{if(inDoc(e.target))saveSel();});
+document.addEventListener('keyup',e=>{if(inDoc(e.target)){saveSel();syncMarkBtns();}});
+document.addEventListener('beforeinput',e=>{
+  if(!inDoc(e.target))return;
+  if(pending.size&&e.inputType==='insertText'&&e.data){
+    e.preventDefault();
+    if(applyPending(e.data)){autoFormat();cleanEmpty();updateCount();syncMarkBtns();}
+  }
+});
 document.addEventListener('selectionchange',()=>{
-  const s=getSelection();
-  if(s.rangeCount&&inDoc(s.getRangeAt(0).startContainer.parentElement||s.getRangeAt(0).startContainer))saveSel();
+  const sl=getSelection();
+  if(sl.rangeCount){const c=sl.getRangeAt(0).startContainer;
+    if(inDoc(c.nodeType===3?c.parentElement:c))saveSel();}
 });
 document.addEventListener('mouseup',e=>{
-  if(e.target.closest&&e.target.closest('.ed-doc'))saveSel();
+  if(e.target.closest&&e.target.closest('.ed-doc')){saveSel();syncMarkBtns();}
 });
+document.addEventListener('selectionchange',()=>syncMarkBtns());
 document.addEventListener('keydown',e=>{
   if(!inDoc(e.target))return;
   if(e.key==='Enter'&&!e.shiftKey){
