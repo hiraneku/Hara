@@ -20,6 +20,7 @@
 .blk-h .ico{width:14px;height:14px}
 .b-h1{font-family:var(--serif);font-size:25px;line-height:1.3;margin:18px 0 4px}
 .b-h2{font-family:var(--serif);font-size:20px;line-height:1.3;margin:16px 0 2px}
+.b-h3{font-weight:600;font-size:16.5px;line-height:1.4;margin:14px 0 2px;letter-spacing:-.005em}
 .b-p{font-size:16px;line-height:1.65}
 .ed-doc{outline:none;min-height:50vh}
 .ed-doc>*{position:relative;padding:3px 0}
@@ -177,3 +178,36 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .pop-in:focus{border-color:var(--accent);background:var(--surface)}
 .pop-row{display:flex;gap:8px;margin-top:2px}
 .pop-row .btn{flex:1;justify-content:center}
+
+/* ── daftar bernomor ── */
+.b-ol{display:flex;gap:10px;font-size:16px;line-height:1.65}
+.b-ol::before{content:attr(data-n);color:var(--faint);flex:none;min-width:1.3em;
+  font-variant-numeric:tabular-nums}
+
+/* ── callout bertipe ──
+   warna diambil dari data-cal; default (tanpa jenis) tetap hijau aksen */
+.b-cal{position:relative}
+.b-cal[data-cal]::before{content:attr(data-cal-label);display:block;
+  font-weight:600;font-size:12.5px;margin-bottom:5px;letter-spacing:.01em}
+
+.b-cal[data-cal=info]{background:color-mix(in srgb,var(--link) 9%,transparent);
+  border-left-color:var(--link)}
+.b-cal[data-cal=info]::before{color:var(--link)}
+
+.b-cal[data-cal=tip]{background:color-mix(in srgb,var(--accent) 11%,transparent);
+  border-left-color:var(--accent)}
+.b-cal[data-cal=tip]::before{color:var(--accent)}
+
+.b-cal[data-cal=warn]{background:color-mix(in srgb,#B5723A 13%,transparent);
+  border-left-color:#B5723A}
+.b-cal[data-cal=warn]::before{color:#B5723A}
+
+.b-cal[data-cal=danger]{background:color-mix(in srgb,var(--danger) 11%,transparent);
+  border-left-color:var(--danger)}
+.b-cal[data-cal=danger]::before{color:var(--danger)}
+
+/* ikon berwarna di menu callout */
+.ico.c-info{color:var(--link)}
+.ico.c-tip{color:var(--accent)}
+.ico.c-warn{color:#B5723A}
+.ico.c-danger{color:var(--danger)}

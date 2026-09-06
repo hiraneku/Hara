@@ -57,7 +57,7 @@ export function syncBtns(){
     if(btn) btn.classList.toggle('active',markActive(m));
   });
   const b=curBlock();
-  const map={h:'b-h1',h2:'b-h2',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',cal:'b-cal'};
+  const map={h:'b-h1',h2:'b-h2',h3:'b-h3',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',ol:'b-ol',cal:'b-cal'};
   Object.entries(map).forEach(([k,cls])=>{
     const btn=document.querySelector('.mb[data-m="'+k+'"]');
     if(btn) btn.classList.toggle('active',!!b&&b.classList.contains(cls));

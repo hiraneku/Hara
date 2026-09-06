@@ -12,6 +12,7 @@ export const BAR = [
 
   { m: 'h',      label: 'H1',       title: 'Heading 1' },
   { m: 'h2',     label: 'H2',       title: 'Heading 2' },
+  { m: 'h3',     label: 'H3',       title: 'Heading 3' },
   { m: 'b',      label: '<b>B</b>', title: 'Tebal' },
   { m: 'i',      label: '<i>I</i>', title: 'Miring' },
   { m: 'hl',     label: '==',       title: 'Sorot' },
@@ -26,11 +27,13 @@ export const BAR = [
 
   { m: 'todo',   label: '☐',        title: 'To-do' },
   { m: 'li',     label: '•',        title: 'Daftar' },
+  { m: 'ol',     label: '1.',       title: 'Daftar bernomor' },
   { m: 'icode',  label: '`',        title: 'Kode inline' },
   { m: 'code',   label: '&lt;/&gt;', title: 'Blok kode' },
   { m: 'quote',  label: '"',        title: 'Kutipan' },
   { m: 'cal',    label: '!',        title: 'Callout' },
   { m: 'hr',     label: '—',        title: 'Pembatas' },
+  { m: 'date',   label: '📅',       title: 'Sisipkan tanggal' },
   { sep: true },
 
   { m: 'out',    label: '⇤',        title: 'Kurangi indent' },
@@ -43,8 +46,8 @@ export const BAR = [
 
 /* Tombol mana yang menyala mengikuti jenis blok saat ini. */
 export const BLOCK_BTN = {
-  h: 'b-h1', h2: 'b-h2', quote: 'b-quote', code: 'b-code',
-  todo: 'b-todo', li: 'b-li', cal: 'b-cal'
+  h: 'b-h1', h2: 'b-h2', h3: 'b-h3', quote: 'b-quote', code: 'b-code',
+  todo: 'b-todo', li: 'b-li', ol: 'b-ol', cal: 'b-cal'
 };
 
 /* Tombol mana yang menyala mengikuti format inline. */

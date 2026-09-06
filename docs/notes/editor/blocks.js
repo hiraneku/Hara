@@ -3,7 +3,7 @@ import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './
 import { refresh } from './cleanup.js';
 import { MARKSEL } from './marks.js';
 
-export const BLOCKCLS = ['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
+export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 
 export function setBlock(cls){
   const d=docEl(); if(!d) return;
@@ -20,6 +20,9 @@ export function setBlock(cls){
     b.insertBefore(box,b.firstChild);
   }
   if(cls!=='b-todo') b.classList.remove('done');
+  /* callout kehilangan jenisnya kalau bukan callout lagi */
+  if(cls!=='b-cal') b.removeAttribute('data-cal');
+  renumber();
   caretEnd(b);
   ensureCaret();
   refresh();
@@ -100,5 +103,57 @@ export function moveBlock(dir){
     }catch(e){ caretEnd(b); }
   }else caretEnd(b);
   b.scrollIntoView&&b.scrollIntoView({block:'nearest'});
+  refresh();
+}
+
+/* ── Nomori ulang semua daftar bernomor.
+      Tiap deretan b-ol yang bersambung dihitung dari 1. ── */
+export function renumber(){
+  const d=docEl(); if(!d) return;
+  let n=0;
+  Array.from(d.children).forEach(b=>{
+    if(b.classList&&b.classList.contains('b-ol')){
+      n++; b.setAttribute('data-n',n+'.');
+    }else if(!b.classList||!b.classList.contains('b-div')){
+      n=0;   /* deretan terputus oleh blok lain */
+    }
+  });
+}
+
+/* ── Ubah jenis callout: info / tip / peringatan / bahaya ── */
+export const CALLOUTS={
+  info:  {label:'Info',        ikon:'i-info'},
+  tip:   {label:'Tip',         ikon:'i-bulb'},
+  warn:  {label:'Peringatan',  ikon:'i-warn'},
+  danger:{label:'Bahaya',      ikon:'i-danger'},
+};
+export function setCallout(jenis){
+  const d=docEl(); if(!d) return;
+  let b=curBlock(); if(!b) return;
+  b=nearestEditable(b); if(!b) return;
+  if(!b.classList.contains('b-cal')) setBlock('b-cal');
+  b=nearestEditable(curBlock());
+  if(!b) return;
+  b.setAttribute('data-cal',jenis);
+  b.setAttribute('data-cal-label',(CALLOUTS[jenis]||CALLOUTS.info).label);
+  ensureCaret();
+  refresh();
+}
+
+/* ── Sisipkan tanggal hari ini di posisi kursor ── */
+const HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN=['Januari','Februari','Maret','April','Mei','Juni','Juli',
+             'Agustus','September','Oktober','November','Desember'];
+export function tanggalHariIni(){
+  const t=new Date();
+  return `${HARI[t.getDay()]}, ${t.getDate()} ${BULAN[t.getMonth()]} ${t.getFullYear()}`;
+}
+export function insertTanggal(teks){
+  const r=ensureCaret(); if(!r) return;
+  const t=document.createTextNode(teks||tanggalHariIni());
+  r.deleteContents(); r.insertNode(t);
+  const nr=document.createRange();
+  nr.setStart(t,t.length); nr.collapse(true);
+  const s=sel(); s.removeAllRanges(); s.addRange(nr);
   refresh();
 }

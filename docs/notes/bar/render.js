@@ -7,6 +7,7 @@ import { slashMenu } from '../menus/slash.js';
 import { wlMenu }    from '../menus/wikilink.js';
 import { tagMenu }   from '../menus/tag.js';
 import { linkMenu }  from '../menus/link.js';
+import { calloutMenu } from '../menus/callout.js';
 import { snap } from '../editor/history.js';
 
 export function renderBar() {
@@ -33,6 +34,7 @@ function bindBar() {
       if (m === 'wl')    return openPop(wlMenu(),    btn);
       if (m === 'tag')   return openPop(tagMenu(),   btn);
       if (m === 'link')  return openPop(linkMenu(),  btn);
+      if (m === 'cal')   return openPop(calloutMenu(), btn);
       const fn = ACTIONS[m];
       if (!fn) return;
       /* tiap aksi tombol = satu langkah undo yang utuh */

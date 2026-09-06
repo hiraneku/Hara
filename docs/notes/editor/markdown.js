@@ -1,7 +1,7 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
 import { docEl, sel, curBlock } from './caret.js';
-import { setBlock } from './blocks.js';
+import { setBlock, setCallout } from './blocks.js';
 import { MARKTAG, MARKCLS } from './marks.js';
 import { updateCount } from './cleanup.js';
 
@@ -13,7 +13,7 @@ export const INLINE=[
   {re:/==([^=\n]+)==$/,m:'hl'},
   {re:/`([^`\n]+)`$/,m:'code'},
 ];
-export const LINE=[[/^###\s/,'b-h2'],[/^##\s/,'b-h2'],[/^#\s/,'b-h1'],
+export const LINE=[[/^###\s/,'b-h3'],[/^##\s/,'b-h2'],[/^#\s/,'b-h1'],
             [/^>\s/,'b-quote'],[/^```$/,'b-code']];
 
 export function absOff(b,c,o){
@@ -56,7 +56,9 @@ export function autoFormat(){
   /* cek dulu: apakah ADA pola yang cocok? kalau tidak, JANGAN sentuh DOM
      maupun caret — menyentuhnya tiap ketikan membuat editor tak bisa dipakai */
   const mayLine = LINE.some(([re])=>re.test(full))
-    || /^[-*+]\s/.test(full) || /^[-*+]?\s*\[[\sx]?\]\s/.test(full);
+    || /^[-*+]\s/.test(full) || /^[-*+]?\s*\[[\sx]?\]\s/.test(full)
+    || /^\d+[.)]\s/.test(full)
+    || /^(?:>\s*)?\[!\w+\]\s/i.test(full);
   const mayInline = /\[\[[^\]\n]+\]\]$/.test(before0)
     || INLINE.some(pp=>pp.re.test(before0));
   if(!mayLine && !mayInline) return;
@@ -77,6 +79,18 @@ export function autoFormat(){
     };
     walk(b);
   };
+  /* > [!info] / [!tip] / [!warn] / [!danger] */
+  const mc=full.match(/^(?:>\s*)?\[!(info|tip|warn|warning|danger|bahaya|peringatan)\]\s/i);
+  if(mc && !b.classList.contains('b-cal')){
+    eat(mc[0].length);
+    const peta={warning:'warn',peringatan:'warn',bahaya:'danger'};
+    const j=(peta[mc[1].toLowerCase()]||mc[1].toLowerCase());
+    setCallout(j); return;
+  }
+  /* daftar bernomor: "1. " */
+  const mo=full.match(/^\d+[.)]\s/);
+  if(mo && !b.classList.contains('b-ol')){ eat(mo[0].length); setBlock('b-ol'); return; }
+
   const todo=b.classList.contains('b-li')?/^[-*+]?\s*\[[\sx]?\]\s/:/^[-*+]\s\[[\sx]?\]\s/;
   const mt=full.match(todo);
   if(mt && !b.classList.contains('b-todo')){

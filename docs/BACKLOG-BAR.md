@@ -2,8 +2,8 @@
 
 Status: **usulan, belum dikerjakan.** Dicatat dari diskusi 6 Sep 2026.
 
-Bar saat ini punya **24 tombol**:
-`↺ ↻ / H1 H2 B I == S [[ 🔗 # ⌫ ☐ • ` </> " ! — ⇤ ⇥ ↑ ↓`
+Bar saat ini punya **27 tombol**:
+`↺ ↻ / H1 H2 H3 B I == S [[ 🔗 # ⌫ ☐ • 1. ` </> " ! — 📅 ⇤ ⇥ ↑ ↓`
 
 ---
 
@@ -16,15 +16,15 @@ Bar saat ini punya **24 tombol**:
 | 3 | ~~**Hapus semua format** (⌫)~~ | `blocks.js → clearFormat()`. Ada seleksi = bersihkan bagian itu saja; tanpa seleksi = seluruh blok kembali paragraf polos (checkbox & indent ikut hilang). |
 | 4 | ~~**Naik / turun blok** (↑ ↓)~~ | `blocks.js → moveBlock()`. Kursor ikut berpindah bersama blok, aman di ujung atas/bawah. |
 
-## Prioritas menengah
+## ✅ Prioritas menengah — SELESAI (6 Sep 2026)
 
-| # | Mekanik | Catatan |
-|---|---------|---------|
-| 5 | **Callout bertipe** | Sekarang `!` cuma satu jenis. Obsidian punya info/peringatan/tip/bahaya. Ubah `!` jadi membuka menu. |
-| 6 | **Heading 3** | H1+H2 kurang untuk catatan panjang. |
-| 7 | **Daftar bernomor** (1.) | Sudah ada `•`, belum ada `1.`. |
-| 8 | **Tabel** | Ada di NOTES.md. **Tunda sampai Lexical** — tabel di contenteditable berat, navigasi antar-sel di HP rumit. |
-| 9 | **Tanggal / catatan harian** | Sisip tanggal hari ini atau buka daily note. Bagian dari mekanik Obsidian di spek. |
+| # | Mekanik | Catatan implementasi |
+|---|---------|----------------------|
+| 5 | ~~**Callout bertipe**~~ | Tombol `!` kini membuka menu 4 jenis: info (biru), tip (hijau), peringatan (jingga), bahaya (merah). Label otomatis lewat `data-cal-label`. Markdown `> [!tip]` juga jalan. Jenis dibuang otomatis saat blok berubah jadi bukan-callout. |
+| 6 | ~~**Heading 3**~~ | Tombol `H3` + markdown `### `. Gayanya sans-serif tebal, membedakan diri dari H1/H2 yang serif. |
+| 7 | ~~**Daftar bernomor**~~ | Tombol `1.` + markdown `1. ` dan `3) `. Nomor dihitung ulang otomatis (`renumber()`); deretan yang terputus blok lain mulai dari 1 lagi. |
+| 8 | **Tabel** | **MASIH DITUNDA.** Alasannya tetap: tabel di `contenteditable` mentah berat dan navigasi antar-sel di HP rumit. Kerjakan setelah pindah ke Lexical. |
+| 9 | ~~**Tanggal**~~ | Tombol `📅` menyisipkan tanggal berbahasa Indonesia ("Minggu, 6 September 2026"). *Catatan harian* (daily note) belum — itu butuh modul jurnal tersendiri, bukan sekadar tombol bar. |
 
 ## Prioritas rendah
 

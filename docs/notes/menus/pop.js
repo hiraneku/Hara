@@ -1,9 +1,10 @@
 /* Popup melayang di atas bar. */
 import { docEl, ensureCaret } from '../editor/caret.js';
-import { setBlock, insertHr } from '../editor/blocks.js';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js';
 import { insertInline } from './insert.js';
 import { focusKeep } from '../bar/render.js';
 import { applyLink } from './link.js';
+import { setCallout } from '../editor/blocks.js';
 
 export const pop = () => document.getElementById('pop');
 
@@ -37,11 +38,15 @@ export function bindPop() {
     const lk = e.target.closest('[data-lk]');
     if (lk) { applyLink(lk.dataset.lk, simpanRange); closeAll(); return; }
 
+    const cl = e.target.closest('[data-cal]');
+    if (cl) { focusKeep(); ensureCaret(); setCallout(cl.dataset.cal); closeAll(); return; }
+
     const t = e.target.closest('[data-blk],[data-ins],[data-wl]');
     if (!t) return;
     focusKeep();
     ensureCaret();
-    if (t.dataset.blk === 'hr') insertHr();
+    if (t.dataset.blk === 'date') insertTanggal();
+    else if (t.dataset.blk === 'hr') insertHr();
     else if (t.dataset.blk)     setBlock(t.dataset.blk);
     else if (t.dataset.ins)     insertInline('tg', t.dataset.ins);
     else if (t.dataset.wl)      insertInline('wl', '[[' + t.dataset.wl + ']]');
