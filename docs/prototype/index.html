@@ -122,13 +122,12 @@ input,textarea{font:inherit;color:inherit}
 .ed-doc>[data-ph]:only-child:empty::before{content:attr(data-ph);color:var(--faint)}
 .ed-doc .b-code{margin:6px 0}
 .ed-doc .b-todo{align-items:flex-start}
-.counter{position:fixed;right:18px;bottom:74px;z-index:44;display:flex;align-items:center;gap:6px;
-  background:var(--surface);border:1px solid var(--border);border-radius:999px;
-  padding:5px 13px;font-size:12px;color:var(--muted);box-shadow:var(--shadow-pop);
-  font-variant-numeric:tabular-nums;pointer-events:none}
+.mech-top{display:flex;align-items:center;gap:10px;padding:6px 12px 2px}
+.counter{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11.5px;
+  color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .counter b{color:var(--text);font-weight:600}
 .counter .dot{color:var(--faint)}
-@media(max-width:768px){.counter{bottom:calc(64px + env(safe-area-inset-bottom));right:12px;font-size:11.5px;padding:4px 11px}}
+
 .b-quote{border-left:2.5px solid var(--border-strong);padding-left:14px;color:var(--muted);
   font-size:16px;line-height:1.65}
 .b-code{background:var(--sunken);border-radius:var(--r-sm);padding:12px 14px;font-family:var(--mono);
@@ -181,9 +180,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .mech{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--surface);
   border-top:1px solid var(--border);display:none;padding-bottom:env(safe-area-inset-bottom)}
 .mech.on{display:block}
-.mech-in{display:flex;gap:2px;overflow-x:auto;padding:7px 8px;scrollbar-width:none}
+.mech-in{display:flex;gap:2px;overflow-x:auto;padding:7px 8px;scrollbar-width:none;
+  touch-action:pan-x;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
 .mech-in::-webkit-scrollbar{display:none}
-.mb{flex:none;min-width:40px;height:38px;padding:0 11px;border-radius:var(--r-sm);
+.mb{touch-action:manipulation;flex:none;min-width:40px;height:38px;padding:0 11px;border-radius:var(--r-sm);
   display:grid;place-items:center;color:var(--muted);font-size:14px;font-weight:600;
   transition:.12s var(--ease);font-family:var(--mono);white-space:nowrap}
 .mb:hover,.mb:active{background:var(--sunken);color:var(--text)}
@@ -317,7 +317,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 <!-- BAR MEKANIK -->
 <div class="mech" id="mech">
-  <div class="mech-lbl">Bar mekanik — muncul saat mengedit, menggantikan hafalan sintaks</div>
+  <div class="mech-top"><span class="mech-lbl">Bar mekanik</span><span class="counter" id="count"></span></div>
   <div class="mech-in">
     <button class="mb acc" data-m="slash">/</button><div class="mb-sep"></div>
     <button class="mb" data-m="h">H1</button><button class="mb" data-m="h2">H2</button>
@@ -330,7 +330,6 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   </div>
 </div>
 
-<div class="counter" id="count" style="display:none"></div>
 <div class="pop" id="pop"></div>
 <div class="toast" id="toast"></div>
 
@@ -632,6 +631,39 @@ const LINE=[
   [/^[-*]\s\[\s?\]\s/,'b-todo'],[/^[-*+]\s/,'b-li'],
 ];
 
+const INLINE_SEL='b,i,s,strong,em,code.ic,.hl,.wl,.tg';
+/* buang bungkus inline yang sudah kosong / hanya berisi zero-width */
+function cleanEmpty(){
+  const d=docEl();if(!d)return;
+  const sel=getSelection();
+  const caretIn=sel.rangeCount?sel.getRangeAt(0).startContainer:null;
+  d.querySelectorAll(INLINE_SEL).forEach(el=>{
+    const t=el.textContent.replace(/\u200b/g,'');
+    if(t!=='')return;
+    if(caretIn&&el.contains(caretIn)){
+      const sp=document.createTextNode('\u200b');
+      el.after(sp);
+      const r=document.createRange();r.setStart(sp,1);r.collapse(true);
+      sel.removeAllRanges();sel.addRange(r);saveSel();
+    }
+    el.remove();
+  });
+  /* blok kosong: pastikan tetap punya <br> agar bisa diketik lagi */
+  Array.from(d.children).forEach(b=>{
+    if(!b.textContent.replace(/\u200b/g,'')&&!b.querySelector('br,img,.cbx'))
+      b.appendChild(document.createElement('br'));
+  });
+}
+/* Backspace tepat di batas elemen inline -> keluar dari format, bukan mengetik di dalamnya */
+function escapeFormatIfNeeded(){
+  const sel=getSelection();if(!sel.rangeCount)return;
+  const r=sel.getRangeAt(0);if(!r.collapsed)return;
+  let n=r.startContainer;
+  if(n.nodeType===3&&r.startOffset===n.data.length){
+    const host=n.parentElement&&n.parentElement.closest(INLINE_SEL);
+    if(host&&n===host.lastChild){/* biarkan; zero-width sudah menangani */}
+  }
+}
 function autoFormat(){
   const sel=getSelection();if(!sel.rangeCount)return;
   const r=sel.getRangeAt(0);if(!r.collapsed)return;
@@ -716,7 +748,7 @@ function wlMenu(){
 
 /* mousedown: cegah editor kehilangan fokus */
 document.querySelectorAll('.mb').forEach(b=>{
-  b.addEventListener('mousedown',e=>e.preventDefault());
+  b.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')e.preventDefault();});
   b.onclick=()=>{
     const m=b.dataset.m;
     if(m==='slash'){openPop(menus.slash,b);return;}
@@ -732,7 +764,7 @@ document.querySelectorAll('.mb').forEach(b=>{
     if(act)act();
   };
 });
-pop.addEventListener('mousedown',e=>e.preventDefault());
+pop.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')e.preventDefault();});
 pop.addEventListener('click',e=>{
   const t=e.target.closest('[data-blk],[data-ins],[data-wl]');if(!t)return;
   if(t.dataset.blk)setBlock(t.dataset.blk);
@@ -750,7 +782,7 @@ function openPop(html,anchor){
 /* ── event editor ── */
 const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
 document.addEventListener('input',e=>{
-  if(inDoc(e.target)){autoFormat();updateCount();}
+  if(inDoc(e.target)){autoFormat();cleanEmpty();updateCount();}
   else if(e.target.classList&&e.target.classList.contains('ed-t'))updateCount();
 });
 document.addEventListener('keyup',e=>{if(inDoc(e.target))saveSel();});
@@ -769,6 +801,23 @@ document.addEventListener('keydown',e=>{
       e.preventDefault();
       const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';
       b.after(nb);placeCaretEnd(nb);updateCount();
+    }
+  }
+  if(e.key==='Backspace'){
+    const sel=getSelection();
+    if(sel.rangeCount&&sel.getRangeAt(0).collapsed){
+      const b=curBlock();
+      const atStart=(()=>{const r=sel.getRangeAt(0);
+        const rr=document.createRange();rr.selectNodeContents(b);rr.setEnd(r.startContainer,r.startOffset);
+        return rr.toString().replace(/\u200b/g,'').length===0;})();
+      const fancy=b&&!b.classList.contains('b-p');
+      if(atStart&&fancy){
+        e.preventDefault();
+        const cb=b.querySelector('.cbx');if(cb)cb.remove();
+        b.classList.remove('b-h1','b-h2','b-quote','b-code','b-li','b-todo','done');
+        b.classList.add('b-p');b.style.paddingLeft='';
+        placeCaretEnd(b);updateCount();return;
+      }
     }
   }
   if(e.key==='Tab'){e.preventDefault();
