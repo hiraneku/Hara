@@ -116,8 +116,19 @@ input,textarea{font:inherit;color:inherit}
 .b-h1{font-family:var(--serif);font-size:25px;line-height:1.3;margin:18px 0 4px}
 .b-h2{font-family:var(--serif);font-size:20px;line-height:1.3;margin:16px 0 2px}
 .b-p{font-size:16px;line-height:1.65}
-.ed-body{outline:none;min-height:1.65em}
-.ed-body:empty::before{content:attr(data-ph);color:var(--faint)}
+.ed-doc{outline:none;min-height:50vh}
+.ed-doc>*{position:relative;padding:3px 0}
+.ed-doc>*:first-child:last-child:empty::before,
+.ed-doc>[data-ph]:only-child:empty::before{content:attr(data-ph);color:var(--faint)}
+.ed-doc .b-code{margin:6px 0}
+.ed-doc .b-todo{align-items:flex-start}
+.counter{position:fixed;right:18px;bottom:74px;z-index:44;display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  padding:5px 13px;font-size:12px;color:var(--muted);box-shadow:var(--shadow-pop);
+  font-variant-numeric:tabular-nums;pointer-events:none}
+.counter b{color:var(--text);font-weight:600}
+.counter .dot{color:var(--faint)}
+@media(max-width:768px){.counter{bottom:calc(64px + env(safe-area-inset-bottom));right:12px;font-size:11.5px;padding:4px 11px}}
 .b-quote{border-left:2.5px solid var(--border-strong);padding-left:14px;color:var(--muted);
   font-size:16px;line-height:1.65}
 .b-code{background:var(--sunken);border-radius:var(--r-sm);padding:12px 14px;font-family:var(--mono);
@@ -319,6 +330,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   </div>
 </div>
 
+<div class="counter" id="count" style="display:none"></div>
 <div class="pop" id="pop"></div>
 <div class="toast" id="toast"></div>
 
@@ -428,7 +440,7 @@ editor:()=>{const n=findNote(openId)||notes[0];
  if(!n)return `<div class="empty"><h3>Catatan tidak ada</h3><p>Mungkin sudah dihapus.</p>
    <button class="btn btn-sec" data-go="notes">Ke daftar catatan</button></div>`;
  const body=n.welcome?welcomeBody
-  :`<div class="blk">${grip}<div class="b-p ed-body" contenteditable="true" data-ph="Mulai menulis, atau ketuk / untuk menyisipkan blok" oninput="onBody(this)"></div></div>`;
+  :`<div class="ed-doc" contenteditable="true" spellcheck="false"><div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"><br></div></div>`;
  return `<div class="ed">
   <input class="ed-t" value="${n.t.replace(/"/g,'&quot;')}" placeholder="Judul" oninput="onTitle(this)">
   <div class="props">
@@ -506,7 +518,7 @@ function go(v){
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
   document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
-  closeAll();
+  closeAll();savedRange=null;updateCount();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
@@ -523,39 +535,240 @@ document.addEventListener('click',e=>{
 let tt;function toast(m){const t=document.getElementById('toast');
   t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200);}
 
-/* ── popup mekanik ── */
+/* ════════ MESIN EDITOR ════════ */
 const pop=document.getElementById('pop');
+let savedRange=null;
+
+const docEl=()=>document.querySelector('.ed-doc');
+function curBlock(){
+  const d=docEl();if(!d)return null;
+  const sel=getSelection();
+  if(!sel.rangeCount)return d.firstElementChild;
+  let n=sel.getRangeAt(0).startContainer;
+  if(n.nodeType===3)n=n.parentNode;
+  while(n&&n.parentNode!==d)n=n.parentNode;
+  return n||d.firstElementChild;
+}
+function saveSel(){const s=getSelection();
+  if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))savedRange=s.getRangeAt(0).cloneRange();}
+function restoreSel(){
+  const d=docEl();if(!d)return null;
+  d.focus();
+  const s=getSelection();
+  if(savedRange){s.removeAllRanges();s.addRange(savedRange);return savedRange;}
+  return s.rangeCount?s.getRangeAt(0):null;
+}
+function caretAfter(node){
+  const r=document.createRange();r.setStartAfter(node);r.collapse(true);
+  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
+}
+
+/* ── bungkus seleksi dengan elemen inline ── */
+function wrapSel(tag,cls){
+  const r=restoreSel();if(!r)return;
+  const el=document.createElement(tag);if(cls)el.className=cls;
+  if(r.collapsed){el.textContent='teks';r.insertNode(el);
+    const nr=document.createRange();nr.selectNodeContents(el);
+    getSelection().removeAllRanges();getSelection().addRange(nr);}
+  else{el.appendChild(r.extractContents());r.insertNode(el);caretAfter(el);}
+  saveSel();updateCount();
+}
+/* ── ubah jenis blok ── */
+const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo'];
+function setBlock(cls){
+  restoreSel();const b=curBlock();if(!b)return;
+  const wasTodo=b.classList.contains('b-todo');
+  const cb=b.querySelector('.cbx');if(cb)cb.remove();
+  BLOCKCLS.forEach(c=>b.classList.remove(c));
+  b.classList.add(cls);
+  if(cls==='b-todo'){
+    const box=document.createElement('button');box.className='cbx';box.contentEditable='false';
+    box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
+    b.insertBefore(box,b.firstChild);
+  }
+  placeCaretEnd(b);updateCount();
+}
+function placeCaretEnd(b){
+  const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
+  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
+}
+function insertText(t){
+  const r=restoreSel();if(!r)return;
+  r.deleteContents();
+  const n=document.createTextNode(t);r.insertNode(n);caretAfter(n);updateCount();
+}
+function insertEl(html){
+  const r=restoreSel();if(!r)return;
+  const tmp=document.createElement('div');tmp.innerHTML=html;
+  const el=tmp.firstElementChild;
+  r.deleteContents();r.insertNode(el);
+  const sp=document.createTextNode('\u00a0');el.after(sp);caretAfter(sp);updateCount();
+}
+
+/* ════════ MARKDOWN OTOMATIS SAAT MENGETIK ════════ */
+/* pola inline: dipicu tepat ketika penutupnya selesai diketik */
+const INLINE=[
+  {re:/\*\*([^*\n]+)\*\*$/,tag:'b'},
+  {re:/(?:^|[^*])\*([^*\n]+)\*$/,tag:'i',g:1},
+  {re:/__([^_\n]+)__$/,tag:'b'},
+  {re:/~~([^~\n]+)~~$/,tag:'s'},
+  {re:/==([^=\n]+)==$/,tag:'span',cls:'hl'},
+  {re:/`([^`\n]+)`$/,tag:'code',cls:'ic'},
+  {re:/\[\[([^\]\n]+)\]\]$/,tag:'span',cls:'wl'},
+];
+/* pola awal baris → ubah jenis blok */
+const LINE=[
+  [/^#\s/,'b-h1'],[/^##\s/,'b-h2'],[/^###\s/,'b-h2'],
+  [/^>\s/,'b-quote'],[/^```$/,'b-code'],
+  [/^[-*]\s\[\s?\]\s/,'b-todo'],[/^[-*+]\s/,'b-li'],
+];
+
+function autoFormat(){
+  const sel=getSelection();if(!sel.rangeCount)return;
+  const r=sel.getRangeAt(0);if(!r.collapsed)return;
+  const node=r.startContainer;if(node.nodeType!==3)return;
+  const off=r.startOffset;
+  const b=curBlock();if(!b)return;
+
+  /* 1. awal baris */
+  const txt=b.textContent;
+  // to-do diperiksa lebih dulu; juga menangani kasus blok sudah terlanjur jadi daftar
+  const todoRe=b.classList.contains('b-li')?/^\[\s?\]\s/:/^[-*]\s\[\s?\]\s/;
+  const mt=txt.match(todoRe);
+  if(mt&&!b.classList.contains('b-todo')){
+    node.deleteData(0,Math.min(mt[0].length,node.data.length));
+    b.classList.remove('b-li');setBlock('b-todo');return;
+  }
+  for(const [re,cls] of LINE){
+    if(cls==='b-todo')continue;
+    const m=txt.match(re);
+    if(m&&!b.classList.contains(cls)){
+      node.deleteData(0,Math.min(m[0].length,node.data.length));
+      setBlock(cls);return;
+    }
+  }
+  /* 2. inline */
+  const before=node.data.slice(0,off);
+  for(const p of INLINE){
+    const m=before.match(p.re);
+    if(!m)continue;
+    const inner=m[p.g||1];
+    const full=m[0].startsWith('*')||!p.g?m[0]:m[0].slice(1);
+    const start=off-full.length;
+    if(start<0)continue;
+    const el=document.createElement(p.tag);
+    if(p.cls)el.className=p.cls;
+    el.textContent=inner;
+    if(p.cls==='wl')el.textContent='[['+inner+']]';
+    const rr=document.createRange();
+    rr.setStart(node,start);rr.setEnd(node,off);
+    rr.deleteContents();rr.insertNode(el);
+    const sp=document.createTextNode('\u200b');
+    el.after(sp);
+    const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
+    sel.removeAllRanges();sel.addRange(nr);saveSel();
+    return;
+  }
+}
+
+/* ════════ PENGHITUNG HURUF ════════ */
+function updateCount(){
+  const el=document.getElementById('count');if(!el)return;
+  const d=docEl();const t=document.querySelector('.ed-t');
+  if(!d){el.style.display='none';return;}
+  el.style.display='flex';
+  const body=(d.innerText!==undefined?d.innerText:d.textContent||'').replace(/\u200b/g,'');
+  const chars=body.length+((t&&t.value)?t.value.length:0);
+  const words=body.trim()?body.trim().split(/\s+/).length:0;
+  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span>${words.toLocaleString('id')} kata`;
+  const n=findNote(openId);
+  if(n){n.ex=body.trim().slice(0,80);}
+}
+
+/* ════════ BAR MEKANIK ════════ */
 const menus={
-slash:`<div class="pop-h">Sisipkan blok</div>`+[['i-txt','Teks',''],['i-hash','Heading 1','#'],['i-hash','Heading 2','##'],
-  ['i-check2','To-do','- [ ]'],['i-quote','Kutipan','>'],['i-code','Kode','```'],
-  ['i-tbl','Tabel',''],['i-img','Gambar',''],['i-info','Callout','> [!]'],['i-link','Sematan','![[ ]]']]
-  .map(([i,n,k])=>`<button class="pop-i" onclick="pick('${n}')"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
-wl:`<div class="pop-h">Tautkan ke catatan</div>
-  <button class="pop-i" onclick="pick('[[Selamat datang di Hara]]')"><svg class="ico"><use href="#i-note"/></svg>Selamat datang di Hara</button>
-  <button class="pop-i pop-new" onclick="pick('catatan baru')"><svg class="ico"><use href="#i-plus"/></svg>Buat catatan baru…</button>
-  <div class="pop-h" style="padding-top:4px">Tautkan ke blok</div>
-  <button class="pop-i" onclick="pick('blok ^a12f')"><svg class="ico"><use href="#i-link"/></svg>
-    <span><span class="sub">^a12f</span><br>Menang di HP, bukan jumlah fitur</span></button>`,
+slash:`<div class="pop-h">Sisipkan blok</div>`+[
+  ['i-txt','Teks','','b-p'],['i-hash','Heading 1','#','b-h1'],['i-hash','Heading 2','##','b-h2'],
+  ['i-check2','To-do','- [ ]','b-todo'],['i-quote','Kutipan','>','b-quote'],['i-code','Kode','```','b-code'],
+  ['i-txt','Daftar','-','b-li']]
+  .map(([i,n,k,c])=>`<button class="pop-i" data-blk="${c}"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
+wl:`<div class="pop-h">Tautkan ke catatan</div>`,
 tag:`<div class="pop-h">Tag</div>
-  <button class="pop-i" onclick="pick('#hara')"><svg class="ico"><use href="#i-tag"/></svg>hara<span class="k">1</span></button>
-  <button class="pop-i" onclick="pick('#proyek/hara')"><svg class="ico"><use href="#i-tag"/></svg>proyek/hara<span class="k">0</span></button>
-  <button class="pop-i pop-new" onclick="pick('tag baru')"><svg class="ico"><use href="#i-plus"/></svg>Buat tag baru…</button>`};
-const labels={h:'Heading 1',h2:'Heading 2',b:'Tebal',i:'Miring',hl:'Sorot',todo:'To-do',
-  li:'Daftar',code:'Kode',quote:'Kutipan',out:'Kurangi indent',in:'Tambah indent'};
-document.querySelectorAll('.mb').forEach(b=>b.onclick=ev=>{
-  const m=b.dataset.m;
-  if(menus[m]){openPop(menus[m],b);}
-  else{toast(labels[m]+' diterapkan');closeAll();}
+  <button class="pop-i" data-ins="#hara"><svg class="ico"><use href="#i-tag"/></svg>hara<span class="k">1</span></button>
+  <button class="pop-i" data-ins="#proyek/hara"><svg class="ico"><use href="#i-tag"/></svg>proyek/hara<span class="k">0</span></button>`};
+
+function wlMenu(){
+  let h=`<div class="pop-h">Tautkan ke catatan</div>`;
+  notes.forEach(n=>{h+=`<button class="pop-i" data-wl="${(n.t||'Tanpa judul').replace(/"/g,'&quot;')}">
+    <svg class="ico"><use href="#i-note"/></svg>${n.t||'Tanpa judul'}</button>`;});
+  h+=`<button class="pop-i pop-new" data-wl="Catatan Baru"><svg class="ico"><use href="#i-plus"/></svg>Buat catatan baru…</button>`;
+  return h;
+}
+
+/* mousedown: cegah editor kehilangan fokus */
+document.querySelectorAll('.mb').forEach(b=>{
+  b.addEventListener('mousedown',e=>e.preventDefault());
+  b.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+  b.onclick=()=>{
+    const m=b.dataset.m;
+    if(m==='slash'){openPop(menus.slash,b);return;}
+    if(m==='wl'){openPop(wlMenu(),b);return;}
+    if(m==='tag'){openPop(menus.tag,b);return;}
+    const act={
+      h:()=>setBlock('b-h1'),h2:()=>setBlock('b-h2'),quote:()=>setBlock('b-quote'),
+      code:()=>setBlock('b-code'),todo:()=>setBlock('b-todo'),li:()=>setBlock('b-li'),
+      b:()=>wrapSel('b'),i:()=>wrapSel('i'),hl:()=>wrapSel('span','hl'),
+      in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel();}},
+      out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel();}},
+    }[m];
+    if(act)act();
+  };
+});
+pop.addEventListener('mousedown',e=>e.preventDefault());
+pop.addEventListener('click',e=>{
+  const t=e.target.closest('[data-blk],[data-ins],[data-wl]');if(!t)return;
+  if(t.dataset.blk)setBlock(t.dataset.blk);
+  else if(t.dataset.ins)insertEl(`<span class="tg">${t.dataset.ins}</span>`);
+  else if(t.dataset.wl)insertEl(`<span class="wl">[[${t.dataset.wl}]]</span>`);
+  closeAll();
 });
 function openPop(html,anchor){
   pop.innerHTML=html;pop.classList.add('on');
   const r=anchor.getBoundingClientRect();
-  let l=Math.min(r.left,innerWidth-300);
-  pop.style.left=Math.max(12,l)+'px';
-  pop.style.top=(r.top-pop.offsetHeight-10)+'px';
-  document.getElementById('scrim').classList.add('on');
+  pop.style.left=Math.max(12,Math.min(r.left,innerWidth-302))+'px';
+  pop.style.top=Math.max(12,r.top-pop.offsetHeight-10)+'px';
 }
-function pick(v){toast('Disisipkan: '+v);closeAll();}
+
+/* ── event editor ── */
+const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
+document.addEventListener('input',e=>{
+  if(inDoc(e.target)){autoFormat();updateCount();}
+  else if(e.target.classList&&e.target.classList.contains('ed-t'))updateCount();
+});
+document.addEventListener('keyup',e=>{if(inDoc(e.target))saveSel();});
+document.addEventListener('mouseup',e=>{
+  if(e.target.closest&&e.target.closest('.ed-doc'))saveSel();
+});
+document.addEventListener('keydown',e=>{
+  if(!inDoc(e.target))return;
+  if(e.key==='Enter'&&!e.shiftKey){
+    const b=curBlock();
+    if(b&&(b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-code'))){
+      e.preventDefault();
+      const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';
+      b.after(nb);placeCaretEnd(nb);updateCount();
+    }
+  }
+  if(e.key==='Tab'){e.preventDefault();
+    const b=curBlock();if(b){const cur=parseInt(b.style.paddingLeft||0);
+    b.style.paddingLeft=Math.max(0,cur+(e.shiftKey?-24:24))+'px';}}
+});
+/* checkbox di dalam editor */
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.ed-doc .cbx');
+  if(c){c.classList.toggle('on');c.parentElement.classList.toggle('done',c.classList.contains('on'));}
+});
+
 function closeAll(){pop.classList.remove('on');
   document.getElementById('sheet').classList.remove('on');
   document.getElementById('scrim').classList.remove('on');}
