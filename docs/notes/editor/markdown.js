@@ -1,0 +1,137 @@
+/* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
+   Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
+import { docEl, sel, curBlock } from './caret.js';
+import { setBlock } from './blocks.js';
+import { MARKTAG, MARKCLS } from './marks.js';
+import { updateCount } from './cleanup.js';
+
+export const INLINE=[
+  {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
+  {re:/__([^_\n]+)__$/,m:'b'},
+  {re:/(^|[^*])\*([^*\n]+)\*$/,m:'i',g:2},
+  {re:/~~([^~\n]+)~~$/,m:'s'},
+  {re:/==([^=\n]+)==$/,m:'hl'},
+  {re:/`([^`\n]+)`$/,m:'code'},
+];
+export const LINE=[[/^###\s/,'b-h2'],[/^##\s/,'b-h2'],[/^#\s/,'b-h1'],
+            [/^>\s/,'b-quote'],[/^```$/,'b-code']];
+
+export function absOff(b,c,o){
+  let n=0,done=false;
+  (function walk(el){
+    if(done) return;
+    for(const ch of Array.from(el.childNodes)){
+      if(done) return;
+      if(ch===c && ch.nodeType===3){ n+=o; done=true; return; }
+      if(ch.nodeType===3) n+=ch.data.length;
+      else { if(ch===c){ done=true; return; } walk(ch); }
+    }
+  })(b);
+  return n;
+}
+export function ptFromAbs(b,abs){
+  let rem=abs,res=null;
+  (function walk(el){
+    if(res) return;
+    for(const ch of Array.from(el.childNodes)){
+      if(res) return;
+      if(ch.nodeType===3){
+        if(rem<=ch.data.length){ res={node:ch,off:rem}; return; }
+        rem-=ch.data.length;
+      } else walk(ch);
+    }
+  })(b);
+  return res;
+}
+export function autoFormat(){
+  const d=docEl(); if(!d) return;
+  const s=sel(); if(!(s&&s.rangeCount)) return;
+  const r=s.getRangeAt(0); if(!r.collapsed) return;
+  const b=curBlock(); if(!b) return;
+  const node=r.startContainer;
+  if(!node||node.nodeType!==3) return;
+  const full=b.textContent;
+  const caretAbs0=absOff(b,node,r.startOffset);
+  const before0=full.slice(0,caretAbs0);
+  /* cek dulu: apakah ADA pola yang cocok? kalau tidak, JANGAN sentuh DOM
+     maupun caret — menyentuhnya tiap ketikan membuat editor tak bisa dipakai */
+  const mayLine = LINE.some(([re])=>re.test(full))
+    || /^[-*+]\s/.test(full) || /^[-*+]?\s*\[[\sx]?\]\s/.test(full);
+  const mayInline = /\[\[[^\]\n]+\]\]$/.test(before0)
+    || INLINE.some(pp=>pp.re.test(before0));
+  if(!mayLine && !mayInline) return;
+
+  /* to-do & daftar */
+  /* buang n karakter pertama dari BLOK (bukan dari node kursor) */
+  const eat=n=>{
+    let left=n;
+    const walk=el=>{
+      for(const c of Array.from(el.childNodes)){
+        if(left<=0) return;
+        if(c.nodeType===3){
+          const take=Math.min(left,c.data.length);
+          c.deleteData(0,take); left-=take;
+          if(c.data==='' && c.parentNode.childNodes.length>1) c.remove();
+        } else walk(c);
+      }
+    };
+    walk(b);
+  };
+  const todo=b.classList.contains('b-li')?/^[-*+]?\s*\[[\sx]?\]\s/:/^[-*+]\s\[[\sx]?\]\s/;
+  const mt=full.match(todo);
+  if(mt && !b.classList.contains('b-todo')){
+    eat(mt[0].length);
+    b.classList.remove('b-li'); setBlock('b-todo'); return;
+  }
+  for(const [re,cls] of LINE){
+    const m2=full.match(re);
+    if(m2 && !b.classList.contains(cls)){ eat(m2[0].length); setBlock(cls); return; }
+  }
+  if(!b.classList.contains('b-li') && !b.classList.contains('b-todo')){
+    const ml=full.match(/^[-*+]\s/);
+    if(ml){ eat(ml[0].length); setBlock('b-li'); return; }
+  }
+  /* wikilink */
+  const caretAbs=caretAbs0;
+  const before=before0;
+  const wl=before.match(/\[\[([^\]\n]+)\]\]$/);
+  if(wl){ replaceAbs(b,caretAbs,wl[0].length,'span','wl','[['+wl[1]+']]'); return; }
+  /* inline mark */
+  for(const p of INLINE){
+    const m2=before.match(p.re);
+    if(!m2) continue;
+    const inner=m2[p.g||1];
+    const lead=(p.g===2 && m2[1])?m2[1].length:0;
+    const len=m2[0].length-lead;
+    replaceAbs(b,caretAbs,len,MARKTAG[p.m],MARKCLS[p.m]||'',inner);
+    return;
+  }
+}
+export function replaceAbs(b,end,len,tag,cls,text){
+  const start=end-len; if(start<0) return;
+  const p1=ptFromAbs(b,start), p2=ptFromAbs(b,end);
+  if(!p1||!p2) return;
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  el.textContent=text;
+  const r=document.createRange();
+  try{ r.setStart(p1.node,p1.off); r.setEnd(p2.node,p2.off); }catch(e){ return; }
+  r.deleteContents(); r.insertNode(el);
+  const sp=document.createTextNode('\u200b'); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+  updateCount();
+}
+export function replaceWith(node,end,len,tag,cls,text){
+  const start=end-len; if(start<0) return;
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  el.textContent=text;
+  const r=document.createRange();
+  r.setStart(node,start); r.setEnd(node,end);
+  r.deleteContents(); r.insertNode(el);
+  const sp=document.createTextNode('\u200b'); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+  updateCount();
+}

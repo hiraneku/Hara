@@ -1,0 +1,14 @@
+:root{
+  --bg:#FBFAF8; --surface:#FFFFFF; --sunken:#F3F1ED;
+  --border:#E6E2DB; --border-strong:#D4CFC5;
+  --text:#1C1B18; --muted:#6B675F; --faint:#9A958B;
+  --accent:#3F6F5B; --accent-weak:#E8F0EB; --danger:#A34434;
+  --link:#2F6E8F; --link-dead:#B0715E;
+  --m-notes:#3F6F5B; --m-rem:#B5723A; --m-task:#4A6B8A;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --shadow-pop:0 4px 16px rgba(28,27,24,.08);
+  --shadow-modal:0 16px 48px rgba(28,27,24,.16);
+  --ease:cubic-bezier(.2,.6,.2,1);
+  --sans:'Inter',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
