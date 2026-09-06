@@ -1,50 +1,80 @@
-/* Daftar tombol bar — DATA, bukan HTML.
-   Menambah tombol baru = tambah satu baris di sini + satu aksi di actions.js.
-   `sep: true` menyisipkan pemisah kelompok. */
+/* Susunan bar — DATA, bukan HTML.
+
+   Dua jenis isian:
+   • tombol datar  { m, label }        → aksi langsung, sekali ketuk
+   • kelompok      { g, label, items } → membuka menu berisi beberapa aksi
+
+   Prinsip penyusunan: yang dipakai hampir tiap kalimat tetap datar
+   (undo, tebal, miring, tautan). Sisanya masuk kelompok supaya bar
+   tidak jadi deretan panjang yang harus dipindai satu per satu. */
 
 export const BAR = [
-  { m: 'undo',   label: '↺',        title: 'Batalkan' },
-  { m: 'redo',   label: '↻',        title: 'Ulangi' },
+  /* ── riwayat ── */
+  { m: 'undo', label: '<svg class="bi"><use href="#i-undo"/></svg>',  title: 'Batalkan' },
+  { m: 'redo', label: '<svg class="bi"><use href="#i-redo"/></svg>',  title: 'Ulangi' },
   { sep: true },
 
-  { m: 'slash',  label: '/',        accent: true, title: 'Sisipkan blok' },
+  /* ── yang paling sering dipakai: langsung, tanpa menu ── */
+  { m: 'b',    label: '<b>B</b>',  title: 'Tebal' },
+  { m: 'i',    label: '<i>I</i>',  title: 'Miring' },
+  { m: 'link', label: '<svg class="bi"><use href="#i-link2"/></svg>', title: 'Tautan web' },
   { sep: true },
 
-  { m: 'h',      label: 'H1',       title: 'Heading 1' },
-  { m: 'h2',     label: 'H2',       title: 'Heading 2' },
-  { m: 'h3',     label: 'H3',       title: 'Heading 3' },
-  { m: 'b',      label: '<b>B</b>', title: 'Tebal' },
-  { m: 'i',      label: '<i>I</i>', title: 'Miring' },
-  { m: 'hl',     label: '==',       title: 'Sorot' },
-  { m: 'strike', label: '<s>S</s>', title: 'Coret' },
-  { sep: true },
-
-  { m: 'wl',     label: '[[',       accent: true, title: 'Tautan catatan' },
-  { m: 'link',   label: '🔗',       accent: true, title: 'Tautan web' },
-  { m: 'tag',    label: '#',        accent: true, title: 'Tag' },
-  { m: 'clear',  label: '⌫',        title: 'Hapus semua format' },
-  { sep: true },
-
-  { m: 'todo',   label: '☐',        title: 'To-do' },
-  { m: 'li',     label: '•',        title: 'Daftar' },
-  { m: 'ol',     label: '1.',       title: 'Daftar bernomor' },
-  { m: 'icode',  label: '`',        title: 'Kode inline' },
-  { m: 'code',   label: '&lt;/&gt;', title: 'Blok kode' },
-  { m: 'quote',  label: '"',        title: 'Kutipan' },
-  { m: 'cal',    label: '!',        title: 'Callout' },
-  { m: 'hr',     label: '—',        title: 'Pembatas' },
-  { m: 'date',   label: '📅',       title: 'Sisipkan tanggal' },
-  { sep: true },
-
-  { m: 'out',    label: '⇤',        title: 'Kurangi indent' },
-  { m: 'in',     label: '⇥',        title: 'Tambah indent' },
-  { sep: true },
-
-  { m: 'up',     label: '↑',        title: 'Naikkan blok' },
-  { m: 'down',   label: '↓',        title: 'Turunkan blok' },
+  /* ── kelompok ── */
+  {
+    g: 'gaya', label: 'A', title: 'Gaya paragraf',
+    /* label tombol ikut berubah mengikuti blok tempat kursor berada */
+    reflect: { 'b-h1': 'H1', 'b-h2': 'H2', 'b-h3': 'H3',
+               'b-quote': '❝', 'b-code': '&lt;/&gt;', 'b-cal': '!' },
+    items: [
+      { m: 'p',     ikon: 'i-txt',    nama: 'Teks biasa',  kunci: '' },
+      { m: 'h',     ikon: 'i-hash',   nama: 'Heading 1',   kunci: '#' },
+      { m: 'h2',    ikon: 'i-hash',   nama: 'Heading 2',   kunci: '##' },
+      { m: 'h3',    ikon: 'i-hash',   nama: 'Heading 3',   kunci: '###' },
+      { m: 'quote', ikon: 'i-quote',  nama: 'Kutipan',     kunci: '>' },
+      { m: 'code',  ikon: 'i-code',   nama: 'Blok kode',   kunci: '```' },
+      { m: 'cal',   ikon: 'i-info',   nama: 'Callout',     kunci: '> [!]' },
+    ]
+  },
+  {
+    g: 'tandai', label: '<svg class="bi"><use href="#i-pen"/></svg>', title: 'Penandaan',
+    items: [
+      { m: 'hl',     ikon: 'i-pen',   nama: 'Sorot',        kunci: '==' },
+      { m: 'strike', ikon: 'i-strike',nama: 'Coret',        kunci: '~~' },
+      { m: 'icode',  ikon: 'i-code',  nama: 'Kode inline',  kunci: '`' },
+      { m: 'clear',  ikon: 'i-eraser',nama: 'Hapus format', kunci: '' },
+    ]
+  },
+  {
+    g: 'daftar', label: '<svg class="bi"><use href="#i-list"/></svg>', title: 'Daftar',
+    reflect: { 'b-li': '•', 'b-ol': '1.', 'b-todo': '☑' },
+    items: [
+      { m: 'li',   ikon: 'i-list',   nama: 'Daftar',          kunci: '-' },
+      { m: 'ol',   ikon: 'i-listol', nama: 'Daftar bernomor', kunci: '1.' },
+      { m: 'todo', ikon: 'i-check2', nama: 'To-do',           kunci: '- [ ]' },
+    ]
+  },
+  {
+    g: 'sisip', label: '<svg class="bi"><use href="#i-plus"/></svg>', title: 'Sisipkan',
+    items: [
+      { m: 'wl',   ikon: 'i-note',  nama: 'Tautan catatan', kunci: '[[' },
+      { m: 'tag',  ikon: 'i-tag',   nama: 'Tag',            kunci: '#' },
+      { m: 'hr',   ikon: 'i-minus', nama: 'Pembatas',       kunci: '---' },
+      { m: 'date', ikon: 'i-cal',   nama: 'Tanggal',        kunci: '' },
+    ]
+  },
+  {
+    g: 'susun', label: '<svg class="bi"><use href="#i-move"/></svg>', title: 'Atur letak',
+    items: [
+      { m: 'in',   ikon: 'i-indent',  nama: 'Tambah indent',  kunci: 'Tab' },
+      { m: 'out',  ikon: 'i-outdent', nama: 'Kurangi indent', kunci: '⇧Tab' },
+      { m: 'up',   ikon: 'i-up',      nama: 'Naikkan blok',   kunci: '' },
+      { m: 'down', ikon: 'i-down',    nama: 'Turunkan blok',  kunci: '' },
+    ]
+  },
 ];
 
-/* Tombol mana yang menyala mengikuti jenis blok saat ini. */
+/* Tombol/menu mana yang menyala mengikuti jenis blok saat ini. */
 export const BLOCK_BTN = {
   h: 'b-h1', h2: 'b-h2', h3: 'b-h3', quote: 'b-quote', code: 'b-code',
   todo: 'b-todo', li: 'b-li', ol: 'b-ol', cal: 'b-cal'
@@ -52,3 +82,6 @@ export const BLOCK_BTN = {
 
 /* Tombol mana yang menyala mengikuti format inline. */
 export const MARK_BTN = { b: 'b', i: 'i', strike: 's', hl: 'hl', icode: 'code' };
+
+/* Semua kelompok, untuk pencarian cepat. */
+export const GROUPS = BAR.filter(x => x.g);

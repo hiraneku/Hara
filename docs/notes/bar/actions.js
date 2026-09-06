@@ -4,6 +4,7 @@ import { toggleMark } from '../editor/marks.js';
 import { undo, redo } from '../editor/history.js';
 
 export const ACTIONS = {
+  p:      () => setBlock('b-p'),
   h:      () => setBlock('b-h1'),
   h2:     () => setBlock('b-h2'),
   h3:     () => setBlock('b-h3'),

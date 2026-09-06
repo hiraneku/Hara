@@ -41,6 +41,14 @@ export function bindPop() {
     const cl = e.target.closest('[data-cal]');
     if (cl) { focusKeep(); ensureCaret(); setCallout(cl.dataset.cal); closeAll(); return; }
 
+    /* item dari menu kelompok */
+    const gm = e.target.closest('[data-m]');
+    if (gm) {
+      closeAll();
+      import('../bar/render.js').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      return;
+    }
+
     const t = e.target.closest('[data-blk],[data-ins],[data-wl]');
     if (!t) return;
     focusKeep();
@@ -55,6 +63,7 @@ export function bindPop() {
 }
 
 export function closeAll() {
+  document.querySelectorAll('.mb-g.open').forEach(x => x.classList.remove('open'));
   pop()?.classList.remove('on');
   document.getElementById('sheet')?.classList.remove('on');
   document.getElementById('scrim')?.classList.remove('on');

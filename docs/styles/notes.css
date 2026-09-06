@@ -103,7 +103,22 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .mb.acc{color:var(--accent)}
 .mb.active{background:var(--accent-weak);color:var(--accent)}
 .mb.active:hover{background:var(--accent-weak)}
-.mb-sep{width:1px;background:var(--border);margin:6px 5px;flex:none}
+.mb-sep{width:1px;background:var(--border);margin:8px 6px;flex:none}
+
+/* ── ikon garis di dalam tombol bar ── */
+.bi{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.75;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+
+/* ── tombol kelompok: isi + panah kecil ── */
+.mb-g{gap:3px;padding:0 8px 0 10px}
+.mb-g .gl{display:flex;align-items:center;justify-content:center;min-width:19px;
+  font-size:15px;font-weight:600;line-height:1}
+.mb-g .chev{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.5;flex:none;
+  transition:transform .16s var(--ease)}
+.mb-g:hover .chev,.mb-g.active .chev{opacity:.8}
+.mb-g.open .chev{transform:rotate(180deg)}
+.mb-g.active .gl{color:var(--accent)}
 .mech-lbl{font-size:10.5px;color:var(--faint);padding:0 10px 6px;letter-spacing:.04em}
 
 /* popup: slash & wikilink & palette */
@@ -216,3 +231,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ico.c-tip{color:var(--accent)}
 .ico.c-warn{color:#B5723A}
 .ico.c-danger{color:var(--danger)}
+
+/* ── menu kelompok ── */
+#pop .pop-i{gap:11px}
+#pop .pop-i .k{margin-left:auto;font-family:var(--mono);font-size:11px;
+  color:var(--faint);background:var(--sunken);padding:2px 6px;border-radius:5px}
+#pop .pop-i.on{background:var(--accent-weak);color:var(--accent)}
+#pop .pop-i.on .ico{color:var(--accent)}

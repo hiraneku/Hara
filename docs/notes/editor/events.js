@@ -27,8 +27,15 @@ export function bindEditor() {
 
     const s=sel();
     if(!s || !s.rangeCount) return;
-    const r=s.getRangeAt(0);
-    if(!b.contains(r.startContainer)) return;
+    let r=s.getRangeAt(0);
+    /* Node caret bisa sudah dilepas dari DOM (blok ditulis ulang oleh
+       setBlock/cleanup). Menulis ke node yatim = teks hilang. Pulihkan. */
+    if(!r.startContainer.isConnected || !b.contains(r.startContainer)){
+      caretEnd(b);
+      if(!s.rangeCount) return;
+      r=s.getRangeAt(0);
+      if(!b.contains(r.startContainer)) return;
+    }
 
     e.preventDefault();
     /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */

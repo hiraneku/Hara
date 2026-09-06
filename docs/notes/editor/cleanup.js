@@ -6,6 +6,7 @@ import { state, save } from '../../core/store.js';
 import { findNote } from '../model.js';
 import { cur } from '../../core/router.js';
 import { canUndo, canRedo, record, isReplaying } from './history.js';
+import { GROUPS } from '../bar/config.js';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -51,16 +52,47 @@ export function syncBtns(){
   if(bu) bu.classList.toggle('off',!canUndo());
   const br=document.querySelector('.mb[data-m="redo"]');
   if(br) br.classList.toggle('off',!canRedo());
+
+  /* tombol inline datar (B, I) */
   Object.keys(MARKSEL).forEach(m=>{
     const key = m==='code'?'icode' : (m==='s'?'strike':m);
     const btn=document.querySelector('.mb[data-m="'+key+'"]');
     if(btn) btn.classList.toggle('active',markActive(m));
   });
+
   const b=curBlock();
-  const map={h:'b-h1',h2:'b-h2',h3:'b-h3',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',ol:'b-ol',cal:'b-cal'};
-  Object.entries(map).forEach(([k,cls])=>{
+  const cls=b?b.className:'';
+  /* tombol blok datar, kalau ada */
+  const map={h:'b-h1',h2:'b-h2',h3:'b-h3',quote:'b-quote',code:'b-code',
+             todo:'b-todo',li:'b-li',ol:'b-ol',cal:'b-cal'};
+  Object.entries(map).forEach(([k,c2])=>{
     const btn=document.querySelector('.mb[data-m="'+k+'"]');
-    if(btn) btn.classList.toggle('active',!!b&&b.classList.contains(cls));
+    if(btn) btn.classList.toggle('active',!!b&&b.classList.contains(c2));
+  });
+
+  /* kelompok: menyala + labelnya mengikuti keadaan sekarang */
+  document.querySelectorAll('.mb-g').forEach(btn=>{
+    const grp=GROUPS.find(x=>x.g===btn.dataset.g);
+    if(!grp) return;
+    let aktif=false;
+    /* aktif kalau salah satu isinya sedang berlaku */
+    grp.items.forEach(it=>{
+      const bc=map[it.m];
+      if(bc && b && b.classList.contains(bc)) aktif=true;
+      const mk={hl:'hl',strike:'s',icode:'code'}[it.m];
+      if(mk && markActive(mk)) aktif=true;
+    });
+    btn.classList.toggle('active',aktif);
+    /* label ikut berubah, mis. "A" -> "H1" */
+    if(grp.reflect){
+      const gl=btn.querySelector('.gl');
+      if(gl){
+        let baru=grp.label;
+        for(const [k2,v] of Object.entries(grp.reflect))
+          if(b&&b.classList.contains(k2)) baru=v;
+        if(gl.innerHTML!==baru) gl.innerHTML=baru;
+      }
+    }
   });
 }
 let saveT=null;
