@@ -10,30 +10,38 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260906152703';
-import { refresh } from './cleanup.js?v=20260906152703';
+import { docEl, sel, curBlock } from './caret.js?v=20260906153652';
+import { refresh } from './cleanup.js?v=20260906153652';
 
 export const FONTS = [
-  { id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
-  { id: 'inter',     nama: 'Inter',           stack: "'Inter',system-ui,sans-serif",                       ket: 'Sans-serif · dimuat aplikasi' },
-  { id: 'serif-app', nama: 'Instrument Serif',stack: "'Instrument Serif',Georgia,serif",                   ket: 'Serif · dimuat aplikasi' },
-  { id: 'mono-app',  nama: 'JetBrains Mono',  stack: "'JetBrains Mono',ui-monospace,monospace",            ket: 'Monospace · dimuat aplikasi' },
+  { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
+  { grup:'dasar',  id: 'inter',     nama: 'Inter',           stack: "'Inter',system-ui,sans-serif",                       ket: 'Sans-serif · dimuat aplikasi' },
+  { grup:'dasar',  id: 'serif-app', nama: 'Instrument Serif',stack: "'Instrument Serif',Georgia,serif",                   ket: 'Serif · dimuat aplikasi' },
+  { grup:'dasar',  id: 'mono-app',  nama: 'JetBrains Mono',  stack: "'JetBrains Mono',ui-monospace,monospace",            ket: 'Monospace · dimuat aplikasi' },
 
-  { id: 'arial',     nama: 'Arial',           stack: "Arial,Helvetica,'Liberation Sans',sans-serif",       ket: 'Sans-serif · hampir selalu ada' },
-  { id: 'helvetica', nama: 'Helvetica',       stack: "Helvetica,Arial,'Nimbus Sans',sans-serif",           ket: 'Sans-serif · umum di Apple' },
-  { id: 'verdana',   nama: 'Verdana',         stack: "Verdana,Geneva,'DejaVu Sans',sans-serif",            ket: 'Sans-serif · huruf lebar, mudah dibaca' },
-  { id: 'tahoma',    nama: 'Tahoma',          stack: "Tahoma,Verdana,'DejaVu Sans',sans-serif",            ket: 'Sans-serif · lebih rapat dari Verdana' },
-  { id: 'trebuchet', nama: 'Trebuchet MS',    stack: "'Trebuchet MS',Tahoma,sans-serif",                   ket: 'Sans-serif · sedikit membulat' },
+  { grup:'sans',   id: 'arial',     nama: 'Arial',           stack: "Arial,Helvetica,'Liberation Sans',sans-serif",       ket: 'Sans-serif · hampir selalu ada' },
+  { grup:'sans',   id: 'helvetica', nama: 'Helvetica',       stack: "Helvetica,Arial,'Nimbus Sans',sans-serif",           ket: 'Sans-serif · umum di Apple' },
+  { grup:'sans',   id: 'verdana',   nama: 'Verdana',         stack: "Verdana,Geneva,'DejaVu Sans',sans-serif",            ket: 'Sans-serif · huruf lebar, mudah dibaca' },
+  { grup:'sans',   id: 'tahoma',    nama: 'Tahoma',          stack: "Tahoma,Verdana,'DejaVu Sans',sans-serif",            ket: 'Sans-serif · lebih rapat dari Verdana' },
+  { grup:'sans',   id: 'trebuchet', nama: 'Trebuchet MS',    stack: "'Trebuchet MS',Tahoma,sans-serif",                   ket: 'Sans-serif · sedikit membulat' },
 
-  { id: 'georgia',   nama: 'Georgia',         stack: "Georgia,'Times New Roman',serif",                    ket: 'Serif · nyaman untuk teks panjang' },
-  { id: 'times',     nama: 'Times New Roman', stack: "'Times New Roman',Times,'Liberation Serif',serif",   ket: 'Serif · gaya dokumen klasik' },
-  { id: 'palatino',  nama: 'Palatino',        stack: "'Palatino Linotype','Book Antiqua',Palatino,serif",  ket: 'Serif · huruf agak lebar' },
+  { grup:'serif',  id: 'georgia',   nama: 'Georgia',         stack: "Georgia,'Times New Roman',serif",                    ket: 'Serif · nyaman untuk teks panjang' },
+  { grup:'serif',  id: 'times',     nama: 'Times New Roman', stack: "'Times New Roman',Times,'Liberation Serif',serif",   ket: 'Serif · gaya dokumen klasik' },
+  { grup:'serif',  id: 'palatino',  nama: 'Palatino',        stack: "'Palatino Linotype','Book Antiqua',Palatino,serif",  ket: 'Serif · huruf agak lebar' },
 
-  { id: 'courier',   nama: 'Courier New',     stack: "'Courier New',Courier,'Liberation Mono',monospace",  ket: 'Monospace · lebar tiap huruf sama' },
-  { id: 'consolas',  nama: 'Consolas',        stack: "Consolas,'Andale Mono','DejaVu Sans Mono',monospace",ket: 'Monospace · rapat, umum untuk kode' },
+  { grup:'mono',   id: 'courier',   nama: 'Courier New',     stack: "'Courier New',Courier,'Liberation Mono',monospace",  ket: 'Monospace · lebar tiap huruf sama' },
+  { grup:'mono',   id: 'consolas',  nama: 'Consolas',        stack: "Consolas,'Andale Mono','DejaVu Sans Mono',monospace",ket: 'Monospace · rapat, umum untuk kode' },
 
-  { id: 'impact',    nama: 'Impact',          stack: "Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif", ket: 'Tebal sempit · untuk judul' },
-  { id: 'comic',     nama: 'Comic Sans MS',   stack: "'Comic Sans MS','Comic Sans',cursive",               ket: 'Santai · gaya tulisan tangan' },
+  { grup:'gaya',   id: 'impact',    nama: 'Impact',          stack: "Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif", ket: 'Tebal sempit · untuk judul' },
+  { grup:'gaya',   id: 'comic',     nama: 'Comic Sans MS',   stack: "'Comic Sans MS','Comic Sans',cursive",               ket: 'Santai · gaya tulisan tangan' },
+];
+
+export const FONT_GRUP = [
+  ['dasar', 'Bawaan aplikasi'],
+  ['sans',  'Tanpa kait'],
+  ['serif', 'Berkait'],
+  ['mono',  'Lebar sama'],
+  ['gaya',  'Bergaya'],
 ];
 
 export const cariFont = id => FONTS.find(f => f.id === id);
@@ -138,7 +146,23 @@ export function setFont(id) {
      untuk yang diketik SETELAH ini, persis seperti tombol tebal/miring.
      Untuk mengubah teks lama, pengguna harus memblok teksnya dulu. */
   if (r.collapsed) {
-    _pending = id || null;
+    if (id) { _pending = id; refresh(); return; }
+
+    /* ── "Bawaan" ──
+       Mengosongkan niat saja tidak cukup: kalau kursor berada DI DALAM
+       span font, ketikan berikutnya tetap masuk ke span itu dan tampak
+       tidak berubah. Jadi caret harus dikeluarkan dari bungkusnya. */
+    _pending = null;
+    const host = fontAround(r.startContainer);
+    if (host) {
+      const sp = document.createTextNode('\u200b');
+      host.after(sp);
+      const nr = document.createRange();
+      nr.setStart(sp, 1);
+      nr.collapse(true);
+      s.removeAllRanges();
+      s.addRange(nr);
+    }
     refresh();
     return;
   }
@@ -197,7 +221,21 @@ export function bungkusFontPending() {
   _pending = null;
   const s = sel();
   if (!(s && s.rangeCount)) return null;
-  const r = s.getRangeAt(0);
+  let r = s.getRangeAt(0);
+
+  /* Kursor sedang di dalam span font lain: keluar dulu, jangan bersarang.
+     Span bersarang membuat DOM menumpuk dan menyulitkan pelepasan font. */
+  const host = fontAround(r.startContainer);
+  if (host && host.getAttribute('data-font') !== id) {
+    const sp = document.createTextNode('');
+    host.after(sp);
+    r = document.createRange();
+    r.setStart(sp, 0);
+    r.collapse(true);
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
   const el = document.createElement('span');
   el.className = 'fnt';
   el.setAttribute('data-font', id);

@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906152703';
-import { setBlock, indent } from './blocks.js?v=20260906152703';
-import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906152703';
-import { autoFormat } from './markdown.js?v=20260906152703';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906152703';
-import { onTitle } from '../model.js?v=20260906152703';
-import { bungkusFontPending, fontPending } from './font.js?v=20260906152703';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906152703';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906153652';
+import { setBlock, indent } from './blocks.js?v=20260906153652';
+import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906153652';
+import { autoFormat } from './markdown.js?v=20260906153652';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906153652';
+import { onTitle } from '../model.js?v=20260906153652';
+import { bungkusFontPending, fontPending } from './font.js?v=20260906153652';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906153652';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');

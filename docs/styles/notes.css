@@ -312,10 +312,27 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .fnt[data-font=impact]{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif}
 .fnt[data-font=comic]{font-family:'Comic Sans MS','Comic Sans',cursive}
 
-/* menu font: tiap baris memakai fontnya sendiri sebagai pratinjau */
-.pop-font{flex-direction:column;align-items:flex-start;gap:1px;padding:8px 13px}
-.pop-font .fn-n{font-size:15px;line-height:1.3}
-.pop-font .fn-k{font-size:11px;color:var(--faint);font-family:var(--sans)}
+/* ── menu jenis huruf ── */
+.fn-grup{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);
+  padding:10px 13px 4px;font-weight:600;background:var(--bg);
+  border-top:1px solid var(--border);margin-top:2px}
+.fn-grup:first-of-type{border-top:0;margin-top:0}
+
+.pop-font{display:flex;align-items:center;gap:10px;padding:9px 13px;position:relative}
+.fn-kiri{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.fn-n{font-size:15px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn-k{font-size:10.5px;color:var(--faint);font-family:var(--sans);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn-contoh{font-size:14px;color:var(--muted);flex:none;letter-spacing:.01em;
+  padding:3px 8px;background:var(--sunken);border-radius:6px;line-height:1.4}
+.fn-cek{width:15px;height:15px;flex:none;fill:none;stroke:var(--accent);stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round;opacity:0}
+
+.pop-font.on{background:var(--accent-weak)}
 .pop-font.on .fn-n{color:var(--accent);font-weight:600}
-.pop-font.hilang{opacity:.42}
+.pop-font.on .fn-contoh{background:transparent;color:var(--accent)}
+.pop-font.on .fn-cek{opacity:1}
+
+.pop-font.hilang{opacity:.45}
 .pop-font.hilang .fn-k{color:var(--danger)}
+.pop-font.hilang .fn-contoh{opacity:.5}

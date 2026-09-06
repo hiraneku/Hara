@@ -1,5 +1,5 @@
 /* Satu baris di daftar catatan. */
-import { esc, stamp } from '../../core/dom.js?v=20260906152703';
+import { esc, stamp } from '../../core/dom.js?v=20260906153652';
 
 export const rowFor=n=>`<button class="row" data-open="${n.id}">
   <div class="row-b"><div class="row-t"${n.t?'':' style="color:var(--faint)"'}>${esc(n.t)||'Tanpa judul'}</div>
