@@ -12,6 +12,43 @@ export function bindEditor() {
   document.addEventListener('beforeinput',e=>{
     if(!inDoc(e.target)) return;
     if(pending.size && e.inputType==='insertText') flushPending();
+
+    /* ── Sisipkan huruf pertama SENDIRI ──
+       Di contenteditable, karakter pertama pada blok yang belum berisi teks
+       kerap ditempatkan browser di posisi yang salah — caret dilempar ke awal
+       blok sehingga "Halo" menjadi "aloH". Di sini kita kendalikan penuh:
+       tulis karakter tepat di posisi caret, lalu majukan caret satu langkah.
+       Format aktif (bold/italic/sorot) ikut terjaga karena kita menulis ke
+       DALAM node tempat caret berada, bukan ke blok. */
+    if(e.inputType!=='insertText' || !e.data) return;
+    const b=curBlock();
+    if(!b) return;
+    if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!=='') return;  /* sudah ada teks */
+
+    const s=sel();
+    if(!s || !s.rangeCount) return;
+    const r=s.getRangeAt(0);
+    if(!b.contains(r.startContainer)) return;
+
+    e.preventDefault();
+    /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */
+    Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
+
+    let node=r.startContainer, off=r.startOffset;
+    if(node.nodeType===3){
+      node.insertData(off, e.data);
+      off+=e.data.length;
+    }else{
+      /* caret bertumpu pada elemen -> buat text node di posisi yang tepat */
+      const t=document.createTextNode(e.data);
+      const ref=node.childNodes[off]||null;
+      if(ref) node.insertBefore(t,ref); else node.appendChild(t);
+      node=t; off=t.length;
+    }
+    const nr=document.createRange();
+    nr.setStart(node,off); nr.collapse(true);
+    s.removeAllRanges(); s.addRange(nr);
+    autoFormat(); refresh();
   });
   document.addEventListener('input',e=>{
     if(inDoc(e.target)){
