@@ -3,12 +3,20 @@ import { docEl, ensureCaret } from '../editor/caret.js';
 import { setBlock, insertHr } from '../editor/blocks.js';
 import { insertInline } from './insert.js';
 import { focusKeep } from '../bar/render.js';
+import { applyLink } from './link.js';
 
 export const pop = () => document.getElementById('pop');
+
+/* seleksi terakhir sebelum popup dibuka — dipakai form tautan */
+export let simpanRange = null;
 
 export function openPop(html, anchor) {
   const p = pop();
   if (!p) return;
+  const s = window.getSelection();
+  const d = document.querySelector('.ed-doc');
+  simpanRange = (s && s.rangeCount && d && d.contains(s.getRangeAt(0).startContainer))
+    ? s.getRangeAt(0).cloneRange() : null;
   p.innerHTML = html;
   p.classList.add('on');
   const r = anchor.getBoundingClientRect();
@@ -19,8 +27,16 @@ export function openPop(html, anchor) {
 export function bindPop() {
   const p = pop();
   if (!p) return;
-  p.addEventListener('mousedown', e => e.preventDefault());
+  p.addEventListener('mousedown', e => { if (!e.target.closest('.pop-in')) e.preventDefault(); });
+  /* form tautan: jangan tutup popup saat mengetik di kolom */
+  p.addEventListener('mousedown', e => {
+    if (e.target.closest('.pop-in')) e.stopPropagation();
+  }, true);
+
   p.addEventListener('click', e => {
+    const lk = e.target.closest('[data-lk]');
+    if (lk) { applyLink(lk.dataset.lk, simpanRange); closeAll(); return; }
+
     const t = e.target.closest('[data-blk],[data-ins],[data-wl]');
     if (!t) return;
     focusKeep();

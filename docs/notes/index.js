@@ -10,6 +10,7 @@ import { bindPop, closeAll } from './menus/pop.js';
 import { saveNow, updateCount, syncBtns } from './editor/cleanup.js';
 import { pending } from './editor/marks.js';
 import { docEl, caretEnd } from './editor/caret.js';
+import { resetHistory } from './editor/history.js';
 
 export const notesModule = {
   id: 'notes',
@@ -36,6 +37,8 @@ export const notesModule = {
       pending.clear();
       const d = docEl();
       if (d && d.firstElementChild) caretEnd(d.firstElementChild);
+      /* undo tidak boleh melintas antar catatan */
+      if (d) resetHistory();
       updateCount();
       syncBtns();
     });

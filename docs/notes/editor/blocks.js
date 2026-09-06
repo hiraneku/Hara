@@ -1,6 +1,7 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
 import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js';
 import { refresh } from './cleanup.js';
+import { MARKSEL } from './marks.js';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
 
@@ -35,5 +36,69 @@ export function indent(dir){
   const b=curBlock(); if(!b) return;
   const cur=parseInt(b.style.paddingLeft)||0;
   b.style.paddingLeft=Math.max(0,cur+dir*24)+'px';
+  refresh();
+}
+
+/* ── Hapus semua format pada teks terpilih (atau seluruh blok bila tak ada seleksi) ── */
+export function clearFormat(){
+  const d=docEl(); if(!d) return;
+  const b=curBlock(); if(!b) return;
+  const s=sel();
+  const r=(s&&s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))?s.getRangeAt(0):null;
+
+  if(r && !r.collapsed){
+    /* hanya bagian yang diblok */
+    const frag=r.extractContents();
+    const teks=frag.textContent;
+    const tn=document.createTextNode(teks);
+    r.insertNode(tn);
+    const nr=document.createRange();
+    nr.setStart(tn,0); nr.setEnd(tn,tn.length);
+    s.removeAllRanges(); s.addRange(nr);
+  }else{
+    /* seluruh blok: buang bungkus inline, kembalikan ke paragraf biasa */
+    const teks=b.textContent.replace(/[\u200b]/g,'');
+    const cbx=b.querySelector(':scope > .cbx'); if(cbx) cbx.remove();
+    BLOCKCLS.forEach(c=>b.classList.remove(c));
+    b.classList.add('b-p');
+    b.classList.remove('done');
+    b.style.paddingLeft='';
+    b.innerHTML='';
+    if(teks){ b.appendChild(document.createTextNode(teks)); caretEnd(b); }
+    else { b.appendChild(document.createElement('br')); caretEnd(b); }
+  }
+  ensureCaret();
+  refresh();
+}
+
+/* ── Pindahkan blok ke atas / bawah ── */
+export function moveBlock(dir){
+  const d=docEl(); if(!d) return;
+  const b=curBlock(); if(!b) return;
+  /* simpan posisi kursor di dalam blok */
+  const s=sel();
+  let off=null;
+  if(s&&s.rangeCount&&b.contains(s.getRangeAt(0).startContainer)){
+    const r=s.getRangeAt(0);
+    off={node:r.startContainer,o:r.startOffset};
+  }
+  if(dir<0){
+    const prev=b.previousElementSibling;
+    if(!prev) return;
+    b.parentNode.insertBefore(b,prev);
+  }else{
+    const next=b.nextElementSibling;
+    if(!next) return;
+    b.parentNode.insertBefore(next,b);
+  }
+  /* pulihkan kursor ke node yang sama (elemennya ikut pindah, jadi masih valid) */
+  if(off){
+    try{
+      const r=document.createRange();
+      r.setStart(off.node,off.o); r.collapse(true);
+      s.removeAllRanges(); s.addRange(r);
+    }catch(e){ caretEnd(b); }
+  }else caretEnd(b);
+  b.scrollIntoView&&b.scrollIntoView({block:'nearest'});
   refresh();
 }

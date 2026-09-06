@@ -4,6 +4,7 @@ import { MARKSEL, markActive, pending } from './marks.js';
 import { state, save } from '../../core/store.js';
 import { findNote } from '../model.js';
 import { cur } from '../../core/router.js';
+import { canUndo, canRedo, record, isReplaying } from './history.js';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -46,6 +47,10 @@ export function updateCount(){
   const n=findNote(state.openId); if(n) n.ex=t.slice(0,80);
 }
 export function syncBtns(){
+  const bu=document.querySelector('.mb[data-m="undo"]');
+  if(bu) bu.classList.toggle('off',!canUndo());
+  const br=document.querySelector('.mb[data-m="redo"]');
+  if(br) br.classList.toggle('off',!canRedo());
   Object.keys(MARKSEL).forEach(m=>{
     const key = m==='code'?'icode' : (m==='s'?'strike':m);
     const btn=document.querySelector('.mb[data-m="'+key+'"]');
@@ -75,4 +80,8 @@ export function saveNow(){
   }
   save();
 }
-export function refresh(){ cleanup(); updateCount(); syncBtns(); saveSoon(); }
+export function refresh(){
+  cleanup();
+  if(!isReplaying()) record();   /* rekam hasil akhir tiap perubahan */
+  updateCount(); syncBtns(); saveSoon();
+}

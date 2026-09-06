@@ -2,19 +2,19 @@
 
 Status: **usulan, belum dikerjakan.** Dicatat dari diskusi 6 Sep 2026.
 
-Bar saat ini punya 18 tombol:
-`H1 H2 == ☐ • ` </> " ! — ⇤ ⇥ B I S / [[ #`
+Bar saat ini punya **24 tombol**:
+`↺ ↻ / H1 H2 B I == S [[ 🔗 # ⌫ ☐ • ` </> " ! — ⇤ ⇥ ↑ ↓`
 
 ---
 
-## Prioritas tinggi
+## ✅ Prioritas tinggi — SELESAI (6 Sep 2026)
 
-| # | Mekanik | Alasan |
-|---|---------|--------|
-| 1 | **Undo / Redo** (↺ ↻) | Di HP tak ada Ctrl+Z. Editor sering mengubah DOM otomatis (markdown, toggle blok) — sekali salah tekan tak bisa kembali. **Paling mendesak.** |
-| 2 | **Tautan URL** (🔗) | `[[...]]` hanya untuk catatan internal. Belum bisa menautkan alamat web. |
-| 3 | **Hapus semua format** (⌫ₐ) | Membersihkan B+I+sorot satu-satu melelahkan. Sekaligus jadi tombol darurat kalau format nyangkut. |
-| 4 | **Naik / turun blok** (↑ ↓) | Memindahkan paragraf di HP tanpa ini = seleksi–potong–tempel, menyakitkan di layar sentuh. |
+| # | Mekanik | Catatan implementasi |
+|---|---------|----------------------|
+| 1 | ~~**Undo / Redo** (↺ ↻)~~ | `editor/history.js`. Snapshot sendiri, bukan `execCommand('undo')` bawaan — riwayat bawaan rusak karena kita banyak mengubah DOM lewat skrip. Ketikan beruntun digabung (jeda 500 ms), batas 100 langkah, riwayat direset tiap ganti catatan. Pintasan: Ctrl/Cmd+Z, Ctrl+Shift+Z, Ctrl+Y. Tombol meredup saat tak bisa dipakai. |
+| 2 | ~~**Tautan URL** (🔗)~~ | `menus/link.js`. Form dua kolom (teks + alamat). `hara.app` → `https://hara.app`, `a@b.com` → `mailto:`. Kursor di dalam tautan → mode ubah + tombol hapus tautan. |
+| 3 | ~~**Hapus semua format** (⌫)~~ | `blocks.js → clearFormat()`. Ada seleksi = bersihkan bagian itu saja; tanpa seleksi = seluruh blok kembali paragraf polos (checkbox & indent ikut hilang). |
+| 4 | ~~**Naik / turun blok** (↑ ↓)~~ | `blocks.js → moveBlock()`. Kursor ikut berpindah bersama blok, aman di ujung atas/bawah. |
 
 ## Prioritas menengah
 

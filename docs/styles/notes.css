@@ -160,3 +160,20 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   .sheet{left:16px;right:16px;width:auto;bottom:calc(128px + env(safe-area-inset-bottom))}
   .pop{left:12px!important;right:12px;width:auto!important}
 }
+
+/* ── tautan web ── */
+.ed-doc a.lk,.b-p a.lk{color:var(--accent);text-decoration:underline;
+  text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent);
+  text-underline-offset:2px;cursor:pointer}
+.ed-doc a.lk:hover{text-decoration-color:var(--accent)}
+
+/* ── tombol bar yang sedang tidak bisa dipakai ── */
+.mb.off{opacity:.32;pointer-events:none}
+
+/* ── form di dalam popup (tautan web) ── */
+.pop-form{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.pop-in{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;
+  background:var(--sunken);color:var(--text);font:inherit;font-size:14px;outline:none}
+.pop-in:focus{border-color:var(--accent);background:var(--surface)}
+.pop-row{display:flex;gap:8px;margin-top:2px}
+.pop-row .btn{flex:1;justify-content:center}

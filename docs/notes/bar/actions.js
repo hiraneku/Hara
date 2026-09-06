@@ -1,6 +1,7 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent } from '../editor/blocks.js';
+import { setBlock, insertHr, indent, clearFormat, moveBlock } from '../editor/blocks.js';
 import { toggleMark } from '../editor/marks.js';
+import { undo, redo } from '../editor/history.js';
 
 export const ACTIONS = {
   h:      () => setBlock('b-h1'),
@@ -18,4 +19,12 @@ export const ACTIONS = {
   icode:  () => toggleMark('code'),
   in:     () => indent(1),
   out:    () => indent(-1),
+  clear:  clearFormat,
+  up:     () => moveBlock(-1),
+  down:   () => moveBlock(1),
+  undo,
+  redo,
 };
+
+/* Tombol yang TIDAK boleh merekam snapshot undo sebelum dijalankan. */
+export const TANPA_SNAP = new Set(['undo', 'redo']);

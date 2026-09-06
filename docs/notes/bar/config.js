@@ -3,6 +3,10 @@
    `sep: true` menyisipkan pemisah kelompok. */
 
 export const BAR = [
+  { m: 'undo',   label: '↺',        title: 'Batalkan' },
+  { m: 'redo',   label: '↻',        title: 'Ulangi' },
+  { sep: true },
+
   { m: 'slash',  label: '/',        accent: true, title: 'Sisipkan blok' },
   { sep: true },
 
@@ -15,7 +19,9 @@ export const BAR = [
   { sep: true },
 
   { m: 'wl',     label: '[[',       accent: true, title: 'Tautan catatan' },
+  { m: 'link',   label: '🔗',       accent: true, title: 'Tautan web' },
   { m: 'tag',    label: '#',        accent: true, title: 'Tag' },
+  { m: 'clear',  label: '⌫',        title: 'Hapus semua format' },
   { sep: true },
 
   { m: 'todo',   label: '☐',        title: 'To-do' },
@@ -29,6 +35,10 @@ export const BAR = [
 
   { m: 'out',    label: '⇤',        title: 'Kurangi indent' },
   { m: 'in',     label: '⇥',        title: 'Tambah indent' },
+  { sep: true },
+
+  { m: 'up',     label: '↑',        title: 'Naikkan blok' },
+  { m: 'down',   label: '↓',        title: 'Turunkan blok' },
 ];
 
 /* Tombol mana yang menyala mengikuti jenis blok saat ini. */

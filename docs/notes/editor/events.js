@@ -5,6 +5,7 @@ import { pending, flushPending, wrapTypedPending } from './marks.js';
 import { autoFormat } from './markdown.js';
 import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js';
 import { onTitle } from '../model.js';
+import { record, snap, undo, redo, isReplaying } from './history.js';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -13,7 +14,11 @@ export function bindEditor() {
     if(pending.size && e.inputType==='insertText') flushPending();
   });
   document.addEventListener('input',e=>{
-    if(inDoc(e.target)){ if(pending.size) wrapTypedPending(); autoFormat(); refresh(); }
+    if(inDoc(e.target)){
+      if(isReplaying()) return;
+      if(pending.size) wrapTypedPending();
+      autoFormat(); refresh();
+    }
     else if(e.target.classList && e.target.classList.contains('ed-t')){ onTitle(e.target); updateCount(); }
   });
   let _lastAnchor=null;
@@ -28,6 +33,15 @@ export function bindEditor() {
   });
   document.addEventListener('keydown',e=>{
     if(!inDoc(e.target)) return;
+    const mod=e.ctrlKey||e.metaKey;
+    if(mod && (e.key==='z'||e.key==='Z')){
+      e.preventDefault();
+      if(e.shiftKey) redo(); else undo();
+      refresh(); return;
+    }
+    if(mod && (e.key==='y'||e.key==='Y')){ e.preventDefault(); redo(); refresh(); return; }
+    /* Enter / Tab / Backspace mengubah struktur -> rekam dulu */
+    if(e.key==='Enter'||e.key==='Tab'||e.key==='Backspace') snap();
     const b=curBlock();
     if(e.key==='Enter' && !e.shiftKey && b &&
        (b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-cal'))){
