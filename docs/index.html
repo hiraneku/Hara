@@ -521,7 +521,14 @@ function go(v){
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
   document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
-  closeAll();savedRange=null;pending.clear();updateCount();syncMarkBtns();
+  closeAll();pending.clear();
+  /* editor baru dirender: taruh kursor di blok pertama supaya tombol
+     bar langsung punya sasaran walau user belum menyentuh teks */
+  const _d=docEl();
+  if(_d){const _b=_d.firstElementChild;
+    if(_b){const _r=document.createRange();_r.selectNodeContents(_b);_r.collapse(false);
+      const _s=getSelection();_s.removeAllRanges();_s.addRange(_r);}}
+  updateCount();syncBtns();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
@@ -538,605 +545,419 @@ document.addEventListener('click',e=>{
 let tt;function toast(m){const t=document.getElementById('toast');
   t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200);}
 
-/* ════════ MESIN EDITOR ════════ */
+/* ════════ MESIN EDITOR (v2 — ditulis ulang, sederhana & lurus) ════════ */
 const pop=document.getElementById('pop');
 const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
-let savedRange=null;
-let savedPos=null;   /* {bi,start,end} — kursor sbg offset karakter, tahan perubahan DOM */
-
-function textLen(n){return (n.textContent||'').replace(/\u200b/g,'').length;}
-function offsetIn(block,container,offset){
-  let total=0,done=false;
-  (function walk(n){
-    if(done)return;
-    if(n===container&&n.nodeType===1){
-      for(let i=0;i<offset&&i<n.childNodes.length;i++)total+=textLen(n.childNodes[i]);
-      done=true;return;
-    }
-    if(n.nodeType===3){
-      if(n===container){total+=(n.data.slice(0,offset)||'').replace(/\u200b/g,'').length;done=true;return;}
-      total+=n.data.replace(/\u200b/g,'').length;return;
-    }
-    for(const c of Array.from(n.childNodes)){walk(c);if(done)return;}
-  })(block);
-  return total;
-}
-function pointAt(block,off){
-  let rem=off,res=null;
-  (function walk(n){
-    if(res)return;
-    if(n.nodeType===3){
-      const len=n.data.replace(/\u200b/g,'').length;
-      if(rem<=len){
-        let real=0,cnt=0;
-        while(real<n.data.length&&cnt<rem){if(n.data[real]!=='\u200b')cnt++;real++;}
-        while(real<n.data.length&&n.data[real]==='\u200b')real++;
-        res={node:n,offset:real};return;
-      }
-      rem-=len;return;
-    }
-    for(const c of Array.from(n.childNodes)){walk(c);if(res)return;}
-  })(block);
-  if(!res){
-    let last=block,guard=0;
-    while(last.lastChild&&guard++<50)last=last.lastChild;
-    res=last.nodeType===3?{node:last,offset:last.data.length}
-                         :{node:block,offset:block.childNodes.length};
-  }
-  return res;
-}
-
-const docEl=()=>document.querySelector('.ed-doc');
-function curBlock(){
-  const d=docEl();if(!d)return null;
-  const fb=()=>d.lastElementChild||d.firstElementChild;
-  const s=getSelection();
-  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)){
-    let n=s.getRangeAt(0).startContainer;
-    if(n.nodeType===3)n=n.parentNode;
-    /* naik sampai anak langsung .ed-doc, TAPI kalau ketemu elemen blok
-       sungguhan lebih dulu, pakai itu (hindari mengubah pembungkus) */
-    let real=null;
-    while(n&&n!==d){
-      if(n.classList&&BLOCKCLS.some(c=>n.classList.contains(c)))real=n;
-      if(n.parentNode===d)break;
-      n=n.parentNode;
-    }
-    if(real)return real;
-    if(n&&n!==d)return n;
-  }
-  if(savedPos&&d.children[savedPos.bi])return d.children[savedPos.bi];
-  return fb();
-}
-function saveSel(){
-  const d=docEl();if(!d)return;
-  const s=getSelection();if(!s.rangeCount)return;
-  const r=s.getRangeAt(0);
-  if(!d.contains(r.startContainer))return;
-  const blocks=Array.from(d.children);
-  let blk=r.startContainer;
-  if(blk.nodeType===3)blk=blk.parentNode;
-  while(blk&&blk.parentNode!==d)blk=blk.parentNode;
-  const bi=blocks.indexOf(blk);
-  if(bi<0)return;
-  savedPos={bi,
-    start:offsetIn(blk,r.startContainer,r.startOffset),
-    end:offsetIn(blk,r.endContainer,r.endOffset)};
-  savedRange=r.cloneRange();
-}
-function restoreSel(focus){
-  const d=docEl();if(!d)return null;
-  if(focus)d.focus({preventScroll:true});
-  const s=getSelection();
-  /* 1. kursor hidup menang — KECUALI kalau ia runtuh sementara savedPos
-        menyimpan rentang (focus() kerap meruntuhkan seleksi) */
-  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)){
-    const live=s.getRangeAt(0);
-    const hadRange=savedPos&&savedPos.start!==savedPos.end;
-    if(!(live.collapsed&&hadRange))return live;
-  }
-  /* 2. pulihkan dari offset tersimpan */
-  if(savedPos){
-    const blk=d.children[savedPos.bi];
-    if(blk){
-      const p1=pointAt(blk,savedPos.start),p2=pointAt(blk,savedPos.end);
-      const r=document.createRange();
-      try{r.setStart(p1.node,p1.offset);r.setEnd(p2.node,p2.offset);}
-      catch(e){r.selectNodeContents(blk);r.collapse(false);}
-      s.removeAllRanges();s.addRange(r);savedRange=r.cloneRange();return r;
-    }
-  }
-  /* 3. terakhir: akhir blok terakhir */
-  const b=d.lastElementChild||d.firstElementChild;if(!b)return null;
-  const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
-  s.removeAllRanges();s.addRange(r);savedRange=r.cloneRange();return r;
-}
-function caretAfter(node){
-  const r=document.createRange();r.setStartAfter(node);r.collapse(true);
-  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
-}
-
-/* ════════ MARK — memakai perintah bawaan browser (native toggle) ════════ */
-const CMD={b:'bold',i:'italic',s:'strikeThrough'};
-const MARKS={b:['b',''],i:['i',''],s:['s',''],hl:['span','hl'],code:['code','ic']};
 const MARKSEL={b:'b,strong',i:'i,em',s:'s,strike',hl:'.hl',code:'code.ic'};
+const MARKTAG={b:'b',i:'i',s:'s',hl:'span',code:'code'};
+const MARKCLS={hl:'hl',code:'ic'};
+const CMD={b:'bold',i:'italic',s:'strikeThrough'};
 let pending=new Set();
 try{document.execCommand('styleWithCSS',false,false);}catch(e){}
 
-const edFocused=()=>{const d=docEl();return !!d&&document.activeElement===d;};
-function mkMark(m){const [t,c]=MARKS[m];const e=document.createElement(t);if(c)e.className=c;return e;}
+const docEl=()=>document.querySelector('.ed-doc');
+const sel=()=>window.getSelection();
 
-/* mark yang membungkus sebuah node */
-function marksAt(node){
-  const set=new Set();const d=docEl();if(!d)return set;
-  let n=node;if(n&&n.nodeType===3)n=n.parentNode;
-  while(n&&n!==d){
-    if(n.matches){
-      for(const m in MARKSEL)if(n.matches(MARKSEL[m]))set.add(m);
+/* ---- blok tempat kursor berada ---- */
+function curBlock(){
+  const d=docEl(); if(!d) return null;
+  const s=sel();
+  if(s && s.rangeCount){
+    const r0=s.getRangeAt(0);
+    let n=r0.startContainer;
+    if(d.contains(n)){
+      /* seleksi berada di container editor -> pakai offset utk cari blok */
+      if(n===d){
+        const kids=d.children;
+        const idx=Math.min(r0.startOffset,kids.length-1);
+        if(kids[idx]) return kids[idx];
+      }
+      if(n.nodeType===3) n=n.parentNode;
+      let best=null;
+      while(n && n!==d){
+        if(n.classList && BLOCKCLS.some(c=>n.classList.contains(c))) best=n;
+        n=n.parentNode;
+      }
+      if(best) return best;
     }
-    n=n.parentNode;
   }
-  return set;
+  return d.lastElementChild || d.firstElementChild;
 }
-function hostFor(m,node){
-  const d=docEl();let n=node;if(n&&n.nodeType===3)n=n.parentNode;
-  while(n&&n!==d){if(n.matches&&n.matches(MARKSEL[m]))return n;n=n.parentNode;}
+/* pastikan editor fokus & ada kursor di dalamnya */
+/* fokuskan editor TANPA kehilangan kursor (focus() kerap meruntuhkan seleksi) */
+function focusKeep(){
+  const d=docEl(); if(!d) return;
+  const s=sel();
+  let keep=null;
+  if(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))
+    keep=s.getRangeAt(0).cloneRange();
+  if(document.activeElement!==d) d.focus({preventScroll:true});
+  if(keep){
+    const s2=sel();
+    const live=s2.rangeCount?s2.getRangeAt(0):null;
+    if(!live || !d.contains(live.startContainer) ||
+       live.startContainer===d ||
+       (live.collapsed && !keep.collapsed)){
+      s2.removeAllRanges(); s2.addRange(keep);
+    }
+  }
+}
+function ensureCaret(){
+  const d=docEl(); if(!d) return null;
+  const s=sel();
+  if(!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))){
+    const b=d.lastElementChild||d.firstElementChild;
+    if(!b) return null;
+    const r=document.createRange(); r.selectNodeContents(b); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
+  }
+  return s.getRangeAt(0);
+}
+function selectContents(node){
+  const r=document.createRange(); r.selectNodeContents(node);
+  const s=sel(); s.removeAllRanges(); s.addRange(r);
+}
+function caretEnd(node){
+  const r=document.createRange(); r.selectNodeContents(node); r.collapse(false);
+  const s=sel(); s.removeAllRanges(); s.addRange(r);
+}
+
+/* ---- BLOK: ganti jenis, toggle balik ---- */
+function setBlock(cls){
+  const d=docEl(); if(!d) return;
+  const b=curBlock(); if(!b) return;
+  if(cls!=='b-p' && b.classList.contains(cls)) cls='b-p';   // toggle balik
+  const cb=b.querySelector(':scope > .cbx'); if(cb) cb.remove();
+  BLOCKCLS.forEach(c=>b.classList.remove(c));
+  b.classList.add(cls);
+  if(cls==='b-todo'){
+    const box=document.createElement('button');
+    box.className='cbx'; box.contentEditable='false';
+    box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
+    b.insertBefore(box,b.firstChild);
+  }
+  if(cls!=='b-todo') b.classList.remove('done');
+  caretEnd(b);
+  refresh();
+}
+function insertHr(){
+  const b=curBlock(); if(!b) return;
+  const hr=document.createElement('div');
+  hr.className='b-div'; hr.contentEditable='false';
+  b.after(hr);
+  const nb=document.createElement('div'); nb.className='b-p'; nb.innerHTML='<br>';
+  hr.after(nb); caretEnd(nb); refresh();
+}
+function indent(dir){
+  const b=curBlock(); if(!b) return;
+  const cur=parseInt(b.style.paddingLeft)||0;
+  b.style.paddingLeft=Math.max(0,cur+dir*24)+'px';
+  refresh();
+}
+
+/* ---- MARK: bold/italic/coret/sorot/kode ---- */
+function markEl(m){
+  const e=document.createElement(MARKTAG[m]);
+  if(MARKCLS[m]) e.className=MARKCLS[m];
+  return e;
+}
+function markAround(m,node){
+  const d=docEl(); let n=node;
+  if(n && n.nodeType===3) n=n.parentNode;
+  while(n && n!==d){ if(n.matches && n.matches(MARKSEL[m])) return n; n=n.parentNode; }
   return null;
 }
-/* status aktif: tanya browser dulu, baru periksa DOM */
-function markOn(m){
-  if(CMD[m]&&edFocused()){
-    try{if(document.queryCommandState(CMD[m]))return true;}catch(e){}
+function markActive(m){
+  const d=docEl(); if(!d) return false;
+  if(pending.has(m)) return true;
+  const s=sel(); if(!(s&&s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))) return false;
+  const r=s.getRangeAt(0);
+  if(markAround(m,r.startContainer)) return true;
+  if(!r.collapsed){
+    const f=r.cloneContents();
+    if(f.querySelector && f.querySelector(MARKSEL[m])) return true;
   }
-  const s=getSelection();
-  const d=docEl();
-  if(s.rangeCount&&d&&d.contains(s.getRangeAt(0).startContainer))
-    if(marksAt(s.getRangeAt(0).startContainer).has(m))return true;
-  if(savedRange&&d&&d.contains(savedRange.startContainer))
-    if(marksAt(savedRange.startContainer).has(m))return true;
   return false;
 }
-function syncMarkBtns(){
-  Object.keys(MARKS).forEach(m=>{
-    const btn=document.querySelector('.mb[data-m="'+(m==='code'?'icode':(m==='s'?'strike':m))+'"]');
-    if(btn)btn.classList.toggle('active',pending.has(m)||markOn(m));
+function unwrapAll(root,m){
+  Array.from(root.querySelectorAll(MARKSEL[m])).forEach(e=>{
+    while(e.firstChild) e.parentNode.insertBefore(e.firstChild,e);
+    e.remove();
+  });
+}
+function toggleMark(m){
+  const d=docEl(); if(!d) return;
+  const r=ensureCaret(); if(!r) return;
+
+  if(r.collapsed){                       // tak ada teks terpilih -> niat ketik
+    if(pending.has(m)) pending.delete(m);
+    else {
+      const host=markAround(m,r.startContainer);
+      if(host){                          // keluar dari format
+        const sp=document.createTextNode('\u200b');
+        host.after(sp);
+        const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+        sel().removeAllRanges(); sel().addRange(nr);
+      } else pending.add(m);
+    }
+    refresh(); return;
+  }
+
+  const on=markActive(m);
+  const host=markAround(m,r.startContainer);
+  const whole = host && host.textContent.replace(/[\u200b\u00a0]/g,'')
+                        === r.toString().replace(/[\u200b\u00a0]/g,'');
+  if(on && whole){                       // seluruh isi mark terpilih -> buka
+    const kids=Array.from(host.childNodes), par=host.parentNode;
+    kids.forEach(k=>par.insertBefore(k,host));
+    host.remove(); par.normalize();
+    if(kids.length){
+      const nr=document.createRange();
+      nr.setStartBefore(kids[0]); nr.setEndAfter(kids[kids.length-1]);
+      sel().removeAllRanges(); sel().addRange(nr);
+    }
+  } else {
+    const frag=r.extractContents();
+    unwrapAll(frag,m);
+    let node;
+    if(on){ node=frag; }                 // lepas
+    else { node=markEl(m); node.appendChild(frag); }   // pasang
+    const first=node.nodeType===11?node.firstChild:node;
+    const last =node.nodeType===11?node.lastChild :node;
+    r.insertNode(node);
+    if(first&&last){
+      const nr=document.createRange();
+      nr.setStartBefore(first); nr.setEndAfter(last);
+      sel().removeAllRanges(); sel().addRange(nr);
+    }
+    const b=curBlock(); if(b) b.normalize();
+  }
+  refresh();
+}
+/* terapkan mark yang menyala tepat sebelum mengetik */
+function flushPending(){
+  if(!pending.size) return;
+  const r=ensureCaret(); if(!r) return;
+  const marks=[...pending]; pending.clear();
+  let inner=document.createTextNode('\u200b'), node=inner;
+  marks.forEach(m=>{ const e=markEl(m); e.appendChild(node); node=e; });
+  r.insertNode(node);
+  const nr=document.createRange(); nr.setStart(inner,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+}
+
+/* ---- pembersihan & hitungan ---- */
+function cleanup(){
+  const d=docEl(); if(!d) return;
+  Object.keys(MARKSEL).forEach(m=>{
+    Array.from(d.querySelectorAll(MARKSEL[m])).forEach(e=>{
+      if(e.textContent.replace(/[\u200b\u00a0]/g,'')==='' && !e.contains(sel().anchorNode))
+        e.remove();
+    });
+  });
+  Array.from(d.children).forEach(b=>{
+    if(b.classList.contains('b-div')) return;
+    if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
+      if(b.innerHTML!=='<br>') b.innerHTML='<br>';
+    }
+  });
+}
+function updateCount(){
+  const el=document.getElementById('count'); if(!el) return;
+  const d=docEl();
+  if(!d){ el.style.display='none'; return; }
+  el.style.display='flex';
+  const t=((d.innerText!==undefined?d.innerText:d.textContent)||'')
+            .replace(/[\u200b\u00a0]/g,' ').trim();
+  const chars=t.length;
+  const words=t?t.split(/\s+/).filter(Boolean).length:0;
+  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span><b>${words.toLocaleString('id')}</b> kata`;
+  const n=findNote(openId); if(n) n.ex=t.slice(0,80);
+}
+function syncBtns(){
+  Object.keys(MARKSEL).forEach(m=>{
+    const key = m==='code'?'icode' : (m==='s'?'strike':m);
+    const btn=document.querySelector('.mb[data-m="'+key+'"]');
+    if(btn) btn.classList.toggle('active',markActive(m));
   });
   const b=curBlock();
   const map={h:'b-h1',h2:'b-h2',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',cal:'b-cal'};
   Object.entries(map).forEach(([k,cls])=>{
     const btn=document.querySelector('.mb[data-m="'+k+'"]');
-    if(btn)btn.classList.toggle('active',!!b&&b.classList.contains(cls));
+    if(btn) btn.classList.toggle('active',!!b&&b.classList.contains(cls));
   });
 }
-function stripMark(frag,m){
-  frag.querySelectorAll&&Array.from(frag.querySelectorAll(MARKSEL[m])).forEach(e=>{
-    while(e.firstChild)e.parentNode.insertBefore(e.firstChild,e);e.remove();});
-}
-/* bungkus / lepas pada teks yang SEDANG terpilih */
-/* cari elemen mark yang MELINGKUPI seluruh range (termasuk saat range
-   memilih node elemen, bukan teks di dalamnya) */
-function hostAround(m,r){
-  const d=docEl();if(!d)return null;
-  let n=r.commonAncestorContainer;
-  if(n.nodeType!==1)n=n.parentNode;
-  while(n&&n!==d){if(n.matches&&n.matches(MARKSEL[m]))return n;n=n.parentNode;}
-  /* range menyeleksi tepat satu elemen mark */
-  const only=r.cloneContents();
-  const kids=Array.from(only.childNodes).filter(k=>k.nodeType!==3||k.data.replace(/[\u200b\u00a0]/g,''));
-  if(kids.length===1&&kids[0].nodeType===1&&kids[0].matches&&kids[0].matches(MARKSEL[m])){
-    let c=r.startContainer;
-    if(c.nodeType===1){const cand=c.childNodes[r.startOffset];
-      if(cand&&cand.matches&&cand.matches(MARKSEL[m]))return cand;}
-  }
-  return null;
-}
-function unwrapIn(r,m){
-  /* buang bungkus m di dalam range, pertahankan isi & seleksi */
-  const frag=r.extractContents();
-  stripMark(frag,m);
-  const marker=document.createElement('span');marker.appendChild(frag);
-  r.insertNode(marker);
-  const kids=Array.from(marker.childNodes),par=marker.parentNode;
-  kids.forEach(k=>par.insertBefore(k,marker));marker.remove();
-  if(kids.length){const nr=document.createRange();
-    nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
-    getSelection().removeAllRanges();getSelection().addRange(nr);}
-  par.normalize&&par.normalize();
-}
-function wrapRange(m,r){
-  /* sudah bermark? -> lepas */
-  const around=hostAround(m,r);
-  const inside=r.cloneContents().querySelector&&r.cloneContents().querySelector(MARKSEL[m]);
-  if(around||inside){
-    if(around&&around.textContent.replace(/[\u200b\u00a0]/g,'')===r.toString().replace(/[\u200b\u00a0]/g,'')){
-      /* seluruh isi host terpilih -> buka bungkusnya sekaligus */
-      const kids=Array.from(around.childNodes),par=around.parentNode;
-      kids.forEach(k=>par.insertBefore(k,around));around.remove();
-      if(kids.length){const nr=document.createRange();
-        nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
-        getSelection().removeAllRanges();getSelection().addRange(nr);}
-      par.normalize&&par.normalize();
-    }else unwrapIn(r,m);
-    return;
-  }
-  const host=hostFor(m,r.startContainer);
-  if(host&&host===hostFor(m,r.endContainer)){
-    /* LEPAS: pecah host jadi sebelum | tengah(polos) | sesudah */
-    const pre=document.createRange();pre.selectNodeContents(host);pre.setEnd(r.startContainer,r.startOffset);
-    const post=document.createRange();post.selectNodeContents(host);post.setStart(r.endContainer,r.endOffset);
-    const preF=pre.cloneContents(),midF=r.cloneContents(),postF=post.cloneContents();
-    stripMark(midF,m);
-    const frag=document.createDocumentFragment();
-    if(preF.textContent.replace(/[\u200b\u00a0]/g,'')){const a=host.cloneNode(false);a.appendChild(preF);frag.appendChild(a);}
-    const marker=document.createElement('span');marker.setAttribute('data-tmp','1');marker.appendChild(midF);
-    frag.appendChild(marker);
-    if(postF.textContent.replace(/[\u200b\u00a0]/g,'')){const c=host.cloneNode(false);c.appendChild(postF);frag.appendChild(c);}
-    host.replaceWith(frag);
-    const kids=Array.from(marker.childNodes),par=marker.parentNode;
-    kids.forEach(k=>par.insertBefore(k,marker));marker.remove();
-    if(kids.length){const nr=document.createRange();
-      nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
-      getSelection().removeAllRanges();getSelection().addRange(nr);}
-  }else{
-    /* PASANG */
-    const el=mkMark(m);
-    const f=r.extractContents();stripMark(f,m);el.appendChild(f);
-    r.insertNode(el);
-    if(el.firstChild){const nr=document.createRange();
-      nr.setStartBefore(el.firstChild);nr.setEndAfter(el.lastChild);
-      getSelection().removeAllRanges();getSelection().addRange(nr);}
-  }
-}
-function toggleMark(m){
-  const d=docEl();if(!d)return;
-  const s=getSelection();
-  const live=s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)?s.getRangeAt(0):null;
-  const hasSel=live&&!live.collapsed;
+function refresh(){ cleanup(); updateCount(); syncBtns(); }
 
-  /* 1. ada teks terpilih -> pasang/lepas langsung */
-  if(hasSel){
-    if(CMD[m]&&edFocused()){try{document.execCommand(CMD[m]);}catch(e){wrapRange(m,live);}}
-    else wrapRange(m,live);
-    saveSel();cleanEmpty();syncMarkBtns();updateCount();return;
-  }
-  /* 2. kursor sedang aktif di editor -> serahkan ke browser (native typing state) */
-  if(edFocused()&&live&&CMD[m]){
-    try{document.execCommand(CMD[m]);pending.delete(m);}
-    catch(e){pending.has(m)?pending.delete(m):pending.add(m);}
-    syncMarkBtns();return;
-  }
-  /* 3. editor belum difokuskan / mark tanpa perintah native -> simpan niat.
-        Tidak menyentuh DOM & tidak memaksa fokus => keyboard tidak terbuka. */
-  if(pending.has(m))pending.delete(m);
-  else if(markOn(m)&&hostFor(m,(live||savedRange||{}).startContainer||d)){
-    /* sedang di dalam mark: keluar dari bungkusnya */
-    const host=hostFor(m,(live||savedRange).startContainer);
-    if(host){const sp=document.createTextNode('\u200b');host.after(sp);
-      const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
-      getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();}
-  }else pending.add(m);
-  syncMarkBtns();
-}
-/* saat mulai mengetik, terapkan mark yang menyala */
-function flushPending(){
-  if(!pending.size)return false;
-  let handled=false;
-  pending.forEach(m=>{
-    if(CMD[m]&&edFocused()){try{document.execCommand(CMD[m]);handled=true;}catch(e){}}
-  });
-  const manual=[...pending].filter(m=>!CMD[m]);
-  pending.clear();
-  if(manual.length){
-    const r=restoreSel(false);
-    if(r){let node=document.createTextNode('\u200b');let outer=node;
-      manual.forEach(m=>{const e=mkMark(m);e.appendChild(outer);outer=e;});
-      r.insertNode(outer);
-      const nr=document.createRange();nr.setStart(node,1);nr.collapse(true);
-      getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();}
-    handled=true;
-  }
-  return handled;
-}
-function wrapSel(tag,cls){
-  const m=cls==='hl'?'hl':(cls==='ic'?'code':tag);
-  if(MARKS[m])return toggleMark(m);
-}
-/* ── ubah jenis blok ── */
-function setBlock(cls,force){
-  restoreSel(false);const b=curBlock();if(!b)return;
-  /* rekam posisi kursor SEKARANG, sebelum DOM blok diubah */
-  let _off=null;
-  {const sl=getSelection();
-   if(sl.rangeCount&&b.contains(sl.getRangeAt(0).startContainer))
-     _off=offsetIn(b,sl.getRangeAt(0).startContainer,sl.getRangeAt(0).startOffset);}
-  /* klik tombol yang sama -> kembali ke paragraf biasa */
-  if(!force&&cls!=='b-p'&&b.classList.contains(cls))cls='b-p';
-  const wasTodo=b.classList.contains('b-todo');
-  const cb=b.querySelector('.cbx');if(cb)cb.remove();
-  BLOCKCLS.forEach(c=>b.classList.remove(c));
-  b.classList.add(cls);
-  if(cls==='b-todo'){
-    const box=document.createElement('button');box.className='cbx';box.contentEditable='false';
-    box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
-    b.insertBefore(box,b.firstChild);
-  }
-  keepCaret(b,_off);updateCount();syncMarkBtns();
-}
-/* pertahankan posisi kursor setelah blok berubah */
-function keepCaret(b,want){
-  const d=docEl();if(!d)return;
-  const off=(want!==null&&want!==undefined)?want:textLen(b);
-  const p=pointAt(b,Math.min(off,textLen(b)));
-  const r=document.createRange();
-  try{r.setStart(p.node,p.offset);r.collapse(true);}catch(e){r.selectNodeContents(b);r.collapse(false);}
-  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
-}
-function placeCaretEnd(b){
-  const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
-  const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
-}
-function insertText(t){
-  const r=restoreSel(true);if(!r)return;
-  r.deleteContents();
-  const n=document.createTextNode(t);r.insertNode(n);caretAfter(n);updateCount();
-}
-function insertEl(html){
-  const r=restoreSel(true);if(!r)return;
-  const tmp=document.createElement('div');tmp.innerHTML=html;
-  const el=tmp.firstElementChild;
-  r.deleteContents();r.insertNode(el);
-  const sp=document.createTextNode('\u00a0');el.after(sp);caretAfter(sp);updateCount();
-}
-
-/* ════════ MARKDOWN OTOMATIS SAAT MENGETIK ════════ */
-/* pola inline: dipicu tepat ketika penutupnya selesai diketik */
+/* ════════ MARKDOWN OTOMATIS ════════ */
 const INLINE=[
-  {re:/\*\*([^*\n]+)\*\*$/,tag:'b'},
-  {re:/(?:^|[^*])\*([^*\n]+)\*$/,tag:'i',g:1},
-  {re:/__([^_\n]+)__$/,tag:'b'},
-  {re:/~~([^~\n]+)~~$/,tag:'s'},
-  {re:/==([^=\n]+)==$/,tag:'span',cls:'hl'},
-  {re:/`([^`\n]+)`$/,tag:'code',cls:'ic'},
-  {re:/\[\[([^\]\n]+)\]\]$/,tag:'span',cls:'wl'},
+  {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
+  {re:/__([^_\n]+)__$/,m:'b'},
+  {re:/(^|[^*])\*([^*\n]+)\*$/,m:'i',g:2},
+  {re:/~~([^~\n]+)~~$/,m:'s'},
+  {re:/==([^=\n]+)==$/,m:'hl'},
+  {re:/`([^`\n]+)`$/,m:'code'},
 ];
-/* pola awal baris → ubah jenis blok */
-const LINE=[
-  [/^#\s/,'b-h1'],[/^##\s/,'b-h2'],[/^###\s/,'b-h2'],
-  [/^>\s/,'b-quote'],[/^```$/,'b-code'],
-  [/^[-*]\s\[\s?\]\s/,'b-todo'],[/^[-*+]\s/,'b-li'],
-];
-
-const INLINE_SEL='b,i,s,strong,em,code.ic,.hl,.wl,.tg';
-/* buang bungkus inline yang sudah kosong / hanya berisi zero-width */
-function cleanEmpty(){
-  const d=docEl();if(!d)return;
-  const sel=getSelection();
-  const caretIn=sel.rangeCount?sel.getRangeAt(0).startContainer:null;
-  /* buang bungkus inline yang isinya kosong */
-  d.querySelectorAll(INLINE_SEL).forEach(el=>{
-    if(el.textContent.replace(/[\u200b\u00a0]/g,'')!=='')return;
-    if(caretIn&&el.contains(caretIn)){
-      const sp=document.createTextNode('\u200b');
-      el.after(sp);
-      const r=document.createRange();r.setStart(sp,1);r.collapse(true);
-      sel.removeAllRanges();sel.addRange(r);saveSel();
-    }
-    el.remove();
-  });
-  /* blok yang benar-benar kosong: reset total, hilangkan SEMUA sisa format */
-  Array.from(d.children).forEach(b=>{
-    const t=b.textContent.replace(/[\u200b\u00a0\s]/g,'');
-    if(t==='' && !b.querySelector('img')){
-      const hasCbx=b.querySelector('.cbx');
-      if(b.innerHTML!=='<br>'&&!hasCbx){
-        b.innerHTML='<br>';
-        if(caretIn&&b.contains(caretIn)){
-          const r=document.createRange();r.setStart(b,0);r.collapse(true);
-          sel.removeAllRanges();sel.addRange(r);saveSel();
-        }
-      }
-    }
-  });
-}
-/* Backspace tepat di batas elemen inline -> keluar dari format, bukan mengetik di dalamnya */
-function escapeFormatIfNeeded(){
-  const sel=getSelection();if(!sel.rangeCount)return;
-  const r=sel.getRangeAt(0);if(!r.collapsed)return;
-  let n=r.startContainer;
-  if(n.nodeType===3&&r.startOffset===n.data.length){
-    const host=n.parentElement&&n.parentElement.closest(INLINE_SEL);
-    if(host&&n===host.lastChild){/* biarkan; zero-width sudah menangani */}
-  }
-}
+const LINE=[[/^###\s/,'b-h2'],[/^##\s/,'b-h2'],[/^#\s/,'b-h1'],
+            [/^>\s/,'b-quote'],[/^```$/,'b-code']];
 function autoFormat(){
-  const sel=getSelection();if(!sel.rangeCount)return;
-  const r=sel.getRangeAt(0);if(!r.collapsed)return;
-  const node=r.startContainer;if(node.nodeType!==3)return;
-  const off=r.startOffset;
-  const b=curBlock();if(!b)return;
+  const d=docEl(); if(!d) return;
+  const s=sel(); if(!(s&&s.rangeCount)) return;
+  const r=s.getRangeAt(0); if(!r.collapsed) return;
+  const node=r.startContainer; if(node.nodeType!==3) return;
+  const b=curBlock(); if(!b) return;
+  const full=b.textContent;
 
-  /* 1. awal baris */
-  const txt=b.textContent;
-  // to-do diperiksa lebih dulu; juga menangani kasus blok sudah terlanjur jadi daftar
-  const todoRe=b.classList.contains('b-li')?/^\[\s?\]\s/:/^[-*]\s\[\s?\]\s/;
-  const mt=txt.match(todoRe);
-  if(mt&&!b.classList.contains('b-todo')){
+  /* to-do & daftar */
+  const todo=b.classList.contains('b-li')?/^\[\s?\]\s/:/^[-*]\s\[\s?\]\s/;
+  const mt=full.match(todo);
+  if(mt && !b.classList.contains('b-todo')){
     node.deleteData(0,Math.min(mt[0].length,node.data.length));
-    b.classList.remove('b-li');setBlock('b-todo');return;
+    b.classList.remove('b-li'); setBlock('b-todo'); return;
   }
   for(const [re,cls] of LINE){
-    if(cls==='b-todo')continue;
-    const m=txt.match(re);
-    if(m&&!b.classList.contains(cls)){
-      node.deleteData(0,Math.min(m[0].length,node.data.length));
-      setBlock(cls);return;
+    const m2=full.match(re);
+    if(m2 && !b.classList.contains(cls)){
+      node.deleteData(0,Math.min(m2[0].length,node.data.length));
+      setBlock(cls); return;
     }
   }
-  /* 2. inline */
-  const before=node.data.slice(0,off);
+  if(!b.classList.contains('b-li') && !b.classList.contains('b-todo')){
+    const ml=full.match(/^[-*+]\s/);
+    if(ml){ node.deleteData(0,Math.min(ml[0].length,node.data.length)); setBlock('b-li'); return; }
+  }
+  /* wikilink */
+  const before=node.data.slice(0,r.startOffset);
+  const wl=before.match(/\[\[([^\]\n]+)\]\]$/);
+  if(wl){ replaceWith(node,r.startOffset,wl[0].length,'span','wl','[['+wl[1]+']]'); return; }
+  /* inline mark */
   for(const p of INLINE){
-    const m=before.match(p.re);
-    if(!m)continue;
-    const inner=m[p.g||1];
-    const full=m[0].startsWith('*')||!p.g?m[0]:m[0].slice(1);
-    const start=off-full.length;
-    if(start<0)continue;
-    const el=document.createElement(p.tag);
-    if(p.cls)el.className=p.cls;
-    el.textContent=inner;
-    if(p.cls==='wl')el.textContent='[['+inner+']]';
-    const rr=document.createRange();
-    rr.setStart(node,start);rr.setEnd(node,off);
-    rr.deleteContents();rr.insertNode(el);
-    const sp=document.createTextNode('\u200b');
-    el.after(sp);
-    const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
-    sel.removeAllRanges();sel.addRange(nr);saveSel();
+    const m2=before.match(p.re);
+    if(!m2) continue;
+    const inner=m2[p.g||1];
+    const lead=(p.g===2 && m2[1])?m2[1].length:0;
+    const len=m2[0].length-lead;
+    replaceWith(node,r.startOffset,len,MARKTAG[p.m],MARKCLS[p.m]||'',inner);
     return;
   }
 }
-
-/* ════════ PENGHITUNG HURUF ════════ */
-function updateCount(){
-  const el=document.getElementById('count');if(!el)return;
-  const d=docEl();
-  if(!d){el.style.display='none';return;}
-  el.style.display='flex';
-  /* hanya ISI catatan — judul tidak dihitung */
-  let body=(d.innerText!==undefined?d.innerText:d.textContent||'');
-  body=body.replace(/\u200b/g,'').replace(/\u00a0/g,' ');
-  const clean=body.replace(/\s+$/,'').replace(/^\s+/,'');
-  const chars=clean.length;
-  const words=clean?clean.split(/\s+/).filter(x=>x.length).length:0;
-  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span><b>${words.toLocaleString('id')}</b> kata`;
-  const n=findNote(openId);
-  if(n)n.ex=clean.slice(0,80);
+function replaceWith(node,end,len,tag,cls,text){
+  const start=end-len; if(start<0) return;
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  el.textContent=text;
+  const r=document.createRange();
+  r.setStart(node,start); r.setEnd(node,end);
+  r.deleteContents(); r.insertNode(el);
+  const sp=document.createTextNode('\u200b'); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+  updateCount();
 }
 
-/* ════════ BAR MEKANIK ════════ */
-const menus={
-slash:`<div class="pop-h">Sisipkan blok</div>`+[
-  ['i-txt','Teks','','b-p'],['i-hash','Heading 1','#','b-h1'],['i-hash','Heading 2','##','b-h2'],
+/* ════════ MENU ════════ */
+const SLASH=[['i-txt','Teks','','b-p'],['i-hash','Heading 1','#','b-h1'],['i-hash','Heading 2','##','b-h2'],
   ['i-check2','To-do','- [ ]','b-todo'],['i-quote','Kutipan','>','b-quote'],['i-code','Kode','```','b-code'],
-  ['i-txt','Daftar','-','b-li'],['i-info','Callout','> [!]','b-cal'],['i-txt','Pembatas','---','hr']]
-  .map(([i,n,k,c])=>`<button class="pop-i" data-blk="${c}"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
-wl:`<div class="pop-h">Tautkan ke catatan</div>`,
-tag:`<div class="pop-h">Tag</div>
-  <button class="pop-i" data-ins="#hara"><svg class="ico"><use href="#i-tag"/></svg>hara<span class="k">1</span></button>
-  <button class="pop-i" data-ins="#proyek/hara"><svg class="ico"><use href="#i-tag"/></svg>proyek/hara<span class="k">0</span></button>`};
-
+  ['i-txt','Daftar','-','b-li'],['i-info','Callout','> [!]','b-cal'],['i-txt','Pembatas','---','hr']];
+const menus={
+  slash:`<div class="pop-h">Sisipkan blok</div>`+SLASH.map(([i,n,k,c])=>
+    `<button class="pop-i" data-blk="${c}"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
+  tag:`<div class="pop-h">Tag</div>
+    <button class="pop-i" data-ins="#hara"><svg class="ico"><use href="#i-tag"/></svg>hara<span class="k">1</span></button>
+    <button class="pop-i" data-ins="#proyek/hara"><svg class="ico"><use href="#i-tag"/></svg>proyek/hara<span class="k">0</span></button>`
+};
 function wlMenu(){
   let h=`<div class="pop-h">Tautkan ke catatan</div>`;
-  notes.forEach(n=>{h+=`<button class="pop-i" data-wl="${(n.t||'Tanpa judul').replace(/"/g,'&quot;')}">
-    <svg class="ico"><use href="#i-note"/></svg>${n.t||'Tanpa judul'}</button>`;});
+  notes.forEach(n=>{ h+=`<button class="pop-i" data-wl="${(n.t||'Tanpa judul').replace(/"/g,'&quot;')}">
+    <svg class="ico"><use href="#i-note"/></svg>${n.t||'Tanpa judul'}</button>`; });
   h+=`<button class="pop-i pop-new" data-wl="Catatan Baru"><svg class="ico"><use href="#i-plus"/></svg>Buat catatan baru…</button>`;
   return h;
 }
-
-/* mousedown: cegah editor kehilangan fokus */
-document.querySelectorAll('.mb').forEach(b=>{
-  b.addEventListener('pointerdown',e=>{
-    /* cegah tombol merebut fokus -> keyboard tidak terbuka & caret tak hilang.
-       gesek tetap bisa karena preventDefault di sini tidak memblokir scroll bar. */
-    e.preventDefault();
-  });
-  b.onclick=()=>{
-    const m=b.dataset.m;
-    const d=docEl();if(!d)return;
-    /* pulihkan kursor ke posisi terakhir SEBELUM aksi apa pun.
-       tanpa ini caret jatuh ke offset 0 -> "Halo" jadi "aloH" */
-    d.focus({preventScroll:true});
-    restoreSel(false);
-    if(m==='slash'){openPop(menus.slash,b);return;}
-    if(m==='wl'){openPop(wlMenu(),b);return;}
-    if(m==='tag'){openPop(menus.tag,b);return;}
-    const act={
-      h:()=>setBlock('b-h1'),h2:()=>setBlock('b-h2'),quote:()=>setBlock('b-quote'),
-      code:()=>setBlock('b-code'),todo:()=>setBlock('b-todo'),li:()=>setBlock('b-li'),
-      b:()=>toggleMark('b'),i:()=>toggleMark('i'),hl:()=>toggleMark('hl'),
-      strike:()=>toggleMark('s'),icode:()=>toggleMark('code'),
-      cal:()=>setBlock('b-cal'),
-      hr:()=>{const bl=curBlock();if(!bl)return;
-        const hr=document.createElement('div');hr.className='b-div';hr.contentEditable='false';
-        bl.after(hr);
-        const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';
-        hr.after(nb);placeCaretEnd(nb);updateCount();},
-      in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel(false);}},
-      out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel(false);}},
-    }[m];
-    if(act)act();
-  };
-});
-pop.addEventListener('pointerdown',e=>e.preventDefault());
-pop.addEventListener('click',e=>{
-  const t=e.target.closest('[data-blk],[data-ins],[data-wl]');if(!t)return;
-  const dd=docEl();if(dd){dd.focus({preventScroll:true});restoreSel(false);}
-  if(t.dataset.blk==='hr'){const bl=curBlock();if(bl){
-      const hr=document.createElement('div');hr.className='b-div';hr.contentEditable='false';bl.after(hr);
-      const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';hr.after(nb);
-      placeCaretEnd(nb);updateCount();}}
-  else if(t.dataset.blk)setBlock(t.dataset.blk);
-  else if(t.dataset.ins)insertEl(`<span class="tg">${t.dataset.ins}</span>`);
-  else if(t.dataset.wl)insertEl(`<span class="wl">[[${t.dataset.wl}]]</span>`);
-  closeAll();
-});
 function openPop(html,anchor){
-  pop.innerHTML=html;pop.classList.add('on');
+  pop.innerHTML=html; pop.classList.add('on');
   const r=anchor.getBoundingClientRect();
-  pop.style.left=Math.max(12,Math.min(r.left,innerWidth-302))+'px';
+  pop.style.left=Math.max(12,Math.min(r.left,window.innerWidth-302))+'px';
   pop.style.top=Math.max(12,r.top-pop.offsetHeight-10)+'px';
 }
+function insertInline(cls,text){
+  const r=ensureCaret(); if(!r) return;
+  const el=document.createElement('span'); el.className=cls; el.textContent=text;
+  r.deleteContents(); r.insertNode(el);
+  const sp=document.createTextNode('\u00a0'); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+  refresh();
+}
+
+/* ════════ TOMBOL BAR ════════ */
+const ACTIONS={
+  h:()=>setBlock('b-h1'), h2:()=>setBlock('b-h2'), quote:()=>setBlock('b-quote'),
+  code:()=>setBlock('b-code'), todo:()=>setBlock('b-todo'), li:()=>setBlock('b-li'),
+  cal:()=>setBlock('b-cal'), hr:insertHr,
+  b:()=>toggleMark('b'), i:()=>toggleMark('i'), strike:()=>toggleMark('s'),
+  hl:()=>toggleMark('hl'), icode:()=>toggleMark('code'),
+  in:()=>indent(1), out:()=>indent(-1),
+};
+document.querySelectorAll('.mb').forEach(btn=>{
+  /* jangan biarkan tombol merebut fokus dari editor */
+  btn.addEventListener('mousedown',e=>e.preventDefault());
+  btn.addEventListener('click',()=>{
+    const m=btn.dataset.m;
+    const d=docEl(); if(!d) return;
+    focusKeep(); ensureCaret();
+    if(m==='slash'){ openPop(menus.slash,btn); return; }
+    if(m==='wl'){ openPop(wlMenu(),btn); return; }
+    if(m==='tag'){ openPop(menus.tag,btn); return; }
+    const fn=ACTIONS[m]; if(fn) fn();
+  });
+});
+pop.addEventListener('mousedown',e=>e.preventDefault());
+pop.addEventListener('click',e=>{
+  const t=e.target.closest('[data-blk],[data-ins],[data-wl]'); if(!t) return;
+  focusKeep(); ensureCaret();
+  if(t.dataset.blk==='hr') insertHr();
+  else if(t.dataset.blk) setBlock(t.dataset.blk);
+  else if(t.dataset.ins) insertInline('tg',t.dataset.ins);
+  else if(t.dataset.wl) insertInline('wl','[['+t.dataset.wl+']]');
+  closeAll();
+});
 
 /* ── event editor ── */
 const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
-document.addEventListener('input',e=>{
-  if(inDoc(e.target)){autoFormat();cleanEmpty();updateCount();}
-  else if(e.target.classList&&e.target.classList.contains('ed-t'))updateCount();
-});
-document.addEventListener('keyup',e=>{if(inDoc(e.target)){saveSel();syncMarkBtns();}});
 document.addEventListener('beforeinput',e=>{
-  if(!inDoc(e.target))return;
-  if(pending.size&&e.inputType==='insertText')flushPending();
+  if(!inDoc(e.target)) return;
+  if(pending.size && e.inputType==='insertText') flushPending();
 });
-document.addEventListener('mouseup',e=>{
-  if(e.target.closest&&e.target.closest('.ed-doc')){saveSel();syncMarkBtns();}
+document.addEventListener('input',e=>{
+  if(inDoc(e.target)){ autoFormat(); refresh(); }
+  else if(e.target.classList && e.target.classList.contains('ed-t')) updateCount();
 });
-document.addEventListener('selectionchange',()=>syncMarkBtns());
+document.addEventListener('selectionchange',()=>{ if(docEl()) syncBtns(); });
 document.addEventListener('keydown',e=>{
-  if(!inDoc(e.target))return;
-  if(e.key==='Enter'&&!e.shiftKey){
-    const b=curBlock();
-    if(b&&(b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-code'))){
-      e.preventDefault();
-      const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';
-      b.after(nb);placeCaretEnd(nb);updateCount();
-    }
+  if(!inDoc(e.target)) return;
+  const b=curBlock();
+  if(e.key==='Enter' && !e.shiftKey && b &&
+     (b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-cal'))){
+    e.preventDefault();
+    const nb=document.createElement('div'); nb.className='b-p'; nb.innerHTML='<br>';
+    b.after(nb); caretEnd(nb); refresh(); return;
   }
-  if(e.key==='Backspace'){
-    const sel=getSelection();
-    if(sel.rangeCount&&sel.getRangeAt(0).collapsed){
-      const b=curBlock();
-      const atStart=(()=>{const r=sel.getRangeAt(0);
-        const rr=document.createRange();rr.selectNodeContents(b);rr.setEnd(r.startContainer,r.startOffset);
-        return rr.toString().replace(/\u200b/g,'').length===0;})();
-      const fancy=b&&!b.classList.contains('b-p');
-      if(atStart&&fancy){
-        e.preventDefault();
-        const cb=b.querySelector('.cbx');if(cb)cb.remove();
-        b.classList.remove('b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal','done');
-        b.classList.add('b-p');b.style.paddingLeft='';
-        placeCaretEnd(b);updateCount();return;
+  if(e.key==='Tab'){ e.preventDefault(); indent(e.shiftKey?-1:1); return; }
+  if(e.key==='Backspace' && b && !b.classList.contains('b-p')){
+    const s=sel();
+    if(s.rangeCount && s.getRangeAt(0).collapsed){
+      const r=s.getRangeAt(0);
+      const pre=document.createRange();
+      pre.selectNodeContents(b); pre.setEnd(r.startContainer,r.startOffset);
+      if(pre.toString().replace(/[\u200b\u00a0]/g,'')===''){
+        e.preventDefault(); setBlock('b-p');
       }
     }
   }
-  if(e.key==='Tab'){e.preventDefault();
-    const b=curBlock();if(b){const cur=parseInt(b.style.paddingLeft||0);
-    b.style.paddingLeft=Math.max(0,cur+(e.shiftKey?-24:24))+'px';}}
 });
-/* checkbox di dalam editor */
 document.addEventListener('click',e=>{
   const c=e.target.closest('.ed-doc .cbx');
-  if(c){c.classList.toggle('on');c.parentElement.classList.toggle('done',c.classList.contains('on'));}
+  if(c){ c.classList.toggle('on'); c.parentElement.classList.toggle('done',c.classList.contains('on')); }
 });
 
 function closeAll(){pop.classList.remove('on');
