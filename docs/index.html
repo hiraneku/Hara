@@ -559,6 +559,21 @@ const docEl=()=>document.querySelector('.ed-doc');
 const sel=()=>window.getSelection();
 
 /* ---- blok tempat kursor berada ---- */
+const editable=el=>el&&el.classList&&!el.classList.contains('b-div');
+/* blok teks terdekat yang bisa disunting (lompati garis pemisah) */
+function nearestEditable(el){
+  const d=docEl(); if(!d) return null;
+  if(editable(el)) return el;
+  let n=el;
+  while(n&&!editable(n)) n=n.nextElementSibling;
+  if(n) return n;
+  n=el;
+  while(n&&!editable(n)) n=n.previousElementSibling;
+  if(n) return n;
+  const nb=document.createElement('div'); nb.className='b-p';
+  nb.appendChild(document.createElement('br'));
+  d.appendChild(nb); return nb;
+}
 function curBlock(){
   const d=docEl(); if(!d) return null;
   const s=sel();
@@ -570,7 +585,7 @@ function curBlock(){
       if(n===d){
         const kids=d.children;
         const idx=Math.min(r0.startOffset,kids.length-1);
-        if(kids[idx]) return kids[idx];
+        if(kids[idx]) return nearestEditable(kids[idx]);
       }
       if(n.nodeType===3) n=n.parentNode;
       let best=null;
@@ -578,10 +593,10 @@ function curBlock(){
         if(n.classList && BLOCKCLS.some(c=>n.classList.contains(c))) best=n;
         n=n.parentNode;
       }
-      if(best) return best;
+      if(best) return nearestEditable(best);
     }
   }
-  return d.lastElementChild || d.firstElementChild;
+  return nearestEditable(d.lastElementChild||d.firstElementChild);
 }
 /* pastikan editor fokus & ada kursor di dalamnya */
 /* fokuskan editor TANPA kehilangan kursor (focus() kerap meruntuhkan seleksi) */
@@ -606,11 +621,37 @@ function ensureCaret(){
   const d=docEl(); if(!d) return null;
   const s=sel();
   if(!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))){
-    const b=d.lastElementChild||d.firstElementChild;
+    const b=nearestEditable(d.lastElementChild||d.firstElementChild);
     if(!b) return null;
     caretEnd(b);
   }
-  return s.getRangeAt(0);
+  let r=s.getRangeAt(0);
+  /* caret jangan bertumpu pada ELEMEN — di browser itu bikin huruf pertama
+     loncat ke belakang ("Halo" -> "aloH"). Turunkan ke text node nyata. */
+  if(r.collapsed && r.startContainer.nodeType===1){
+    const el=r.startContainer;
+    if(el.classList && el.classList.contains('b-div')){
+      const t=nearestEditable(el); if(t){ caretEnd(t); return sel().getRangeAt(0); }
+    }
+    const kid=el.childNodes[r.startOffset];
+    let tn=null;
+    if(kid && kid.nodeType===3) tn=kid;
+    else if(kid && kid.nodeName==='BR'){
+      tn=document.createTextNode(''); el.insertBefore(tn,kid);
+    } else {
+      const prev=el.childNodes[r.startOffset-1];
+      if(prev && prev.nodeType===3){ 
+        const nr=document.createRange(); nr.setStart(prev,prev.data.length); nr.collapse(true);
+        s.removeAllRanges(); s.addRange(nr); return s.getRangeAt(0);
+      }
+      tn=document.createTextNode('');
+      if(kid) el.insertBefore(tn,kid); else el.appendChild(tn);
+    }
+    if(tn){ const nr=document.createRange(); nr.setStart(tn,0); nr.collapse(true);
+            s.removeAllRanges(); s.addRange(nr); }
+    r=s.getRangeAt(0);
+  }
+  return r;
 }
 function selectContents(node){
   const r=document.createRange(); r.selectNodeContents(node);
@@ -620,14 +661,17 @@ function caretEnd(node){
   /* blok kosong hanya berisi <br> pengganjal. Menaruh caret SESUDAH <br>
      membuat huruf pertama jatuh ke baris berikutnya ("Halo" -> "aloH").
      Ganti <br> dgn text node kosong supaya caret benar-benar di dalam teks. */
-  const only=node.childNodes.length===1&&node.firstChild.nodeName==='BR';
   if(node.childNodes.length===0){
     node.appendChild(document.createElement('br'));
   }
-  if(only||node.childNodes.length===1&&node.firstChild.nodeName==='BR'){
-    /* taruh caret SEBELUM <br> pengganjal, jangan sesudahnya (bikin "aloH"),
-       dan jangan hapus <br>-nya (blok jadi tinggi 0 & tak bisa diklik) */
-    const r=document.createRange(); r.setStart(node,0); r.collapse(true);
+  const only=node.childNodes.length===1&&node.firstChild.nodeName==='BR';
+  if(only){
+    /* blok kosong: <br> DIPERTAHANKAN supaya tinggi baris tetap ada,
+       tapi caret ditaruh di TEXT NODE nyata sebelum <br>. Caret berbasis
+       elemen membuat huruf pertama loncat ("Halo" -> "aloH"). */
+    const t=document.createTextNode('');
+    node.insertBefore(t,node.firstChild);
+    const r=document.createRange(); r.setStart(t,0); r.collapse(true);
     const s=sel(); s.removeAllRanges(); s.addRange(r);
     return;
   }
@@ -638,7 +682,8 @@ function caretEnd(node){
 /* ---- BLOK: ganti jenis, toggle balik ---- */
 function setBlock(cls){
   const d=docEl(); if(!d) return;
-  const b=curBlock(); if(!b) return;
+  let b=curBlock(); if(!b) return;
+  b=nearestEditable(b); if(!b) return;
   if(cls!=='b-p' && b.classList.contains(cls)) cls='b-p';   // toggle balik
   const cb=b.querySelector(':scope > .cbx'); if(cb) cb.remove();
   BLOCKCLS.forEach(c=>b.classList.remove(c));
@@ -651,6 +696,7 @@ function setBlock(cls){
   }
   if(cls!=='b-todo') b.classList.remove('done');
   caretEnd(b);
+  ensureCaret();
   refresh();
 }
 function insertHr(){
@@ -795,9 +841,12 @@ function cleanup(){
     if(b.classList.contains('b-div')) return;
     /* <br> pengganjal hanya boleh ada saat blok benar-benar kosong */
     if(b.textContent.replace(/[\u200b\u00a0]/g,'')!==''){
-      Array.from(b.querySelectorAll(':scope > br')).forEach(br=>{
-        if(!br.nextSibling || !(br.nextSibling.textContent||'').trim()) br.remove();
-        else br.remove();
+      /* blok sudah berisi teks -> <br> pengganjal tidak diperlukan lagi */
+      Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
+      /* buang text node kosong sisa penempatan caret */
+      const s2=sel(); const anc=s2&&s2.anchorNode;
+      Array.from(b.childNodes).forEach(n=>{
+        if(n.nodeType===3 && n.data==='' && n!==anc) n.remove();
       });
     }
     if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
