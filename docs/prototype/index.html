@@ -319,7 +319,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 <!-- BAR MEKANIK -->
 <div class="mech" id="mech">
-  <div class="mech-top"><span class="mech-lbl">Bar mekanik</span><span class="counter" id="count"></span></div>
+  <div class="mech-top"><span class="mech-lbl">Ketuk untuk mengaktifkan · ketuk catatan untuk mengetik</span><span class="counter" id="count"></span></div>
   <div class="mech-in">
     <button class="mb acc" data-m="slash">/</button><div class="mb-sep"></div>
     <button class="mb" data-m="h">H1</button><button class="mb" data-m="h2">H2</button>
@@ -519,7 +519,7 @@ function go(v){
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
   document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
-  closeAll();savedRange=null;pending.clear();updateCount();syncMarkBtns();
+  closeAll();savedRange=null;pending.clear();off.clear();updateCount();syncMarkBtns();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
@@ -556,13 +556,15 @@ function curBlock(){
 }
 function saveSel(){const s=getSelection();
   if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))savedRange=s.getRangeAt(0).cloneRange();}
-function restoreSel(){
+function restoreSel(focus){
   const d=docEl();if(!d)return null;
-  d.focus();
+  if(focus)d.focus();
   const s=getSelection();
+  /* kursor yang SEDANG hidup selalu diutamakan; savedRange hanya cadangan
+     saat fokus sudah pindah (mis. menekan tombol di bar) */
+  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))return s.getRangeAt(0);
   if(savedRange&&d.contains(savedRange.startContainer)){
     s.removeAllRanges();s.addRange(savedRange);return savedRange;}
-  if(s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))return s.getRangeAt(0);
   const b=d.lastElementChild||d.firstElementChild;
   if(!b)return null;
   const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
@@ -576,7 +578,7 @@ function caretAfter(node){
 /* ════════ MARK (bold/italic/dll) — bisa di-toggle & digabung ════════ */
 const MARKS={b:['b',''],i:['i',''],s:['s',''],hl:['span','hl'],code:['code','ic']};
 const MARKSEL={b:'b,strong',i:'i,em',s:'s',hl:'.hl',code:'code.ic'};
-let pending=new Set();
+let pending=new Set();let off=new Set();
 
 function mkMark(m){const [t,c]=MARKS[m];const e=document.createElement(t);if(c)e.className=c;return e;}
 /* mark apa saja yang sedang membungkus kursor */
@@ -606,6 +608,7 @@ function syncMarkBtns(){
   if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))
     act=marksAt(s.getRangeAt(0).startContainer);
   pending.forEach(m=>act.add(m));
+  off.forEach(m=>act.delete(m));
   Object.keys(MARKS).forEach(m=>{
     const btn=document.querySelector('.mb[data-m="'+m+'"]');
     if(btn)btn.classList.toggle('active',act.has(m));
@@ -617,7 +620,7 @@ function stripMark(frag,m){
     while(e.firstChild)e.parentNode.insertBefore(e.firstChild,e);e.remove();});
 }
 function toggleMark(m){
-  const r=restoreSel();if(!r)return;
+  const r=restoreSel(false);if(!r)return;
   const on=marksAt(r.startContainer).has(m);
 
   if(!r.collapsed){
@@ -658,35 +661,67 @@ function toggleMark(m){
     saveSel();
   }else{
     /* kursor saja: nyalakan/matikan untuk ketikan berikutnya */
-    if(pending.has(m)){        /* sedang menyala tapi belum diketik -> matikan */
-      pending.delete(m);
-      cleanEmpty();syncMarkBtns();updateCount();return;
-    }
-    if(on){
-      const host=hostFor(m,r.startContainer);
-      if(host){ /* keluar dari format */
-        const sp=document.createTextNode('\u200b');
-        host.after(sp);
-        const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
-        getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();
-      }
-      pending.delete(m);
-    }else{
-      pending.add(m);
-    }
+    /* murni pengaturan status — DOM tidak disentuh, keyboard tidak dipaksa muncul */
+    const aktif=(marksAt(r.startContainer).has(m)||pending.has(m))&&!off.has(m);
+    if(aktif){pending.delete(m);if(marksAt(r.startContainer).has(m))off.add(m);}
+    else{off.delete(m);pending.add(m);}
   }
   cleanEmpty();syncMarkBtns();updateCount();
 }
-/* ketikan berikutnya dibungkus mark yang sedang menyala */
+/* pecah keluar dari elemen mark yang sedang dimatikan */
+function splitOut(r){
+  const d=docEl();
+  let node=r.startContainer,offset=r.startOffset;
+  if(node.nodeType===3){
+    const t=node;
+    if(offset<t.length)node=t.splitText(offset);
+    else node=t.nextSibling?t.nextSibling:(()=>{const n=document.createTextNode('');t.after(n);return n;})();
+    offset=0;
+  }
+  /* naik selama masih di dalam mark yang harus dimatikan */
+  let guard=0;
+  while(guard++<20){
+    let p=node.parentNode;
+    if(!p||p===d)break;
+    const isOff=Array.from(off).some(m=>p.matches&&p.matches(MARKSEL[m]));
+    if(!isOff&&!(p.matches&&p.matches(INLINE_SEL)&&Array.from(off).some(m=>p.closest(MARKSEL[m]))))
+      { if(!isOff)break; }
+    /* pindahkan node dan saudara sesudahnya keluar dari p */
+    const after=p.cloneNode(false);
+    let sib=node;
+    while(sib){const nx=sib.nextSibling;after.appendChild(sib);sib=nx;}
+    p.after(after);
+    if(!p.textContent.replace(/[\u200b\u00a0]/g,''))p.remove();
+    node=after;
+    if(!after.textContent.replace(/[\u200b\u00a0]/g,'')){
+      const holder=document.createTextNode('');after.replaceWith(holder);node=holder;
+    }
+  }
+  return node;
+}
+/* ketikan berikutnya memakai mark yang sedang menyala */
 function applyPending(txt){
-  const r=restoreSel();if(!r)return false;
-  let inner=document.createTextNode(txt);
+  const r=restoreSel(false);if(!r)return false;
+  r.deleteContents();
+  /* mark yang masih aktif di posisi ini dan TIDAK sedang dimatikan */
+  const keep=[];
+  if(off.size){
+    marksAt(r.startContainer).forEach(m=>{if(!off.has(m))keep.push(m);});
+  }
+  let anchor=off.size?splitOut(r):null;
+  const inner=document.createTextNode(txt);
   let node=inner;
+  keep.forEach(m=>{const e=mkMark(m);e.appendChild(node);node=e;});
   pending.forEach(m=>{const e=mkMark(m);e.appendChild(node);node=e;});
-  r.deleteContents();r.insertNode(node);
+  if(anchor){
+    if(anchor.nodeType===3&&anchor.data===''){anchor.replaceWith(node);}
+    else anchor.parentNode.insertBefore(node,anchor);
+  }else{
+    const rr=restoreSel(false);rr.insertNode(node);
+  }
   const nr=document.createRange();nr.setStart(inner,inner.length);nr.collapse(true);
   getSelection().removeAllRanges();getSelection().addRange(nr);
-  pending.clear();saveSel();return true;
+  pending.clear();off.clear();saveSel();return true;
 }
 function wrapSel(tag,cls){
   const m=cls==='hl'?'hl':(cls==='ic'?'code':tag);
@@ -695,7 +730,7 @@ function wrapSel(tag,cls){
 /* ── ubah jenis blok ── */
 const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo'];
 function setBlock(cls){
-  restoreSel();const b=curBlock();if(!b)return;
+  restoreSel(false);const b=curBlock();if(!b)return;
   const wasTodo=b.classList.contains('b-todo');
   const cb=b.querySelector('.cbx');if(cb)cb.remove();
   BLOCKCLS.forEach(c=>b.classList.remove(c));
@@ -712,12 +747,12 @@ function placeCaretEnd(b){
   const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
 }
 function insertText(t){
-  const r=restoreSel();if(!r)return;
+  const r=restoreSel(true);if(!r)return;
   r.deleteContents();
   const n=document.createTextNode(t);r.insertNode(n);caretAfter(n);updateCount();
 }
 function insertEl(html){
-  const r=restoreSel();if(!r)return;
+  const r=restoreSel(true);if(!r)return;
   const tmp=document.createElement('div');tmp.innerHTML=html;
   const el=tmp.firstElementChild;
   r.deleteContents();r.insertNode(el);
@@ -871,7 +906,11 @@ function wlMenu(){
 
 /* mousedown: cegah editor kehilangan fokus */
 document.querySelectorAll('.mb').forEach(b=>{
-  b.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')e.preventDefault();});
+  b.addEventListener('pointerdown',e=>{
+    /* cegah tombol merebut fokus -> keyboard tidak terbuka & caret tak hilang.
+       gesek tetap bisa karena preventDefault di sini tidak memblokir scroll bar. */
+    e.preventDefault();
+  });
   b.onclick=()=>{
     const m=b.dataset.m;
     if(m==='slash'){openPop(menus.slash,b);return;}
@@ -882,8 +921,8 @@ document.querySelectorAll('.mb').forEach(b=>{
       code:()=>setBlock('b-code'),todo:()=>setBlock('b-todo'),li:()=>setBlock('b-li'),
       b:()=>toggleMark('b'),i:()=>toggleMark('i'),hl:()=>toggleMark('hl'),
       strike:()=>toggleMark('s'),
-      in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel();}},
-      out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel();}},
+      in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel(false);}},
+      out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel(false);}},
     }[m];
     if(act)act();
   };
@@ -912,7 +951,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('keyup',e=>{if(inDoc(e.target)){saveSel();syncMarkBtns();}});
 document.addEventListener('beforeinput',e=>{
   if(!inDoc(e.target))return;
-  if(pending.size&&e.inputType==='insertText'&&e.data){
+  if((pending.size||off.size)&&e.inputType==='insertText'&&e.data){
     e.preventDefault();
     if(applyPending(e.data)){autoFormat();cleanEmpty();updateCount();syncMarkBtns();}
   }
