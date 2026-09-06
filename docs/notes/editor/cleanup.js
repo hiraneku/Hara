@@ -1,13 +1,13 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260906153652';
-import { renumber } from './blocks.js?v=20260906153652';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260906153652';
-import { state, save } from '../../core/store.js?v=20260906153652';
-import { findNote } from '../model.js?v=20260906153652';
-import { cur } from '../../core/router.js?v=20260906153652';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260906153652';
-import { GROUPS } from '../bar/config.js?v=20260906153652';
-import { bersihkanSrc } from './image.js?v=20260906153652';
+import { docEl, sel, curBlock } from './caret.js?v=20260906154433';
+import { renumber } from './blocks.js?v=20260906154433';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260906154433';
+import { state, save } from '../../core/store.js?v=20260906154433';
+import { findNote } from '../model.js?v=20260906154433';
+import { cur } from '../../core/router.js?v=20260906154433';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260906154433';
+import { GROUPS } from '../bar/config.js?v=20260906154433';
+import { bersihkanSrc } from './image.js?v=20260906154433';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

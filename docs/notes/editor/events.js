@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906153652';
-import { setBlock, indent } from './blocks.js?v=20260906153652';
-import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906153652';
-import { autoFormat } from './markdown.js?v=20260906153652';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906153652';
-import { onTitle } from '../model.js?v=20260906153652';
-import { bungkusFontPending, fontPending } from './font.js?v=20260906153652';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906153652';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906154433';
+import { setBlock, indent } from './blocks.js?v=20260906154433';
+import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906154433';
+import { autoFormat } from './markdown.js?v=20260906154433';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906154433';
+import { onTitle } from '../model.js?v=20260906154433';
+import { bungkusFontPending, fontPending, adaPendingNone } from './font.js?v=20260906154433';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906154433';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -26,16 +26,25 @@ export function bindEditor() {
     if(!b) return;
     if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!==''){
       /* blok sudah berisi teks: kalau ada font menunggu, bungkus di sini */
-      if (fontPending()) {
+      if (fontPending() || adaPendingNone()) {
         e.preventDefault();
-        const el = bungkusFontPending();
-        if (el) {
-          const s2 = sel(); const r2 = s2.getRangeAt(0);
-          const t2 = r2.startContainer;
-          if (t2.nodeType === 3) { t2.insertData(r2.startOffset, e.data);
-            const nr2 = document.createRange();
-            nr2.setStart(t2, r2.startOffset + e.data.length); nr2.collapse(true);
-            s2.removeAllRanges(); s2.addRange(nr2); }
+        /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
+           hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
+        bungkusFontPending();
+        const s2 = sel();
+        if (s2 && s2.rangeCount) {
+          const r2 = s2.getRangeAt(0);
+          let t2 = r2.startContainer, o2 = r2.startOffset;
+          if (t2.nodeType !== 3) {
+            const baru = document.createTextNode('');
+            const ref = t2.childNodes[o2] || null;
+            if (ref) t2.insertBefore(baru, ref); else t2.appendChild(baru);
+            t2 = baru; o2 = 0;
+          }
+          t2.insertData(o2, e.data);
+          const nr2 = document.createRange();
+          nr2.setStart(t2, o2 + e.data.length); nr2.collapse(true);
+          s2.removeAllRanges(); s2.addRange(nr2);
           autoFormat(); refresh();
         }
       }
@@ -56,7 +65,7 @@ export function bindEditor() {
 
     e.preventDefault();
     /* font yang menunggu -> bungkus dulu, huruf masuk ke dalamnya */
-    if (fontPending()) { const el = bungkusFontPending(); if (el) { r = sel().getRangeAt(0); } }
+    if (fontPending() || adaPendingNone()) { bungkusFontPending(); r = sel().getRangeAt(0); }
     /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */
     Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
 

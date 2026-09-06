@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260906153652';
-import { refresh } from './cleanup.js?v=20260906153652';
+import { docEl, sel, curBlock } from './caret.js?v=20260906154433';
+import { refresh } from './cleanup.js?v=20260906154433';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -130,8 +130,10 @@ function lepasDalam(frag) {
 /* Font yang menunggu dipakai untuk ketikan berikutnya.
    Diakses lewat fungsi, bukan variabel — nilai `let` yang diekspor tidak
    ikut terbarui di modul yang mengimpornya. */
+const NONE = '\u0000none';        /* penanda "kembali ke bawaan" */
 let _pending = null;
-export const fontPending = () => _pending;
+export const fontPending = () => (_pending === NONE ? '' : _pending);
+export const adaPendingNone = () => _pending === NONE;
 export const bersihkanPending = () => { _pending = null; };
 
 export function setFont(id) {
@@ -149,20 +151,10 @@ export function setFont(id) {
     if (id) { _pending = id; refresh(); return; }
 
     /* ── "Bawaan" ──
-       Mengosongkan niat saja tidak cukup: kalau kursor berada DI DALAM
-       span font, ketikan berikutnya tetap masuk ke span itu dan tampak
-       tidak berubah. Jadi caret harus dikeluarkan dari bungkusnya. */
-    _pending = null;
-    const host = fontAround(r.startContainer);
-    if (host) {
-      const sp = document.createTextNode('\u200b');
-      host.after(sp);
-      const nr = document.createRange();
-      nr.setStart(sp, 1);
-      nr.collapse(true);
-      s.removeAllRanges();
-      s.addRange(nr);
-    }
+       Caret sedang di dalam span font? Jangan cuma memindahkan caret ke
+       luar — browser akan menariknya kembali masuk. Catat niatnya, lalu
+       pecah keluar tepat saat huruf pertama diketik. */
+    _pending = fontAround(r.startContainer) ? NONE : null;
     refresh();
     return;
   }
@@ -215,7 +207,45 @@ export function setFont(id) {
 
 /* Bungkus karakter yang baru diketik dengan font yang menunggu.
    Dipanggil dari handler beforeinput sebelum karakter disisipkan. */
+/* Pecah keluar dari span font di posisi caret, lalu kembalikan titik
+   sisip yang berada DI LUAR span. */
+export function keluarDariFont() {
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const r = s.getRangeAt(0);
+  const host = fontAround(r.startContainer);
+  if (!host) return false;
+
+  /* pisahkan isi span jadi sebelum-caret dan sesudah-caret */
+  const sisa = document.createRange();
+  sisa.selectNodeContents(host);
+  try { sisa.setStart(r.startContainer, r.startOffset); } catch (e) { return false; }
+  const buntut = sisa.extractContents();
+
+  const titik = document.createTextNode('');
+  host.after(titik);
+  if (buntut.textContent !== '') {
+    const kanan = host.cloneNode(false);
+    kanan.appendChild(buntut);
+    titik.after(kanan);
+  }
+  if (host.textContent === '') host.remove();
+
+  const nr = document.createRange();
+  nr.setStart(titik, 0);
+  nr.collapse(true);
+  s.removeAllRanges();
+  s.addRange(nr);
+  return true;
+}
+
 export function bungkusFontPending() {
+  /* niat "kembali ke bawaan": keluar dari span, tanpa membuat span baru */
+  if (_pending === NONE) {
+    _pending = null;
+    keluarDariFont();
+    return null;
+  }
   if (!_pending) return null;
   const id = _pending;
   _pending = null;

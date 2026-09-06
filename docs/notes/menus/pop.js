@@ -1,13 +1,13 @@
 /* Popup melayang di atas bar. */
-import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260906153652';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260906153652';
-import { insertInline } from './insert.js?v=20260906153652';
-import { focusKeep } from '../bar/render.js?v=20260906153652';
-import { applyLink } from './link.js?v=20260906153652';
-import { setFont } from '../editor/font.js?v=20260906153652';
-import { setCallout } from '../editor/blocks.js?v=20260906153652';
-import { snap as snapFont } from '../editor/history.js?v=20260906153652';
-import { getar } from '../bar/prefs.js?v=20260906153652';
+import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260906154433';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260906154433';
+import { insertInline } from './insert.js?v=20260906154433';
+import { focusKeep } from '../bar/render.js?v=20260906154433';
+import { applyLink } from './link.js?v=20260906154433';
+import { setFont } from '../editor/font.js?v=20260906154433';
+import { setCallout } from '../editor/blocks.js?v=20260906154433';
+import { snap as snapFont } from '../editor/history.js?v=20260906154433';
+import { getar } from '../bar/prefs.js?v=20260906154433';
 
 export const pop = () => document.getElementById('pop');
 
@@ -57,7 +57,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260906153652').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260906154433').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -66,7 +66,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260906153652').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260906154433').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -76,7 +76,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260906153652').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260906154433').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 

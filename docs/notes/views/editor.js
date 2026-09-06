@@ -1,8 +1,8 @@
 /* Layar editor: judul, properti, isi catatan. */
-import { state } from '../../core/store.js?v=20260906153652';
-import { findNote } from '../model.js?v=20260906153652';
-import { esc } from '../../core/dom.js?v=20260906153652';
-import { welcomeBody, panels } from './welcome.js?v=20260906153652';
+import { state } from '../../core/store.js?v=20260906154433';
+import { findNote } from '../model.js?v=20260906154433';
+import { esc } from '../../core/dom.js?v=20260906154433';
+import { welcomeBody, panels } from './welcome.js?v=20260906154433';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
