@@ -3,287 +3,322 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hara — Prototipe Desain</title>
+<title>Hara — Prototipe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-/* ─────────────  TOKEN  ───────────── */
 :root{
   --bg:#FBFAF8; --surface:#FFFFFF; --sunken:#F3F1ED;
   --border:#E6E2DB; --border-strong:#D4CFC5;
   --text:#1C1B18; --muted:#6B675F; --faint:#9A958B;
   --accent:#3F6F5B; --accent-weak:#E8F0EB; --danger:#A34434;
+  --link:#2F6E8F; --link-dead:#B0715E;
   --m-notes:#3F6F5B; --m-rem:#B5723A; --m-task:#4A6B8A;
   --r-sm:6px; --r-md:10px; --r-lg:14px;
   --shadow-pop:0 4px 16px rgba(28,27,24,.08);
   --shadow-modal:0 16px 48px rgba(28,27,24,.16);
   --ease:cubic-bezier(.2,.6,.2,1);
-  --sans:'Inter',system-ui,-apple-system,sans-serif;
-  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
 }
 [data-theme=dark]{
   --bg:#161512; --surface:#1E1D19; --sunken:#272621;
   --border:#33312B; --border-strong:#45423A;
   --text:#EDEAE3; --muted:#A29D93; --faint:#7C776D;
   --accent:#7FB399; --accent-weak:#22302A; --danger:#D9836F;
+  --link:#7FB0CC; --link-dead:#C98F79;
   --m-notes:#7FB399; --m-rem:#D19A63; --m-task:#7FA3C4;
-  --shadow-pop:0 4px 16px rgba(0,0,0,.35);
-  --shadow-modal:0 16px 48px rgba(0,0,0,.5);
+  --shadow-pop:0 4px 16px rgba(0,0,0,.35); --shadow-modal:0 16px 48px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
-  font-family:var(--sans);background:var(--bg);color:var(--text);
-  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
-  transition:background .18s var(--ease),color .18s var(--ease);
-}
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
 input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+@media (prefers-reduced-motion:reduce){*{transition-duration:0s!important;animation-duration:0s!important}}
 .ico{width:18px;height:18px;stroke:currentColor;stroke-width:1.5;fill:none;
   stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-/* ─────────────  SHELL  ───────────── */
 .app{display:flex;min-height:100vh}
-
-/* sidebar (desktop) */
-.side{width:240px;flex:none;border-right:1px solid var(--border);
-  padding:20px 12px;display:flex;flex-direction:column;gap:2px;
-  position:sticky;top:0;height:100vh;background:var(--bg)}
-.brand{font-family:var(--serif);font-size:24px;letter-spacing:-.01em;
-  padding:4px 10px 18px;display:flex;align-items:center;gap:9px}
-.brand-dot{width:9px;height:9px;border-radius:999px;background:var(--accent);flex:none}
+.side{width:240px;flex:none;border-right:1px solid var(--border);padding:20px 12px;
+  display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;background:var(--bg)}
+.brand{font-family:var(--serif);font-size:24px;padding:4px 10px 18px;display:flex;align-items:center;gap:9px}
+.brand-dot{width:9px;height:9px;border-radius:999px;background:var(--accent)}
 .nav-i{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:var(--r-md);
-  color:var(--muted);font-size:14px;font-weight:450;
-  transition:background .12s var(--ease),color .12s var(--ease);width:100%;text-align:left}
+  color:var(--muted);font-size:14px;transition:.12s var(--ease);width:100%}
 .nav-i:hover{background:var(--sunken);color:var(--text)}
 .nav-i.on{background:var(--accent-weak);color:var(--accent);font-weight:500}
+.nav-i .ct{margin-left:auto;font-size:12px;color:var(--faint)}
 .nav-sep{height:1px;background:var(--border);margin:12px 10px}
-.nav-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--faint);padding:0 10px 6px;margin-top:4px}
 .side-foot{margin-top:auto}
-
-/* main */
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.head{height:56px;flex:none;display:flex;align-items:center;gap:12px;
-  padding:0 20px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--bg);z-index:20}
-.head h1{font-family:var(--serif);font-size:22px;font-weight:400;letter-spacing:-.01em}
-.head-sp{flex:1}
+.head{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 20px;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:20}
+.head h1{font-family:var(--serif);font-size:22px;font-weight:400}
+.sp{flex:1}
 .iconbtn{width:36px;height:36px;display:grid;place-items:center;border-radius:var(--r-md);
-  color:var(--muted);transition:background .12s var(--ease),color .12s var(--ease)}
+  color:var(--muted);transition:.12s var(--ease)}
 .iconbtn:hover{background:var(--sunken);color:var(--text)}
 .wrap{flex:1;overflow-y:auto}
-.page{max-width:880px;margin:0 auto;padding:28px 32px 96px}
+.page{max-width:880px;margin:0 auto;padding:28px 32px 120px}
 
-/* ─────────────  ATOM  ───────────── */
 .btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;
-  border-radius:var(--r-md);font-size:14px;font-weight:500;
-  transition:background .12s var(--ease),opacity .12s var(--ease)}
+  border-radius:var(--r-md);font-size:14px;font-weight:500;transition:.12s var(--ease)}
 .btn-pri{background:var(--accent);color:#fff}
 [data-theme=dark] .btn-pri{color:#131711}
 .btn-pri:hover{opacity:.9}
-.btn-sec{background:var(--sunken);color:var(--text)}
+.btn-sec{background:var(--sunken)}
 .btn-sec:hover{background:var(--border)}
-.btn-gho{color:var(--muted)}
-.btn-gho:hover{background:var(--sunken);color:var(--text)}
 .chip{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:var(--r-sm);
   background:var(--sunken);color:var(--muted);font-size:12px;font-weight:500}
 .chip-a{background:var(--accent-weak);color:var(--accent)}
 .overline{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
-.sec{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
-.sec h2{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.01em}
-.sec .lnk{margin-left:auto;font-size:13px;color:var(--faint);font-weight:450}
-.sec .lnk:hover{color:var(--accent)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
-
-/* baris daftar */
-.row{display:flex;align-items:center;gap:14px;padding:13px 16px;width:100%;text-align:left;
-  border-bottom:1px solid var(--border);transition:background .12s var(--ease);min-height:64px}
+.row{display:flex;align-items:center;gap:14px;padding:13px 16px;width:100%;
+  border-bottom:1px solid var(--border);transition:.12s var(--ease);min-height:64px}
 .row:last-child{border-bottom:none}
 .row:hover{background:var(--sunken)}
 .row-b{flex:1;min-width:0}
-.row-t{font-size:15px;font-weight:450;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row-s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;margin-top:2px}
-.row-m{font-size:12px;color:var(--faint);flex:none;font-variant-numeric:tabular-nums}
-.row-m.late{color:var(--danger);font-weight:500}
-.bar{width:3px;align-self:stretch;border-radius:999px;flex:none;margin:-13px 0;opacity:.8}
+.row-t{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.row-m{font-size:12px;color:var(--faint);flex:none}
+.empty{text-align:center;padding:64px 20px}
+.empty h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.empty p{font-size:14px;color:var(--muted);margin-bottom:20px;max-width:340px;margin-inline:auto;line-height:1.6}
+.sec{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
+.sec h2{font-size:13px;font-weight:600;color:var(--muted)}
+.hello{margin-bottom:32px}
+.hello .d{font-family:var(--serif);font-size:30px;line-height:1.2}
+.hello .s{font-size:14px;color:var(--muted);margin-top:5px}
 
-/* checkbox */
-.cbx{width:20px;height:20px;border:1.5px solid var(--border-strong);border-radius:999px;
-  flex:none;display:grid;place-items:center;transition:all .12s var(--ease)}
+/* ── EDITOR ── */
+.ed{max-width:34rem;margin:0 auto;padding:28px 24px 160px}
+.ed-t{font-family:var(--serif);font-size:30px;line-height:1.25;width:100%;border:none;
+  background:none;outline:none}
+/* properties */
+.props{margin:16px 0 6px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px 0}
+.prop{display:flex;align-items:center;gap:12px;padding:6px 2px;font-size:13px}
+.prop-k{width:104px;flex:none;color:var(--faint);display:flex;align-items:center;gap:7px}
+.prop-k .ico{width:14px;height:14px}
+.prop-v{color:var(--text)}
+.prop-add{font-size:12px;color:var(--faint);padding:6px 2px}
+.prop-add:hover{color:var(--accent)}
+/* blok */
+.blocks{margin-top:18px}
+.blk{position:relative;padding:3px 0}
+.blk-h{position:absolute;left:-30px;top:5px;width:22px;height:22px;display:grid;place-items:center;
+  border-radius:5px;color:var(--faint);opacity:0;transition:.12s var(--ease);cursor:grab}
+.blk:hover .blk-h{opacity:1}
+.blk-h:hover{background:var(--sunken);color:var(--text)}
+.blk-h .ico{width:14px;height:14px}
+.b-h1{font-family:var(--serif);font-size:25px;line-height:1.3;margin:18px 0 4px}
+.b-h2{font-family:var(--serif);font-size:20px;line-height:1.3;margin:16px 0 2px}
+.b-p{font-size:16px;line-height:1.65}
+.b-quote{border-left:2.5px solid var(--border-strong);padding-left:14px;color:var(--muted);
+  font-size:16px;line-height:1.65}
+.b-code{background:var(--sunken);border-radius:var(--r-sm);padding:12px 14px;font-family:var(--mono);
+  font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
+.b-todo{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.65}
+.b-li{display:flex;gap:10px;font-size:16px;line-height:1.65}
+.b-li::before{content:'•';color:var(--faint);flex:none}
+.b-cal{background:var(--accent-weak);border-left:2.5px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;
+  padding:12px 14px;font-size:15px;line-height:1.6}
+.b-cal .t{font-weight:600;color:var(--accent);font-size:13px;display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.b-div{height:1px;background:var(--border);margin:18px 0}
+.cbx{width:19px;height:19px;border:1.5px solid var(--border-strong);border-radius:999px;flex:none;
+  display:grid;place-items:center;margin-top:3px;transition:.12s var(--ease)}
 .cbx:hover{border-color:var(--accent)}
 .cbx.on{background:var(--accent);border-color:var(--accent)}
-.cbx svg{width:12px;height:12px;stroke:#fff;stroke-width:2.5;opacity:0;fill:none;
+.cbx svg{width:11px;height:11px;stroke:#fff;stroke-width:2.5;fill:none;opacity:0;
   stroke-linecap:round;stroke-linejoin:round}
 [data-theme=dark] .cbx.on svg{stroke:#131711}
 .cbx.on svg{opacity:1}
-.done .row-t{text-decoration:line-through;color:var(--faint)}
+.b-todo.done span{text-decoration:line-through;color:var(--faint)}
+/* inline */
+.wl{color:var(--link);cursor:pointer;border-bottom:1px solid transparent}
+.wl:hover{border-bottom-color:var(--link)}
+.wl.dead{color:var(--link-dead);border-bottom:1px dashed var(--link-dead)}
+.tg{color:var(--accent);cursor:pointer;font-weight:500}
+.hl{background:#F3E7B8;border-radius:3px;padding:0 3px}
+[data-theme=dark] .hl{background:#4A4222;color:#F0E5C0}
+code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:.87em}
+/* blok tersemat */
+.emb{border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;background:var(--surface)}
+.emb-h{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:6px;margin-bottom:7px;
+  letter-spacing:.06em;text-transform:uppercase}
+.emb-h .ico{width:12px;height:12px}
 
-/* kosong */
-.empty{text-align:center;padding:56px 20px}
-.empty h3{font-size:15px;font-weight:600;margin-bottom:5px}
-.empty p{font-size:14px;color:var(--muted);margin-bottom:18px}
+/* backlink & graph */
+.panel{max-width:34rem;margin:36px auto 0;border-top:1px solid var(--border);padding-top:22px}
+.panel-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.panel-h .n{background:var(--sunken);color:var(--faint);border-radius:999px;font-size:11px;padding:1px 7px;font-weight:600}
+.bl{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px;
+  background:var(--surface);transition:.12s var(--ease);display:block;width:100%}
+.bl:hover{border-color:var(--border-strong)}
+.bl-t{font-size:14px;font-weight:500;margin-bottom:4px}
+.bl-c{font-size:13px;color:var(--muted);line-height:1.55}
+.bl-c b{background:var(--accent-weak);color:var(--accent);font-weight:500;border-radius:3px;padding:0 3px}
+.unl{display:flex;align-items:center;gap:10px;border:1px dashed var(--border-strong);border-radius:var(--r-md);
+  padding:11px 14px;font-size:13px;color:var(--muted)}
+.unl .btn{height:28px;font-size:12.5px;margin-left:auto;flex:none}
 
-/* ─────────────  BERANDA  ───────────── */
-.hello{margin-bottom:32px}
-.hello .d{font-family:var(--serif);font-size:30px;letter-spacing:-.01em;line-height:1.2}
-.hello .s{font-size:14px;color:var(--muted);margin-top:5px}
-.blk{margin-bottom:30px}
+/* ── BAR MEKANIK (di atas keyboard) ── */
+.mech{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--surface);
+  border-top:1px solid var(--border);display:none;padding-bottom:env(safe-area-inset-bottom)}
+.mech.on{display:block}
+.mech-in{display:flex;gap:2px;overflow-x:auto;padding:7px 8px;scrollbar-width:none}
+.mech-in::-webkit-scrollbar{display:none}
+.mb{flex:none;min-width:40px;height:38px;padding:0 11px;border-radius:var(--r-sm);
+  display:grid;place-items:center;color:var(--muted);font-size:14px;font-weight:600;
+  transition:.12s var(--ease);font-family:var(--mono);white-space:nowrap}
+.mb:hover,.mb:active{background:var(--sunken);color:var(--text)}
+.mb.acc{color:var(--accent)}
+.mb-sep{width:1px;background:var(--border);margin:6px 5px;flex:none}
+.mech-lbl{font-size:10.5px;color:var(--faint);padding:0 10px 6px;letter-spacing:.04em}
 
-/* ─────────────  EDITOR  ───────────── */
-.ed{max-width:34rem;margin:0 auto;padding:32px 24px 120px}
-.ed-t{font-family:var(--serif);font-size:30px;line-height:1.25;width:100%;border:none;
-  background:none;outline:none;letter-spacing:-.01em}
-.ed-t::placeholder{color:var(--faint)}
-.ed-tags{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 20px}
-.ed-b{width:100%;border:none;background:none;outline:none;font-size:16px;line-height:1.65;
-  resize:none;min-height:340px;color:var(--text)}
-.ed-b::placeholder{color:var(--faint)}
-.saved{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:6px}
-.saved .dot{width:5px;height:5px;border-radius:999px;background:var(--accent)}
+/* popup: slash & wikilink & palette */
+.pop{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-modal);z-index:80;overflow:hidden;display:none;width:290px}
+.pop.on{display:block}
+.pop-h{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);
+  padding:10px 13px 6px;font-weight:600}
+.pop-i{display:flex;align-items:center;gap:11px;padding:9px 13px;font-size:14px;transition:.1s var(--ease);width:100%}
+.pop-i:hover,.pop-i.sel{background:var(--sunken)}
+.pop-i .k{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.pop-i .sub{font-size:12px;color:var(--faint)}
+.pop-i .ico{color:var(--faint)}
+.pop-new{color:var(--accent)}
 
-/* ─────────────  TABS  ───────────── */
-.tabs{display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:20px}
-.tab{padding:0 0 11px;font-size:14px;font-weight:450;color:var(--muted);
-  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .12s var(--ease)}
-.tab:hover{color:var(--text)}
-.tab.on{color:var(--text);font-weight:500;border-bottom-color:var(--accent)}
-.daygrp{font-size:12px;font-weight:600;color:var(--faint);letter-spacing:.04em;
-  padding:16px 2px 8px;text-transform:uppercase}
-.daygrp:first-child{padding-top:0}
+/* graph */
+.graph{border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);height:190px;position:relative;overflow:hidden}
+.gnode{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;
+  align-items:center;gap:5px;cursor:pointer}
+.gdot{width:11px;height:11px;border-radius:999px;background:var(--border-strong)}
+.gnode.me .gdot{width:15px;height:15px;background:var(--accent)}
+.gnode span{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.gnode.me span{color:var(--text);font-weight:500}
 
-/* ─────────────  CARI  ───────────── */
-.srch{display:flex;align-items:center;gap:10px;background:var(--sunken);
-  border:1px solid transparent;border-radius:var(--r-md);padding:0 13px;height:42px;
-  transition:border-color .12s var(--ease)}
-.srch:focus-within{border-color:var(--accent)}
-.srch input{flex:1;border:none;background:none;outline:none;font-size:15px}
-.srch input::placeholder{color:var(--faint)}
-mark{background:var(--accent-weak);color:var(--accent);border-radius:3px;padding:0 2px;font-weight:500}
-.kbd{font-size:11px;font-family:var(--sans);color:var(--faint);background:var(--bg);
-  border:1px solid var(--border);border-radius:4px;padding:2px 5px;font-weight:500}
-
-/* ─────────────  FAB + SHEET  ───────────── */
 .fab{position:fixed;right:24px;bottom:24px;width:52px;height:52px;border-radius:999px;
-  background:var(--accent);color:#fff;display:grid;place-items:center;
-  box-shadow:var(--shadow-pop);z-index:40;transition:transform .12s var(--ease)}
+  background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:var(--shadow-pop);z-index:40}
 [data-theme=dark] .fab{color:#131711}
-.fab:hover{transform:scale(1.04)}
 .fab .ico{width:22px;height:22px;stroke-width:2}
-.scrim{position:fixed;inset:0;background:rgba(28,27,24,.32);z-index:50;opacity:0;
-  pointer-events:none;transition:opacity .18s var(--ease)}
+.scrim{position:fixed;inset:0;background:rgba(28,27,24,.32);z-index:50;opacity:0;pointer-events:none;transition:.18s}
 .scrim.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;right:24px;bottom:88px;width:270px;background:var(--surface);
-  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-modal);
-  z-index:60;padding:6px;opacity:0;pointer-events:none;
-  transform:translateY(8px);transition:opacity .18s var(--ease),transform .18s var(--ease)}
-.sheet.on{opacity:1;pointer-events:auto;transform:none}
-.sheet-i{display:flex;align-items:center;gap:12px;padding:10px 11px;border-radius:var(--r-md);
-  width:100%;text-align:left;font-size:14px;transition:background .12s var(--ease)}
+.sheet{position:fixed;right:24px;bottom:88px;width:270px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);box-shadow:var(--shadow-modal);z-index:60;padding:6px;display:none}
+.sheet.on{display:block}
+.sheet-i{display:flex;align-items:center;gap:12px;padding:10px 11px;border-radius:var(--r-md);width:100%;font-size:14px}
 .sheet-i:hover{background:var(--sunken)}
-.sheet-i span{color:var(--faint);font-size:12px;margin-left:auto}
-
-/* ─────────────  TOAST  ───────────── */
-.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,8px);z-index:70;
-  background:var(--text);color:var(--bg);border-radius:var(--r-md);padding:10px 12px 10px 16px;
-  display:flex;align-items:center;gap:16px;font-size:14px;box-shadow:var(--shadow-modal);
-  opacity:0;pointer-events:none;transition:opacity .18s var(--ease),transform .18s var(--ease)}
-.toast.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
-.toast button{font-weight:600;font-size:13px;color:var(--bg);opacity:.85}
-.toast button:hover{opacity:1}
-
-/* ─────────────  BOTTOM NAV (mobile)  ───────────── */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;background:var(--text);
+  color:var(--bg);border-radius:var(--r-md);padding:10px 16px;font-size:14px;box-shadow:var(--shadow-modal);
+  opacity:0;pointer-events:none;transition:.18s}
+.toast.on{opacity:1}
 .bnav{display:none}
+.note{max-width:880px;margin:0 auto;padding:26px 32px 40px;font-size:13px;color:var(--faint);line-height:1.65}
 
-@media (max-width:768px){
+@media(max-width:768px){
   .side{display:none}
-  .page{padding:20px 20px 96px}
-  .ed{padding:24px 20px 120px}
-  .head{padding:0 16px}
-  .head h1{font-size:20px}
-  .hello .d{font-size:26px}
-  .ed-t{font-size:26px}
+  .page{padding:20px 20px 110px}
+  .ed{padding:22px 20px 200px}
+  .head{padding:0 14px} .head h1{font-size:19px}
+  .hello .d{font-size:26px} .ed-t{font-size:26px}
+  .blk-h{display:none}
+  .note{padding:20px}
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;height:calc(56px + env(safe-area-inset-bottom));
-    padding-bottom:env(safe-area-inset-bottom);background:var(--bg);
-    border-top:1px solid var(--border);z-index:30}
+    padding-bottom:env(safe-area-inset-bottom);background:var(--bg);border-top:1px solid var(--border);z-index:30}
   .bnav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;color:var(--faint);font-size:11px;font-weight:500;transition:color .12s var(--ease)}
+    gap:3px;color:var(--faint);font-size:11px;font-weight:500}
   .bnav button.on{color:var(--accent)}
   .bnav .ico{width:20px;height:20px}
-  .fab{bottom:calc(72px + env(safe-area-inset-bottom));right:16px;width:48px;height:48px}
-  .sheet{left:16px;right:16px;width:auto;bottom:calc(132px + env(safe-area-inset-bottom))}
-  .toast{left:16px;right:16px;transform:translateY(8px)}
-  .toast.on{transform:none}
+  .bnav.hide{display:none}
+  .fab{bottom:calc(70px + env(safe-area-inset-bottom));right:16px;width:48px;height:48px}
+  .fab.hide{display:none}
+  .sheet{left:16px;right:16px;width:auto;bottom:calc(128px + env(safe-area-inset-bottom))}
+  .pop{left:12px!important;right:12px;width:auto!important}
 }
-/* keterangan prototipe */
-.note{max-width:880px;margin:0 auto;padding:0 32px 40px;font-size:13px;color:var(--faint);line-height:1.6}
-@media(max-width:768px){.note{padding:0 20px 40px}}
 </style>
 </head>
 <body>
 <svg style="display:none">
- <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
- <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></symbol>
- <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></symbol>
- <symbol id="i-check2" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h10"/></symbol>
- <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
- <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol>
- <symbol id="i-arch" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></symbol>
- <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.5 15H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.3 8.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V10a1.6 1.6 0 0 0 1.5 1h.3a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></symbol>
- <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
- <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
- <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></symbol>
- <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
- <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></symbol>
- <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3h6l-1 6 3.5 3.5H6.5L10 9z"/><path d="M12 12.5V21"/></symbol>
- <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></symbol>
+<symbol id="i-check2" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h10"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol>
+<symbol id="i-arch" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></symbol>
+<symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.8-1.1 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3.5 15H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.3 8.2a2 2 0 1 1 2.8-2.8 1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8 1.6 1.6 0 0 0-.3 1.8V10a1.6 1.6 0 0 0 1.5 1h.3a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></symbol>
+<symbol id="i-graph" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.5 7.2 6.4 15.6M13.5 7.2l4.1 8.4M7.5 18h9"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+<symbol id="i-txt" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M9 3 7 21M17 3l-2 18M4 8h16M3 16h16"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="M9 18l-6-6 6-6M15 6l6 6-6 6"/></symbol>
+<symbol id="i-quote" viewBox="0 0 24 24"><path d="M7 15a3 3 0 1 1 0-6c0-2 1-3 3-4M17 15a3 3 0 1 1 0-6c0-2 1-3 3-4"/></symbol>
+<symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5-9 9"/></symbol>
+<symbol id="i-tbl" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></symbol>
 </svg>
 
 <div class="app">
-  <!-- SIDEBAR -->
-  <aside class="side">
-    <div class="brand"><span class="brand-dot"></span>Hara</div>
-    <button class="nav-i on" data-go="home"><svg class="ico"><use href="#i-home"/></svg>Beranda</button>
-    <button class="nav-i" data-go="notes"><svg class="ico"><use href="#i-note"/></svg>Catatan</button>
-    <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg>Reminder</button>
-    <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg>Tugas</button>
-    <div class="nav-sep"></div>
-    <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
-    <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg>Tag</button>
-    <button class="nav-i" data-go="arsip"><svg class="ico"><use href="#i-arch"/></svg>Arsip</button>
-    <div class="side-foot">
-      <button class="nav-i" data-go="set"><svg class="ico"><use href="#i-cog"/></svg>Pengaturan</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main">
-    <header class="head">
-      <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
-      <h1 id="title">Beranda</h1>
-      <div class="head-sp"></div>
-      <div class="saved" id="saved" style="display:none"><span class="dot"></span>Tersimpan</div>
-      <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
-      <button class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></button>
-    </header>
-    <div class="wrap" id="wrap"></div>
-  </div>
+<aside class="side">
+  <div class="brand"><span class="brand-dot"></span>Hara</div>
+  <button class="nav-i on" data-go="home"><svg class="ico"><use href="#i-home"/></svg>Beranda</button>
+  <button class="nav-i" data-go="notes"><svg class="ico"><use href="#i-note"/></svg>Catatan<span class="ct">1</span></button>
+  <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg>Reminder</button>
+  <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg>Tugas</button>
+  <div class="nav-sep"></div>
+  <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
+  <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg>Tag</button>
+  <button class="nav-i" data-go="arsip"><svg class="ico"><use href="#i-arch"/></svg>Arsip</button>
+  <div class="side-foot"><button class="nav-i" data-go="set"><svg class="ico"><use href="#i-cog"/></svg>Pengaturan</button></div>
+</aside>
+<div class="main">
+  <header class="head">
+    <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
+    <h1 id="title">Beranda</h1><div class="sp"></div>
+    <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
+    <button class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></button>
+  </header>
+  <div class="wrap" id="wrap"></div>
+</div>
 </div>
 
 <button class="fab" id="fab"><svg class="ico"><use href="#i-plus"/></svg></button>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
-  <button class="sheet-i" data-new="notes"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg>Catatan baru<span>N</span></button>
-  <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg>Reminder baru<span>R</span></button>
-  <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg>Tugas baru<span>T</span></button>
+  <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg>Catatan baru</button>
+  <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg>Reminder baru</button>
+  <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg>Tugas baru</button>
 </div>
-<div class="toast" id="toast"><span id="toast-t"></span><button onclick="hideToast()">Urungkan</button></div>
 
-<nav class="bnav">
+<!-- BAR MEKANIK -->
+<div class="mech" id="mech">
+  <div class="mech-lbl">Bar mekanik — muncul saat mengedit, menggantikan hafalan sintaks</div>
+  <div class="mech-in">
+    <button class="mb acc" data-m="slash">/</button><div class="mb-sep"></div>
+    <button class="mb" data-m="h">H1</button><button class="mb" data-m="h2">H2</button>
+    <button class="mb" data-m="b"><b>B</b></button><button class="mb" data-m="i"><i>I</i></button>
+    <button class="mb" data-m="hl">==</button><div class="mb-sep"></div>
+    <button class="mb acc" data-m="wl">[[</button><button class="mb acc" data-m="tag">#</button><div class="mb-sep"></div>
+    <button class="mb" data-m="todo">☐</button><button class="mb" data-m="li">•</button>
+    <button class="mb" data-m="code">&lt;/&gt;</button><button class="mb" data-m="quote">"</button>
+    <div class="mb-sep"></div><button class="mb" data-m="out">⇤</button><button class="mb" data-m="in">⇥</button>
+  </div>
+</div>
+
+<div class="pop" id="pop"></div>
+<div class="toast" id="toast"></div>
+
+<nav class="bnav" id="bnav">
   <button class="on" data-go="home"><svg class="ico"><use href="#i-home"/></svg>Beranda</button>
   <button data-go="notes"><svg class="ico"><use href="#i-note"/></svg>Catatan</button>
   <button data-go="rem"><svg class="ico"><use href="#i-bell"/></svg>Ingat</button>
@@ -291,200 +326,208 @@ mark{background:var(--accent-weak);color:var(--accent);border-radius:3px;padding
 </nav>
 
 <script>
-const notes=[
- {t:'Struktur modul Hara',s:'Tiap modul mengekspor satu objek: id, nama, ikon, rute…',m:'2j',pin:1,tags:['hara','arsitektur']},
- {t:'Belanja mingguan',s:'Beras 5kg, kopi, telur, minyak goreng, sabun cuci',m:'5j',pin:1,tags:['rumah']},
- {t:'Ide nama untuk fitur jurnal',s:'Harian · Runut · Jejak — yang terakhir paling enak diucapkan',m:'Kemarin',tags:['ide']},
- {t:'Catatan rapat 4 September',s:'Deadline mundur seminggu. Perlu konfirmasi ke tim desain hari Senin.',m:'2 hari',tags:['kerja']},
- {t:'Resep nasi goreng kampung',s:'Kunci: nasi dingin semalam, api besar, kecap manis di akhir',m:'5 hari',tags:['masak']},
- {t:'Buku yang mau dibaca',s:'The Design of Everyday Things · Refactoring UI · Atomic Habits',m:'1 mgg',tags:['baca']},
-];
-const rem=[
- {g:'Terlewat',i:[{t:'Bayar tagihan listrik',m:'Kemarin 09.00',late:1}]},
- {g:'Hari Ini',i:[{t:'Telepon dokter gigi',m:'14.00'},{t:'Kirim draft ke Rani',m:'17.30'},{t:'Minum obat',m:'20.00'}]},
- {g:'Besok',i:[{t:'Servis motor',m:'08.00'},{t:'Rapat mingguan tim',m:'10.00'}]},
- {g:'Sabtu, 13 September',i:[{t:'Ulang tahun Ibu',m:'Sepanjang hari'}]},
-];
-const tasks=[
- {t:'Rancang skema database Hara',m:'Hari ini',done:0},
- {t:'Bikin komponen ListRow',m:'Besok',done:0},
- {t:'Riset library markdown ringan',m:'—',done:0},
- {t:'Pilih palet warna',m:'',done:1},
- {t:'Baca dokumentasi Dexie',m:'',done:1},
-];
+/* ═══ SATU CATATAN SAJA ═══ */
+const welcome={t:'Selamat datang di Hara',tags:['hara'],mod:'baru saja'};
 
-const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const cbx=on=>`<button class="cbx ${on?'on':''}" onclick="tick(this)"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
+const cbx=(on,i)=>`<button class="cbx ${on?'on':''}" onclick="tick(this,${i})"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
+const grip='<button class="blk-h" title="Seret untuk memindahkan blok"><svg class="ico"><use href="#i-grip"/></svg></button>';
+const B=(cls,inner)=>`<div class="blk">${grip}<div class="${cls}">${inner}</div></div>`;
 
-function noteRow(n,color){return `<button class="row" onclick="go('editor')">
-  ${color?`<span class="bar" style="background:var(--m-notes)"></span>`:''}
-  <div class="row-b"><div class="row-t">${esc(n.t)}</div><div class="row-s">${esc(n.s)}</div></div>
-  <span class="row-m">${n.m}</span></button>`}
+/* isi catatan sambutan — memperagakan tiap mekanik */
+const welcomeBody=`
+${B('b-p','Ini satu-satunya catatan di Hara. Hapus saja kalau sudah selesai membaca — aplikasi memang sengaja dimulai kosong.')}
+${B('b-h2','Mekanik yang bisa dicoba')}
+${B('b-p','Tautan antar catatan ditulis begini: <span class="wl" data-act="Membuka Ide Produk">[[Ide Produk]]</span>. Yang belum ada catatannya tampil putus-putus — <span class="wl dead" data-act="Membuat catatan Belum Dibuat">[[Belum Dibuat]]</span> — ketuk untuk membuatnya.')}
+${B('b-p','Tag ditulis <span class="tg" data-act="Membuka tag #hara">#hara</span>, bisa bersarang seperti <span class="tg" data-act="Membuka tag #proyek/hara">#proyek/hara</span>. Teks bisa <b>tebal</b>, <i>miring</i>, <span class="hl">disorot</span>, atau <code class="ic">kode</code>.')}
+${B('b-todo','')}
+${B('b-h2','Menulis tanpa hafal sintaks')}
+${B('b-p','Di HP, bar abu-abu di atas keyboard itu <b>bar mekanik</b>. Ketuk tombolnya, jangan hafal simbolnya. Inilah yang paling menyiksa di Obsidian mobile.')}
+${B('b-p','Ketuk tombol <code class="ic">/</code> di bar itu untuk membuka daftar blok — heading, kutipan, kode, tabel, gambar.')}
+${B('b-cal','<div class="t"><svg class="ico"><use href="#i-info"/></svg>Callout</div>Blok penekanan seperti ini juga didukung, lewat sintaks <code class="ic">&gt; [!info]</code> atau dari menu <code class="ic">/</code>.')}
+${B('b-h2','Blok, bukan berkas')}
+${B('b-p','Tiap paragraf adalah blok mandiri dengan id sendiri. Di desktop, arahkan kursor ke kiri paragraf — muncul pegangan untuk menyeretnya.')}
+${B('b-p','Karena unit simpannya blok, mengetik satu huruf hanya menulis ulang satu blok. Itu sebabnya <b>tidak ada batas jumlah huruf</b> di satu catatan.')}
+${B('b-quote','Yang dirender hanya blok yang terlihat. Catatan satu juta kata pun tetap lancar digulir.')}
+${B('b-code','1.000.000 kata  ≈  6 MB\\nKuota IndexedDB  ≈  ratusan MB – beberapa GB')}
+${B('b-h2','Menyematkan blok lain')}
+${B('b-p','Sematan ditulis <code class="ic">![[Catatan#^blok]]</code> dan isinya tampil langsung:')}
+<div class="blk">${grip}<div class="emb"><div class="emb-h"><svg class="ico"><use href="#i-link"/></svg>Ide Produk › blok ^a12f</div>
+<div class="b-p" style="font-size:15px">Menang di HP, bukan menang di jumlah fitur.</div></div></div>
+${B('b-div','')}
+${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
 const views={
 home:()=>`<div class="page">
-  <div class="hello"><div class="d">Sabtu, 6 September</div>
-  <div class="s">3 pengingat hari ini, 1 terlewat.</div></div>
-
-  <div class="blk"><div class="sec"><h2>Hari Ini</h2><button class="lnk" data-go="rem">Lihat semua</button></div>
-  <div class="card">
-    <div class="row"><span class="bar" style="background:var(--m-rem)"></span>${cbx(0)}
-      <div class="row-b"><div class="row-t">Bayar tagihan listrik</div></div>
-      <span class="row-m late">Kemarin 09.00</span></div>
-    <div class="row"><span class="bar" style="background:var(--m-rem)"></span>${cbx(0)}
-      <div class="row-b"><div class="row-t">Telepon dokter gigi</div></div><span class="row-m">14.00</span></div>
-    <div class="row"><span class="bar" style="background:var(--m-task)"></span>${cbx(0)}
-      <div class="row-b"><div class="row-t">Rancang skema database Hara</div>
-      <div class="row-s">Tugas</div></div><span class="row-m">17.30</span></div>
-  </div></div>
-
-  <div class="blk"><div class="sec"><h2>Catatan Terakhir</h2><button class="lnk" data-go="notes">Lihat semua</button></div>
-  <div class="card">${notes.slice(0,4).map(n=>noteRow(n,1)).join('')}</div></div>
+  <div class="hello"><div class="d">Sabtu, 6 September</div><div class="s">Belum ada apa-apa. Mulai dari catatan sambutan di bawah.</div></div>
+  <div class="sec"><h2>Catatan</h2></div>
+  <div class="card"><button class="row" onclick="go('editor')">
+    <span style="width:3px;align-self:stretch;background:var(--m-notes);border-radius:999px;margin:-13px 0"></span>
+    <div class="row-b"><div class="row-t">${welcome.t}</div>
+    <div class="row-s">Ini satu-satunya catatan di Hara. Hapus saja kalau sudah selesai…</div></div>
+    <span class="row-m">${welcome.mod}</span></button></div>
 </div>
-<p class="note">Beranda sengaja bukan dashboard penuh grafik — hanya apa yang jatuh tempo hari ini dan apa yang terakhir kamu tulis.</p>`,
+<p class="note">Aplikasi dimulai bersih: satu catatan sambutan, tanpa reminder, tanpa tugas.</p>`,
 
 notes:()=>`<div class="page">
-  <div class="srch" style="margin-bottom:22px"><svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
-    <input placeholder="Cari catatan…"><span class="kbd">⌘K</span></div>
-  <div class="overline" style="margin-bottom:9px">Disematkan</div>
-  <div class="card" style="margin-bottom:26px">${notes.filter(n=>n.pin).map(n=>noteRow(n)).join('')}</div>
-  <div class="overline" style="margin-bottom:9px">Semua Catatan</div>
-  <div class="card">${notes.filter(n=>!n.pin).map(n=>noteRow(n)).join('')}</div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:24px">
-    <span class="chip chip-a">semua 6</span><span class="chip">hara 1</span><span class="chip">rumah 1</span>
-    <span class="chip">ide 1</span><span class="chip">kerja 1</span><span class="chip">masak 1</span><span class="chip">baca 1</span>
-  </div></div>
-<p class="note">Daftar, bukan grid kartu: lebih padat dan lebih cepat dipindai. Tanpa bayangan — pemisahnya cuma garis tipis.</p>`,
-
-editor:()=>`<div class="ed">
-  <input class="ed-t" value="Struktur modul Hara" placeholder="Judul">
-  <div class="ed-tags"><span class="chip">hara</span><span class="chip">arsitektur</span>
-    <span class="chip" style="color:var(--faint)">+ tag</span></div>
-  <textarea class="ed-b" spellcheck="false">Tiap modul mengekspor satu objek: id, nama, ikon, rute, dan (opsional) search, quickActions, homeWidget.
-
-Shell tidak pernah tahu isi modul — hanya kontraknya. Jadi menambah tool baru berarti menambah satu folder, bukan membongkar aplikasi.
-
-Yang perlu dipikirkan lagi:
-— apakah homeWidget sebaiknya punya batas tinggi tetap?
-— urutan modul di nav: manual atau berdasarkan pemakaian?
-
-Rasanya manual dulu saja. Urutan otomatis bikin posisi tombol berpindah-pindah, dan itu justru melelahkan buat otot memori.</textarea>
-</div>
-<p class="note">Editor lapang: lebar isi dibatasi 34rem (±68 karakter) supaya nyaman dibaca. Tanpa toolbar mengambang — status simpan ada di header.</p>`,
-
-rem:()=>`<div class="page">
-  <div class="tabs"><button class="tab on">Akan Datang</button><button class="tab">Selesai</button></div>
-  ${rem.map(g=>`<div class="daygrp">${g.g}</div><div class="card">${g.i.map(x=>
-    `<div class="row"><span class="bar" style="background:var(--m-rem)"></span>${cbx(0)}
-     <div class="row-b"><div class="row-t">${esc(x.t)}</div></div>
-     <span class="row-m ${x.late?'late':''}">${x.m}</span></div>`).join('')}</div>`).join('')}
-</div>
-<p class="note">Yang terlewat ditandai lewat warna waktu saja, bukan seluruh baris merah — supaya daftar tetap tenang saat ada banyak yang lewat.</p>`,
-
-task:()=>`<div class="page">
-  <div class="sec"><h2>Belum Selesai</h2></div>
-  <div class="card" style="margin-bottom:26px">${tasks.filter(t=>!t.done).map(t=>
-    `<div class="row"><span class="bar" style="background:var(--m-task)"></span>${cbx(0)}
-     <div class="row-b"><div class="row-t">${esc(t.t)}</div></div>
-     <span class="row-m">${t.m}</span></div>`).join('')}</div>
-  <div class="sec"><h2>Selesai</h2></div>
-  <div class="card">${tasks.filter(t=>t.done).map(t=>
-    `<div class="row done">${cbx(1)}<div class="row-b"><div class="row-t">${esc(t.t)}</div></div></div>`).join('')}</div>
+  <div class="card"><button class="row" onclick="go('editor')">
+    <div class="row-b"><div class="row-t">${welcome.t}</div>
+    <div class="row-s">Ini satu-satunya catatan di Hara. Hapus saja kalau sudah…</div></div>
+    <span class="row-m">${welcome.mod}</span></button></div>
+  <div style="margin-top:16px"><span class="chip chip-a">#hara 1</span></div>
 </div>`,
 
-search:()=>`<div class="page">
-  <div class="srch" style="margin-bottom:26px"><svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
-    <input value="hara" autofocus></div>
-  <div class="overline" style="margin-bottom:9px">Catatan · 2</div>
-  <div class="card" style="margin-bottom:24px">
-    <button class="row" onclick="go('editor')"><div class="row-b">
-      <div class="row-t">Struktur modul <mark>Hara</mark></div>
-      <div class="row-s">Tiap modul mengekspor satu objek: id, nama, ikon…</div></div><span class="row-m">2j</span></button>
-    <button class="row" onclick="go('editor')"><div class="row-b">
-      <div class="row-t">Ide nama untuk fitur jurnal</div>
-      <div class="row-s">…dipakai di <mark>Hara</mark> sebagai modul keempat</div></div><span class="row-m">Kemarin</span></button>
+editor:()=>`<div class="ed">
+  <input class="ed-t" value="${welcome.t}">
+  <div class="props">
+    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-cal"/></svg>dibuat</span><span class="prop-v">6 Sep 2026</span></div>
+    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-hash"/></svg>tag</span><span class="prop-v"><span class="tg">#hara</span></span></div>
+    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-txt"/></svg>status</span><span class="prop-v">belum dibaca</span></div>
+    <button class="prop-add" onclick="toast('Tambah properti baru')">+ properti</button>
   </div>
-  <div class="overline" style="margin-bottom:9px">Tugas · 1</div>
-  <div class="card" style="margin-bottom:24px">
-    <div class="row">${cbx(0)}<div class="row-b"><div class="row-t">Rancang skema database <mark>Hara</mark></div></div>
-    <span class="row-m">Hari ini</span></div></div>
-  <div class="overline" style="margin-bottom:9px">Tag · 1</div>
-  <div class="card"><button class="row"><svg class="ico" style="color:var(--faint)"><use href="#i-tag"/></svg>
-    <div class="row-b"><div class="row-t"><mark>hara</mark></div><div class="row-s">1 item</div></div></button></div>
+  <div class="blocks">${welcomeBody}</div>
 </div>
-<p class="note">Hasil dikelompokkan per modul. Kata yang cocok ditandai warna aksen lembut, bukan kuning stabilo.</p>`,
+<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-link"/></svg>Backlink<span class="n">1</span></div>
+  <button class="bl" onclick="toast('Membuka Ide Produk')"><div class="bl-t">Ide Produk</div>
+  <div class="bl-c">Semua ide awal dikumpulkan di <b>[[Selamat datang di Hara]]</b> sebelum dipecah jadi catatan sendiri.</div></button>
+  <div class="unl">Disebut tanpa tautan di 1 catatan
+    <button class="btn btn-sec" onclick="toast('Tautan dibuat')">Tautkan</button></div>
+</div>
+<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-graph"/></svg>Local graph</div>
+  <div class="graph">
+    <svg style="position:absolute;inset:0;width:100%;height:100%" stroke="var(--border-strong)" stroke-width="1">
+      <line x1="50%" y1="50%" x2="22%" y2="26%"/><line x1="50%" y1="50%" x2="80%" y2="30%"/>
+      <line x1="50%" y1="50%" x2="30%" y2="80%"/><line x1="50%" y1="50%" x2="74%" y2="76%"/></svg>
+    <div class="gnode me" style="left:50%;top:50%"><span class="gdot"></span><span>Selamat datang</span></div>
+    <div class="gnode" style="left:22%;top:26%"><span class="gdot"></span><span>Ide Produk</span></div>
+    <div class="gnode" style="left:80%;top:30%"><span class="gdot"></span><span>Belum Dibuat</span></div>
+    <div class="gnode" style="left:30%;top:80%"><span class="gdot"></span><span>#hara</span></div>
+    <div class="gnode" style="left:74%;top:76%"><span class="gdot"></span><span>Harian 6 Sep</span></div>
+  </div></div>
+<p class="note">Local graph hanya tetangga 1–2 langkah — bukan graph global 3D yang berat dan jarang berguna.</p>`,
 
-arsip:()=>`<div class="page"><div class="empty">
-  <h3>Arsip kosong</h3><p>Catatan yang diarsipkan akan muncul di sini dan hilang dari daftar utama.</p>
-  <button class="btn btn-sec" data-go="notes">Ke catatan</button></div></div>
-<p class="note">Status kosong: judul, satu kalimat yang menjelaskan, satu tombol. Tanpa ilustrasi besar.</p>`,
+rem:()=>`<div class="page"><div class="empty"><h3>Belum ada pengingat</h3>
+  <p>Pengingat yang kamu buat akan muncul di sini, dikelompokkan per hari.</p>
+  <button class="btn btn-pri" onclick="toast('Reminder baru')">Buat pengingat</button></div></div>`,
 
-tags:()=>`<div class="page"><div style="display:flex;gap:8px;flex-wrap:wrap">
-  ${['hara 4','arsitektur 2','rumah 1','ide 3','kerja 5','masak 1','baca 2','desain 3']
-    .map(t=>`<span class="chip" style="height:30px;padding:0 12px;font-size:13px">${t}</span>`).join('')}
-</div></div>`,
+task:()=>`<div class="page"><div class="empty"><h3>Belum ada tugas</h3>
+  <p>Tugas dengan tenggat akan ikut muncul di Beranda bersama pengingat hari itu.</p>
+  <button class="btn btn-pri" onclick="toast('Tugas baru')">Buat tugas</button></div></div>`,
+
+search:()=>`<div class="page">
+  <div style="display:flex;align-items:center;gap:10px;background:var(--sunken);border-radius:var(--r-md);
+    padding:0 13px;height:44px;margin-bottom:22px">
+    <svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
+    <input placeholder="Cari — coba tag:hara atau &quot;frasa persis&quot;" style="flex:1;border:none;background:none;outline:none;font-size:15px"></div>
+  <div class="overline" style="margin-bottom:10px">Operator</div>
+  <div class="card">
+    ${[['tag:','cari berdasarkan tag'],['folder:','batasi ke satu folder'],['judul:','cocokkan judul saja'],
+       ['"frasa persis"','pencocokan utuh'],['-kecuali','buang kata ini'],['sebelum: / sesudah:','rentang tanggal']]
+      .map(([a,b])=>`<div class="row" style="min-height:48px;padding:10px 16px">
+      <code class="ic">${a}</code><div class="row-b"><div class="row-s">${b}</div></div></div>`).join('')}
+  </div></div>
+<p class="note">Target: hasil muncul di bawah 50 ms untuk 10.000 catatan — indeks tersimpan, tanpa pemindaian ulang saat aplikasi dibuka.</p>`,
+
+tags:()=>`<div class="page"><div class="card"><button class="row" onclick="go('editor')">
+  <svg class="ico" style="color:var(--faint)"><use href="#i-tag"/></svg>
+  <div class="row-b"><div class="row-t">hara</div><div class="row-s">1 catatan</div></div></button></div></div>`,
+
+arsip:()=>`<div class="page"><div class="empty"><h3>Arsip kosong</h3>
+  <p>Catatan yang diarsipkan hilang dari daftar utama tapi tetap bisa dicari.</p></div></div>`,
 
 set:()=>`<div class="page">
   <div class="sec"><h2>Tampilan</h2></div>
-  <div class="card" style="margin-bottom:26px">
-    <div class="row"><div class="row-b"><div class="row-t">Tema</div>
-      <div class="row-s">Mengikuti sistem</div></div>
-      <button class="btn btn-sec" id="theme2">Ganti</button></div>
-    <div class="row"><div class="row-b"><div class="row-t">Tampilan catatan</div>
-      <div class="row-s">Daftar</div></div></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Mengikuti sistem</div></div>
+      <button class="btn btn-sec" onclick="toggleTheme()">Ganti</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Bar mekanik</div>
+      <div class="row-s">Tampil saat mengedit · isinya bisa diatur</div></div></div>
   </div>
   <div class="sec"><h2>Data</h2></div>
   <div class="card">
-    <div class="row"><div class="row-b"><div class="row-t">Ekspor semua data</div>
-      <div class="row-s">Unduh sebagai JSON</div></div><button class="btn btn-sec">Ekspor</button></div>
-    <div class="row"><div class="row-b"><div class="row-t">Impor</div>
-      <div class="row-s">Dari berkas JSON</div></div><button class="btn btn-sec">Pilih berkas</button></div>
-    <div class="row"><div class="row-b"><div class="row-t" style="color:var(--danger)">Tempat sampah</div>
-      <div class="row-s">2 item, dihapus otomatis setelah 30 hari</div></div></div>
+    <div class="row"><div class="row-b"><div class="row-t">Impor vault Obsidian</div>
+      <div class="row-s">Wikilink & frontmatter dipertahankan</div></div>
+      <button class="btn btn-sec" onclick="toast('Pilih folder vault')">Pilih</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Ekspor semua</div>
+      <div class="row-s">Markdown · JSON · PDF</div></div>
+      <button class="btn btn-sec" onclick="toast('Mengekspor…')">Ekspor</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Penyimpanan</div>
+      <div class="row-s">1 catatan · 4 KB terpakai</div></div></div>
   </div>
-  <p class="note" style="padding:26px 0 0">Hara v0.1 · data tersimpan di perangkat ini</p>
-</div>`};
+  <p class="note" style="padding:24px 0 0">Hara v0.1 · prototipe desain · data tersimpan di perangkat</p></div>`};
 
 const titles={home:'Beranda',notes:'Catatan',editor:'',rem:'Reminder',task:'Tugas',
   search:'Cari',tags:'Tag',arsip:'Arsip',set:'Pengaturan'};
 let cur='home';
 function go(v){
-  cur=v;
-  document.getElementById('wrap').innerHTML=views[v]();
-  document.getElementById('wrap').scrollTop=0;
+  cur=v;const w=document.getElementById('wrap');
+  w.innerHTML=views[v]();w.scrollTop=0;
   document.getElementById('title').textContent=titles[v];
-  document.getElementById('back').style.display=v==='editor'?'grid':'none';
-  document.getElementById('saved').style.display=v==='editor'?'flex':'none';
-  document.querySelectorAll('.nav-i,.bnav button').forEach(b=>
-    b.classList.toggle('on',b.dataset.go===v));
-  closeSheet();
+  const isEd=v==='editor';
+  document.getElementById('back').style.display=isEd?'grid':'none';
+  document.getElementById('mech').classList.toggle('on',isEd);
+  document.getElementById('bnav').classList.toggle('hide',isEd);
+  document.getElementById('fab').classList.toggle('hide',isEd);
+  document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
+  closeAll();
 }
 document.addEventListener('click',e=>{
-  const g=e.target.closest('[data-go]'); if(g){go(g.dataset.go);return;}
+  const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
   const n=e.target.closest('[data-new]');
-  if(n){closeSheet();toast(n.dataset.new==='notes'?'Catatan baru dibuat':'Item baru dibuat');
-    if(n.dataset.new==='notes')go('editor');}
+  if(n){closeAll();if(n.dataset.new==='note'){toast('Catatan baru');go('editor');}else toast('Dibuat');}
 });
 document.getElementById('back').onclick=()=>go('notes');
 function tick(el){el.classList.toggle('on');
-  const r=el.closest('.row'); r.classList.toggle('done',el.classList.contains('on'));
-  if(el.classList.contains('on'))toast('Ditandai selesai');}
-let tt;
-function toast(m){document.getElementById('toast-t').textContent=m;
-  document.getElementById('toast').classList.add('on');
-  clearTimeout(tt);tt=setTimeout(hideToast,3000);}
-function hideToast(){document.getElementById('toast').classList.remove('on')}
-const sheet=document.getElementById('sheet'),scrim=document.getElementById('scrim');
-function closeSheet(){sheet.classList.remove('on');scrim.classList.remove('on')}
-document.getElementById('fab').onclick=()=>{sheet.classList.toggle('on');scrim.classList.toggle('on')};
-scrim.onclick=closeSheet;
-addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
-function toggleTheme(){
-  const d=document.documentElement.getAttribute('data-theme')==='dark';
+  el.parentElement.classList.toggle('done',el.classList.contains('on'));}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');if(a)toast(a.dataset.act);});
+let tt;function toast(m){const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200);}
+
+/* ── popup mekanik ── */
+const pop=document.getElementById('pop');
+const menus={
+slash:`<div class="pop-h">Sisipkan blok</div>`+[['i-txt','Teks',''],['i-hash','Heading 1','#'],['i-hash','Heading 2','##'],
+  ['i-check2','To-do','- [ ]'],['i-quote','Kutipan','>'],['i-code','Kode','```'],
+  ['i-tbl','Tabel',''],['i-img','Gambar',''],['i-info','Callout','> [!]'],['i-link','Sematan','![[ ]]']]
+  .map(([i,n,k])=>`<button class="pop-i" onclick="pick('${n}')"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
+wl:`<div class="pop-h">Tautkan ke catatan</div>
+  <button class="pop-i" onclick="pick('[[Selamat datang di Hara]]')"><svg class="ico"><use href="#i-note"/></svg>Selamat datang di Hara</button>
+  <button class="pop-i pop-new" onclick="pick('catatan baru')"><svg class="ico"><use href="#i-plus"/></svg>Buat catatan baru…</button>
+  <div class="pop-h" style="padding-top:4px">Tautkan ke blok</div>
+  <button class="pop-i" onclick="pick('blok ^a12f')"><svg class="ico"><use href="#i-link"/></svg>
+    <span><span class="sub">^a12f</span><br>Menang di HP, bukan jumlah fitur</span></button>`,
+tag:`<div class="pop-h">Tag</div>
+  <button class="pop-i" onclick="pick('#hara')"><svg class="ico"><use href="#i-tag"/></svg>hara<span class="k">1</span></button>
+  <button class="pop-i" onclick="pick('#proyek/hara')"><svg class="ico"><use href="#i-tag"/></svg>proyek/hara<span class="k">0</span></button>
+  <button class="pop-i pop-new" onclick="pick('tag baru')"><svg class="ico"><use href="#i-plus"/></svg>Buat tag baru…</button>`};
+const labels={h:'Heading 1',h2:'Heading 2',b:'Tebal',i:'Miring',hl:'Sorot',todo:'To-do',
+  li:'Daftar',code:'Kode',quote:'Kutipan',out:'Kurangi indent',in:'Tambah indent'};
+document.querySelectorAll('.mb').forEach(b=>b.onclick=ev=>{
+  const m=b.dataset.m;
+  if(menus[m]){openPop(menus[m],b);}
+  else{toast(labels[m]+' diterapkan');closeAll();}
+});
+function openPop(html,anchor){
+  pop.innerHTML=html;pop.classList.add('on');
+  const r=anchor.getBoundingClientRect();
+  let l=Math.min(r.left,innerWidth-300);
+  pop.style.left=Math.max(12,l)+'px';
+  pop.style.top=(r.top-pop.offsetHeight-10)+'px';
+  document.getElementById('scrim').classList.add('on');
+}
+function pick(v){toast('Disisipkan: '+v);closeAll();}
+function closeAll(){pop.classList.remove('on');
+  document.getElementById('sheet').classList.remove('on');
+  document.getElementById('scrim').classList.remove('on');}
+document.getElementById('scrim').onclick=closeAll;
+addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+document.getElementById('fab').onclick=()=>{
+  document.getElementById('sheet').classList.toggle('on');
+  document.getElementById('scrim').classList.toggle('on');};
+function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';
   document.documentElement.setAttribute('data-theme',d?'light':'dark');
   document.querySelector('#theme use').setAttribute('href',d?'#i-moon':'#i-sun');}
 document.getElementById('theme').onclick=toggleTheme;
-document.addEventListener('click',e=>{if(e.target.id==='theme2')toggleTheme()});
 go('home');
 </script>
 </body>
