@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906154433';
-import { setBlock, indent } from './blocks.js?v=20260906154433';
-import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906154433';
-import { autoFormat } from './markdown.js?v=20260906154433';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906154433';
-import { onTitle } from '../model.js?v=20260906154433';
-import { bungkusFontPending, fontPending, adaPendingNone } from './font.js?v=20260906154433';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906154433';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906155231';
+import { setBlock, indent } from './blocks.js?v=20260906155231';
+import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906155231';
+import { autoFormat } from './markdown.js?v=20260906155231';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906155231';
+import { onTitle } from '../model.js?v=20260906155231';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260906155231';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906155231';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -26,11 +26,18 @@ export function bindEditor() {
     if(!b) return;
     if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!==''){
       /* blok sudah berisi teks: kalau ada font menunggu, bungkus di sini */
-      if (fontPending() || adaPendingNone()) {
+      /* Mode bawaan MELEKAT: tiap karakter diperiksa, bukan cuma yang
+         pertama. Browser kerap menarik caret kembali ke dalam span font
+         setelah karakter sebelumnya — di sini kita pecah keluar lagi. */
+      const perluKeluar = modeBawaan() &&
+        fontAround(sel().rangeCount ? sel().getRangeAt(0).startContainer : null);
+
+      if (fontPending() || adaPendingNone() || perluKeluar) {
         e.preventDefault();
         /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
            hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
-        bungkusFontPending();
+        if (adaPendingNone() || fontPending()) bungkusFontPending();
+        else if (perluKeluar) keluarDariFont();
         const s2 = sel();
         if (s2 && s2.rangeCount) {
           const r2 = s2.getRangeAt(0);

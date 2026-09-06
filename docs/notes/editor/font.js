@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260906154433';
-import { refresh } from './cleanup.js?v=20260906154433';
+import { docEl, sel, curBlock } from './caret.js?v=20260906155231';
+import { refresh } from './cleanup.js?v=20260906155231';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -132,9 +132,15 @@ function lepasDalam(frag) {
    ikut terbarui di modul yang mengimpornya. */
 const NONE = '\u0000none';        /* penanda "kembali ke bawaan" */
 let _pending = null;
+/* Mode bawaan MELEKAT: bertahan lintas ketikan sampai dibatalkan.
+   Tanpa ini, huruf ke-2 diserahkan ke browser yang menarik caret
+   kembali ke dalam span font lama. */
+let _modeBawaan = false;
 export const fontPending = () => (_pending === NONE ? '' : _pending);
 export const adaPendingNone = () => _pending === NONE;
-export const bersihkanPending = () => { _pending = null; };
+export const modeBawaan = () => _modeBawaan;
+export const matikanModeBawaan = () => { _modeBawaan = false; };
+export const bersihkanPending = () => { _pending = null; _modeBawaan = false; };
 
 export function setFont(id) {
   const d = docEl();
@@ -148,19 +154,20 @@ export function setFont(id) {
      untuk yang diketik SETELAH ini, persis seperti tombol tebal/miring.
      Untuk mengubah teks lama, pengguna harus memblok teksnya dulu. */
   if (r.collapsed) {
-    if (id) { _pending = id; refresh(); return; }
+    if (id) { _pending = id; _modeBawaan = false; refresh(); return; }
 
     /* ── "Bawaan" ──
        Caret sedang di dalam span font? Jangan cuma memindahkan caret ke
        luar — browser akan menariknya kembali masuk. Catat niatnya, lalu
        pecah keluar tepat saat huruf pertama diketik. */
-    _pending = fontAround(r.startContainer) ? NONE : null;
+    if (fontAround(r.startContainer)) { _pending = NONE; _modeBawaan = true; }
+    else { _pending = null; _modeBawaan = false; }
     refresh();
     return;
   }
 
   /* ── Ada teks terpilih: ganti font pada bagian itu saja ── */
-  _pending = null;
+  _pending = null; _modeBawaan = false;
   /* Kalau seleksi persis mengisi sebuah span font, buka bungkusnya dulu —
      kalau tidak, span lama tetap tertinggal dan "Bawaan" tampak gagal. */
   const induk = fontAround(r.startContainer);
@@ -222,8 +229,14 @@ export function keluarDariFont() {
   try { sisa.setStart(r.startContainer, r.startOffset); } catch (e) { return false; }
   const buntut = sisa.extractContents();
 
-  const titik = document.createTextNode('');
-  host.after(titik);
+  /* Pakai kembali text node polos yang sudah ada tepat setelah span —
+     kalau membuat node baru tiap kali, caret selalu kembali ke offset 0
+     dan huruf tersisip terbalik ("polos" jadi "solop"). */
+  let titik = host.nextSibling;
+  if (!(titik && titik.nodeType === 3 && !fontAround(titik))) {
+    titik = document.createTextNode('');
+    host.after(titik);
+  }
   if (buntut.textContent !== '') {
     const kanan = host.cloneNode(false);
     kanan.appendChild(buntut);
@@ -232,7 +245,7 @@ export function keluarDariFont() {
   if (host.textContent === '') host.remove();
 
   const nr = document.createRange();
-  nr.setStart(titik, 0);
+  nr.setStart(titik, titik.length);   /* di AKHIR teks yang sudah ada */
   nr.collapse(true);
   s.removeAllRanges();
   s.addRange(nr);
@@ -257,13 +270,9 @@ export function bungkusFontPending() {
      Span bersarang membuat DOM menumpuk dan menyulitkan pelepasan font. */
   const host = fontAround(r.startContainer);
   if (host && host.getAttribute('data-font') !== id) {
-    const sp = document.createTextNode('');
-    host.after(sp);
-    r = document.createRange();
-    r.setStart(sp, 0);
-    r.collapse(true);
-    s.removeAllRanges();
-    s.addRange(r);
+    keluarDariFont();
+    if (!s.rangeCount) return null;
+    r = s.getRangeAt(0);
   }
 
   const el = document.createElement('span');
@@ -293,6 +302,6 @@ function taruhCaretAkhir(b) {
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
   const b = curBlock();
-  if (_pending && blokTerakhir && b !== blokTerakhir) _pending = null;
+  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _modeBawaan = false; }
   blokTerakhir = b;
 });
