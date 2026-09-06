@@ -521,7 +521,7 @@ function go(v){
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
   document.querySelectorAll('.nav-i,.bnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
-  closeAll();savedRange=null;pending.clear();off.clear();updateCount();syncMarkBtns();
+  closeAll();savedRange=null;pending.clear();updateCount();syncMarkBtns();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
@@ -577,23 +577,24 @@ function caretAfter(node){
   const s=getSelection();s.removeAllRanges();s.addRange(r);saveSel();
 }
 
-/* ════════ MARK (bold/italic/dll) — bisa di-toggle & digabung ════════ */
+/* ════════ MARK — memakai perintah bawaan browser (native toggle) ════════ */
+const CMD={b:'bold',i:'italic',s:'strikeThrough'};
 const MARKS={b:['b',''],i:['i',''],s:['s',''],hl:['span','hl'],code:['code','ic']};
-const MARKSEL={b:'b,strong',i:'i,em',s:'s',hl:'.hl',code:'code.ic'};
-let pending=new Set();let off=new Set();
+const MARKSEL={b:'b,strong',i:'i,em',s:'s,strike',hl:'.hl',code:'code.ic'};
+let pending=new Set();
+try{document.execCommand('styleWithCSS',false,false);}catch(e){}
 
+const edFocused=()=>{const d=docEl();return !!d&&document.activeElement===d;};
 function mkMark(m){const [t,c]=MARKS[m];const e=document.createElement(t);if(c)e.className=c;return e;}
-/* mark apa saja yang sedang membungkus kursor */
+
+/* mark yang membungkus sebuah node */
 function marksAt(node){
   const set=new Set();const d=docEl();if(!d)return set;
   let n=node;if(n&&n.nodeType===3)n=n.parentNode;
   while(n&&n!==d){
-    const t=(n.tagName||'').toLowerCase();
-    if(t==='b'||t==='strong')set.add('b');
-    if(t==='i'||t==='em')set.add('i');
-    if(t==='s')set.add('s');
-    if(n.classList){if(n.classList.contains('hl'))set.add('hl');
-      if(n.classList.contains('ic'))set.add('code');}
+    if(n.matches){
+      for(const m in MARKSEL)if(n.matches(MARKSEL[m]))set.add(m);
+    }
     n=n.parentNode;
   }
   return set;
@@ -603,19 +604,24 @@ function hostFor(m,node){
   while(n&&n!==d){if(n.matches&&n.matches(MARKSEL[m]))return n;n=n.parentNode;}
   return null;
 }
-/* status tombol mengikuti posisi kursor */
-function syncMarkBtns(){
+/* status aktif: tanya browser dulu, baru periksa DOM */
+function markOn(m){
+  if(CMD[m]&&edFocused()){
+    try{if(document.queryCommandState(CMD[m]))return true;}catch(e){}
+  }
   const s=getSelection();
-  let act=new Set();
-  if(s.rangeCount&&docEl()&&docEl().contains(s.getRangeAt(0).startContainer))
-    act=marksAt(s.getRangeAt(0).startContainer);
-  pending.forEach(m=>act.add(m));
-  off.forEach(m=>act.delete(m));
+  const d=docEl();
+  if(s.rangeCount&&d&&d.contains(s.getRangeAt(0).startContainer))
+    if(marksAt(s.getRangeAt(0).startContainer).has(m))return true;
+  if(savedRange&&d&&d.contains(savedRange.startContainer))
+    if(marksAt(savedRange.startContainer).has(m))return true;
+  return false;
+}
+function syncMarkBtns(){
   Object.keys(MARKS).forEach(m=>{
-    const btn=document.querySelector('.mb[data-m="'+m+'"]');
-    if(btn)btn.classList.toggle('active',act.has(m));
+    const btn=document.querySelector('.mb[data-m="'+(m==='code'?'icode':(m==='s'?'strike':m))+'"]');
+    if(btn)btn.classList.toggle('active',pending.has(m)||markOn(m));
   });
-  /* tombol blok ikut menyala sesuai blok tempat kursor berada */
   const b=curBlock();
   const map={h:'b-h1',h2:'b-h2',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',cal:'b-cal'};
   Object.entries(map).forEach(([k,cls])=>{
@@ -623,114 +629,134 @@ function syncMarkBtns(){
     if(btn)btn.classList.toggle('active',!!b&&b.classList.contains(cls));
   });
 }
-/* buang mark m dari sebuah fragment */
 function stripMark(frag,m){
   frag.querySelectorAll&&Array.from(frag.querySelectorAll(MARKSEL[m])).forEach(e=>{
     while(e.firstChild)e.parentNode.insertBefore(e.firstChild,e);e.remove();});
 }
+/* bungkus / lepas pada teks yang SEDANG terpilih */
+/* cari elemen mark yang MELINGKUPI seluruh range (termasuk saat range
+   memilih node elemen, bukan teks di dalamnya) */
+function hostAround(m,r){
+  const d=docEl();if(!d)return null;
+  let n=r.commonAncestorContainer;
+  if(n.nodeType!==1)n=n.parentNode;
+  while(n&&n!==d){if(n.matches&&n.matches(MARKSEL[m]))return n;n=n.parentNode;}
+  /* range menyeleksi tepat satu elemen mark */
+  const only=r.cloneContents();
+  const kids=Array.from(only.childNodes).filter(k=>k.nodeType!==3||k.data.replace(/[\u200b\u00a0]/g,''));
+  if(kids.length===1&&kids[0].nodeType===1&&kids[0].matches&&kids[0].matches(MARKSEL[m])){
+    let c=r.startContainer;
+    if(c.nodeType===1){const cand=c.childNodes[r.startOffset];
+      if(cand&&cand.matches&&cand.matches(MARKSEL[m]))return cand;}
+  }
+  return null;
+}
+function unwrapIn(r,m){
+  /* buang bungkus m di dalam range, pertahankan isi & seleksi */
+  const frag=r.extractContents();
+  stripMark(frag,m);
+  const marker=document.createElement('span');marker.appendChild(frag);
+  r.insertNode(marker);
+  const kids=Array.from(marker.childNodes),par=marker.parentNode;
+  kids.forEach(k=>par.insertBefore(k,marker));marker.remove();
+  if(kids.length){const nr=document.createRange();
+    nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
+    getSelection().removeAllRanges();getSelection().addRange(nr);}
+  par.normalize&&par.normalize();
+}
+function wrapRange(m,r){
+  /* sudah bermark? -> lepas */
+  const around=hostAround(m,r);
+  const inside=r.cloneContents().querySelector&&r.cloneContents().querySelector(MARKSEL[m]);
+  if(around||inside){
+    if(around&&around.textContent.replace(/[\u200b\u00a0]/g,'')===r.toString().replace(/[\u200b\u00a0]/g,'')){
+      /* seluruh isi host terpilih -> buka bungkusnya sekaligus */
+      const kids=Array.from(around.childNodes),par=around.parentNode;
+      kids.forEach(k=>par.insertBefore(k,around));around.remove();
+      if(kids.length){const nr=document.createRange();
+        nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
+        getSelection().removeAllRanges();getSelection().addRange(nr);}
+      par.normalize&&par.normalize();
+    }else unwrapIn(r,m);
+    return;
+  }
+  const host=hostFor(m,r.startContainer);
+  if(host&&host===hostFor(m,r.endContainer)){
+    /* LEPAS: pecah host jadi sebelum | tengah(polos) | sesudah */
+    const pre=document.createRange();pre.selectNodeContents(host);pre.setEnd(r.startContainer,r.startOffset);
+    const post=document.createRange();post.selectNodeContents(host);post.setStart(r.endContainer,r.endOffset);
+    const preF=pre.cloneContents(),midF=r.cloneContents(),postF=post.cloneContents();
+    stripMark(midF,m);
+    const frag=document.createDocumentFragment();
+    if(preF.textContent.replace(/[\u200b\u00a0]/g,'')){const a=host.cloneNode(false);a.appendChild(preF);frag.appendChild(a);}
+    const marker=document.createElement('span');marker.setAttribute('data-tmp','1');marker.appendChild(midF);
+    frag.appendChild(marker);
+    if(postF.textContent.replace(/[\u200b\u00a0]/g,'')){const c=host.cloneNode(false);c.appendChild(postF);frag.appendChild(c);}
+    host.replaceWith(frag);
+    const kids=Array.from(marker.childNodes),par=marker.parentNode;
+    kids.forEach(k=>par.insertBefore(k,marker));marker.remove();
+    if(kids.length){const nr=document.createRange();
+      nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
+      getSelection().removeAllRanges();getSelection().addRange(nr);}
+  }else{
+    /* PASANG */
+    const el=mkMark(m);
+    const f=r.extractContents();stripMark(f,m);el.appendChild(f);
+    r.insertNode(el);
+    if(el.firstChild){const nr=document.createRange();
+      nr.setStartBefore(el.firstChild);nr.setEndAfter(el.lastChild);
+      getSelection().removeAllRanges();getSelection().addRange(nr);}
+  }
+}
 function toggleMark(m){
-  const r=restoreSel(false);if(!r)return;
-  const on=marksAt(r.startContainer).has(m);
+  const d=docEl();if(!d)return;
+  const s=getSelection();
+  const live=s.rangeCount&&d.contains(s.getRangeAt(0).startContainer)?s.getRangeAt(0):null;
+  const hasSel=live&&!live.collapsed;
 
-  if(!r.collapsed){
-    if(on){ /* MATIKAN pada teks terpilih */
-      const host=hostFor(m,r.startContainer);
-      if(host){
-        const pre=document.createRange();pre.selectNodeContents(host);pre.setEnd(r.startContainer,r.startOffset);
-        const post=document.createRange();post.selectNodeContents(host);post.setStart(r.endContainer,r.endOffset);
-        const preF=pre.cloneContents(),midF=r.cloneContents(),postF=post.cloneContents();
-        stripMark(midF,m);
-        const frag=document.createDocumentFragment();
-        if(preF.textContent.replace(/\u200b/g,'')){const a=host.cloneNode(false);a.appendChild(preF);frag.appendChild(a);}
-        const mid=document.createElement('span');mid.setAttribute('data-tmp','1');mid.appendChild(midF);
-        frag.appendChild(mid);
-        if(postF.textContent.replace(/\u200b/g,'')){const c=host.cloneNode(false);c.appendChild(postF);frag.appendChild(c);}
-        host.replaceWith(frag);
-        /* buka bungkus sementara, lalu pulihkan seleksi memakai node nyata */
-        const kids=Array.from(mid.childNodes);
-        const parent=mid.parentNode;
-        kids.forEach(k=>parent.insertBefore(k,mid));
-        mid.remove();
-        if(kids.length){
-          const nr=document.createRange();
-          nr.setStartBefore(kids[0]);nr.setEndAfter(kids[kids.length-1]);
-          getSelection().removeAllRanges();getSelection().addRange(nr);
-        }
-      }
-    }else{ /* NYALAKAN pada teks terpilih */
-      const el=mkMark(m);
-      const f=r.extractContents();stripMark(f,m);el.appendChild(f);
-      r.insertNode(el);
-      if(el.firstChild){
-        const nr=document.createRange();
-        nr.setStartBefore(el.firstChild);nr.setEndAfter(el.lastChild);
-        getSelection().removeAllRanges();getSelection().addRange(nr);
-      }
-    }
-    saveSel();
-  }else{
-    /* kursor saja: nyalakan/matikan untuk ketikan berikutnya */
-    /* murni pengaturan status — DOM tidak disentuh, keyboard tidak dipaksa muncul */
-    const aktif=(marksAt(r.startContainer).has(m)||pending.has(m))&&!off.has(m);
-    if(aktif){pending.delete(m);if(marksAt(r.startContainer).has(m))off.add(m);}
-    else{off.delete(m);pending.add(m);}
+  /* 1. ada teks terpilih -> pasang/lepas langsung */
+  if(hasSel){
+    if(CMD[m]&&edFocused()){try{document.execCommand(CMD[m]);}catch(e){wrapRange(m,live);}}
+    else wrapRange(m,live);
+    saveSel();cleanEmpty();syncMarkBtns();updateCount();return;
   }
-  cleanEmpty();syncMarkBtns();updateCount();
+  /* 2. kursor sedang aktif di editor -> serahkan ke browser (native typing state) */
+  if(edFocused()&&live&&CMD[m]){
+    try{document.execCommand(CMD[m]);pending.delete(m);}
+    catch(e){pending.has(m)?pending.delete(m):pending.add(m);}
+    syncMarkBtns();return;
+  }
+  /* 3. editor belum difokuskan / mark tanpa perintah native -> simpan niat.
+        Tidak menyentuh DOM & tidak memaksa fokus => keyboard tidak terbuka. */
+  if(pending.has(m))pending.delete(m);
+  else if(markOn(m)&&hostFor(m,(live||savedRange||{}).startContainer||d)){
+    /* sedang di dalam mark: keluar dari bungkusnya */
+    const host=hostFor(m,(live||savedRange).startContainer);
+    if(host){const sp=document.createTextNode('\u200b');host.after(sp);
+      const nr=document.createRange();nr.setStart(sp,1);nr.collapse(true);
+      getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();}
+  }else pending.add(m);
+  syncMarkBtns();
 }
-/* pecah keluar dari elemen mark yang sedang dimatikan */
-function splitOut(r){
-  const d=docEl();
-  let node=r.startContainer,offset=r.startOffset;
-  if(node.nodeType===3){
-    const t=node;
-    if(offset<t.length)node=t.splitText(offset);
-    else node=t.nextSibling?t.nextSibling:(()=>{const n=document.createTextNode('');t.after(n);return n;})();
-    offset=0;
+/* saat mulai mengetik, terapkan mark yang menyala */
+function flushPending(){
+  if(!pending.size)return false;
+  let handled=false;
+  pending.forEach(m=>{
+    if(CMD[m]&&edFocused()){try{document.execCommand(CMD[m]);handled=true;}catch(e){}}
+  });
+  const manual=[...pending].filter(m=>!CMD[m]);
+  pending.clear();
+  if(manual.length){
+    const r=restoreSel(false);
+    if(r){let node=document.createTextNode('\u200b');let outer=node;
+      manual.forEach(m=>{const e=mkMark(m);e.appendChild(outer);outer=e;});
+      r.insertNode(outer);
+      const nr=document.createRange();nr.setStart(node,1);nr.collapse(true);
+      getSelection().removeAllRanges();getSelection().addRange(nr);saveSel();}
+    handled=true;
   }
-  /* naik selama masih di dalam mark yang harus dimatikan */
-  let guard=0;
-  while(guard++<20){
-    let p=node.parentNode;
-    if(!p||p===d)break;
-    const isOff=Array.from(off).some(m=>p.matches&&p.matches(MARKSEL[m]));
-    if(!isOff&&!(p.matches&&p.matches(INLINE_SEL)&&Array.from(off).some(m=>p.closest(MARKSEL[m]))))
-      { if(!isOff)break; }
-    /* pindahkan node dan saudara sesudahnya keluar dari p */
-    const after=p.cloneNode(false);
-    let sib=node;
-    while(sib){const nx=sib.nextSibling;after.appendChild(sib);sib=nx;}
-    p.after(after);
-    if(!p.textContent.replace(/[\u200b\u00a0]/g,''))p.remove();
-    node=after;
-    if(!after.textContent.replace(/[\u200b\u00a0]/g,'')){
-      const holder=document.createTextNode('');after.replaceWith(holder);node=holder;
-    }
-  }
-  return node;
-}
-/* ketikan berikutnya memakai mark yang sedang menyala */
-function applyPending(txt){
-  const r=restoreSel(false);if(!r)return false;
-  r.deleteContents();
-  /* mark yang masih aktif di posisi ini dan TIDAK sedang dimatikan */
-  const keep=[];
-  if(off.size){
-    marksAt(r.startContainer).forEach(m=>{if(!off.has(m))keep.push(m);});
-  }
-  let anchor=off.size?splitOut(r):null;
-  const inner=document.createTextNode(txt);
-  let node=inner;
-  keep.forEach(m=>{const e=mkMark(m);e.appendChild(node);node=e;});
-  pending.forEach(m=>{const e=mkMark(m);e.appendChild(node);node=e;});
-  if(anchor){
-    if(anchor.nodeType===3&&anchor.data===''){anchor.replaceWith(node);}
-    else anchor.parentNode.insertBefore(node,anchor);
-  }else{
-    const rr=restoreSel(false);rr.insertNode(node);
-  }
-  const nr=document.createRange();nr.setStart(inner,inner.length);nr.collapse(true);
-  getSelection().removeAllRanges();getSelection().addRange(nr);
-  pending.clear();off.clear();saveSel();return true;
+  return handled;
 }
 function wrapSel(tag,cls){
   const m=cls==='hl'?'hl':(cls==='ic'?'code':tag);
@@ -924,6 +950,13 @@ document.querySelectorAll('.mb').forEach(b=>{
   });
   b.onclick=()=>{
     const m=b.dataset.m;
+    const d=docEl();
+    if(d&&document.activeElement!==d){
+      d.focus({preventScroll:true});
+      if(savedRange&&d.contains(savedRange.startContainer)){
+        const sl=getSelection();sl.removeAllRanges();sl.addRange(savedRange);
+      }
+    }
     if(m==='slash'){openPop(menus.slash,b);return;}
     if(m==='wl'){openPop(wlMenu(),b);return;}
     if(m==='tag'){openPop(menus.tag,b);return;}
@@ -972,15 +1005,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('keyup',e=>{if(inDoc(e.target)){saveSel();syncMarkBtns();}});
 document.addEventListener('beforeinput',e=>{
   if(!inDoc(e.target))return;
-  if((pending.size||off.size)&&e.inputType==='insertText'&&e.data){
-    e.preventDefault();
-    if(applyPending(e.data)){autoFormat();cleanEmpty();updateCount();syncMarkBtns();}
-  }
-});
-document.addEventListener('selectionchange',()=>{
-  const sl=getSelection();
-  if(sl.rangeCount){const c=sl.getRangeAt(0).startContainer;
-    if(inDoc(c.nodeType===3?c.parentElement:c))saveSel();}
+  if(pending.size&&e.inputType==='insertText')flushPending();
 });
 document.addEventListener('mouseup',e=>{
   if(e.target.closest&&e.target.closest('.ed-doc')){saveSel();syncMarkBtns();}
