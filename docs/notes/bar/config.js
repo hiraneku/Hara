@@ -58,7 +58,9 @@ export const BAR = [
     g: 'sisip', label: '<svg class="bi"><use href="#i-plus"/></svg>', title: 'Sisipkan',
     items: [
       { m: 'wl',   ikon: 'i-note',  nama: 'Tautan catatan', kunci: '[[' },
+      { m: 'img',  ikon: 'i-img',   nama: 'Gambar',         kunci: '' },
       { m: 'tag',  ikon: 'i-tag',   nama: 'Tag',            kunci: '#' },
+      { m: 'ref',  ikon: 'i-anchor',nama: 'Tandai blok',    kunci: '^' },
       { m: 'hr',   ikon: 'i-minus', nama: 'Pembatas',       kunci: '---' },
       { m: 'date', ikon: 'i-cal',   nama: 'Tanggal',        kunci: '' },
     ]

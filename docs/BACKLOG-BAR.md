@@ -26,20 +26,20 @@ Bar saat ini punya **27 tombol**:
 | 8 | **Tabel** | **MASIH DITUNDA.** Alasannya tetap: tabel di `contenteditable` mentah berat dan navigasi antar-sel di HP rumit. Kerjakan setelah pindah ke Lexical. |
 | 9 | ~~**Tanggal**~~ | Tombol `📅` menyisipkan tanggal berbahasa Indonesia ("Minggu, 6 September 2026"). *Catatan harian* (daily note) belum — itu butuh modul jurnal tersendiri, bukan sekadar tombol bar. |
 
-## Prioritas rendah
+## ✅ Prioritas rendah — SELESAI (6 Sep 2026)
 
-| # | Mekanik | Catatan |
-|---|---------|---------|
-| 10 | **Sematkan gambar** | Perlu penanganan berkas. `localStorage` tak sanggup — tunggu IndexedDB. |
-| 11 | **Tautan blok** (`^id`) | Ada di spek, baru berguna setelah backlink hidup. |
-| 12 | Rumus matematika, mermaid, kolom | Wilayah plugin. Sesuai riset: **jangan kejar paritas Obsidian** (2.700+ plugin). |
+| # | Mekanik | Catatan implementasi |
+|---|---------|----------------------|
+| 10 | ~~**Sematkan gambar**~~ | `core/blobs.js` + `editor/image.js`. Berkas masuk **IndexedDB**, catatan hanya menyimpan `data-blob="b7"`. Foto besar dikecilkan otomatis ke maks 1600 px. `src` objectURL dibuang sebelum autosave, dipasang ulang saat catatan dibuka. Menghapus gambar ikut menghapus berkasnya. |
+| 11 | ~~**Tautan blok** (`^id`)~~ | `editor/blockref.js`. Menandai blok dengan id 4 karakter yang dijamin unik lintas catatan; rujukan `[[Judul#^a3f2]]` langsung disalin ke papan klip. Penanda ditampilkan lewat CSS `::after`, jadi tidak ikut terbaca sebagai teks. |
+| 12 | Rumus matematika, mermaid, kolom | **Sengaja tidak dikerjakan.** Wilayah plugin. Sesuai riset: jangan kejar paritas Obsidian (2.700+ plugin). |
 
-## Perbaikan bar itu sendiri (bukan tombol baru)
+## ✅ Perbaikan bar — SELESAI
 
-- **Pemisah antar kelompok** — 18 tombol berderet tanpa jeda mulai sulit dipindai. Sekat: blok | inline | sisip | atur.
-- **Bar bisa diatur sendiri** — pengguna menyembunyikan tombol yang tak dipakai. Penting begitu tembus 20+ tombol.
-- **Baris kedua yang bisa dibuka** — alternatif dari poin di atas.
-- **Umpan balik getar (haptic)** saat menekan tombol di HP.
+- ~~**Pemisah antar kelompok**~~ — sudah, sekaligus saat bar dikelompokkan jadi 10 kontrol.
+- ~~**Bar bisa diatur sendiri**~~ — 8 kontrol bisa disembunyikan lewat Pengaturan. Undo/redo sengaja tidak bisa disembunyikan. Pemisah yang jadi kembar atau menggantung dirapikan otomatis.
+- **Baris kedua yang bisa dibuka** — tidak jadi dikerjakan; pengelompokan dropdown sudah menyelesaikan masalah yang sama dengan lebih rapi.
+- ~~**Umpan balik getar**~~ — `navigator.vibrate(8)` saat menekan tombol & memilih menu, bisa dimatikan di Pengaturan.
 
 ---
 

@@ -9,6 +9,7 @@ import { tagMenu }   from '../menus/tag.js';
 import { linkMenu }  from '../menus/link.js';
 import { calloutMenu } from '../menus/callout.js';
 import { snap } from '../editor/history.js';
+import { tersembunyi, getar } from './prefs.js';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -17,11 +18,26 @@ export function renderBar() {
   if (!box) return;
   box.innerHTML = BAR.map(b => {
     if (b.sep) return '<div class="mb-sep"></div>';
+    if (tersembunyi(b.g || b.m)) return '';
     if (b.g) return `<button class="mb mb-g" data-g="${b.g}" title="${b.title || ''}">
         <span class="gl">${b.label}</span>${CHEV}</button>`;
     return `<button class="mb${b.accent ? ' acc' : ''}" data-m="${b.m}" title="${b.title || ''}">${b.label}</button>`;
   }).join('');
+  rapikanSep(box);
   bindBar();
+}
+
+/* Hilangkan pemisah ganda atau yang berada di ujung. */
+function rapikanSep(box){
+  const anak = Array.from(box.children);
+  let sebelumnyaSep = true;      /* awal dianggap sep, agar sep pertama dibuang */
+  anak.forEach(el => {
+    const sep = el.classList.contains('mb-sep');
+    if (sep && sebelumnyaSep) el.remove();
+    else sebelumnyaSep = sep;
+  });
+  const akhir = box.lastElementChild;
+  if (akhir && akhir.classList.contains('mb-sep')) akhir.remove();
 }
 
 /* Menu untuk sebuah kelompok. */
@@ -64,6 +80,7 @@ function bindBar() {
     /* jangan biarkan tombol merebut fokus -> keyboard tak terbuka & caret aman */
     btn.addEventListener('mousedown', e => e.preventDefault());
     btn.addEventListener('click', () => {
+      getar();
       if (btn.dataset.g) {
         const sudah = btn.classList.contains('open');
         document.querySelectorAll('.mb-g.open').forEach(x => x.classList.remove('open'));

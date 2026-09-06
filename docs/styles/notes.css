@@ -238,3 +238,30 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   color:var(--faint);background:var(--sunken);padding:2px 6px;border-radius:5px}
 #pop .pop-i.on{background:var(--accent-weak);color:var(--accent)}
 #pop .pop-i.on .ico{color:var(--accent)}
+
+/* ── gambar tersemat ── */
+.b-img{position:relative;margin:10px 0;border-radius:var(--r-md);overflow:hidden;
+  background:var(--sunken);line-height:0}
+.b-img img{width:100%;height:auto;display:block;max-height:70vh;object-fit:contain}
+.img-x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:999px;
+  background:rgba(0,0,0,.55);display:grid;place-items:center;opacity:0;
+  transition:opacity .14s var(--ease)}
+.b-img:hover .img-x,.b-img:active .img-x{opacity:1}
+.img-x svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
+.img-hilang{padding:14px;border:1px dashed var(--border-strong);border-radius:var(--r-md);
+  color:var(--faint);font-size:13px;text-align:center}
+@media(hover:none){.img-x{opacity:.85}}
+
+/* ── blok bertanda (tautan blok) ── */
+.ed-doc>[data-ref]{position:relative}
+.ed-doc>[data-ref]::after{content:'^' attr(data-ref);position:absolute;right:0;top:3px;
+  font-family:var(--mono);font-size:10.5px;color:var(--faint);background:var(--sunken);
+  padding:1px 5px;border-radius:4px;pointer-events:none;user-select:none;opacity:.75}
+
+/* ── saklar di halaman Pengaturan ── */
+.sw{width:42px;height:25px;border-radius:999px;background:var(--border-strong);
+  flex:none;padding:3px;transition:background .16s var(--ease)}
+.sw span{display:block;width:19px;height:19px;border-radius:999px;background:#fff;
+  transition:transform .16s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:var(--accent)}
+.sw.on span{transform:translateX(17px)}

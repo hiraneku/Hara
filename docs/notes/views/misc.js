@@ -38,9 +38,13 @@ set:()=>`<div class="page">
   <div class="card" style="margin-bottom:24px">
     <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Mengikuti sistem</div></div>
       <button class="btn btn-sec" onclick="toggleTheme()">Ganti</button></div>
-    <div class="row"><div class="row-b"><div class="row-t">Bar mekanik</div>
-      <div class="row-s">Tampil saat mengedit · isinya bisa diatur</div></div></div>
+    <div class="row"><div class="row-b"><div class="row-t">Getar saat menekan tombol</div>
+      <div class="row-s">Umpan balik singkat di perangkat yang mendukung</div></div>
+      <button class="sw" data-getar role="switch"><span></span></button></div>
   </div>
+  <div class="sec"><h2>Isi bar mekanik</h2></div>
+  <div class="card" style="margin-bottom:24px" id="bar-prefs"></div>
+  <p class="note">Undo dan Redo selalu tampil — tanpa keduanya kesalahan ketik tak bisa dibatalkan.</p>
   <div class="sec"><h2>Data</h2></div>
   <div class="card">
     <div class="row"><div class="row-b"><div class="row-t">Impor vault Obsidian</div>
@@ -50,7 +54,7 @@ set:()=>`<div class="page">
       <div class="row-s">Markdown · JSON · PDF</div></div>
       <button class="btn btn-sec" onclick="toast('Mengekspor…')">Ekspor</button></div>
     <div class="row"><div class="row-b"><div class="row-t">Penyimpanan</div>
-      <div class="row-s">1 catatan · 4 KB terpakai</div></div></div>
+      <div class="row-s" id="ruang">menghitung…</div></div></div>
   </div>
   <p class="note" style="padding:24px 0 0">Hara v0.1 · prototipe desain · data tersimpan di perangkat</p></div>`};
 

@@ -2,6 +2,8 @@
 import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js';
 import { toggleMark } from '../editor/marks.js';
 import { undo, redo } from '../editor/history.js';
+import { pilihGambar } from '../editor/image.js';
+import { toggleRef } from '../editor/blockref.js';
 
 export const ACTIONS = {
   p:      () => setBlock('b-p'),
@@ -16,6 +18,8 @@ export const ACTIONS = {
   cal:    () => setBlock('b-cal'),
   hr:     insertHr,
   date:   () => insertTanggal(),
+  img:    pilihGambar,
+  ref:    toggleRef,
   b:      () => toggleMark('b'),
   i:      () => toggleMark('i'),
   strike: () => toggleMark('s'),
@@ -31,4 +35,4 @@ export const ACTIONS = {
 };
 
 /* Tombol yang TIDAK boleh merekam snapshot undo sebelum dijalankan. */
-export const TANPA_SNAP = new Set(['undo', 'redo']);
+export const TANPA_SNAP = new Set(['undo', 'redo', 'img']);

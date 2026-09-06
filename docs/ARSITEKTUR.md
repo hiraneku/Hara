@@ -15,6 +15,7 @@ docs/
 │
 ├── core/               dipakai SEMUA tools
 │   ├── store.js        state + localStorage. Ganti isi file ini saat pindah ke Dexie
+│   ├── blobs.js        berkas (gambar) di IndexedDB — kuota jauh lebih besar
 │   ├── router.js       go(), registerViews(), kait onBeforeLeave/onAfterRender
 │   ├── dom.js          $ $$ el esc stamp
 │   └── toast.js
@@ -29,10 +30,14 @@ docs/
 │   │   ├── marks.js    toggleMark, pending, flushPending
 │   │   ├── markdown.js autoFormat + pola INLINE & LINE
 │   │   ├── cleanup.js  cleanup, updateCount, syncBtns, saveNow/saveSoon
+│   │   ├── history.js  undo/redo — snapshot sendiri, bukan execCommand
+│   │   ├── image.js    sisip/pasang/hapus gambar
+│   │   ├── blockref.js tandai blok dengan ^id
 │   │   └── events.js   input, beforeinput, keydown, selectionchange
 │   │
 │   ├── bar/
-│   │   ├── config.js   DAFTAR TOMBOL SEBAGAI DATA
+│   │   ├── config.js   DAFTAR TOMBOL SEBAGAI DATA (datar + kelompok)
+│   │   ├── prefs.js    kontrol mana yang tampil + saklar getar
 │   │   ├── actions.js  peta aksi tiap tombol
 │   │   └── render.js   gambar bar + focusKeep
 │   │

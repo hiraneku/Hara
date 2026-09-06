@@ -5,6 +5,7 @@ import { insertInline } from './insert.js';
 import { focusKeep } from '../bar/render.js';
 import { applyLink } from './link.js';
 import { setCallout } from '../editor/blocks.js';
+import { getar } from '../bar/prefs.js';
 
 export const pop = () => document.getElementById('pop');
 
@@ -44,6 +45,7 @@ export function bindPop() {
     /* item dari menu kelompok */
     const gm = e.target.closest('[data-m]');
     if (gm) {
+      getar();
       closeAll();
       import('../bar/render.js').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;

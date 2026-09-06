@@ -7,6 +7,7 @@ import { findNote } from '../model.js';
 import { cur } from '../../core/router.js';
 import { canUndo, canRedo, record, isReplaying } from './history.js';
 import { GROUPS } from '../bar/config.js';
+import { bersihkanSrc } from './image.js';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -104,7 +105,7 @@ export function saveNow(){
   clearTimeout(saveT); saveT=null;   /* jangan biarkan jadwal lama menimpa */
   const d=docEl(); const n=findNote(state.openId);
   if(d&&n){
-    n.html=d.innerHTML;
+    n.html=bersihkanSrc(d.innerHTML);
     const t=((d.innerText!==undefined?d.innerText:d.textContent)||'')
               .replace(/[\u200b\u00a0]/g,' ').trim();
     n.ex=t.slice(0,80);
