@@ -1,5 +1,6 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
 import { docEl, sel, curBlock } from './caret.js';
+import { renumber } from './blocks.js';
 import { MARKSEL, markActive, pending } from './marks.js';
 import { state, save } from '../../core/store.js';
 import { findNote } from '../model.js';
@@ -29,7 +30,14 @@ export function cleanup(){
     if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
       const s2=sel();
       const inside=s2&&s2.anchorNode&&b.contains(s2.anchorNode);
-      if(inside) return;              /* jangan ganggu blok yg sedang diketik */
+      if(inside){
+        /* Caret sedang di blok kosong. <br> WAJIB berada di belakang caret,
+           bukan di depannya — kalau di depan, huruf pertama terdorong ke
+           baris berikutnya dan tampak pindah ke akhir ("Halo" -> "aloH"). */
+        const br=b.querySelector(':scope > br');
+        if(br && br!==b.lastChild) b.appendChild(br);
+        return;
+      }
       if(b.innerHTML!=='<br>') b.innerHTML='<br>';
     }
   });
@@ -82,6 +90,7 @@ export function saveNow(){
 }
 export function refresh(){
   cleanup();
+  renumber();                     /* nomor daftar selalu berurutan */
   if(!isReplaying()) record();   /* rekam hasil akhir tiap perubahan */
   updateCount(); syncBtns(); saveSoon();
 }

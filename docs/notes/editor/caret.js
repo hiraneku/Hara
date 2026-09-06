@@ -84,6 +84,10 @@ export function selectContents(node){
   const r=document.createRange(); r.selectNodeContents(node);
   const s=sel(); s.removeAllRanges(); s.addRange(r);
 }
+/* Apakah blok ini tidak punya teks sama sekali (hanya <br>/checkbox)? */
+function blokKosong(node){
+  return (node.textContent||'').replace(/[\u200b\u00a0]/g,'')==='';
+}
 export function caretEnd(node){
   /* blok kosong hanya berisi <br> pengganjal. Menaruh caret SESUDAH <br>
      membuat huruf pertama jatuh ke baris berikutnya ("Halo" -> "aloH").
@@ -91,13 +95,24 @@ export function caretEnd(node){
   if(node.childNodes.length===0){
     node.appendChild(document.createElement('br'));
   }
-  const only=node.childNodes.length===1&&node.firstChild.nodeName==='BR';
+  const only=blokKosong(node);
   if(only){
     /* blok kosong: <br> DIPERTAHANKAN supaya tinggi baris tetap ada,
        tapi caret ditaruh di TEXT NODE nyata sebelum <br>. Caret berbasis
        elemen membuat huruf pertama loncat ("Halo" -> "aloH"). */
+    /* buang semua text node kosong sisa penempatan caret sebelumnya */
+    Array.from(node.childNodes).forEach(n=>{
+      if(n.nodeType===3 && n.data==='') n.remove();
+    });
+    /* pastikan ada tepat satu <br> dan ia anak TERAKHIR */
+    const brs=Array.from(node.querySelectorAll(':scope > br'));
+    brs.slice(1).forEach(x=>x.remove());
+    let br=brs[0];
+    if(!br){ br=document.createElement('br'); }
+    node.appendChild(br);
+    /* caret di text node tepat SEBELUM <br> */
     const t=document.createTextNode('');
-    node.insertBefore(t,node.firstChild);
+    node.insertBefore(t,br);
     const r=document.createRange(); r.setStart(t,0); r.collapse(true);
     const s=sel(); s.removeAllRanges(); s.addRange(r);
     return;

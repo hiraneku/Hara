@@ -43,8 +43,38 @@ export function bindEditor() {
     /* Enter / Tab / Backspace mengubah struktur -> rekam dulu */
     if(e.key==='Enter'||e.key==='Tab'||e.key==='Backspace') snap();
     const b=curBlock();
+    /* Enter di dalam daftar: item kosong = keluar dari daftar */
     if(e.key==='Enter' && !e.shiftKey && b &&
-       (b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-cal'))){
+       (b.classList.contains('b-ol')||b.classList.contains('b-li')||b.classList.contains('b-todo'))){
+      const kosong=(b.textContent||'').replace(/[\u200b\u00a0\s]/g,'')==='';
+      if(kosong){
+        e.preventDefault();
+        setBlock('b-p');
+        refresh();
+        return;
+      }
+      /* item berisi: biarkan browser membuat blok baru, lalu rapikan */
+      setTimeout(()=>{
+        const nb=curBlock();
+        if(nb && nb!==b){
+          nb.removeAttribute('data-n');
+          const cb=nb.querySelector(':scope > .cbx');
+          if(cb) cb.remove();
+          if(b.classList.contains('b-todo')){
+            nb.classList.remove('done');
+            const box=document.createElement('button');
+            box.className='cbx'; box.contentEditable='false';
+            box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
+            nb.insertBefore(box,nb.firstChild);
+          }
+        }
+        refresh();
+      },0);
+      return;
+    }
+    if(e.key==='Enter' && !e.shiftKey && b &&
+       (b.classList.contains('b-h1')||b.classList.contains('b-h2')||
+        b.classList.contains('b-h3')||b.classList.contains('b-cal'))){
       e.preventDefault();
       const nb=document.createElement('div'); nb.className='b-p';
       b.after(nb); caretEnd(nb); refresh(); return;
