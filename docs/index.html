@@ -621,11 +621,13 @@ function caretEnd(node){
      membuat huruf pertama jatuh ke baris berikutnya ("Halo" -> "aloH").
      Ganti <br> dgn text node kosong supaya caret benar-benar di dalam teks. */
   const only=node.childNodes.length===1&&node.firstChild.nodeName==='BR';
-  if(only||node.childNodes.length===0){
-    node.innerHTML='';
-    const t=document.createTextNode('');
-    node.appendChild(t);
-    const r=document.createRange(); r.setStart(t,0); r.collapse(true);
+  if(node.childNodes.length===0){
+    node.appendChild(document.createElement('br'));
+  }
+  if(only||node.childNodes.length===1&&node.firstChild.nodeName==='BR'){
+    /* taruh caret SEBELUM <br> pengganjal, jangan sesudahnya (bikin "aloH"),
+       dan jangan hapus <br>-nya (blok jadi tinggi 0 & tak bisa diklik) */
+    const r=document.createRange(); r.setStart(node,0); r.collapse(true);
     const s=sel(); s.removeAllRanges(); s.addRange(r);
     return;
   }
@@ -748,6 +750,26 @@ function toggleMark(m){
   }
   refresh();
 }
+/* bungkus karakter yang baru saja diketik dgn mark yang menyala
+   (dipakai kalau beforeinput tidak tersedia / tidak sempat jalan) */
+function wrapTypedPending(){
+  const s2=sel(); if(!(s2&&s2.rangeCount)) return;
+  const r=s2.getRangeAt(0);
+  const node=r.startContainer;
+  if(node.nodeType!==3 || r.startOffset===0) return;
+  const marks=[...pending]; pending.clear();
+  const start=r.startOffset-1;
+  const rr=document.createRange();
+  rr.setStart(node,start); rr.setEnd(node,r.startOffset);
+  const frag=rr.extractContents();
+  let outer=frag;
+  marks.forEach(m=>{ const e=markEl(m); e.appendChild(outer); outer=e; });
+  rr.insertNode(outer);
+  let deep=outer; while(deep.firstChild) deep=deep.firstChild;
+  const nr=document.createRange();
+  nr.setStart(deep,deep.length!==undefined?deep.length:0); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+}
 /* terapkan mark yang menyala tepat sebelum mengetik */
 function flushPending(){
   if(!pending.size) return;
@@ -771,6 +793,13 @@ function cleanup(){
   });
   Array.from(d.children).forEach(b=>{
     if(b.classList.contains('b-div')) return;
+    /* <br> pengganjal hanya boleh ada saat blok benar-benar kosong */
+    if(b.textContent.replace(/[\u200b\u00a0]/g,'')!==''){
+      Array.from(b.querySelectorAll(':scope > br')).forEach(br=>{
+        if(!br.nextSibling || !(br.nextSibling.textContent||'').trim()) br.remove();
+        else br.remove();
+      });
+    }
     if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
       const s2=sel();
       const inside=s2&&s2.anchorNode&&b.contains(s2.anchorNode);
@@ -849,16 +878,18 @@ function autoFormat(){
   const s=sel(); if(!(s&&s.rangeCount)) return;
   const r=s.getRangeAt(0); if(!r.collapsed) return;
   const b=curBlock(); if(!b) return;
-  /* satukan pecahan text node lalu hitung posisi caret relatif ke BLOK,
-     supaya pola seperti **tebal** tetap cocok walau teks terpecah-pecah */
-  let abs=absOff(b,r.startContainer,r.startOffset);
-  b.normalize();
-  const pt=ptFromAbs(b,abs);
-  if(pt){ const nr=document.createRange(); nr.setStart(pt.node,pt.off); nr.collapse(true);
-          sel().removeAllRanges(); sel().addRange(nr); }
-  const node=pt?pt.node:r.startContainer;
+  const node=r.startContainer;
   if(!node||node.nodeType!==3) return;
   const full=b.textContent;
+  const caretAbs0=absOff(b,node,r.startOffset);
+  const before0=full.slice(0,caretAbs0);
+  /* cek dulu: apakah ADA pola yang cocok? kalau tidak, JANGAN sentuh DOM
+     maupun caret — menyentuhnya tiap ketikan membuat editor tak bisa dipakai */
+  const mayLine = LINE.some(([re])=>re.test(full))
+    || /^[-*+]\s/.test(full) || /^[-*+]?\s*\[[\sx]?\]\s/.test(full);
+  const mayInline = /\[\[[^\]\n]+\]\]$/.test(before0)
+    || INLINE.some(pp=>pp.re.test(before0));
+  if(!mayLine && !mayInline) return;
 
   /* to-do & daftar */
   /* buang n karakter pertama dari BLOK (bukan dari node kursor) */
@@ -891,8 +922,8 @@ function autoFormat(){
     if(ml){ eat(ml[0].length); setBlock('b-li'); return; }
   }
   /* wikilink */
-  const caretAbs=absOff(b,node,pt?pt.off:r.startOffset);
-  const before=full.slice(0,caretAbs);
+  const caretAbs=caretAbs0;
+  const before=before0;
   const wl=before.match(/\[\[([^\]\n]+)\]\]$/);
   if(wl){ replaceAbs(b,caretAbs,wl[0].length,'span','wl','[['+wl[1]+']]'); return; }
   /* inline mark */
@@ -1009,7 +1040,7 @@ document.addEventListener('beforeinput',e=>{
   if(pending.size && e.inputType==='insertText') flushPending();
 });
 document.addEventListener('input',e=>{
-  if(inDoc(e.target)){ autoFormat(); refresh(); }
+  if(inDoc(e.target)){ if(pending.size) wrapTypedPending(); autoFormat(); refresh(); }
   else if(e.target.classList && e.target.classList.contains('ed-t')) updateCount();
 });
 let _lastAnchor=null;
@@ -1017,8 +1048,9 @@ document.addEventListener('selectionchange',()=>{
   if(!docEl()) return;
   const s=sel();
   const a=s&&s.anchorNode;
-  if(pending.size && a!==_lastAnchor) pending.clear();
-  _lastAnchor=a;
+  const blk=curBlock();
+  if(pending.size && _lastAnchor && blk!==_lastAnchor) pending.clear();
+  _lastAnchor=blk;
   syncBtns();
 });
 document.addEventListener('keydown',e=>{
