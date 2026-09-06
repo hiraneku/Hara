@@ -1,16 +1,16 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260906145805';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260906145805';
-import { docEl, ensureCaret, curBlock } from '../editor/caret.js?v=20260906145805';
-import { openPop, closeAll } from '../menus/pop.js?v=20260906145805';
-import { slashMenu } from '../menus/slash.js?v=20260906145805';
-import { wlMenu }    from '../menus/wikilink.js?v=20260906145805';
-import { tagMenu }   from '../menus/tag.js?v=20260906145805';
-import { linkMenu }  from '../menus/link.js?v=20260906145805';
-import { calloutMenu } from '../menus/callout.js?v=20260906145805';
-import { snap } from '../editor/history.js?v=20260906145805';
-import { tersembunyi, getar } from './prefs.js?v=20260906145805';
-import { HELP, HELP_GRUP } from './help.js?v=20260906145805';
+import { BAR, GROUPS } from './config.js?v=20260906150557';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260906150557';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260906150557';
+import { openPop, closeAll } from '../menus/pop.js?v=20260906150557';
+import { slashMenu } from '../menus/slash.js?v=20260906150557';
+import { wlMenu }    from '../menus/wikilink.js?v=20260906150557';
+import { tagMenu }   from '../menus/tag.js?v=20260906150557';
+import { linkMenu }  from '../menus/link.js?v=20260906150557';
+import { calloutMenu } from '../menus/callout.js?v=20260906150557';
+import { snap } from '../editor/history.js?v=20260906150557';
+import { tersembunyi, getar } from './prefs.js?v=20260906150557';
+import { HELP, HELP_GRUP } from './help.js?v=20260906150557';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -137,6 +137,7 @@ function bindBar() {
     }
     btn.addEventListener('click', () => {
       getar();
+      kunciKeyboard();
       if (btn.dataset.g) {
         const sudah = btn.classList.contains('open');
         document.querySelectorAll('.mb-g.open').forEach(x => x.classList.remove('open'));
@@ -152,23 +153,39 @@ function bindBar() {
   });
 }
 
-/* Fokuskan editor TANPA kehilangan seleksi (focus() kerap meruntuhkannya). */
+/* Jaga posisi kursor TANPA memunculkan keyboard.
+
+   Sebelumnya fungsi ini memanggil d.focus(), dan itulah yang membuat papan
+   ketik terbuka setiap kali tombol bar ditekan. Fokus sebenarnya tidak
+   diperlukan: semua mekanik memanipulasi DOM langsung, bukan lewat
+   document.execCommand yang mensyaratkan elemen ter-fokus.
+
+   Yang benar-benar dibutuhkan hanyalah objek Selection tetap menunjuk ke
+   dalam editor — dan itu bertahan sendiri selama tidak ada elemen lain yang
+   merebut fokus. Tombol bar sudah mencegahnya lewat preventDefault pada
+   mousedown/pointerdown. */
 export function focusKeep() {
   const d = docEl();
   if (!d) return;
   const s = window.getSelection();
-  let keep = null;
-  if (s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))
-    keep = s.getRangeAt(0).cloneRange();
-  if (document.activeElement !== d) d.focus({ preventScroll: true });
-  if (keep) {
-    const s2 = window.getSelection();
-    const live = s2.rangeCount ? s2.getRangeAt(0) : null;
-    if (!live || !d.contains(live.startContainer) ||
-        live.startContainer === d ||
-        (live.collapsed && !keep.collapsed)) {
-      s2.removeAllRanges();
-      s2.addRange(keep);
-    }
+  /* Seleksi masih menunjuk ke editor -> tidak ada yang perlu dilakukan. */
+  if (s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer)) return;
+
+  /* Seleksi hilang (mis. baru membuka catatan dan belum menyentuh teks).
+     Pulihkan ke posisi terakhir yang diketahui, tanpa memanggil focus(). */
+  if (rangeTerakhir && d.contains(rangeTerakhir.startContainer)) {
+    s.removeAllRanges();
+    s.addRange(rangeTerakhir);
   }
 }
+
+/* Kursor terakhir di dalam editor, dicatat terus-menerus supaya tombol bar
+   punya sasaran walau papan ketik belum pernah dibuka. */
+let rangeTerakhir = null;
+document.addEventListener('selectionchange', () => {
+  const d = docEl();
+  if (!d) return;
+  const s = window.getSelection();
+  if (s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))
+    rangeTerakhir = s.getRangeAt(0).cloneRange();
+});

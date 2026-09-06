@@ -1,8 +1,24 @@
 /* Posisi kursor. Bagian paling rawan — semua bug "aloH" berasal dari sini.
    Aturan: caret HARUS bertumpu pada text node, tidak pernah pada elemen. */
-import { BLOCKCLS } from './blocks.js?v=20260906145805';
+import { BLOCKCLS } from './blocks.js?v=20260906150557';
 
 export const docEl = () => document.querySelector('.ed-doc');
+
+/* ── Kunci papan ketik ──
+   Sebagian browser memunculkan keyboard begitu elemen contenteditable
+   berstatus fokus. inputmode="none" memberitahu sistem agar tidak
+   menampilkannya. Dilepas saat pengguna benar-benar menyentuh teks. */
+export function kunciKeyboard() {
+  const d = docEl();
+  if (d) d.setAttribute('inputmode', 'none');
+}
+export function bukaKeyboard() {
+  const d = docEl();
+  if (d) d.removeAttribute('inputmode');
+}
+document.addEventListener('pointerdown', e => {
+  if (e.target.closest && e.target.closest('.ed-doc')) bukaKeyboard();
+}, true);
 export const sel   = () => window.getSelection();
 
 export const editable = el => el && el.classList && !el.classList.contains('b-div');
