@@ -1,11 +1,11 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js';
-import { setBlock, indent } from './blocks.js';
-import { pending, flushPending, wrapTypedPending } from './marks.js';
-import { autoFormat } from './markdown.js';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js';
-import { onTitle } from '../model.js';
-import { record, snap, undo, redo, isReplaying } from './history.js';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906145805';
+import { setBlock, indent } from './blocks.js?v=20260906145805';
+import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906145805';
+import { autoFormat } from './markdown.js?v=20260906145805';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906145805';
+import { onTitle } from '../model.js?v=20260906145805';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906145805';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');

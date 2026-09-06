@@ -1,13 +1,13 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js';
-import { renumber } from './blocks.js';
-import { MARKSEL, markActive, pending } from './marks.js';
-import { state, save } from '../../core/store.js';
-import { findNote } from '../model.js';
-import { cur } from '../../core/router.js';
-import { canUndo, canRedo, record, isReplaying } from './history.js';
-import { GROUPS } from '../bar/config.js';
-import { bersihkanSrc } from './image.js';
+import { docEl, sel, curBlock } from './caret.js?v=20260906145805';
+import { renumber } from './blocks.js?v=20260906145805';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260906145805';
+import { state, save } from '../../core/store.js?v=20260906145805';
+import { findNote } from '../model.js?v=20260906145805';
+import { cur } from '../../core/router.js?v=20260906145805';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260906145805';
+import { GROUPS } from '../bar/config.js?v=20260906145805';
+import { bersihkanSrc } from './image.js?v=20260906145805';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

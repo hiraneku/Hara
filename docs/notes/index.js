@@ -1,21 +1,21 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js';
-import { homeView, notesView } from './views/list.js';
-import { editorView } from './views/editor.js';
-import { miscViews } from './views/misc.js';
-import { bindEditor } from './editor/events.js';
-import { renderBar }  from './bar/render.js';
-import { bindPop, closeAll } from './menus/pop.js';
-import { saveNow, updateCount, syncBtns } from './editor/cleanup.js';
-import { pending } from './editor/marks.js';
-import { docEl, caretEnd } from './editor/caret.js';
-import { resetHistory } from './editor/history.js';
-import { pasangGambar, hapusGambar } from './editor/image.js';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js';
-import { renderBar as gambarBar } from './bar/render.js';
-import { state } from '../core/store.js';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260906145805';
+import { homeView, notesView } from './views/list.js?v=20260906145805';
+import { editorView } from './views/editor.js?v=20260906145805';
+import { miscViews } from './views/misc.js?v=20260906145805';
+import { bindEditor } from './editor/events.js?v=20260906145805';
+import { renderBar }  from './bar/render.js?v=20260906145805';
+import { bindPop, closeAll } from './menus/pop.js?v=20260906145805';
+import { saveNow, updateCount, syncBtns } from './editor/cleanup.js?v=20260906145805';
+import { pending } from './editor/marks.js?v=20260906145805';
+import { docEl, caretEnd } from './editor/caret.js?v=20260906145805';
+import { resetHistory } from './editor/history.js?v=20260906145805';
+import { pasangGambar, hapusGambar } from './editor/image.js?v=20260906145805';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260906145805';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260906145805';
+import { renderBar as gambarBar } from './bar/render.js?v=20260906145805';
+import { state } from '../core/store.js?v=20260906145805';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {

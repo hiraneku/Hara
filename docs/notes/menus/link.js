@@ -1,9 +1,9 @@
 /* Tautan ke alamat web. Berbeda dari [[wikilink]] yang menuju catatan lain. */
 
-import { docEl, sel, ensureCaret } from '../editor/caret.js';
-import { refresh } from '../editor/cleanup.js';
-import { esc } from '../../core/dom.js';
-import { openPop, pop, closeAll } from './pop.js';
+import { docEl, sel, ensureCaret } from '../editor/caret.js?v=20260906145805';
+import { refresh } from '../editor/cleanup.js?v=20260906145805';
+import { esc } from '../../core/dom.js?v=20260906145805';
+import { openPop, pop, closeAll } from './pop.js?v=20260906145805';
 
 /* Rapikan alamat: "hara.app" -> "https://hara.app" */
 function rapikan(url) {

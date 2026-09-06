@@ -78,6 +78,19 @@ tools/reminder/
 Lalu di `app.js`: `import { reminderModule } from './tools/reminder/index.js';`
 dan masukkan ke array `MODULES`.
 
+## Sebelum commit: cap versi
+
+GitHub Pages menyajikan modul ES dengan cache agresif, dan browser HP kerap
+menahan berkas lama berhari-hari — deploy berhasil tapi pengguna tetap melihat
+versi lama. Karena itu jalankan ini setiap kali sebelum commit:
+
+```
+node tools/version.mjs
+```
+
+Skrip menempelkan `?v=<cap waktu>` ke semua import, `<script src>`, dan
+`<link href>` lokal. Idempoten: cap lama diganti, bukan ditumpuk.
+
 ## Rencana berikutnya
 
 Saat pindah ke React + Vite + Lexical, struktur folder ini **tetap** —

@@ -1,11 +1,11 @@
 /* Popup melayang di atas bar. */
-import { docEl, ensureCaret } from '../editor/caret.js';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js';
-import { insertInline } from './insert.js';
-import { focusKeep } from '../bar/render.js';
-import { applyLink } from './link.js';
-import { setCallout } from '../editor/blocks.js';
-import { getar } from '../bar/prefs.js';
+import { docEl, ensureCaret } from '../editor/caret.js?v=20260906145805';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260906145805';
+import { insertInline } from './insert.js?v=20260906145805';
+import { focusKeep } from '../bar/render.js?v=20260906145805';
+import { applyLink } from './link.js?v=20260906145805';
+import { setCallout } from '../editor/blocks.js?v=20260906145805';
+import { getar } from '../bar/prefs.js?v=20260906145805';
 
 export const pop = () => document.getElementById('pop');
 
@@ -46,7 +46,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260906145805').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -55,7 +55,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260906145805').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -64,7 +64,7 @@ export function bindPop() {
     if (gm) {
       getar();
       closeAll();
-      import('../bar/render.js').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260906145805').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 

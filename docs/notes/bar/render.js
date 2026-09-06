@@ -1,16 +1,16 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js';
-import { ACTIONS, TANPA_SNAP } from './actions.js';
-import { docEl, ensureCaret, curBlock } from '../editor/caret.js';
-import { openPop, closeAll } from '../menus/pop.js';
-import { slashMenu } from '../menus/slash.js';
-import { wlMenu }    from '../menus/wikilink.js';
-import { tagMenu }   from '../menus/tag.js';
-import { linkMenu }  from '../menus/link.js';
-import { calloutMenu } from '../menus/callout.js';
-import { snap } from '../editor/history.js';
-import { tersembunyi, getar } from './prefs.js';
-import { HELP, HELP_GRUP } from './help.js';
+import { BAR, GROUPS } from './config.js?v=20260906145805';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260906145805';
+import { docEl, ensureCaret, curBlock } from '../editor/caret.js?v=20260906145805';
+import { openPop, closeAll } from '../menus/pop.js?v=20260906145805';
+import { slashMenu } from '../menus/slash.js?v=20260906145805';
+import { wlMenu }    from '../menus/wikilink.js?v=20260906145805';
+import { tagMenu }   from '../menus/tag.js?v=20260906145805';
+import { linkMenu }  from '../menus/link.js?v=20260906145805';
+import { calloutMenu } from '../menus/callout.js?v=20260906145805';
+import { snap } from '../editor/history.js?v=20260906145805';
+import { tersembunyi, getar } from './prefs.js?v=20260906145805';
+import { HELP, HELP_GRUP } from './help.js?v=20260906145805';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 

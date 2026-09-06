@@ -1,8 +1,8 @@
 /* Bentuk data catatan + operasi CRUD. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js';
-import { toast } from '../core/toast.js';
-import { go } from '../core/router.js';
-import { saveSoon } from './editor/cleanup.js';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260906145805';
+import { toast } from '../core/toast.js?v=20260906145805';
+import { go } from '../core/router.js?v=20260906145805';
+import { saveSoon } from './editor/cleanup.js?v=20260906145805';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
