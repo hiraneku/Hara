@@ -138,6 +138,8 @@ input,textarea{font:inherit;color:inherit}
 .b-cal{background:var(--accent-weak);border-left:2.5px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;
   padding:12px 14px;font-size:15px;line-height:1.6}
 .b-cal .t{font-weight:600;color:var(--accent);font-size:13px;display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.ed-doc .b-cal{margin:6px 0}
+.ed-doc .b-div{cursor:default;height:1px;background:var(--border);margin:16px 0;padding:0}
 .b-div{height:1px;background:var(--border);margin:18px 0}
 .cbx{width:19px;height:19px;border:1.5px solid var(--border-strong);border-radius:999px;flex:none;
   display:grid;place-items:center;margin-top:3px;transition:.12s var(--ease)}
@@ -327,7 +329,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
     <button class="mb" data-m="hl">==</button><button class="mb" data-m="strike"><s>S</s></button><div class="mb-sep"></div>
     <button class="mb acc" data-m="wl">[[</button><button class="mb acc" data-m="tag">#</button><div class="mb-sep"></div>
     <button class="mb" data-m="todo">☐</button><button class="mb" data-m="li">•</button>
-    <button class="mb" data-m="code">&lt;/&gt;</button><button class="mb" data-m="quote">"</button>
+    <button class="mb" data-m="icode">`</button><button class="mb" data-m="code">&lt;/&gt;</button><button class="mb" data-m="quote">"</button><button class="mb" data-m="cal">!</button><button class="mb" data-m="hr">—</button>
     <div class="mb-sep"></div><button class="mb" data-m="out">⇤</button><button class="mb" data-m="in">⇥</button>
   </div>
 </div>
@@ -613,6 +615,13 @@ function syncMarkBtns(){
     const btn=document.querySelector('.mb[data-m="'+m+'"]');
     if(btn)btn.classList.toggle('active',act.has(m));
   });
+  /* tombol blok ikut menyala sesuai blok tempat kursor berada */
+  const b=curBlock();
+  const map={h:'b-h1',h2:'b-h2',quote:'b-quote',code:'b-code',todo:'b-todo',li:'b-li',cal:'b-cal'};
+  Object.entries(map).forEach(([k,cls])=>{
+    const btn=document.querySelector('.mb[data-m="'+k+'"]');
+    if(btn)btn.classList.toggle('active',!!b&&b.classList.contains(cls));
+  });
 }
 /* buang mark m dari sebuah fragment */
 function stripMark(frag,m){
@@ -728,9 +737,11 @@ function wrapSel(tag,cls){
   if(MARKS[m])return toggleMark(m);
 }
 /* ── ubah jenis blok ── */
-const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo'];
-function setBlock(cls){
+const BLOCKCLS=['b-p','b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal'];
+function setBlock(cls,force){
   restoreSel(false);const b=curBlock();if(!b)return;
+  /* klik tombol yang sama -> kembali ke paragraf biasa */
+  if(!force&&cls!=='b-p'&&b.classList.contains(cls))cls='b-p';
   const wasTodo=b.classList.contains('b-todo');
   const cb=b.querySelector('.cbx');if(cb)cb.remove();
   BLOCKCLS.forEach(c=>b.classList.remove(c));
@@ -740,7 +751,7 @@ function setBlock(cls){
     box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
     b.insertBefore(box,b.firstChild);
   }
-  placeCaretEnd(b);updateCount();
+  placeCaretEnd(b);updateCount();syncMarkBtns();
 }
 function placeCaretEnd(b){
   const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
@@ -889,7 +900,7 @@ const menus={
 slash:`<div class="pop-h">Sisipkan blok</div>`+[
   ['i-txt','Teks','','b-p'],['i-hash','Heading 1','#','b-h1'],['i-hash','Heading 2','##','b-h2'],
   ['i-check2','To-do','- [ ]','b-todo'],['i-quote','Kutipan','>','b-quote'],['i-code','Kode','```','b-code'],
-  ['i-txt','Daftar','-','b-li']]
+  ['i-txt','Daftar','-','b-li'],['i-info','Callout','> [!]','b-cal'],['i-txt','Pembatas','---','hr']]
   .map(([i,n,k,c])=>`<button class="pop-i" data-blk="${c}"><svg class="ico"><use href="#${i}"/></svg>${n}<span class="k">${k}</span></button>`).join(''),
 wl:`<div class="pop-h">Tautkan ke catatan</div>`,
 tag:`<div class="pop-h">Tag</div>
@@ -920,17 +931,27 @@ document.querySelectorAll('.mb').forEach(b=>{
       h:()=>setBlock('b-h1'),h2:()=>setBlock('b-h2'),quote:()=>setBlock('b-quote'),
       code:()=>setBlock('b-code'),todo:()=>setBlock('b-todo'),li:()=>setBlock('b-li'),
       b:()=>toggleMark('b'),i:()=>toggleMark('i'),hl:()=>toggleMark('hl'),
-      strike:()=>toggleMark('s'),
+      strike:()=>toggleMark('s'),icode:()=>toggleMark('code'),
+      cal:()=>setBlock('b-cal'),
+      hr:()=>{const bl=curBlock();if(!bl)return;
+        const hr=document.createElement('div');hr.className='b-div';hr.contentEditable='false';
+        bl.after(hr);
+        const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';
+        hr.after(nb);placeCaretEnd(nb);updateCount();},
       in:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=(parseInt(bl.style.paddingLeft||0)+24)+'px';restoreSel(false);}},
       out:()=>{const bl=curBlock();if(bl){bl.style.paddingLeft=Math.max(0,parseInt(bl.style.paddingLeft||0)-24)+'px';restoreSel(false);}},
     }[m];
     if(act)act();
   };
 });
-pop.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')e.preventDefault();});
+pop.addEventListener('pointerdown',e=>e.preventDefault());
 pop.addEventListener('click',e=>{
   const t=e.target.closest('[data-blk],[data-ins],[data-wl]');if(!t)return;
-  if(t.dataset.blk)setBlock(t.dataset.blk);
+  if(t.dataset.blk==='hr'){const bl=curBlock();if(bl){
+      const hr=document.createElement('div');hr.className='b-div';hr.contentEditable='false';bl.after(hr);
+      const nb=document.createElement('div');nb.className='b-p';nb.innerHTML='<br>';hr.after(nb);
+      placeCaretEnd(nb);updateCount();}}
+  else if(t.dataset.blk)setBlock(t.dataset.blk);
   else if(t.dataset.ins)insertEl(`<span class="tg">${t.dataset.ins}</span>`);
   else if(t.dataset.wl)insertEl(`<span class="wl">[[${t.dataset.wl}]]</span>`);
   closeAll();
@@ -986,7 +1007,7 @@ document.addEventListener('keydown',e=>{
       if(atStart&&fancy){
         e.preventDefault();
         const cb=b.querySelector('.cbx');if(cb)cb.remove();
-        b.classList.remove('b-h1','b-h2','b-quote','b-code','b-li','b-todo','done');
+        b.classList.remove('b-h1','b-h2','b-quote','b-code','b-li','b-todo','b-cal','done');
         b.classList.add('b-p');b.style.paddingLeft='';
         placeCaretEnd(b);updateCount();return;
       }
