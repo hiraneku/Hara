@@ -291,3 +291,26 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   color:var(--faint);margin-bottom:3px}
 .help-b p{margin:0;font-size:13px;line-height:1.55;color:var(--muted)}
 .help-go{width:100%;justify-content:center;margin-top:4px}
+
+/* ── jenis huruf ── */
+.fnt[data-font=inter]{font-family:'Inter',system-ui,sans-serif}
+.fnt[data-font=serif-app]{font-family:'Instrument Serif',Georgia,serif}
+.fnt[data-font=mono-app]{font-family:'JetBrains Mono',ui-monospace,monospace}
+.fnt[data-font=arial]{font-family:Arial,Helvetica,'Liberation Sans',sans-serif}
+.fnt[data-font=helvetica]{font-family:Helvetica,Arial,'Nimbus Sans',sans-serif}
+.fnt[data-font=verdana]{font-family:Verdana,Geneva,'DejaVu Sans',sans-serif}
+.fnt[data-font=tahoma]{font-family:Tahoma,Verdana,'DejaVu Sans',sans-serif}
+.fnt[data-font=trebuchet]{font-family:'Trebuchet MS',Tahoma,sans-serif}
+.fnt[data-font=georgia]{font-family:Georgia,'Times New Roman',serif}
+.fnt[data-font=times]{font-family:'Times New Roman',Times,'Liberation Serif',serif}
+.fnt[data-font=palatino]{font-family:'Palatino Linotype','Book Antiqua',Palatino,serif}
+.fnt[data-font=courier]{font-family:'Courier New',Courier,'Liberation Mono',monospace}
+.fnt[data-font=consolas]{font-family:Consolas,'Andale Mono','DejaVu Sans Mono',monospace}
+.fnt[data-font=impact]{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif}
+.fnt[data-font=comic]{font-family:'Comic Sans MS','Comic Sans',cursive}
+
+/* menu font: tiap baris memakai fontnya sendiri sebagai pratinjau */
+.pop-font{flex-direction:column;align-items:flex-start;gap:1px;padding:8px 13px}
+.pop-font .fn-n{font-size:15px;line-height:1.3}
+.pop-font .fn-k{font-size:11px;color:var(--faint);font-family:var(--sans)}
+.pop-font.on .fn-n{color:var(--accent);font-weight:600}

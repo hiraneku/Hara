@@ -37,6 +37,11 @@ export const BAR = [
     ]
   },
   {
+    g: 'huruf', label: '<svg class="bi"><use href="#i-font"/></svg>', title: 'Jenis huruf',
+    menu: 'font',          /* menu khusus, bukan daftar items biasa */
+    items: []
+  },
+  {
     g: 'tandai', label: '<svg class="bi"><use href="#i-pen"/></svg>', title: 'Penandaan',
     items: [
       { m: 'hl',     ikon: 'i-pen',   nama: 'Sorot',        kunci: '==' },

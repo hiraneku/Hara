@@ -1,16 +1,17 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260906150557';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260906150557';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260906150557';
-import { openPop, closeAll } from '../menus/pop.js?v=20260906150557';
-import { slashMenu } from '../menus/slash.js?v=20260906150557';
-import { wlMenu }    from '../menus/wikilink.js?v=20260906150557';
-import { tagMenu }   from '../menus/tag.js?v=20260906150557';
-import { linkMenu }  from '../menus/link.js?v=20260906150557';
-import { calloutMenu } from '../menus/callout.js?v=20260906150557';
-import { snap } from '../editor/history.js?v=20260906150557';
-import { tersembunyi, getar } from './prefs.js?v=20260906150557';
-import { HELP, HELP_GRUP } from './help.js?v=20260906150557';
+import { BAR, GROUPS } from './config.js?v=20260906151809';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260906151809';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260906151809';
+import { openPop, closeAll } from '../menus/pop.js?v=20260906151809';
+import { slashMenu } from '../menus/slash.js?v=20260906151809';
+import { wlMenu }    from '../menus/wikilink.js?v=20260906151809';
+import { tagMenu }   from '../menus/tag.js?v=20260906151809';
+import { linkMenu }  from '../menus/link.js?v=20260906151809';
+import { fontMenu } from '../menus/font.js?v=20260906151809';
+import { calloutMenu } from '../menus/callout.js?v=20260906151809';
+import { snap } from '../editor/history.js?v=20260906151809';
+import { tersembunyi, getar } from './prefs.js?v=20260906151809';
+import { HELP, HELP_GRUP } from './help.js?v=20260906151809';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -60,6 +61,7 @@ function rapikanSep(box){
 function groupMenu(g) {
   const grp = GROUPS.find(x => x.g === g);
   if (!grp) return '';
+  if (grp.menu === 'font') return fontMenu();
   const b = curBlock();
   const BLK = { p:'b-p', h:'b-h1', h2:'b-h2', h3:'b-h3', quote:'b-quote',
                 code:'b-code', cal:'b-cal', li:'b-li', ol:'b-ol', todo:'b-todo' };

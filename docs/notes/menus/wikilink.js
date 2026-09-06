@@ -1,6 +1,6 @@
 /* Menu "[[" — tautkan ke catatan lain. */
-import { state } from '../../core/store.js?v=20260906150557';
-import { esc } from '../../core/dom.js?v=20260906150557';
+import { state } from '../../core/store.js?v=20260906151809';
+import { esc } from '../../core/dom.js?v=20260906151809';
 
 export function wlMenu() {
   let h = `<div class="pop-h">Tautkan ke catatan</div>`;
