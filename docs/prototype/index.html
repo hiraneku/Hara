@@ -608,8 +608,7 @@ function ensureCaret(){
   if(!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))){
     const b=d.lastElementChild||d.firstElementChild;
     if(!b) return null;
-    const r=document.createRange(); r.selectNodeContents(b); r.collapse(false);
-    s.removeAllRanges(); s.addRange(r);
+    caretEnd(b);
   }
   return s.getRangeAt(0);
 }
@@ -618,6 +617,18 @@ function selectContents(node){
   const s=sel(); s.removeAllRanges(); s.addRange(r);
 }
 function caretEnd(node){
+  /* blok kosong hanya berisi <br> pengganjal. Menaruh caret SESUDAH <br>
+     membuat huruf pertama jatuh ke baris berikutnya ("Halo" -> "aloH").
+     Ganti <br> dgn text node kosong supaya caret benar-benar di dalam teks. */
+  const only=node.childNodes.length===1&&node.firstChild.nodeName==='BR';
+  if(only||node.childNodes.length===0){
+    node.innerHTML='';
+    const t=document.createTextNode('');
+    node.appendChild(t);
+    const r=document.createRange(); r.setStart(t,0); r.collapse(true);
+    const s=sel(); s.removeAllRanges(); s.addRange(r);
+    return;
+  }
   const r=document.createRange(); r.selectNodeContents(node); r.collapse(false);
   const s=sel(); s.removeAllRanges(); s.addRange(r);
 }
@@ -645,7 +656,7 @@ function insertHr(){
   const hr=document.createElement('div');
   hr.className='b-div'; hr.contentEditable='false';
   b.after(hr);
-  const nb=document.createElement('div'); nb.className='b-p'; nb.innerHTML='<br>';
+  const nb=document.createElement('div'); nb.className='b-p';
   hr.after(nb); caretEnd(nb); refresh();
 }
 function indent(dir){
@@ -669,9 +680,11 @@ function markAround(m,node){
 }
 function markActive(m){
   const d=docEl(); if(!d) return false;
-  if(pending.has(m)) return true;
   const s=sel(); if(!(s&&s.rangeCount&&d.contains(s.getRangeAt(0).startContainer))) return false;
   const r=s.getRangeAt(0);
+  /* niat 'pending' hanya berlaku saat kursor kosong; kalau ada teks terpilih
+     yang menentukan adalah isi DOM, bukan niat sebelumnya */
+  if(r.collapsed && pending.has(m)) return true;
   if(markAround(m,r.startContainer)) return true;
   if(!r.collapsed){
     const f=r.cloneContents();
@@ -703,6 +716,7 @@ function toggleMark(m){
     refresh(); return;
   }
 
+  pending.clear();                 /* seleksi nyata mengalahkan niat lama */
   const on=markActive(m);
   const host=markAround(m,r.startContainer);
   const whole = host && host.textContent.replace(/[\u200b\u00a0]/g,'')
@@ -758,6 +772,9 @@ function cleanup(){
   Array.from(d.children).forEach(b=>{
     if(b.classList.contains('b-div')) return;
     if(b.textContent.replace(/[\u200b\u00a0\s]/g,'')==='' && !b.querySelector('img,.cbx')){
+      const s2=sel();
+      const inside=s2&&s2.anchorNode&&b.contains(s2.anchorNode);
+      if(inside) return;              /* jangan ganggu blok yg sedang diketik */
       if(b.innerHTML!=='<br>') b.innerHTML='<br>';
     }
   });
@@ -800,36 +817,84 @@ const INLINE=[
 ];
 const LINE=[[/^###\s/,'b-h2'],[/^##\s/,'b-h2'],[/^#\s/,'b-h1'],
             [/^>\s/,'b-quote'],[/^```$/,'b-code']];
+function absOff(b,c,o){
+  let n=0,done=false;
+  (function walk(el){
+    if(done) return;
+    for(const ch of Array.from(el.childNodes)){
+      if(done) return;
+      if(ch===c && ch.nodeType===3){ n+=o; done=true; return; }
+      if(ch.nodeType===3) n+=ch.data.length;
+      else { if(ch===c){ done=true; return; } walk(ch); }
+    }
+  })(b);
+  return n;
+}
+function ptFromAbs(b,abs){
+  let rem=abs,res=null;
+  (function walk(el){
+    if(res) return;
+    for(const ch of Array.from(el.childNodes)){
+      if(res) return;
+      if(ch.nodeType===3){
+        if(rem<=ch.data.length){ res={node:ch,off:rem}; return; }
+        rem-=ch.data.length;
+      } else walk(ch);
+    }
+  })(b);
+  return res;
+}
 function autoFormat(){
   const d=docEl(); if(!d) return;
   const s=sel(); if(!(s&&s.rangeCount)) return;
   const r=s.getRangeAt(0); if(!r.collapsed) return;
-  const node=r.startContainer; if(node.nodeType!==3) return;
   const b=curBlock(); if(!b) return;
+  /* satukan pecahan text node lalu hitung posisi caret relatif ke BLOK,
+     supaya pola seperti **tebal** tetap cocok walau teks terpecah-pecah */
+  let abs=absOff(b,r.startContainer,r.startOffset);
+  b.normalize();
+  const pt=ptFromAbs(b,abs);
+  if(pt){ const nr=document.createRange(); nr.setStart(pt.node,pt.off); nr.collapse(true);
+          sel().removeAllRanges(); sel().addRange(nr); }
+  const node=pt?pt.node:r.startContainer;
+  if(!node||node.nodeType!==3) return;
   const full=b.textContent;
 
   /* to-do & daftar */
-  const todo=b.classList.contains('b-li')?/^\[\s?\]\s/:/^[-*]\s\[\s?\]\s/;
+  /* buang n karakter pertama dari BLOK (bukan dari node kursor) */
+  const eat=n=>{
+    let left=n;
+    const walk=el=>{
+      for(const c of Array.from(el.childNodes)){
+        if(left<=0) return;
+        if(c.nodeType===3){
+          const take=Math.min(left,c.data.length);
+          c.deleteData(0,take); left-=take;
+          if(c.data==='' && c.parentNode.childNodes.length>1) c.remove();
+        } else walk(c);
+      }
+    };
+    walk(b);
+  };
+  const todo=b.classList.contains('b-li')?/^[-*+]?\s*\[[\sx]?\]\s/:/^[-*+]\s\[[\sx]?\]\s/;
   const mt=full.match(todo);
   if(mt && !b.classList.contains('b-todo')){
-    node.deleteData(0,Math.min(mt[0].length,node.data.length));
+    eat(mt[0].length);
     b.classList.remove('b-li'); setBlock('b-todo'); return;
   }
   for(const [re,cls] of LINE){
     const m2=full.match(re);
-    if(m2 && !b.classList.contains(cls)){
-      node.deleteData(0,Math.min(m2[0].length,node.data.length));
-      setBlock(cls); return;
-    }
+    if(m2 && !b.classList.contains(cls)){ eat(m2[0].length); setBlock(cls); return; }
   }
   if(!b.classList.contains('b-li') && !b.classList.contains('b-todo')){
     const ml=full.match(/^[-*+]\s/);
-    if(ml){ node.deleteData(0,Math.min(ml[0].length,node.data.length)); setBlock('b-li'); return; }
+    if(ml){ eat(ml[0].length); setBlock('b-li'); return; }
   }
   /* wikilink */
-  const before=node.data.slice(0,r.startOffset);
+  const caretAbs=absOff(b,node,pt?pt.off:r.startOffset);
+  const before=full.slice(0,caretAbs);
   const wl=before.match(/\[\[([^\]\n]+)\]\]$/);
-  if(wl){ replaceWith(node,r.startOffset,wl[0].length,'span','wl','[['+wl[1]+']]'); return; }
+  if(wl){ replaceAbs(b,caretAbs,wl[0].length,'span','wl','[['+wl[1]+']]'); return; }
   /* inline mark */
   for(const p of INLINE){
     const m2=before.match(p.re);
@@ -837,9 +902,24 @@ function autoFormat(){
     const inner=m2[p.g||1];
     const lead=(p.g===2 && m2[1])?m2[1].length:0;
     const len=m2[0].length-lead;
-    replaceWith(node,r.startOffset,len,MARKTAG[p.m],MARKCLS[p.m]||'',inner);
+    replaceAbs(b,caretAbs,len,MARKTAG[p.m],MARKCLS[p.m]||'',inner);
     return;
   }
+}
+function replaceAbs(b,end,len,tag,cls,text){
+  const start=end-len; if(start<0) return;
+  const p1=ptFromAbs(b,start), p2=ptFromAbs(b,end);
+  if(!p1||!p2) return;
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  el.textContent=text;
+  const r=document.createRange();
+  try{ r.setStart(p1.node,p1.off); r.setEnd(p2.node,p2.off); }catch(e){ return; }
+  r.deleteContents(); r.insertNode(el);
+  const sp=document.createTextNode('\u200b'); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  sel().removeAllRanges(); sel().addRange(nr);
+  updateCount();
 }
 function replaceWith(node,end,len,tag,cls,text){
   const start=end-len; if(start<0) return;
@@ -932,14 +1012,22 @@ document.addEventListener('input',e=>{
   if(inDoc(e.target)){ autoFormat(); refresh(); }
   else if(e.target.classList && e.target.classList.contains('ed-t')) updateCount();
 });
-document.addEventListener('selectionchange',()=>{ if(docEl()) syncBtns(); });
+let _lastAnchor=null;
+document.addEventListener('selectionchange',()=>{
+  if(!docEl()) return;
+  const s=sel();
+  const a=s&&s.anchorNode;
+  if(pending.size && a!==_lastAnchor) pending.clear();
+  _lastAnchor=a;
+  syncBtns();
+});
 document.addEventListener('keydown',e=>{
   if(!inDoc(e.target)) return;
   const b=curBlock();
   if(e.key==='Enter' && !e.shiftKey && b &&
      (b.classList.contains('b-h1')||b.classList.contains('b-h2')||b.classList.contains('b-cal'))){
     e.preventDefault();
-    const nb=document.createElement('div'); nb.className='b-p'; nb.innerHTML='<br>';
+    const nb=document.createElement('div'); nb.className='b-p';
     b.after(nb); caretEnd(nb); refresh(); return;
   }
   if(e.key==='Tab'){ e.preventDefault(); indent(e.shiftKey?-1:1); return; }
