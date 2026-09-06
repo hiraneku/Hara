@@ -41,6 +41,28 @@ yang dibangun untuk desktop, mobile datang belakangan"*.
 Ini bukan "Obsidian yang lebih lengkap" — ini **Obsidian untuk orang yang hidup di HP**.
 Dan itu justru sejalan dengan keputusan arsitektur kita yang sudah diambil:
 
+### Yang diambil dari Obsidian: mekanik, bukan rupa
+
+Hara **tidak meniru tampilan** Obsidian. Yang diadopsi adalah **mekanik dan perkakasnya** —
+konsep-konsep yang sudah terbukti bagus dan tidak perlu ditemukan ulang:
+
+| Mekanik yang diadopsi | Wujudnya di Hara |
+|---|---|
+| `[[wikilink]]` antar catatan | Sama, plus autocomplete & tautan mati bisa diklik |
+| Backlink & unlinked mention | Sama, dengan kalimat konteks |
+| Markdown sebagai bahasa menulis | Sama, tapi WYSIWYG — bukan split preview |
+| Tag bersarang (`#a/b`) | Sama |
+| Frontmatter / Properties | Sama isinya, tapi UI tabel — bukan YAML mentah |
+| Sematan `![[Catatan]]` | Sama |
+| Tautan setingkat blok | Sama, dan lebih kokoh karena blok memang unit penyimpanan |
+| Daily note & template | Sama |
+| Command palette & slash command | Sama |
+| Query koleksi catatan (Dataview/Bases) | Diganti Smart Folder berbasis UI (§3.6) |
+| Graph view | Diganti local graph ringan (§3.3) |
+
+Rupa, tata letak, warna, dan alur navigasi mengikuti [`DESIGN.md`](DESIGN.md) — bukan Obsidian.
+Singkatnya: **cara kerjanya familier bagi pengguna Obsidian, tapi rasanya bukan Obsidian.**
+
 | Keputusan kita | Kenapa menang di titik lemah Obsidian |
 |---|---|
 | IndexedDB + indeks pencarian | Tidak ada re-index saat buka; cari instan, bukan grep |
@@ -92,6 +114,72 @@ interface Block {
 **Tetap kompatibel:** `blocks ⇄ markdown` punya konverter dua arah. Ekspor menghasilkan
 `.md` biasa yang bisa dibuka Obsidian; impor folder vault Obsidian juga didukung.
 Tidak ada penguncian data.
+
+---
+
+## 2b. Tanpa Batas Jumlah Huruf
+
+**Aturan produk: satu catatan tidak punya batas jumlah karakter.** Tidak ada nomor ajaib
+di mana aplikasi menolak menulis, memotong isi, atau menampilkan "catatan terlalu panjang".
+
+### Kenapa ini bisa dijanjikan
+
+Batas huruf di aplikasi catatan hampir selalu datang dari tiga sebab. Arsitektur kita
+kebetulan sudah menghindari ketiganya:
+
+| Sebab umum batas | Kondisi Hara |
+|---|---|
+| Batas kolom database (mis. `VARCHAR(65535)`) | **Tidak ada.** IndexedDB menyimpan objek JS; panjang string tidak dibatasi skema |
+| Batas ukuran payload server | **Tidak ada.** Local-first — menulis tidak melewati jaringan |
+| Editor melambat lalu dibatasi paksa | **Dihindari lewat blok.** Yang dirender & disimpan hanya bagian yang perlu |
+
+Batas teknis yang benar-benar ada hanyalah **kuota penyimpanan perangkat**, bukan panjang
+catatan. Sebagai gambaran: 1 juta karakter ≈ 1 MB, sedangkan kuota IndexedDB di Android
+umumnya ratusan MB hingga beberapa GB. Novel ~500.000 kata pun masih di bawah 3 MB.
+
+### Yang membuatnya tetap cepat
+
+Menjanjikan "tanpa batas" itu mudah; yang sulit adalah tetap lancar saat catatannya
+benar-benar raksasa. Empat mekanisme:
+
+1. **Virtualisasi blok.** Hanya blok di layar (plus sedikit penyangga) yang ada di DOM.
+   Catatan 50.000 blok pun DOM-nya tetap berisi ~30 elemen.
+2. **Simpan per blok, bukan per catatan.** Mengetik satu huruf hanya menulis ulang satu blok
+   (biasanya < 1 KB), bukan seluruh dokumen. Ini yang membuat autosave tetap ringan
+   di catatan 100.000 kata.
+3. **Indeks pencarian di Web Worker.** Pengindeksan catatan panjang tidak pernah
+   membekukan antarmuka.
+4. **Muat bertahap.** Membuka catatan panjang memuat ~100 blok pertama lebih dulu;
+   sisanya menyusul saat digulir. Waktu buka tidak bergantung pada panjang catatan.
+
+### Batas satu blok
+
+Blok tunggal yang sangat panjang (mis. satu paragraf 200.000 karakter tanpa Enter sama
+sekali) adalah satu-satunya kasus yang bisa terasa berat, karena satu blok = satu elemen
+yang dirender utuh. Penanganannya **bukan menolak**, tapi:
+
+- Di atas ~50.000 karakter dalam satu blok, blok dipecah otomatis secara internal saat
+  disimpan (pemisahan tak terlihat oleh pengguna, isi tidak berubah)
+- Pengguna tidak pernah melihat pesan galat atau kehilangan teks
+
+### Anggaran performa untuk catatan raksasa
+
+| Ukuran catatan | Buka | Ketik | Cari di dalam catatan |
+|---|---|---|---|
+| 10.000 kata | < 100 ms | < 16 ms | instan |
+| 100.000 kata | < 300 ms | < 16 ms | < 50 ms |
+| 1.000.000 kata (~6 MB) | < 1 detik | < 16 ms | < 200 ms |
+
+**Uji wajib:** satu catatan berisi 1 juta kata harus bisa dibuka, digulir, dan diedit
+di HP Android kelas menengah tanpa macet. Ini masuk daftar uji rilis, bukan sekadar harapan.
+
+### Yang jujur perlu diakui
+
+- **Kuota browser tetap berlaku.** Kalau penyimpanan perangkat penuh, penulisan gagal —
+  ini di luar kendali aplikasi. Mitigasi: minta `navigator.storage.persist()`, tampilkan
+  peringatan saat kuota menipis, dan sediakan ekspor.
+- **Ekspor PDF** untuk catatan sangat besar akan lambat — dijalankan di worker dengan
+  indikator kemajuan, dan boleh dibatalkan.
 
 ---
 
@@ -198,6 +286,7 @@ Ini yang menentukan menang atau tidak. Dilanggar = fitur ditolak.
 | Cari 10.000 catatan | < 50 ms | Indeks terbalik, bukan pindai |
 | Ketik → karakter muncul | < 16 ms | Blok aktif saja yang dirender ulang |
 | Catatan 10.000 kata | Gulir mulus | Virtualisasi blok |
+| Catatan 1.000.000 kata | Buka < 1 detik, gulir mulus | Virtualisasi + muat bertahap (§2b) |
 | Autosave | Tak terasa | Debounce 600 ms, tulis per blok, di Web Worker |
 
 **Uji wajib sebelum rilis:** vault 5.000 catatan di HP Android kelas menengah.
@@ -234,3 +323,5 @@ daripada Obsidian — walau fiturnya jauh lebih sedikit. Itulah intinya.
 | Ukuran bundel membengkak | LaTeX, syntax highlight, PDF dimuat malas; anggaran bundel awal < 200 KB gzip |
 | Pengguna Obsidian enggan pindah | Impor vault yang mulus + ekspor `.md` — datang & pergi tanpa risiko |
 | Tergoda menambah sistem plugin | Ditolak secara arsitektur; ekstensibilitas lewat Smart Folder & template |
+| Janji "tanpa limit huruf" jebol di catatan raksasa | Virtualisasi + simpan per blok sejak N1 (bukan ditambal belakangan); uji 1 juta kata masuk daftar rilis |
+| Kuota penyimpanan perangkat habis | `navigator.storage.persist()`, peringatan dini saat kuota menipis, ekspor selalu tersedia |
