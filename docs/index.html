@@ -116,6 +116,8 @@ input,textarea{font:inherit;color:inherit}
 .b-h1{font-family:var(--serif);font-size:25px;line-height:1.3;margin:18px 0 4px}
 .b-h2{font-family:var(--serif);font-size:20px;line-height:1.3;margin:16px 0 2px}
 .b-p{font-size:16px;line-height:1.65}
+.ed-body{outline:none;min-height:1.65em}
+.ed-body:empty::before{content:attr(data-ph);color:var(--faint)}
 .b-quote{border-left:2.5px solid var(--border-strong);padding-left:14px;color:var(--muted);
   font-size:16px;line-height:1.65}
 .b-code{background:var(--sunken);border-radius:var(--r-sm);padding:12px 14px;font-family:var(--mono);
@@ -255,6 +257,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-13M9 7V4h6v3"/></symbol>
 <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></symbol>
 <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></symbol>
 <symbol id="i-graph" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.5 7.2 6.4 15.6M13.5 7.2l4.1 8.4M7.5 18h9"/></symbol>
@@ -286,7 +289,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
     <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
     <h1 id="title">Beranda</h1><div class="sp"></div>
     <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
-    <button class="iconbtn"><svg class="ico"><use href="#i-more"/></svg></button>
+    <button class="iconbtn" id="del" style="display:none" title="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
+    <button class="iconbtn" id="dots"><svg class="ico"><use href="#i-more"/></svg></button>
   </header>
   <div class="wrap" id="wrap"></div>
 </div>
@@ -326,8 +330,27 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 </nav>
 
 <script>
-/* ═══ SATU CATATAN SAJA ═══ */
-const welcome={t:'Selamat datang di Hara',tags:['hara'],mod:'baru saja'};
+/* ═══ STATE ═══ */
+let seq=1;
+const notes=[{id:'w',t:'Selamat datang di Hara',welcome:true,mod:'baru saja',
+  ex:'Ini catatan bawaan Hara. Hapus saja kalau sudah selesai membaca…'}];
+let openId='w';
+const findNote=id=>notes.find(n=>n.id===id);
+function newNote(){
+  const n={id:'n'+(seq++),t:'',welcome:false,mod:'baru saja',ex:''};
+  notes.unshift(n);openId=n.id;go('editor');
+  setTimeout(()=>{const i=document.querySelector('.ed-t');if(i)i.focus();},60);
+  toast('Catatan baru dibuat');
+}
+function delNote(){
+  const i=notes.findIndex(n=>n.id===openId);
+  if(i>-1)notes.splice(i,1);
+  toast('Catatan dihapus');go('notes');
+}
+/* judul & isi tersimpan saat diketik */
+function onTitle(el){const n=findNote(openId);if(n){n.t=el.value;n.mod='baru saja';}}
+function onBody(el){const n=findNote(openId);
+  if(n){n.ex=el.innerText.trim().slice(0,80);n.mod='baru saja';}}
 
 const cbx=(on,i)=>`<button class="cbx ${on?'on':''}" onclick="tick(this,${i})"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
 const grip='<button class="blk-h" title="Seret untuk memindahkan blok"><svg class="ico"><use href="#i-grip"/></svg></button>';
@@ -356,42 +379,18 @@ ${B('b-p','Sematan ditulis <code class="ic">![[Catatan#^blok]]</code> dan isinya
 ${B('b-div','')}
 ${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
-const views={
-home:()=>`<div class="page">
-  <div class="hello"><div class="d">Sabtu, 6 September</div><div class="s">Belum ada apa-apa. Mulai dari catatan sambutan di bawah.</div></div>
-  <div class="sec"><h2>Catatan</h2></div>
-  <div class="card"><button class="row" onclick="go('editor')">
-    <span style="width:3px;align-self:stretch;background:var(--m-notes);border-radius:999px;margin:-13px 0"></span>
-    <div class="row-b"><div class="row-t">${welcome.t}</div>
-    <div class="row-s">Ini satu-satunya catatan di Hara. Hapus saja kalau sudah selesai…</div></div>
-    <span class="row-m">${welcome.mod}</span></button></div>
-</div>
-<p class="note">Aplikasi dimulai bersih: satu catatan sambutan, tanpa reminder, tanpa tugas.</p>`,
+/* baris daftar catatan */
+const rowFor=n=>`<button class="row" data-open="${n.id}">
+  <div class="row-b"><div class="row-t"${n.t?'':' style="color:var(--faint)"'}>${n.t||'Tanpa judul'}</div>
+  ${n.ex?`<div class="row-s">${n.ex}</div>`:''}</div>
+  <span class="row-m">${n.mod}</span></button>`;
 
-notes:()=>`<div class="page">
-  <div class="card"><button class="row" onclick="go('editor')">
-    <div class="row-b"><div class="row-t">${welcome.t}</div>
-    <div class="row-s">Ini satu-satunya catatan di Hara. Hapus saja kalau sudah…</div></div>
-    <span class="row-m">${welcome.mod}</span></button></div>
-  <div style="margin-top:16px"><span class="chip chip-a">#hara 1</span></div>
-</div>`,
-
-editor:()=>`<div class="ed">
-  <input class="ed-t" value="${welcome.t}">
-  <div class="props">
-    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-cal"/></svg>dibuat</span><span class="prop-v">6 Sep 2026</span></div>
-    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-hash"/></svg>tag</span><span class="prop-v"><span class="tg">#hara</span></span></div>
-    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-txt"/></svg>status</span><span class="prop-v">belum dibaca</span></div>
-    <button class="prop-add" onclick="toast('Tambah properti baru')">+ properti</button>
-  </div>
-  <div class="blocks">${welcomeBody}</div>
-</div>
-<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-link"/></svg>Backlink<span class="n">1</span></div>
-  <button class="bl" onclick="toast('Membuka Ide Produk')"><div class="bl-t">Ide Produk</div>
+/* panel backlink + graph — hanya untuk catatan sambutan */
+const panels=`<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-link"/></svg>Backlink<span class="n">1</span></div>
+  <button class="bl" data-act="Membuka Ide Produk"><div class="bl-t">Ide Produk</div>
   <div class="bl-c">Semua ide awal dikumpulkan di <b>[[Selamat datang di Hara]]</b> sebelum dipecah jadi catatan sendiri.</div></button>
   <div class="unl">Disebut tanpa tautan di 1 catatan
-    <button class="btn btn-sec" onclick="toast('Tautan dibuat')">Tautkan</button></div>
-</div>
+    <button class="btn btn-sec" data-act="Tautan dibuat">Tautkan</button></div></div>
 <div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-graph"/></svg>Local graph</div>
   <div class="graph">
     <svg style="position:absolute;inset:0;width:100%;height:100%" stroke="var(--border-strong)" stroke-width="1">
@@ -403,7 +402,44 @@ editor:()=>`<div class="ed">
     <div class="gnode" style="left:30%;top:80%"><span class="gdot"></span><span>#hara</span></div>
     <div class="gnode" style="left:74%;top:76%"><span class="gdot"></span><span>Harian 6 Sep</span></div>
   </div></div>
-<p class="note">Local graph hanya tetangga 1–2 langkah — bukan graph global 3D yang berat dan jarang berguna.</p>`,
+<p class="note">Local graph hanya tetangga 1–2 langkah — bukan graph global 3D yang berat dan jarang berguna.</p>`;
+
+const views={
+home:()=>`<div class="page">
+  <div class="hello"><div class="d">Sabtu, 6 September</div>
+  <div class="s">${notes.length?notes.length+' catatan tersimpan. Tanpa pengingat hari ini.':'Belum ada apa-apa.'}</div></div>
+  <div class="sec"><h2>Catatan</h2></div>
+  ${notes.length?`<div class="card">${notes.map(rowFor).join('')}</div>`
+   :`<div class="empty" style="padding:40px 20px"><h3>Belum ada catatan</h3>
+     <p>Ketuk tombol + untuk menulis yang pertama.</p>
+     <button class="btn btn-pri" data-act2="new">Tulis catatan</button></div>`}
+</div>`,
+
+notes:()=>`<div class="page">
+  ${notes.length?`<div class="card">${notes.map(rowFor).join('')}</div>
+   <div style="margin-top:16px"><span class="chip chip-a">semua ${notes.length}</span></div>`
+  :`<div class="empty"><h3>Belum ada catatan</h3>
+    <p>Catatan yang kamu tulis akan muncul di sini. Mulai dari yang pertama.</p>
+    <button class="btn btn-pri" data-act2="new">Tulis catatan</button></div>`}
+</div>`,
+
+
+editor:()=>{const n=findNote(openId)||notes[0];
+ if(!n)return `<div class="empty"><h3>Catatan tidak ada</h3><p>Mungkin sudah dihapus.</p>
+   <button class="btn btn-sec" data-go="notes">Ke daftar catatan</button></div>`;
+ const body=n.welcome?welcomeBody
+  :`<div class="blk">${grip}<div class="b-p ed-body" contenteditable="true" data-ph="Mulai menulis, atau ketuk / untuk menyisipkan blok" oninput="onBody(this)"></div></div>`;
+ return `<div class="ed">
+  <input class="ed-t" value="${n.t.replace(/"/g,'&quot;')}" placeholder="Judul" oninput="onTitle(this)">
+  <div class="props">
+    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-cal"/></svg>dibuat</span><span class="prop-v">6 Sep 2026</span></div>
+    ${n.welcome?`<div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-hash"/></svg>tag</span><span class="prop-v"><span class="tg">#hara</span></span></div>`:''}
+    <button class="prop-add" data-act="Tambah properti baru">+ properti</button>
+  </div>
+  <div class="blocks">${body}</div>
+ </div>
+ ${n.welcome?panels:''}`;},
+
 
 rem:()=>`<div class="page"><div class="empty"><h3>Belum ada pengingat</h3>
   <p>Pengingat yang kamu buat akan muncul di sini, dikelompokkan per hari.</p>
@@ -464,6 +500,8 @@ function go(v){
   document.getElementById('title').textContent=titles[v];
   const isEd=v==='editor';
   document.getElementById('back').style.display=isEd?'grid':'none';
+  document.getElementById('del').style.display=isEd?'grid':'none';
+  document.getElementById('dots').style.display=isEd?'none':'grid';
   document.getElementById('mech').classList.toggle('on',isEd);
   document.getElementById('bnav').classList.toggle('hide',isEd);
   document.getElementById('fab').classList.toggle('hide',isEd);
@@ -472,8 +510,10 @@ function go(v){
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return;}
+  const o=e.target.closest('[data-open]');if(o){openId=o.dataset.open;go('editor');return;}
+  if(e.target.closest('[data-act2="new"]')){newNote();return;}
   const n=e.target.closest('[data-new]');
-  if(n){closeAll();if(n.dataset.new==='note'){toast('Catatan baru');go('editor');}else toast('Dibuat');}
+  if(n){closeAll();if(n.dataset.new==='note')newNote();else toast('Dibuat');}
 });
 document.getElementById('back').onclick=()=>go('notes');
 function tick(el){el.classList.toggle('on');
@@ -528,6 +568,7 @@ function toggleTheme(){const d=document.documentElement.getAttribute('data-theme
   document.documentElement.setAttribute('data-theme',d?'light':'dark');
   document.querySelector('#theme use').setAttribute('href',d?'#i-moon':'#i-sun');}
 document.getElementById('theme').onclick=toggleTheme;
+document.getElementById('del').onclick=delNote;
 go('home');
 </script>
 </body>
