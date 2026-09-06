@@ -1,6 +1,6 @@
 /* Layar beranda + daftar catatan. */
-import { state } from '../../core/store.js?v=20260906151809';
-import { rowFor } from './row.js?v=20260906151809';
+import { state } from '../../core/store.js?v=20260906152703';
+import { rowFor } from './row.js?v=20260906152703';
 
 export const homeView = () => `<div class="page">
   <div class="hello"><div class="d">Sabtu, 6 September</div>

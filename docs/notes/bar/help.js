@@ -193,7 +193,7 @@ export const HELP = {
 
 /* Penjelasan tiap kelompok, muncul di kepala menunya. */
 export const HELP_GRUP = {
-  huruf:  'Mengganti jenis huruf. Tanpa teks terpilih, berlaku ke seluruh blok tempat kursor berada.',
+  huruf:  'Mengganti jenis huruf. Pilihan berlaku untuk teks yang diketik setelahnya; blok teks dulu untuk mengubah tulisan yang sudah ada. Font yang tidak ada di perangkat ditandai dan tidak akan tampil berbeda.',
   gaya:   'Mengubah peran satu blok: judul, kutipan, kode, atau callout. Berlaku ke seluruh blok tempat kursor berada.',
   tandai: 'Memberi penanda pada potongan teks yang diblok. Bisa ditumpuk, dan dilepas dengan memilih ulang.',
   daftar: 'Mengubah blok jadi daftar. Enter membuat butir baru, Enter pada butir kosong keluar dari daftar.',

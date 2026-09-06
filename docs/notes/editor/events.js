@@ -1,11 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906151809';
-import { setBlock, indent } from './blocks.js?v=20260906151809';
-import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906151809';
-import { autoFormat } from './markdown.js?v=20260906151809';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906151809';
-import { onTitle } from '../model.js?v=20260906151809';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906151809';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260906152703';
+import { setBlock, indent } from './blocks.js?v=20260906152703';
+import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260906152703';
+import { autoFormat } from './markdown.js?v=20260906152703';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260906152703';
+import { onTitle } from '../model.js?v=20260906152703';
+import { bungkusFontPending, fontPending } from './font.js?v=20260906152703';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260906152703';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -23,7 +24,23 @@ export function bindEditor() {
     if(e.inputType!=='insertText' || !e.data) return;
     const b=curBlock();
     if(!b) return;
-    if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!=='') return;  /* sudah ada teks */
+    if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!==''){
+      /* blok sudah berisi teks: kalau ada font menunggu, bungkus di sini */
+      if (fontPending()) {
+        e.preventDefault();
+        const el = bungkusFontPending();
+        if (el) {
+          const s2 = sel(); const r2 = s2.getRangeAt(0);
+          const t2 = r2.startContainer;
+          if (t2.nodeType === 3) { t2.insertData(r2.startOffset, e.data);
+            const nr2 = document.createRange();
+            nr2.setStart(t2, r2.startOffset + e.data.length); nr2.collapse(true);
+            s2.removeAllRanges(); s2.addRange(nr2); }
+          autoFormat(); refresh();
+        }
+      }
+      return;
+    }
 
     const s=sel();
     if(!s || !s.rangeCount) return;
@@ -38,6 +55,8 @@ export function bindEditor() {
     }
 
     e.preventDefault();
+    /* font yang menunggu -> bungkus dulu, huruf masuk ke dalamnya */
+    if (fontPending()) { const el = bungkusFontPending(); if (el) { r = sel().getRangeAt(0); } }
     /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */
     Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
 

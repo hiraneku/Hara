@@ -123,7 +123,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 /* popup: slash & wikilink & palette */
 .pop{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
-  box-shadow:var(--shadow-modal);z-index:80;overflow:hidden;display:none;width:290px}
+  box-shadow:var(--shadow-modal);z-index:80;display:none;width:290px;
+  max-height:min(60vh,420px);overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pop::-webkit-scrollbar{width:0}
 .pop.on{display:block}
 .pop-h{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);
   padding:10px 13px 6px;font-weight:600}
@@ -314,3 +317,5 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .pop-font .fn-n{font-size:15px;line-height:1.3}
 .pop-font .fn-k{font-size:11px;color:var(--faint);font-family:var(--sans)}
 .pop-font.on .fn-n{color:var(--accent);font-weight:600}
+.pop-font.hilang{opacity:.42}
+.pop-font.hilang .fn-k{color:var(--danger)}
