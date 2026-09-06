@@ -345,25 +345,63 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 </nav>
 
 <script>
-/* ═══ STATE ═══ */
-let seq=1;
-const notes=[{id:'w',t:'Selamat datang di Hara',welcome:true,mod:'baru saja',
+/* ═══ STATE + PENYIMPANAN ═══ */
+const KEY='hara.v1';
+const DEFAULT_NOTES=()=>[{id:'w',t:'Selamat datang di Hara',welcome:true,mod:'baru saja',
   ex:'Ini catatan bawaan Hara. Hapus saja kalau sudah selesai membaca…'}];
+let seq=1;
+let notes=DEFAULT_NOTES();
 let openId='w';
+
+function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({seq,openId,notes}));
+  }catch(e){ /* penyimpanan penuh / mode privat: abaikan */ }
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    if(!data||!Array.isArray(data.notes)) return;
+    notes=data.notes;
+    seq=data.seq||1;
+    if(!notes.length) notes=DEFAULT_NOTES();
+    openId=(data.openId&&notes.some(n=>n.id===data.openId))?data.openId:notes[0].id;
+  }catch(e){ notes=DEFAULT_NOTES(); }
+}
+load();
+
+/* jam terbaca: "baru saja", "5 mnt lalu", ... */
+window.addEventListener('pagehide',()=>{ if(typeof cur!=='undefined'&&cur==='editor') saveNow(); });
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&typeof cur!=='undefined'&&cur==='editor') saveNow();
+});
+function stamp(ts){
+  if(!ts) return 'baru saja';
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'baru saja';
+  if(s<3600) return Math.floor(s/60)+' mnt lalu';
+  if(s<86400) return Math.floor(s/3600)+' jam lalu';
+  return Math.floor(s/86400)+' hari lalu';
+}
 const findNote=id=>notes.find(n=>n.id===id);
 function newNote(){
-  const n={id:'n'+(seq++),t:'',welcome:false,mod:'baru saja',ex:''};
-  notes.unshift(n);openId=n.id;go('editor');
+  const n={id:'n'+(seq++),t:'',welcome:false,mod:'baru saja',ex:'',html:'',ts:Date.now()};
+  notes.unshift(n);openId=n.id;save();go('editor');
   setTimeout(()=>{const i=document.querySelector('.ed-t');if(i)i.focus();},60);
   toast('Catatan baru dibuat');
 }
 function delNote(){
   const i=notes.findIndex(n=>n.id===openId);
   if(i>-1)notes.splice(i,1);
+  if(!notes.length) notes=DEFAULT_NOTES();
+  save();
   toast('Catatan dihapus');go('notes');
 }
 /* judul & isi tersimpan saat diketik */
-function onTitle(el){const n=findNote(openId);if(n){n.t=el.value;n.mod='baru saja';}}
+function onTitle(el){const n=findNote(openId);
+  if(n){n.t=el.value;n.ts=Date.now();n.mod='baru saja';saveSoon();}}
 function onBody(el){const n=findNote(openId);
   if(n){n.ex=el.innerText.trim().slice(0,80);n.mod='baru saja';}}
 
@@ -395,10 +433,11 @@ ${B('b-div','')}
 ${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
 /* baris daftar catatan */
+const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rowFor=n=>`<button class="row" data-open="${n.id}">
-  <div class="row-b"><div class="row-t"${n.t?'':' style="color:var(--faint)"'}>${n.t||'Tanpa judul'}</div>
-  ${n.ex?`<div class="row-s">${n.ex}</div>`:''}</div>
-  <span class="row-m">${n.mod}</span></button>`;
+  <div class="row-b"><div class="row-t"${n.t?'':' style="color:var(--faint)"'}>${esc(n.t)||'Tanpa judul'}</div>
+  ${n.ex?`<div class="row-s">${esc(n.ex)}</div>`:''}</div>
+  <span class="row-m">${n.ts?stamp(n.ts):(n.mod||'')}</span></button>`;
 
 /* panel backlink + graph — hanya untuk catatan sambutan */
 const panels=`<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-link"/></svg>Backlink<span class="n">1</span></div>
@@ -442,8 +481,12 @@ notes:()=>`<div class="page">
 editor:()=>{const n=findNote(openId)||notes[0];
  if(!n)return `<div class="empty"><h3>Catatan tidak ada</h3><p>Mungkin sudah dihapus.</p>
    <button class="btn btn-sec" data-go="notes">Ke daftar catatan</button></div>`;
- const body=n.welcome?`<div class="ed-doc" contenteditable="true" spellcheck="false">${welcomeBody}</div>`
-  :`<div class="ed-doc" contenteditable="true" spellcheck="false"><div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"><br></div></div>`;
+ const saved=n.html;
+ const inner = saved!==undefined&&saved!==null&&saved!==''
+   ? saved
+   : (n.welcome ? welcomeBody
+     : `<div class="b-p" data-ph="Mulai menulis. Coba ketik **tebal** atau # judul"><br></div>`);
+ const body=`<div class="ed-doc" contenteditable="true" spellcheck="false">${inner}</div>`;
  return `<div class="ed">
   <input class="ed-t" value="${n.t.replace(/"/g,'&quot;')}" placeholder="Judul" oninput="onTitle(this)">
   <div class="props">
@@ -510,6 +553,9 @@ const titles={home:'Beranda',notes:'Catatan',editor:'',rem:'Reminder',task:'Tuga
   search:'Cari',tags:'Tag',arsip:'Arsip',set:'Pengaturan'};
 let cur='home';
 function go(v){
+  /* simpan isi catatan yang sedang terbuka sebelum layar diganti */
+  if(cur==='editor') saveNow();
+  clearTimeout(saveT); saveT=null;
   cur=v;const w=document.getElementById('wrap');
   w.innerHTML=views[v]();w.scrollTop=0;
   document.getElementById('title').textContent=titles[v];
@@ -857,6 +903,24 @@ function cleanup(){
     }
   });
 }
+/* ── autosave isi editor ── */
+let saveT=null;
+function saveSoon(){
+  if(cur!=='editor') return;         /* view sudah pindah: jangan simpan DOM basi */
+  clearTimeout(saveT); saveT=setTimeout(saveNow,400);
+}
+function saveNow(){
+  clearTimeout(saveT); saveT=null;   /* jangan biarkan jadwal lama menimpa */
+  const d=docEl(); const n=findNote(openId);
+  if(d&&n){
+    n.html=d.innerHTML;
+    const t=((d.innerText!==undefined?d.innerText:d.textContent)||'')
+              .replace(/[\u200b\u00a0]/g,' ').trim();
+    n.ex=t.slice(0,80);
+    n.ts=Date.now(); n.mod='baru saja';
+  }
+  save();
+}
 function updateCount(){
   const el=document.getElementById('count'); if(!el) return;
   const d=docEl();
@@ -882,7 +946,7 @@ function syncBtns(){
     if(btn) btn.classList.toggle('active',!!b&&b.classList.contains(cls));
   });
 }
-function refresh(){ cleanup(); updateCount(); syncBtns(); }
+function refresh(){ cleanup(); updateCount(); syncBtns(); saveSoon(); }
 
 /* ════════ MARKDOWN OTOMATIS ════════ */
 const INLINE=[
