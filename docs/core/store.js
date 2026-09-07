@@ -4,8 +4,8 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907004453';
-import { welcomeBody } from '../notes/views/welcome.js?v=20260907004453';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907005847';
+import { welcomeBody } from '../notes/views/welcome.js?v=20260907005847';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
@@ -33,7 +33,12 @@ export function save() {
       openId: state.openId,
       notes: state.notes,
     }));
-  } catch (e) { /* penyimpanan penuh / mode privat */ }
+    return true;
+  } catch (e) {
+    /* penyimpanan penuh / mode privat — dilaporkan supaya autosave bisa
+       menampilkan status error dan MEMPERTAHANKAN draf recovery */
+    return false;
+  }
 }
 
 export function load() {

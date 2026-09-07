@@ -1,21 +1,26 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907004453';
-import { homeView, notesView } from './views/list.js?v=20260907004453';
-import { editorView } from './views/editor.js?v=20260907004453';
-import { miscViews } from './views/misc.js?v=20260907004453';
-import { bindEditor } from './editor/events.js?v=20260907004453';
-import { renderBar }  from './bar/render.js?v=20260907004453';
-import { bindPop, closeAll } from './menus/pop.js?v=20260907004453';
-import { saveNow, updateCount, syncBtns } from './editor/cleanup.js?v=20260907004453';
-import { pending, sticky } from './editor/marks.js?v=20260907004453';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907004453';
-import { resetHistory } from './editor/history.js?v=20260907004453';
-import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907004453';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907004453';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907004453';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907004453';
-import { state } from '../core/store.js?v=20260907004453';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907005847';
+import { homeView, notesView } from './views/list.js?v=20260907005847';
+import { editorView } from './views/editor.js?v=20260907005847';
+import { miscViews } from './views/misc.js?v=20260907005847';
+import { bindEditor } from './editor/events.js?v=20260907005847';
+import { renderBar }  from './bar/render.js?v=20260907005847';
+import { bindPop, closeAll } from './menus/pop.js?v=20260907005847';
+import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907005847';
+import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang }
+  from '../core/autosave.js?v=20260907005847';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907005847';
+import { toast } from '../core/toast.js?v=20260907005847';
+import { blocksToDom } from './note-model.js?v=20260907005847';
+import { pending, sticky } from './editor/marks.js?v=20260907005847';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907005847';
+import { resetHistory } from './editor/history.js?v=20260907005847';
+import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907005847';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907005847';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907005847';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907005847';
+import { state } from '../core/store.js?v=20260907005847';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -41,6 +46,85 @@ function isiPengaturan() {
   }
 }
 
+/* ════════ INDIKATOR STATUS SIMPAN ════════
+   Menumpang di bar mekanik yang sudah ada — tidak membuat UI baru. */
+function tampilkanStatus(s) {
+  const el = document.getElementById('save-st');
+  if (!el) return;
+  const teks = {
+    [STATUS.IDLE]:   '',
+    [STATUS.DIRTY]:  '',
+    [STATUS.SAVING]: 'Menyimpan…',
+    [STATUS.SAVED]:  'Tersimpan',
+    [STATUS.ERROR]:  'Gagal menyimpan <button class="st-retry" data-retry>Coba lagi</button>',
+  }[s] || '';
+  el.innerHTML = teks;
+  el.className = 'save-st' + (s === STATUS.ERROR ? ' err' : s === STATUS.SAVED ? ' ok' : '');
+  /* "Tersimpan" cukup sekilas, tidak perlu menetap */
+  clearTimeout(tampilkanStatus._t);
+  if (s === STATUS.SAVED)
+    tampilkanStatus._t = setTimeout(() => { if (el.classList.contains('ok')) el.innerHTML = ''; }, 1800);
+}
+
+/* ════════ BILAH RECOVERY ════════ */
+function tutupBilahRecovery() {
+  const b = document.getElementById('rec-bar');
+  if (b) b.remove();
+}
+
+/* Tawarkan pemulihan HANYA kalau draf memang milik catatan yang dibuka
+   dan isinya berbeda dari yang sudah tersimpan. */
+function tawarkanRecovery() {
+  tutupBilahRecovery();
+  if (cur !== 'editor') return;
+  const n = state.notes.find(x => x.id === state.openId);
+  if (!n) return;
+
+  const draf = bacaDraf(n.id);          /* difilter per noteId */
+  if (!draf) return;
+
+  /* draf identik dengan yang tersimpan -> tidak perlu ditawarkan */
+  if (JSON.stringify(draf.blocks) === JSON.stringify(n.blocks)) {
+    hapusDraf();
+    return;
+  }
+
+  const ed = document.querySelector('.ed');
+  if (!ed) return;
+  const bar = document.createElement('div');
+  bar.className = 'rec-bar';
+  bar.id = 'rec-bar';
+  bar.innerHTML =
+    `<span class="rec-t">Ada perubahan yang belum tersimpan.</span>
+     <button class="btn btn-pri" data-rec="restore">Pulihkan</button>
+     <button class="btn btn-sec" data-rec="discard">Buang</button>`;
+  ed.insertBefore(bar, ed.firstChild);
+}
+
+/* Pulihkan draf KE CATATAN YANG SAMA — tidak pernah membuat catatan baru,
+   dan id catatan maupun id blok tidak diubah. */
+function pulihkanDraf() {
+  const n = state.notes.find(x => x.id === state.openId);
+  if (!n) return;
+  const draf = bacaDraf(n.id);
+  if (!draf) { tutupBilahRecovery(); return; }
+
+  n.blocks = draf.blocks;               /* id blok ikut apa adanya */
+  if (typeof draf.title === 'string') n.title = draf.title;
+
+  const d = docEl();
+  if (d) d.innerHTML = blocksToDom(n.blocks);
+  const ti = document.querySelector('.ed-t');
+  if (ti && typeof draf.title === 'string') ti.value = draf.title;
+
+  hapusDraf();
+  tutupBilahRecovery();
+  saveNow();
+  pasangGambar();
+  updateCount();
+  toast('Perubahan dipulihkan');
+}
+
 export const notesModule = {
   id: 'notes',
   name: 'Catatan',
@@ -53,13 +137,19 @@ export const notesModule = {
         search: 'Cari', tags: 'Tag', arsip: 'Arsip', set: 'Pengaturan' }
     );
 
+    /* Hubungkan editor <-> autosave manager. Editor tidak menyentuh
+       storage; manager yang mengatur debounce, urutan, dan draf. */
+    konfigurasi({ baca: bacaEditor, tulis: tulisKeCatatan });
+    onStatus(tampilkanStatus);
+
     renderBar();
     bindEditor();
     bindPop();
 
     /* simpan sebelum meninggalkan editor */
     onBeforeLeave(from => {
-      if (from === 'editor') saveNow();
+      /* tuntaskan perubahan tertunda SEBELUM layar berganti */
+      if (from === 'editor') { flush(); resetAutosave(); }
       bebaskanUrl();          /* objectURL lama tidak dipakai lagi */
     });
 
@@ -99,12 +189,30 @@ export const notesModule = {
       syncBtns();
       pasangGambar();
       isiPengaturan();
+      tawarkanRecovery();
     });
 
     /* simpan saat aplikasi ditutup / dipindah ke belakang */
-    window.addEventListener('pagehide', () => { if (cur === 'editor') saveNow(); });
+    /* ── lifecycle: jangan sampai ada yang tertinggal ── */
+    const tuntaskan = () => { if (cur === 'editor') { saveNow(); } };
+    window.addEventListener('pagehide', tuntaskan);
+    window.addEventListener('beforeunload', tuntaskan);
+    window.addEventListener('blur', tuntaskan);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && cur === 'editor') saveNow();
+      if (document.visibilityState === 'hidden') tuntaskan();
+    });
+
+    /* tombol "Coba lagi" pada indikator status */
+    document.addEventListener('click', e => {
+      if (e.target.closest('[data-retry]')) cobaUlang();
+    });
+
+    /* pilihan Pulihkan / Buang pada bilah recovery */
+    document.addEventListener('click', e => {
+      const r = e.target.closest('[data-rec]');
+      if (!r) return;
+      if (r.dataset.rec === 'restore') pulihkanDraf();
+      else { hapusDraf(); tutupBilahRecovery(); toast('Perubahan dibuang'); }
     });
   }
 };

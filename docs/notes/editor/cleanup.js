@@ -1,13 +1,14 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907004453';
-import { renumber } from './blocks.js?v=20260907004453';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907004453';
-import { state, save } from '../../core/store.js?v=20260907004453';
-import { findNote } from '../model.js?v=20260907004453';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907004453';
-import { cur } from '../../core/router.js?v=20260907004453';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907004453';
-import { GROUPS } from '../bar/config.js?v=20260907004453';
+import { docEl, sel, curBlock } from './caret.js?v=20260907005847';
+import { renumber } from './blocks.js?v=20260907005847';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907005847';
+import { state, save } from '../../core/store.js?v=20260907005847';
+import { findNote } from '../model.js?v=20260907005847';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907005847';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907005847';
+import { cur } from '../../core/router.js?v=20260907005847';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907005847';
+import { GROUPS } from '../bar/config.js?v=20260907005847';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -99,23 +100,39 @@ export function syncBtns(){
     }
   });
 }
-let saveT=null;
-export function saveSoon(){
-  if(cur!=='editor') return;         /* view sudah pindah: jangan simpan DOM basi */
-  clearTimeout(saveT); saveT=setTimeout(saveNow,400);
-}
-export function saveNow(){
-  clearTimeout(saveT); saveT=null;   /* jangan biarkan jadwal lama menimpa */
+/* ── Jembatan ke Autosave Manager ──
+   Editor tidak menulis ke storage sendiri. Ia hanya melaporkan perubahan;
+   penjadwalan, urutan penulisan, dan draf recovery diurus autosave.js. */
+
+/* Baca keadaan editor sekarang jadi data yang siap disimpan. */
+export function bacaEditor(){
   const d=docEl(); const n=findNote(state.openId);
-  if(d&&n){
-    /* DOM dibaca balik jadi blocks — inilah satu-satunya yang disimpan.
-       Cuplikan & hitungan kata dihitung ulang dari blocks saat dibutuhkan,
-       jadi tidak ada dua sumber data yang bisa berselisih. */
-    n.blocks = domToBlocks(d);
-    touch(n);
-  }
-  save();
+  if(!d||!n) return null;
+  return { noteId:n.id, title:n.title, blocks:domToBlocks(d) };
 }
+
+/* Terapkan data ke catatan lalu tulis ke penyimpanan utama. */
+export function tulisKeCatatan(data){
+  const n=findNote(data.noteId);
+  if(!n) return false;
+  n.blocks=data.blocks;
+  if(typeof data.title==='string') n.title=data.title;
+  touch(n);
+  return save();          /* save() mengembalikan false kalau gagal */
+}
+
+export function saveSoon(){
+  if(cur!=='editor') return;   /* view sudah pindah: jangan simpan DOM basi */
+  tandaiBerubah();
+}
+
+export function saveNow(){
+  if(cur!=='editor') return flush();
+  /* pastikan perubahan terakhir ikut terbaca sebelum dipaksa tulis */
+  tandaiBerubah();
+  return flush();
+}
+
 export function refresh(){
   cleanup();
   /* Beri id pada blok yang baru lahir (Enter, tombol bar, tempel) SEBELUM

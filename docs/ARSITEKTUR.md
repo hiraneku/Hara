@@ -16,6 +16,8 @@ docs/
 ├── core/               dipakai SEMUA tools
 │   ├── store.js        state + localStorage. Ganti isi file ini saat pindah ke Dexie
 │   ├── blobs.js        berkas (gambar) di IndexedDB — kuota jauh lebih besar
+│   ├── autosave.js     AUTOSAVE MANAGER: debounce, anti-race, status, flush
+│   ├── recovery.js     draf crash — satu entri, dibuang setelah save sukses
 │   ├── router.js       go(), registerViews(), kait onBeforeLeave/onAfterRender
 │   ├── dom.js          $ $$ el esc stamp
 │   └── toast.js
@@ -64,6 +66,12 @@ docs/
    ia juga mendeteksi id kembar akibat clone dan memberi id baru.
    Duplikat blok WAJIB lewat `duplicateBlock()` agar dapat id baru.
    Jangan pernah memakai index atau `blocks.length` sebagai id.
+
+0c. **Editor tidak menulis ke storage.** Alurnya
+   `editor → tandaiBerubah() → autosave.js → store.js`. Penjadwalan,
+   urutan penulisan, dan draf recovery diurus manager, bukan editor.
+   Berpindah catatan WAJIB `flush()` dulu — kalau `openId` diganti lebih
+   dulu, isi editor lama tertulis ke catatan yang salah.
 
 1. **Semua tulis data lewat `core/store.js`.** Tidak ada modul yang menyentuh
    `localStorage` langsung. Saat pindah ke Dexie, cukup satu file yang berubah.
