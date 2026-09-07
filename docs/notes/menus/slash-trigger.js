@@ -8,9 +8,9 @@
 
    Menu dipasang sebagai popup yang sudah ada, jadi tidak ada UI baru. */
 
-import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907092650';
-import { slashMenu } from './slash.js?v=20260907092650';
-import { openPop, closeAll, pop, setPopIsi } from './pop.js?v=20260907092650';
+import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907093429';
+import { slashMenu } from './slash.js?v=20260907093429';
+import { openPop, closeAll, pop, setPopIsi } from './pop.js?v=20260907093429';
 
 /* Posisi "/" yang sedang aktif: { node, offset } */
 let jangkar = null;

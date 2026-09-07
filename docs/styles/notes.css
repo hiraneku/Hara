@@ -141,17 +141,22 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 /* popup: slash & wikilink & palette */
 .pop{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
   box-shadow:var(--shadow-modal);z-index:80;display:none;width:290px;
-  flex-direction:column;max-height:min(60vh,420px)}
-.pop.on{display:flex}
-.pop-top{flex:none;display:flex;justify-content:flex-end;align-items:center;padding:3px 5px 0;
-  background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0}
-.pop-x{width:32px;height:28px;display:grid;place-items:center;border-radius:8px;color:var(--faint)}
-.pop-x:hover{background:var(--sunken);color:var(--text)}
+  max-height:min(60vh,420px);overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pop::-webkit-scrollbar{width:0}
+.pop.on{display:block}
+/* Judul satu baris dengan tombol × di ujung kanan — sejajar teks judul */
+.pop-h.ber-x{display:flex;align-items:center;gap:6px;padding-right:8px}
+.pop-h .pop-x{margin-left:auto;width:30px;height:26px;flex:none;display:grid;
+  place-items:center;border-radius:8px;color:var(--faint);transition:.12s var(--ease)}
+.pop-h .pop-x:hover{background:var(--sunken);color:var(--text)}
 .pop-x:active{transform:scale(.94)}
-.pop-x .ico{width:14px;height:14px}
-.pop-isi{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;min-height:0}
-.pop-isi::-webkit-scrollbar{width:0}
+.pop-x .ico{width:13px;height:13px}
+/* konten tanpa judul: baris kecil × di atas sebagai pengganti */
+.pop-top{display:flex;justify-content:flex-end;padding:2px 6px 0}
+.pop-top .pop-x{width:30px;height:26px;display:grid;place-items:center;border-radius:8px;
+  color:var(--faint);transition:.12s var(--ease)}
+.pop-top .pop-x:hover{background:var(--sunken);color:var(--text)}
 .pop-h{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);
   padding:10px 13px 6px;font-weight:600}
 .pop-i{display:flex;align-items:center;gap:11px;padding:9px 13px;font-size:14px;transition:.1s var(--ease);width:100%}

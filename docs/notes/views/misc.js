@@ -1,11 +1,11 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260907092650';
-import { esc, stamp } from '../../core/dom.js?v=20260907092650';
-import { rowFor } from './row.js?v=20260907092650';
-import { plainText } from '../note-model.js?v=20260907092650';
-import { semuaTag } from '../tags.js?v=20260907092650';
+import { state } from '../../core/store.js?v=20260907093429';
+import { esc, stamp } from '../../core/dom.js?v=20260907093429';
+import { rowFor } from './row.js?v=20260907093429';
+import { plainText } from '../note-model.js?v=20260907093429';
+import { semuaTag } from '../tags.js?v=20260907093429';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
