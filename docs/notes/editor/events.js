@@ -1,13 +1,13 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907025521';
-import { setBlock, indent } from './blocks.js?v=20260907025521';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907025521';
-import { autoFormat } from './markdown.js?v=20260907025521';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907025521';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907025521';
-import { onTitle } from '../model.js?v=20260907025521';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907025521';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907025521';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907032909';
+import { setBlock, indent } from './blocks.js?v=20260907032909';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907032909';
+import { autoFormat } from './markdown.js?v=20260907032909';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907032909';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907032909';
+import { onTitle } from '../model.js?v=20260907032909';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907032909';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907032909';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:

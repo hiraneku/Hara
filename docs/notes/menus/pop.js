@@ -1,14 +1,14 @@
 /* Popup melayang di atas bar. */
-import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907025521';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907025521';
-import { insertInline } from './insert.js?v=20260907025521';
-import { focusKeep } from '../bar/render.js?v=20260907025521';
-import { applyLink } from './link.js?v=20260907025521';
-import { buangGaring, slashAktif, tutupSlash } from './slash-trigger.js?v=20260907025521';
-import { setFont } from '../editor/font.js?v=20260907025521';
-import { setCallout } from '../editor/blocks.js?v=20260907025521';
-import { snap as snapFont } from '../editor/history.js?v=20260907025521';
-import { getar } from '../bar/prefs.js?v=20260907025521';
+import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907032909';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907032909';
+import { insertInline } from './insert.js?v=20260907032909';
+import { focusKeep } from '../bar/render.js?v=20260907032909';
+import { applyLink } from './link.js?v=20260907032909';
+import { buangGaring, slashAktif, tutupSlash } from './slash-trigger.js?v=20260907032909';
+import { setFont } from '../editor/font.js?v=20260907032909';
+import { setCallout } from '../editor/blocks.js?v=20260907032909';
+import { snap as snapFont } from '../editor/history.js?v=20260907032909';
+import { getar } from '../bar/prefs.js?v=20260907032909';
 
 export const pop = () => document.getElementById('pop');
 
@@ -58,7 +58,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907025521').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907032909').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -67,7 +67,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907025521').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907032909').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -77,7 +77,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907025521').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907032909').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 

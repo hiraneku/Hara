@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907025521';
-import { refresh } from './cleanup.js?v=20260907025521';
+import { docEl, sel, curBlock } from './caret.js?v=20260907032909';
+import { refresh } from './cleanup.js?v=20260907032909';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -228,6 +228,23 @@ export function setFont(id) {
 export function keluarDariFont() {
   const s = sel();
   if (!(s && s.rangeCount)) return false;
+  if (!fontAround(s.getRangeAt(0).startContainer)) return false;
+
+  /* Span font BISA BERSARANG. Keluar satu lapis saja membuat caret
+     mendarat di span font LUAR — pengguna melihat "font sebelumnya"
+     atau bahkan "sebelum-sebelumnya" dipakai lagi. Jadi keluar berulang
+     sampai benar-benar tidak ada lagi span font yang membungkus. */
+  let aman = 0;
+  while (fontAround(sel().getRangeAt(0).startContainer) && aman++ < 12) {
+    if (!keluarSatuLapis()) break;
+  }
+  return true;
+}
+
+/* Pecah keluar dari SATU span font di posisi caret. */
+function keluarSatuLapis() {
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
   const r = s.getRangeAt(0);
   const host = fontAround(r.startContainer);
   if (!host) return false;
@@ -238,11 +255,12 @@ export function keluarDariFont() {
   try { sisa.setStart(r.startContainer, r.startOffset); } catch (e) { return false; }
   const buntut = sisa.extractContents();
 
-  /* Pakai kembali text node polos yang sudah ada tepat setelah span —
-     kalau membuat node baru tiap kali, caret selalu kembali ke offset 0
-     dan huruf tersisip terbalik ("polos" jadi "solop"). */
+  /* Titik sisip harus SAUDARA host, bukan keturunan span font mana pun.
+     Cek `fontAround(titik)` di sini sengaja memeriksa leluhur — kalau
+     host masih dibungkus span lain, node itu belum benar-benar bebas,
+     dan perulangan di atas akan mengurusnya pada putaran berikutnya. */
   let titik = host.nextSibling;
-  if (!(titik && titik.nodeType === 3 && !fontAround(titik))) {
+  if (!(titik && titik.nodeType === 3 && titik.parentNode === host.parentNode)) {
     titik = document.createTextNode('');
     host.after(titik);
   }
@@ -251,6 +269,7 @@ export function keluarDariFont() {
     kanan.appendChild(buntut);
     titik.after(kanan);
   }
+  const indukHost = host.parentNode;
   if (host.textContent === '') host.remove();
 
   const nr = document.createRange();
@@ -258,6 +277,9 @@ export function keluarDariFont() {
   nr.collapse(true);
   s.removeAllRanges();
   s.addRange(nr);
+  /* bersihkan induk yang jadi kosong akibat pemecahan */
+  if (indukHost && indukHost.classList && indukHost.classList.contains('fnt') &&
+      indukHost.textContent === '') indukHost.remove();
   return true;
 }
 

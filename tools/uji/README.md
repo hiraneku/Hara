@@ -18,6 +18,7 @@ for f in tools/uji/*.mjs; do node $f; done
 | `kondisi-tepi.mjs` | pending nyangkut, sisip di tengah, toggle tanpa ketik |
 | `spasi-dan-penanda.mjs` | spasi termakan, huruf berpindah saat ganti format |
 | `editor-dasar.mjs` | acceptance criteria editor dasar: tipe blok, Enter/ID, todo meta, slash menu |
+| `font-menyeluruh.mjs` | matriks lengkap pergantian font + span BERSARANG |
 | `font-ganti.mjs` | ganti font nyangkut ke font lama, span font kosong menumpuk |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —
@@ -40,3 +41,12 @@ Kalau butuh pijakan caret, pakai **text node kosong** (`createTextNode('')`)
 dengan caret di offset 0. Node kosong tidak tersimpan dan tidak merusak teks.
 
 `cleanup()` juga membersihkan penanda warisan dari catatan lama.
+
+## Span font tidak boleh bersarang
+
+`<span class="fnt">` di dalam `<span class="fnt">` membuat "keluar dari font"
+hanya melepas satu lapis — caret mendarat di font LUAR, dan pengguna melihat
+"font sebelumnya" atau "sebelum-sebelumnya" dipakai lagi.
+
+Dua pengaman: `keluarDariFont()` keluar **berulang** sampai bebas, dan
+`cleanup()` **meratakan** sarang yang terlanjur terbentuk.
