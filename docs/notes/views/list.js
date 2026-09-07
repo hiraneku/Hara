@@ -3,11 +3,48 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260907130443';
-import { esc, tglHari } from '../../core/dom.js?v=20260907130443';
-import { rowFor } from './row.js?v=20260907130443';
-import { stt } from './data.js?v=20260907130443';
-import { tagDariIsi } from '../tags.js?v=20260907130443';
+import { state } from '../../core/store.js?v=20260907142616';
+import { esc, tglHari } from '../../core/dom.js?v=20260907142616';
+import { rowFor } from './row.js?v=20260907142616';
+import { stt } from './data.js?v=20260907142616';
+import { tagDariIsi } from '../tags.js?v=20260907142616';
+
+/* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
+   catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
+function teksPolos(html) {
+  return (html || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/[\u200b\u00a0]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+const TODO_MAKS = 150;   /* batas tampil — sisanya tetap ada di catatannya */
+
+export const belumSelesai = daftar =>
+  daftar.map(n => ({
+    n,
+    items: (n.blocks || [])
+      .filter(b => b.type === 'todo' && !(b.meta && b.meta.checked))
+      .map(b => ({ bid: b.id, teks: teksPolos(b.content) }))
+      .filter(x => x.teks),
+  }))
+  .filter(x => x.items.length)
+  .sort((a, b) => b.n.updatedAt - a.n.updatedAt)
+  .slice(0, 12)
+  .flatMap(x => x.items.slice(0, TODO_MAKS).map(i => ({ n: x.n, ...i })));
+
+const kartuTodo = daftar =>
+  `<div class="sec" style="margin-top:6px"><h2>Belum selesai</h2></div>
+  <div class="card">${daftar.map(i => `
+    <button class="row trowe" data-todo-lompat="${i.n.id}" data-todo-bid="${i.bid}"
+      title="Buka di catatan «${esc(i.n.title || 'Tanpa judul')}»">
+      <span class="tobox" aria-hidden="true"></span>
+      <div class="row-b">
+        <div class="row-t">${esc(i.teks)}</div>
+        <div class="row-s">${esc(i.n.title || 'Tanpa judul')}</div>
+      </div>
+    </button>`).join('')}
+  </div>`;
 
 /* Catatan yang muncul di daftar utama: belum diarsip & belum dihapus. */
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
@@ -64,6 +101,7 @@ export const notesView = () => {
         <p>Tulis #${esc(tag)} di catatan mana pun — chip tag di baris daftar menyinkronkannya otomatis.</p>
         <button class="btn btn-sec" data-act2="new">Tulis catatan</button></div>`
     : ''}
+  ${(() => { const t = belumSelesai(daftar); return t.length ? kartuTodo(t) : ''; })()}
   ${pin.length ? overline('Disematkan') + kartu(pin) : ''}
   ${lain.length ? (pin.length ? overline('Lainnya') : '') + kartu(lain) : ''}
   <div class="list-foot">

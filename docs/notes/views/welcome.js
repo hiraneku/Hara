@@ -23,3 +23,8 @@ ${B('b-div','')}
 ${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
 export { welcomeBody };
+
+/* Versi ISI catatan sambutan. Saat aplikasi diperbarui dengan sambutan
+   baru, angka ini dinaikkan supaya catatan sambutan (yang terkunci,
+   tidak bisa disunting pengguna) ikut diperbarui isinya. */
+export const WELCOME_V = 2;

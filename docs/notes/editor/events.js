@@ -1,16 +1,16 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907130443';
-import { setBlock, indent } from './blocks.js?v=20260907130443';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260907130443';
-import { autoFormat } from './markdown.js?v=20260907130443';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907130443';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907130443';
-import { onTitle } from '../model.js?v=20260907130443';
-import { tanganiPaste } from './paste.js?v=20260907130443';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260907130443';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260907130443';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260907130443';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907130443';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907142616';
+import { setBlock, indent } from './blocks.js?v=20260907142616';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260907142616';
+import { autoFormat } from './markdown.js?v=20260907142616';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907142616';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907142616';
+import { onTitle } from '../model.js?v=20260907142616';
+import { tanganiPaste } from './paste.js?v=20260907142616';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260907142616';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260907142616';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260907142616';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907142616';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:

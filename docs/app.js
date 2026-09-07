@@ -1,13 +1,14 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260907130443';
-import { go, onAfterRender } from './core/router.js?v=20260907130443';
-import { toast } from './core/toast.js?v=20260907130443';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907130443';
-import { notesModule } from './notes/index.js?v=20260907130443';
+import { load, state } from './core/store.js?v=20260907142616';
+import { go, onAfterRender } from './core/router.js?v=20260907142616';
+import { toast } from './core/toast.js?v=20260907142616';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907142616';
+import { notesModule } from './notes/index.js?v=20260907142616';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260907130443';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260907130443';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260907130443';
+  from './notes/model.js?v=20260907142616';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907142616';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260907142616';
+import { simpanTemplatNote } from './notes/templat.js?v=20260907142616';
 
 const MODULES = [notesModule];
 
@@ -57,6 +58,17 @@ document.addEventListener('click', e => {
     if (a === 'pin') pinNote();
     else if (a === 'arsip') arsipNote();
     else if (a === 'duplikat') duplikatNote();
+    else if (a === 'cetak') {
+      /* popup ditutup dulu, lalu biarkan peramban mencetak — CSS @media
+         print membereskan tata letak (bar, gagang, warna latar tetap) */
+      setTimeout(() => { try { window.print(); } catch (err) { /* tua */ } }, 60);
+      return;
+    }
+    else if (a === 'tpl') {
+      const n = state.notes.find(x => x.id === state.openId);
+      simpanTemplatNote(n);
+      return;
+    }
     else if (a === 'remind') toast('Modul Reminder menyusul');
     else if (a === 'hapus') delNote();
     return;

@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20260907130443">
-<link rel="stylesheet" href="./styles/base.css?v=20260907130443">
-<link rel="stylesheet" href="./styles/shell.css?v=20260907130443">
-<link rel="stylesheet" href="./styles/notes.css?v=20260907130443">
+<link rel="stylesheet" href="./styles/tokens.css?v=20260907142616">
+<link rel="stylesheet" href="./styles/base.css?v=20260907142616">
+<link rel="stylesheet" href="./styles/shell.css?v=20260907142616">
+<link rel="stylesheet" href="./styles/notes.css?v=20260907142616">
 </head>
 <body>
 <svg style="display:none">
@@ -68,6 +68,9 @@
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
 <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v11"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></symbol>
 <symbol id="i-ul" viewBox="0 0 24 24"><path d="M12 14V3"/><path d="M7 8l5-5 5 5"/><path d="M4 20h16"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H11v3H6.5A2.5 2.5 0 0 1 4 18.5z"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3h10v5"/><rect x="4" y="8" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></symbol>
+<symbol id="i-tpl" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 14h6M12 11v6"/></symbol>
 </svg>
 
 <div class="app">
@@ -88,6 +91,7 @@
     <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
     <h1 id="title">Beranda</h1><div class="sp"></div>
     <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
+    <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
     <button class="iconbtn" id="del" style="display:none" title="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
     <button class="iconbtn" id="dots"><svg class="ico"><use href="#i-more"/></svg></button>
   </header>
@@ -99,6 +103,7 @@
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg>Catatan baru</button>
+  <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg>Dari templat…</button>
   <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg>Reminder baru</button>
   <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg>Tugas baru</button>
 </div>
@@ -119,6 +124,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
 </nav>
 
-<script type="module" src="./app.js?v=20260907130443"></script>
+<script type="module" src="./app.js?v=20260907142616"></script>
 </body>
 </html>

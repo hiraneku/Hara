@@ -4,8 +4,8 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907130443';
-import { welcomeBody } from '../notes/views/welcome.js?v=20260907130443';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907142616';
+import { welcomeBody, WELCOME_V } from '../notes/views/welcome.js?v=20260907142616';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
@@ -20,8 +20,24 @@ export const DEFAULT_NOTES = () => [
     blocks: htmlToBlocks(welcomeBody),
     tags: ['hara'],
     welcome: true,
+    welcomeV: WELCOME_V,
   }),
 ];
+
+/* Catatan sambutan bersifat GLOBAL & terkunci: pengguna tidak bisa
+   menyunting isinya, jadi aplikasi bebas menyinkronkan isi itu ke versi
+   terbaru (welcomeV) setiap kali aplikasi diperbarui. Kalau pengguna
+   menghapusnya (sampah → permanen), ia tidak dibuat ulang. */
+function sinkronWelcome() {
+  const w = state.notes.find(x => x.welcome && !x.deletedAt);
+  if (w && w.welcomeV !== WELCOME_V) {
+    w.title = 'Selamat datang di Hara';
+    w.blocks = htmlToBlocks(welcomeBody);
+    w.welcomeV = WELCOME_V;
+    return true;
+  }
+  return false;
+}
 
 export const state = {
   seq: 1,
@@ -86,7 +102,7 @@ export function load() {
 
     /* data lama baru saja dinaikkan versinya -> tulis ulang sekali,
        supaya pemuatan berikutnya tidak perlu migrasi lagi */
-    if ((data.schema || 1) < SCHEMA) save();
+    if ((data.schema || 1) < SCHEMA || sinkronWelcome()) save();
   } catch (e) {
     /* jaring pengaman terakhir: mulai dari bawaan, jangan sampai
        aplikasi mati hanya karena satu data bermasalah */

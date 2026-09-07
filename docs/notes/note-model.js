@@ -125,7 +125,7 @@ export function makeNote(patch = {}) {
       ? patch.props.map(pr => ({ k: String(pr.k ?? ''), v: String(pr.v ?? '') }))
       : [],
     /* penanda UI, bukan bagian isi */
-    ...(patch.welcome ? { welcome: true } : {}),
+    ...(patch.welcome ? { welcome: true, welcomeV: patch.welcomeV ?? 0 } : {}),
   };
 }
 
@@ -416,6 +416,7 @@ export function normalizeNote(raw) {
     archived: raw.archived,
     deletedAt: raw.deletedAt,
     welcome: raw.welcome,
+    welcomeV: raw.welcomeV,
   });
 }
 
