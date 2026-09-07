@@ -14,8 +14,8 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907142616';
-import { refresh } from './cleanup.js?v=20260907142616';
+import { docEl, sel, curBlock } from './caret.js?v=20260907151528';
+import { refresh } from './cleanup.js?v=20260907151528';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang

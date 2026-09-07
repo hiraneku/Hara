@@ -174,7 +174,28 @@ export function blockToHtml(b) {
   if (b.type === 'image') {
     const alt = escAttr(meta.alt || 'gambar');
     const blob = escAttr(meta.blobId || '');
-    return `<div class="b-img" contenteditable="false"${bid}>` +
+    /* Tata letak gambar (tata-gambar.js): lebar %, rotasi −180..180,
+       perataan kiri/tengah/kanan, geser halus px. Gambar lama tanpa
+       pengaturan apa pun dirender seperti dulu (100%, lurus). */
+    let lebar = Math.round(Number(meta.w) || 0);
+    lebar = lebar >= 20 && lebar <= 100 ? lebar : 100;
+    let rot = Math.round(Number(meta.rot) || 0) || 0;
+    rot = Math.max(-180, Math.min(180, rot));
+    let off = Math.round(Number(meta.off) || 0) || 0;
+    off = Math.max(-400, Math.min(400, off));
+    const ga = meta.align === 'l' || meta.align === 'c' || meta.align === 'r'
+      ? meta.align : '';
+    const khusus = lebar !== 100 || rot !== 0 || off !== 0 || ga;
+    let cls = 'b-img';
+    let gaya = '';
+    if (ga) cls += ' i-' + ga;
+    if (khusus) {
+      cls += ' tata';
+      gaya = ` style="width:${lebar}%;--gr:${rot}deg;--go:${off}px"` +
+        ` data-gw="${lebar}" data-gr="${rot}"` +
+        (ga ? ` data-ga="${ga}"` : '') + ` data-go="${off}"`;
+    }
+    return `<div class="${cls}" contenteditable="false"${gaya}${bid}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="Hapus gambar" aria-label="Hapus gambar">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
@@ -272,6 +293,26 @@ export function elToBlock(el) {
       meta.blobId = img.getAttribute('data-blob') || '';
       const alt = img.getAttribute('alt');
       if (alt) meta.alt = alt;
+    }
+    /* tata letak: atribut data-gw/gr/ga/go pada figur (baca balik dari
+       tata-gambar.js). Gambar lama tanpa atribut tidak mendapat meta —
+       tetap dirender sebagai gambar 100% lurus seperti sebelumnya. */
+    const gw = el.getAttribute && el.getAttribute('data-gw');
+    if (gw) {
+      const w = parseInt(gw, 10);
+      if (!isNaN(w)) meta.w = Math.max(20, Math.min(100, w));
+    }
+    const gr = el.getAttribute && el.getAttribute('data-gr');
+    if (gr) {
+      const r = Math.round(Number(gr)) || 0;
+      meta.rot = Math.max(-180, Math.min(180, r));
+    }
+    const ga = el.getAttribute && el.getAttribute('data-ga');
+    if (ga === 'l' || ga === 'c' || ga === 'r') meta.align = ga;
+    const go = el.getAttribute && el.getAttribute('data-go');
+    if (go) {
+      const o = Math.round(Number(go)) || 0;
+      meta.off = Math.max(-400, Math.min(400, o));
     }
   } else if (type === 'todo') {
     meta.checked = kelas.includes('done');

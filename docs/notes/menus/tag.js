@@ -1,6 +1,6 @@
 /* Menu "#" — daftar tag sungguhan (agregat dari isi catatan). */
-import { semuaTag } from '../tags.js?v=20260907142616';
-import { esc } from '../../core/dom.js?v=20260907142616';
+import { semuaTag } from '../tags.js?v=20260907151528';
+import { esc } from '../../core/dom.js?v=20260907151528';
 
 export const tagMenu = () => {
   const sem = semuaTag();
