@@ -1,26 +1,26 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907035221';
-import { homeView, notesView } from './views/list.js?v=20260907035221';
-import { editorView } from './views/editor.js?v=20260907035221';
-import { miscViews } from './views/misc.js?v=20260907035221';
-import { bindEditor } from './editor/events.js?v=20260907035221';
-import { renderBar }  from './bar/render.js?v=20260907035221';
-import { bindPop, closeAll } from './menus/pop.js?v=20260907035221';
-import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907035221';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907040539';
+import { homeView, notesView } from './views/list.js?v=20260907040539';
+import { editorView } from './views/editor.js?v=20260907040539';
+import { miscViews } from './views/misc.js?v=20260907040539';
+import { bindEditor } from './editor/events.js?v=20260907040539';
+import { renderBar }  from './bar/render.js?v=20260907040539';
+import { bindPop, closeAll } from './menus/pop.js?v=20260907040539';
+import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907040539';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang }
-  from '../core/autosave.js?v=20260907035221';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907035221';
-import { toast } from '../core/toast.js?v=20260907035221';
-import { blocksToDom } from './note-model.js?v=20260907035221';
-import { pending, sticky, mati } from './editor/marks.js?v=20260907035221';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907035221';
-import { resetHistory } from './editor/history.js?v=20260907035221';
-import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907035221';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907035221';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907035221';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907035221';
-import { state } from '../core/store.js?v=20260907035221';
+  from '../core/autosave.js?v=20260907040539';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907040539';
+import { toast } from '../core/toast.js?v=20260907040539';
+import { blocksToDom } from './note-model.js?v=20260907040539';
+import { pending, sticky, mati } from './editor/marks.js?v=20260907040539';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907040539';
+import { resetHistory } from './editor/history.js?v=20260907040539';
+import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907040539';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907040539';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907040539';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907040539';
+import { state } from '../core/store.js?v=20260907040539';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {

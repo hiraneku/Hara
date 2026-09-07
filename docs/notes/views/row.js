@@ -1,6 +1,6 @@
 /* Satu baris di daftar catatan. */
-import { esc, stamp } from '../../core/dom.js?v=20260907035221';
-import { excerptOf } from '../note-model.js?v=20260907035221';
+import { esc, stamp } from '../../core/dom.js?v=20260907040539';
+import { excerptOf } from '../note-model.js?v=20260907040539';
 
 export const rowFor=n=>{
   const cuplikan=excerptOf(n);      /* diturunkan dari blocks, tidak disimpan */

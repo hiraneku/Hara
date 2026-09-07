@@ -1,7 +1,7 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260907035221';
-import { refresh } from './cleanup.js?v=20260907035221';
-import { MARKSEL } from './marks.js?v=20260907035221';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260907040539';
+import { refresh } from './cleanup.js?v=20260907040539';
+import { MARKSEL } from './marks.js?v=20260907040539';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 

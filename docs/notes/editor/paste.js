@@ -14,7 +14,8 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907035221';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907040539';
+import { sisipGambar } from './image.js?v=20260907040539';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
@@ -275,12 +276,42 @@ export function sisipTeksDiCaret(teks) {
   s.removeAllRanges(); s.addRange(nr);
 }
 
+/* Ambil berkas gambar pertama dari clipboard, kalau ada.
+   Menyalin gambar dari peramban/aplikasi lain menaruhnya di `items`
+   sebagai File, bukan sebagai teks. */
+function ambilGambar(cd) {
+  try {
+    const item = cd.items;
+    if (item) {
+      for (const it of Array.from(item)) {
+        if (it.kind === 'file' && /^image\//.test(it.type || '')) {
+          const f = it.getAsFile && it.getAsFile();
+          if (f) return f;
+        }
+      }
+    }
+    const files = cd.files;
+    if (files && files.length) {
+      for (const f of Array.from(files)) {
+        if (/^image\//.test(f.type || '')) return f;
+      }
+    }
+  } catch (err) { /* clipboard aneh: abaikan, lanjut ke teks */ }
+  return null;
+}
+
 /* ── Titik masuk: dipanggil dari handler paste ── */
 export function tanganiPaste(e) {
   const d = docEl();
   if (!d) return false;
   const cd = e.clipboardData || (typeof window !== 'undefined' && window.clipboardData);
   if (!cd) return false;
+
+  /* ── Gambar di clipboard ──
+     Ditangani lebih dulu: berkasnya masuk IndexedDB lewat jalur gambar
+     yang sudah ada, jadi catatan tetap ringan dan tidak menyimpan base64. */
+  const berkas = ambilGambar(cd);
+  if (berkas) { sisipGambar(berkas); return true; }
 
   let html = '', teks = '';
   try { html = cd.getData('text/html') || ''; } catch (err) {}

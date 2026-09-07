@@ -13,7 +13,9 @@ for(const k of ['document','getSelection','HTMLElement','Node','Range','MouseEve
 globalThis.window=w; globalThis.self=w; globalThis.indexedDB=w.indexedDB;
 globalThis.addEventListener=w.addEventListener.bind(w);
 Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true});
-w.URL.createObjectURL=()=>'blob:x/1';w.URL.revokeObjectURL=()=>{};globalThis.URL=w.URL;
+let _u=0;w.URL.createObjectURL=()=>'blob:x/'+(++_u);w.URL.revokeObjectURL=()=>{};globalThis.URL=w.URL;
+/* jsdom tidak pernah memuat gambar -> picu onerror agar kecilkan() lanjut */
+Object.defineProperty(w.Image.prototype,'src',{set(){setTimeout(()=>this.onerror&&this.onerror(),0);},configurable:true});
 const V=fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 await import(`${AKAR}/docs/app.js?v=${V}`);
 const {go}=await import(`${AKAR}/docs/core/router.js?v=${V}`);
@@ -214,6 +216,57 @@ for(let i=0;i<4;i++){
 const semua=ids();
 ok('semua ID unik', new Set(semua).size===semua.length, `${semua.length} blok, ${new Set(semua).size} unik`);
 ok('semua blok punya ID', semua.every(x=>x&&x.length>3));
+
+console.log('══ 15. PASTE GAMBAR -> IndexedDB ══');
+{
+  const B=await import(`${AKAR}/docs/core/blobs.js?v=${V}`);
+  siap('<div class="b-p">teks</div>');
+  taruhCaret(0,4);
+  const berkas=new w.File([new Uint8Array([1,2,3])],'foto.png',{type:'image/png'});
+  const ev=new w.Event('paste',{bubbles:true,cancelable:true});
+  ev.clipboardData={ types:['Files'], files:[berkas],
+    items:[{kind:'file',type:'image/png',getAsFile:()=>berkas}],
+    getData:()=>'' };
+  DOC().dispatchEvent(ev);
+  ok('paste gambar dicegah', ev.defaultPrevented);
+  await sleep(120);
+  ok('blok gambar tersisip', !!DOC().querySelector('.b-img'), JSON.stringify(DOC().innerHTML.slice(0,110)));
+  const img=DOC().querySelector('img[data-blob]');
+  ok('punya data-blob', !!img);
+  if(img){
+    const ada=await B.ambilBlob(img.getAttribute('data-blob'));
+    ok('berkas masuk IndexedDB', !!ada);
+  }
+  saveNow();
+  const simpan=JSON.stringify(N().blocks);
+  ok('TIDAK menyimpan base64', !/base64|data:image/.test(simpan), simpan.slice(0,100));
+  ok('teks lama utuh', /teks/.test(DOC().textContent));
+  ok('type=image di model', N().blocks.some(b=>b.type==='image'), JSON.stringify(tipe()));
+
+  /* clipboard campuran: ada gambar DAN teks -> gambar menang */
+  siap('<div class="b-p"></div>');
+  taruhCaret(0,0);
+  const ev2=new w.Event('paste',{bubbles:true,cancelable:true});
+  ev2.clipboardData={ types:['Files','text/plain'], files:[berkas],
+    items:[{kind:'file',type:'image/png',getAsFile:()=>berkas}],
+    getData:t=>t==='text/plain'?'jangan pakai ini':'' };
+  DOC().dispatchEvent(ev2);
+  await sleep(120);
+  ok('gambar diutamakan', !!DOC().querySelector('.b-img') && !/jangan pakai/.test(DOC().textContent),
+     JSON.stringify(DOC().textContent.slice(0,60)));
+
+  /* item non-gambar tidak salah tangkap */
+  siap('<div class="b-p"></div>');
+  taruhCaret(0,0);
+  const ev3=new w.Event('paste',{bubbles:true,cancelable:true});
+  ev3.clipboardData={ types:['text/plain'],
+    items:[{kind:'string',type:'text/plain',getAsFile:()=>null}],
+    getData:t=>t==='text/plain'?'teks biasa':'' };
+  DOC().dispatchEvent(ev3);
+  await sleep(30);
+  ok('teks biasa tetap teks', /teks biasa/.test(DOC().textContent) && !DOC().querySelector('.b-img'),
+     JSON.stringify(DOC().textContent.slice(0,50)));
+}
 
 console.log('\n════════ HASIL ════════');
 if(!gagal.length) console.log(`SEMUA ${P} LOLOS`);
