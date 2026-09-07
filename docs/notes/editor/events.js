@@ -1,15 +1,15 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907103335';
-import { setBlock, indent } from './blocks.js?v=20260907103335';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907103335';
-import { autoFormat } from './markdown.js?v=20260907103335';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907103335';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907103335';
-import { onTitle } from '../model.js?v=20260907103335';
-import { tanganiPaste } from './paste.js?v=20260907103335';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907103335';
-import { bungkusWarnaPending, warnaPending, adaPendingHapus, modeBawaanWarna, keluarDariWarna, warnaAround, warnaPerluKeluar, reBungkusLekat } from './warna.js?v=20260907103335';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907103335';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907111650';
+import { setBlock, indent } from './blocks.js?v=20260907111650';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260907111650';
+import { autoFormat } from './markdown.js?v=20260907111650';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907111650';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907111650';
+import { onTitle } from '../model.js?v=20260907111650';
+import { tanganiPaste } from './paste.js?v=20260907111650';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260907111650';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260907111650';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907111650';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -98,51 +98,27 @@ export function bindEditor() {
       /* Mode bawaan MELEKAT: tiap karakter diperiksa, bukan cuma yang
          pertama. Browser kerap menarik caret kembali ke dalam span font
          setelah karakter sebelumnya — di sini kita pecah keluar lagi. */
-      const perluKeluar = modeBawaan() &&
-        fontAround(sel().rangeCount ? sel().getRangeAt(0).startContainer : null);
       /* Mark yang dimatikan tapi caret masih di dalamnya — diperiksa TIAP
          karakter, karena browser menarik caret kembali masuk setelah
-         karakter sebelumnya. */
-      /* Mark yang sedang sticky JANGAN dikeluarkan — ia baru saja
-         dinyalakan lagi oleh pengguna. */
+         karakter sebelumnya. Mark yang sedang sticky JANGAN dikeluarkan —
+         ia baru saja dinyalakan lagi oleh pengguna. */
       const markKeluar = markPerluKeluar().filter(m => !sticky.has(m));
-      /* Font melekat tapi caret berada di span font LAIN -> pecah keluar
-         lalu bungkus ulang dengan font yang benar. Diperiksa TIAP karakter,
-         karena browser menarik caret kembali ke span lama. */
-      const fontKeluar = fontPerluKeluar();
-      /* Warna teks: padanan warna dari dua aturan di atas. */
-      const perluKeluarWarna = modeBawaanWarna() &&
-        warnaAround(sel().rangeCount ? sel().getRangeAt(0).startContainer : null);
-      const warnaKeluar = warnaPerluKeluar();
-      const adaWarna = warnaPending() || adaPendingHapus();
+      /* Font & warna perlu dibungkus untuk karakter ini: ada yang
+         menunggu, mode "Bawaan" di dalam span, caret di span yang tidak
+         cocok dengan yang lekat, ATAU format lekat yang caret-nya sedang
+         di luar span — mis. semua teks barusan dihapus sampai span-nya
+         ikut hilang. Dalam kasus terakhir, karakter berikutnya harus
+         dibungkus lagi supaya format tidak "mati sendiri". */
+      const fontBungkus = fontPerluBungkus();
+      const warnaBungkus = warnaPerluBungkus();
 
-      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length ||
-          fontKeluar || adaWarna || perluKeluarWarna || warnaKeluar) {
+      if (markKeluar.length || fontBungkus || warnaBungkus) {
         e.preventDefault();
-        /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
-           hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
-        if (adaPendingNone() || fontPending()) bungkusFontPending();
-        else if (perluKeluar) keluarDariFont();
-        else if (fontKeluar) {
-          /* keluar dari span font lama, lalu bungkus dgn font yang dipilih */
-          keluarDariFont();
-          const el = document.createElement('span');
-          el.className = 'fnt';
-          el.setAttribute('data-font', fontLekat());
-          const t0 = document.createTextNode('');
-          el.appendChild(t0);
-          const sx = sel();
-          if (sx && sx.rangeCount) {
-            sx.getRangeAt(0).insertNode(el);
-            const rx = document.createRange();
-            rx.setStart(t0, 0); rx.collapse(true);
-            sx.removeAllRanges(); sx.addRange(rx);
-          }
-        }
-        /* warna teks: bungkus/hapus/keluar, berjalan sendiri setelah font */
-        if (adaWarna) bungkusWarnaPending();
-        else if (perluKeluarWarna) keluarDariWarna();
-        else if (warnaKeluar) { keluarDariWarna(); reBungkusLekat(); }
+        /* Bungkus dulu — untuk "Bawaan" fungsi mengembalikan null, itu
+           wajar: ia hanya memecah keluar dari span, karakternya tetap
+           harus ditulis. */
+        if (fontBungkus) bungkusFontPending();
+        if (warnaBungkus) bungkusWarnaPending();
         markKeluar.forEach(m => keluarDariMark(m));
         const s2 = sel();
         if (s2 && s2.rangeCount) {
@@ -187,10 +163,14 @@ export function bindEditor() {
     }
 
     e.preventDefault();
-    /* font yang menunggu -> bungkus dulu, huruf masuk ke dalamnya */
-    if (fontPending() || adaPendingNone()) { bungkusFontPending(); r = sel().getRangeAt(0); }
-    /* warna yang menunggu -> bungkus juga (bisa berdampingan dengan font) */
-    if (warnaPending() || adaPendingHapus()) { bungkusWarnaPending(); r = sel().getRangeAt(0); }
+    /* font yang menunggu/lekat -> bungkus dulu, huruf masuk ke dalamnya */
+    if (fontPerluBungkus()) { bungkusFontPending(); r = sel().getRangeAt(0); }
+    /* warna yang menunggu/lekat -> bungkus juga (bisa berdampingan dgn font) */
+    if (warnaPerluBungkus()) { bungkusWarnaPending(); r = sel().getRangeAt(0); }
+    /* mark lekat (tebal/dll.) tanpa elemen di posisi caret — mis. blok
+       dikosongkan sehingga <b> ikut dibuang — sediakan wadah kosong
+       supaya karakter pertama masuk ke dalamnya, bukan polos */
+    if (sticky.size) { bungkusMarkLekat(); if (sel().rangeCount) r = sel().getRangeAt(0); }
     /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */
     Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
 

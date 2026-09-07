@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907103335';
-import { refresh } from './cleanup.js?v=20260907103335';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907111650';
+import { refresh } from './cleanup.js?v=20260907111650';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };
@@ -156,6 +156,21 @@ export function wrapTypedPending(){
   sel().removeAllRanges(); sel().addRange(nr);
   return true;
 }
+/* Mark LEKAT yang caret-nya sedang berada DI LUAR elemennya — sediakan
+   wadah kosong di posisi caret supaya karakter berikutnya langsung masuk.
+   Dipakai jalur ketikan karakter pertama pada blok kosong: teks lama sudah
+   dihapus habis sehingga elemen mark ikut dibuang, tapi tombol harus tetap
+   menyala dan ketikan baru harus tetap berformat. */
+export function bungkusMarkLekat(){
+  if(!sticky.size) return;
+  const s=sel();
+  if(!(s&&s.rangeCount)) return;
+  const perlu=[...sticky].filter(m=>!markAround(m,s.getRangeAt(0).startContainer));
+  if(!perlu.length) return;
+  perlu.forEach(m=>pending.add(m));
+  flushPending();
+}
+
 export function flushPending(){
   if(!pending.size) return;
   const r=ensureCaret(); if(!r) return;

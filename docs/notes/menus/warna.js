@@ -14,7 +14,7 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20260907103335';
+  from '../editor/warna.js?v=20260907111650';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */
@@ -26,9 +26,12 @@ export const WARNA_UMUM = [
 
 const WARNA_MULAI = '#b91c1c';      /* warna awal roda saat teks polos */
 
-export function warnaMenu() {
+export function warnaMenu(hexPaksa) {
+  /* hexPaksa: warna yang BARU SAJA dipakai (mis. ketukan swatch). Dipakai
+     sebagai sumber kebenaran render ulang — seleksi bisa sedang tidak
+     terbaca (jsdom) atau belum pulih setelah sentuhan layar. */
   const menunggu = warnaPending();
-  const kini = menunggu !== null ? (menunggu || warnaLekat() || '') : warnaSekarang();
+  const kini = hexPaksa || (menunggu !== null ? (menunggu || warnaLekat() || '') : warnaSekarang());
   const hexKini = /^#[0-9a-f]{6}$/i.test(kini) ? kini.toLowerCase() : '';
   const hexAwal = hexKini || WARNA_MULAI;
 

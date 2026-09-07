@@ -14,8 +14,8 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907103335';
-import { refresh } from './cleanup.js?v=20260907103335';
+import { docEl, sel, curBlock } from './caret.js?v=20260907111650';
+import { refresh } from './cleanup.js?v=20260907111650';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -134,6 +134,24 @@ export const warnaPending = () => (_pending === HAPUS ? '' : _pending);
 export const adaPendingHapus = () => _pending === HAPUS;
 export const modeBawaanWarna = () => _modeBawaan;
 export const warnaLekat = () => _lekat;
+
+/* Warna perlu dibungkus untuk ketikan berikutnya?
+   • ada warna yang menunggu (atau hapus yang menunggu);
+   • mode Bawaan menyala dan caret ada di dalam span warna — dipecah keluar
+     tiap karakter, karena browser menarik caret kembali masuk;
+   • warna lekat menyala tapi caret TIDAK di dalam span warna yang cocok —
+     termasuk saat semua teks barusan dihapus sampai span-nya ikut hilang:
+     karakter berikutnya harus dibungkus lagi supaya warna tidak mati
+     dengan sendirinya. */
+export function warnaPerluBungkus() {
+  if (_pending === HAPUS || _pending) return true;
+  const s = sel();
+  const host = (s && s.rangeCount)
+    ? warnaAround(s.getRangeAt(0).startContainer) : null;
+  if (_modeBawaan) return !!host;
+  if (!_lekat) return false;
+  return !host || host.getAttribute('data-warna') !== _lekat;
+}
 
 /* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai
    setelah normalize() menggabungkan text node. */
@@ -288,8 +306,13 @@ function keluarSatuLapis() {
 /* Bungkus titik ketik berikutnya dengan warna yang menunggu. */
 export function bungkusWarnaPending() {
   if (_pending === HAPUS) { _pending = null; keluarDariWarna(); return null; }
-  if (!_pending) return null;
-  const hex = _pending;
+  /* Mode Bawaan MELEKAT: selama masih menyala, tiap karakter yang mendarat
+     di dalam span warna dipecah keluar (tanpa membuat span baru). */
+  if (_modeBawaan && !_pending) { keluarDariWarna(); return null; }
+  /* Warna lekat dipakai ulang saat caret sedang di luar span yang cocok —
+     persis kasus "teks dihapus habis, warnanya jangan ikut hilang". */
+  const hex = _pending || (!_modeBawaan ? _lekat : '');
+  if (!hex) return null;
   _pending = null;
   const s = sel();
   if (!(s && s.rangeCount)) return null;

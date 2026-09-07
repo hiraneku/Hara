@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907103335';
-import { refresh } from './cleanup.js?v=20260907103335';
+import { docEl, sel, curBlock } from './caret.js?v=20260907111650';
+import { refresh } from './cleanup.js?v=20260907111650';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -187,6 +187,24 @@ export const fontPending = () => (_pending === NONE ? '' : _pending);
 export const adaPendingNone = () => _pending === NONE;
 export const modeBawaan = () => _modeBawaan;
 
+/* Font perlu dibungkus untuk ketikan berikutnya?
+   • ada font yang menunggu (atau "Bawaan" yang menunggu);
+   • mode Bawaan menyala dan caret ada di dalam span font — dipecah keluar
+     tiap karakter, karena browser menarik caret kembali masuk;
+   • font lekat menyala tapi caret TIDAK di dalam span font yang cocok —
+     termasuk saat semua teks barusan dihapus sampai span-nya ikut hilang:
+     karakter berikutnya harus dibungkus lagi supaya font tidak mati
+     dengan sendirinya. */
+export function fontPerluBungkus() {
+  if (_pending === NONE || _pending) return true;
+  const s = sel();
+  const host = (s && s.rangeCount)
+    ? fontAround(s.getRangeAt(0).startContainer) : null;
+  if (_modeBawaan) return !!host;
+  if (!_lekat) return false;
+  return !host || host.getAttribute('data-font') !== _lekat;
+}
+
 export function setFont(id) {
   const d = docEl();
   if (!d) return;
@@ -328,8 +346,13 @@ export function bungkusFontPending() {
     keluarDariFont();
     return null;
   }
-  if (!_pending) return null;
-  const id = _pending;
+  /* Mode Bawaan MELEKAT: selama masih menyala, tiap karakter yang mendarat
+     di dalam span font dipecah keluar (tanpa membuat span baru). */
+  if (_modeBawaan && !_pending) { keluarDariFont(); return null; }
+  /* Font lekat dipakai ulang saat caret sedang di luar span yang cocok —
+     persis kasus "teks dihapus habis, fontnya jangan ikut hilang". */
+  const id = _pending || (!_modeBawaan ? _lekat : '');
+  if (!id) return null;
   _pending = null;
   const s = sel();
   if (!(s && s.rangeCount)) return null;
