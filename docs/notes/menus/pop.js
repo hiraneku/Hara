@@ -1,17 +1,17 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907111935';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907111935';
-import { insertInline } from './insert.js?v=20260907111935';
-import { focusKeep } from '../bar/render.js?v=20260907111935';
-import { applyLink } from './link.js?v=20260907111935';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907111935';
-import { setFont } from '../editor/font.js?v=20260907111935';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907111935';
-import { warnaMenu, rodaPasang } from './warna.js?v=20260907111935';
-import { setCallout } from '../editor/blocks.js?v=20260907111935';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907111935';
-import { getar } from '../bar/prefs.js?v=20260907111935';
-import { toast } from '../../core/toast.js?v=20260907111935';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907113349';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907113349';
+import { insertInline } from './insert.js?v=20260907113349';
+import { focusKeep } from '../bar/render.js?v=20260907113349';
+import { applyLink } from './link.js?v=20260907113349';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907113349';
+import { setFont } from '../editor/font.js?v=20260907113349';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907113349';
+import { rodaPasang } from './warna.js?v=20260907113349';
+import { setCallout } from '../editor/blocks.js?v=20260907113349';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907113349';
+import { getar } from '../bar/prefs.js?v=20260907113349';
+import { toast } from '../../core/toast.js?v=20260907113349';
 
 export const pop = () => document.getElementById('pop');
 
@@ -89,12 +89,14 @@ export function bindPop() {
     if (e.target.closest('.pop-x')) { closeAll(); return; }
   });
 
-  /* strip warna bisa digeser MENDATAR; gerakan itu jangan ikut
-     menggulung panel (keluhan: panel ikut scroll saat strip digeser). */
+  /* strip warna: gerakan mendatar (termasuk diagonal yang didominasi
+     mendatar) hanya menggeser strip — panel tidak ikut bergulung. Yang
+     vertikal MURNI tetap perilaku biasa (gulung panel). Sentuhan jari
+     ditangani touch-action di CSS. */
   p.addEventListener('wheel', e => {
     const st = e.target && e.target.closest ? e.target.closest('.wpal') : null;
     if (!st) return;
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+    if (Math.abs(e.deltaX) > 3) {
       e.preventDefault();
       st.scrollLeft += e.deltaX;
     }
@@ -150,10 +152,18 @@ export function bindPop() {
       getar(); kunciKeyboard(); focusKeep(); ensureCaret();
       snapWarna();
       setWarna(wc.dataset.warna);
-      /* Strip sengaja TIDAK menutup popup — pengguna bisa mencoba warna
-         lain & melihat efeknya langsung. Isi dimuat ulang supaya cincin
-         penanda dan roda ikut pindah ke warna yang baru dipilih. */
-      if (p.querySelector('#roda-w')) { setPopIsi(warnaMenu(wc.dataset.warna)); rodaPasang(); }
+      /* Popup TIDAK ditutup DAN tidak digambar ulang — menggambar ulang
+         membuat strip yang sedang digeser lompat balik ke kiri. Cukup
+         pindahkan cincin penanda, lalu selaraskan roda + kolom kode ke
+         warna yang barusan dipakai (bisa dicoba beruntun). */
+      p.querySelectorAll('.wsw.on').forEach(x => {
+        x.classList.remove('on'); x.removeAttribute('aria-pressed');
+      });
+      wc.classList.add('on');
+      wc.setAttribute('aria-pressed', 'true');
+      const inp = p.querySelector('#warna-hex');
+      if (inp) inp.value = wc.dataset.warna;
+      if (p.querySelector('#roda-w')) rodaPasang();
       return;
     }
     /* hapus warna (kembali ke bawaan) */
@@ -189,7 +199,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907111935').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907113349').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -198,7 +208,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907111935').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907113349').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -208,7 +218,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907111935').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907113349').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 

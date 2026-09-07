@@ -14,7 +14,7 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20260907111935';
+  from '../editor/warna.js?v=20260907113349';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */
@@ -26,12 +26,9 @@ export const WARNA_UMUM = [
 
 const WARNA_MULAI = '#b91c1c';      /* warna awal roda saat teks polos */
 
-export function warnaMenu(hexPaksa) {
-  /* hexPaksa: warna yang BARU SAJA dipakai (mis. ketukan swatch). Dipakai
-     sebagai sumber kebenaran render ulang — seleksi bisa sedang tidak
-     terbaca (jsdom) atau belum pulih setelah sentuhan layar. */
+export function warnaMenu() {
   const menunggu = warnaPending();
-  const kini = hexPaksa || (menunggu !== null ? (menunggu || warnaLekat() || '') : warnaSekarang());
+  const kini = menunggu !== null ? (menunggu || warnaLekat() || '') : warnaSekarang();
   const hexKini = /^#[0-9a-f]{6}$/i.test(kini) ? kini.toLowerCase() : '';
   const hexAwal = hexKini || WARNA_MULAI;
 
@@ -91,61 +88,117 @@ export function hslKeHex(h, s, l) {
 
 /* ── gambar roda (kanvas). jsdom/tanpa kanvas: dilewati dengan aman. ── */
 
-function rodaGambar(cv, h, s, l) {
-  const ctx = cv.getContext ? cv.getContext('2d') : null;
-  if (!ctx) return;
-  const R = cv.width / 2;
-  const img = ctx.createImageData(cv.width, cv.height);
-  const dat = img.data;
-  const PI2 = Math.PI * 2;
-  for (let y = 0; y < cv.height; y++) {
-    const dy = y - R + 0.5;
-    for (let x = 0; x < cv.width; x++) {
-      const dx = x - R + 0.5;
-      if (dx * dx + dy * dy > R * R) continue;
-      const hue = (Math.atan2(dy, dx) + PI2) % PI2 * 180 / Math.PI;
-      const jenuh = Math.min(1, Math.hypot(dx, dy) / R);
-      const [rr, gg, bb] = hslKeRgb(hue, jenuh, l);
-      const i = (y * cv.width + x) * 4;
-      dat[i] = rr; dat[i + 1] = gg; dat[i + 2] = bb; dat[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  /* penanda posisi warna sekarang — dua lapis agar terlihat di warna
-     terang maupun gelap */
-  const rad = h * Math.PI / 180;
-  const tx = R + Math.cos(rad) * s * R;
-  const ty = R + Math.sin(rad) * s * R;
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = 'rgba(0,0,0,.55)';
-  ctx.beginPath(); ctx.arc(tx, ty, 7, 0, PI2); ctx.stroke();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#fff';
-  ctx.beginPath(); ctx.arc(tx, ty, 7, 0, PI2); ctx.stroke();
+const RODA_PX = 192;               /* ukuran roda dalam px CSS */
+let rodaH = 0, rodaS = 0, rodaL = 0.55;   /* warna yang sedang digarap */
+let rodaEl = null;                 /* {cv,g,hex,chip} popup yang aktif */
+let diskL = null, diskPx = 0, diskCv = null;   /* cache cakram: (l, px) */
+
+/* Kanvas dicetak pada resolusi PERANGKAT (devicePixelRatio, dibatasi 2×)
+   supaya di layar rapat tampak tajam, bukan buram. */
+function rodaUkuran(cv) {
+  const dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+  const px = Math.max(1, Math.round(RODA_PX * dpr));
+  if (cv.width !== px || cv.height !== px) { cv.width = px; cv.height = px; }
+  return px;
 }
 
-/* Pasang interaksi roda — dipanggil setiap popup warna dibuka. */
+/* Cakram roda untuk satu nilai gelap–terang `l`, di-resolusi perangkat.
+   Tepi lingkaran di-anti-alias (bulu 1 px CSS) supaya pinggirannya mulus,
+   bukan bergerigi. Dibuat sekali per nilai l lalu dipakai ulang. */
+function cakramRoda(l, px) {
+  if (diskCv && diskL === l && diskPx === px) return diskCv;
+  const off = document.createElement('canvas');
+  off.width = px; off.height = px;
+  const c2 = off.getContext('2d');
+  if (!c2) return null;
+  const R = px / 2;
+  const img = c2.createImageData(px, px);
+  const dat = img.data;
+  const PI2 = Math.PI * 2;
+  const bulu = Math.max(1, px / RODA_PX);        /* 1 px CSS */
+  for (let y = 0; y < px; y++) {
+    const dy = y - R + 0.5;
+    for (let x = 0; x < px; x++) {
+      const dx = x - R + 0.5;
+      const d = Math.hypot(dx, dy);
+      if (d > R + bulu) continue;
+      /* alfa tepi: penuh di dalam, menipis 1 px CSS di bibir lingkaran */
+      const alfa = d > R - bulu ? Math.max(0, Math.min(1, (R + bulu - d) / (2 * bulu))) : 1;
+      const hue = (Math.atan2(dy, dx) + PI2) % PI2 * 180 / Math.PI;
+      const jenuh = Math.min(1, d / R);
+      const [rr, gg, bb] = hslKeRgb(hue, jenuh, l);
+      const i = (y * px + x) * 4;
+      dat[i] = rr; dat[i + 1] = gg; dat[i + 2] = bb;
+      dat[i + 3] = Math.round(alfa * 255);
+    }
+  }
+  c2.putImageData(img, 0, 0);
+  diskCv = off; diskL = l; diskPx = px;
+  return off;
+}
+
+function rodaGambar(cv, h, s, l) {
+  const c2 = cv.getContext ? cv.getContext('2d') : null;
+  if (!c2) return;
+  const px = rodaUkuran(cv);
+  const off = cakramRoda(l, px);
+  if (!off) return;
+  c2.clearRect(0, 0, px, px);
+  c2.drawImage(off, 0, 0);
+  /* penanda posisi warna sekarang — digambar vektor di resolusi perangkat
+     (tajam), dua lapis agar terlihat di warna terang maupun gelap */
+  const R = px / 2;
+  const sk = px / RODA_PX;
+  const mr = 7 * sk;
+  const rad = h * Math.PI / 180;
+  const jarak = Math.max(0, Math.min(1, s)) * (R - mr - 2 * sk);
+  const tx = R + Math.cos(rad) * jarak;
+  const ty = R + Math.sin(rad) * jarak;
+  const gores = (r, w, warna) => {
+    c2.lineWidth = w; c2.strokeStyle = warna;
+    c2.beginPath(); c2.arc(tx, ty, r, 0, Math.PI * 2); c2.stroke();
+  };
+  gores(mr, 4 * sk, 'rgba(0,0,0,.55)');
+  gores(mr, 2 * sk, '#fff');
+}
+
+function rodaSegar() {
+  const el = rodaEl;
+  if (!el) return;
+  const heks = hslKeHex(rodaH, rodaS, rodaL);
+  if (el.chip) el.chip.style.background = heks;
+  el.hex.value = heks;
+  el.hex.classList.remove('salah');
+  if (el.g) el.g.value = Math.round(rodaL * 100);
+  rodaGambar(el.cv, rodaH, rodaS, rodaL);
+}
+
+/* Pasang interaksi roda. Dipanggil saat popup dibuka DAN saat swatch strip
+   diklik (sinkron ulang). Aman dipanggil berulang pada elemen yang sama:
+   listener hanya dipasang sekali per elemen (penanda dataset), sisanya
+   murni sinkronisasi keadaan dari kolom kode. */
 export function rodaPasang() {
   const cv = document.getElementById('roda-w');
   const g = document.getElementById('roda-g');
   const hex = document.getElementById('warna-hex');
   const chip = document.getElementById('warna-chip');
   if (!cv || !g || !hex) return;
-
+  rodaEl = { cv, g, hex, chip };
   const awal = hexKeHsl(normalizeWarna(hex.value) || WARNA_MULAI);
-  let h = awal[0], s = awal[1], l = awal[2];
+  rodaH = awal[0]; rodaS = awal[1]; rodaL = awal[2];
+  rodaSegar();
+  if (cv.dataset.roda) return;      /* interaksi sudah terpasang */
 
-  const segar = () => {
-    const heks = hslKeHex(h, s, l);
-    if (chip) chip.style.background = heks;
-    hex.value = heks;
-    hex.classList.remove('salah');
-    rodaGambar(cv, h, s, l);
+  const ambilPosisi = e => {
+    const rc = cv.getBoundingClientRect();
+    if (!rc || !rc.width) return;
+    const dx = (e.clientX || rc.left + rc.width / 2) - (rc.left + rc.width / 2);
+    const dy = (e.clientY || rc.top + rc.height / 2) - (rc.top + rc.height / 2);
+    if (Math.hypot(dx, dy) > rc.width / 2) return;   /* di luar lingkaran */
+    rodaH = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+    rodaS = Math.min(1, Math.hypot(dx, dy) / (rc.width / 2));
+    rodaSegar();
   };
-
-  g.value = Math.round(l * 100);
-  segar();
-
   cv.addEventListener('pointerdown', e => {
     e.preventDefault();
     ambilPosisi(e);
@@ -154,24 +207,12 @@ export function rodaPasang() {
     }
   });
   cv.addEventListener('pointermove', e => {
-    if (!e.buttons) return;
-    ambilPosisi(e);
+    if (e.buttons) ambilPosisi(e);
   });
 
-  function ambilPosisi(e) {
-    const rc = cv.getBoundingClientRect();
-    if (!rc || !rc.width) return;
-    const dx = (e.clientX || rc.left + rc.width / 2) - (rc.left + rc.width / 2);
-    const dy = (e.clientY || rc.top + rc.height / 2) - (rc.top + rc.height / 2);
-    if (Math.hypot(dx, dy) > rc.width / 2) return;   /* di luar lingkaran */
-    h = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
-    s = Math.min(1, Math.hypot(dx, dy) / (rc.width / 2));
-    segar();
-  }
-
   g.addEventListener('input', () => {
-    l = Number(g.value) / 100;
-    segar();
+    rodaL = Number(g.value) / 100;
+    rodaSegar();
   });
 
   hex.addEventListener('input', () => {
@@ -181,12 +222,8 @@ export function rodaPasang() {
          ikut. Umpan balik ini penting: kode "rgb(...)" langsung berubah
          jadi "#rrggbb" = tanda bahwa kode diterima. */
       const [hh, ss, ll] = hexKeHsl(c);
-      h = hh; s = ss; l = ll;
-      g.value = Math.round(l * 100);
-      hex.value = c;
-      hex.classList.remove('salah');
-      if (chip) chip.style.background = c;
-      rodaGambar(cv, h, s, l);
+      rodaH = hh; rodaS = ss; rodaL = ll;
+      rodaSegar();
     } else {
       hex.classList.toggle('salah', hex.value.trim() !== '');
     }

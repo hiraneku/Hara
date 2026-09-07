@@ -445,7 +445,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 /* strip warna umum: satu baris memanjang, digeser kalau panjang.
    Hitam → putih ada di ujung kiri, lalu warna-warna umum. */
 .wpal{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding:8px 14px 12px;
-  overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .wpal::-webkit-scrollbar{height:4px}
 .wpal::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 .wsw{flex:none;width:36px;height:36px;border-radius:999px;padding:0;position:relative;
@@ -464,7 +464,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .wroda-s{position:relative;width:30px;height:192px;flex:none}
 .wroda-s input{position:absolute;left:50%;top:50%;width:192px;height:22px;
   margin:0;padding:0;transform:translate(-50%,-50%) rotate(-90deg);
-  -webkit-appearance:none;appearance:none;background:none;cursor:pointer}
+  -webkit-appearance:none;appearance:none;background:none;cursor:pointer;
+  touch-action:none}
 .wroda-s input::-webkit-slider-runnable-track{height:8px;border-radius:99px;
   border:1px solid color-mix(in srgb,var(--text) 26%,transparent);
   background:linear-gradient(90deg,#000,#fff)}
