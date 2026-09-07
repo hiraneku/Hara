@@ -1,37 +1,41 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907082115';
-import { homeView, notesView } from './views/list.js?v=20260907082115';
-import { editorView } from './views/editor.js?v=20260907082115';
-import { miscViews, renderHasilCari } from './views/misc.js?v=20260907082115';
-import { bindEditor } from './editor/events.js?v=20260907082115';
-import { renderBar }  from './bar/render.js?v=20260907082115';
-import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260907082115';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907091218';
+import { homeView, notesView } from './views/list.js?v=20260907091218';
+import { editorView } from './views/editor.js?v=20260907091218';
+import { miscViews, renderHasilCari } from './views/misc.js?v=20260907091218';
+import { bindEditor } from './editor/events.js?v=20260907091218';
+import { renderBar }  from './bar/render.js?v=20260907091218';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260907091218';
 import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
-  from './editor/cleanup.js?v=20260907082115';
+  from './editor/cleanup.js?v=20260907091218';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20260907082115';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907082115';
-import { toast } from '../core/toast.js?v=20260907082115';
-import { blocksToDom, touch } from './note-model.js?v=20260907082115';
-import { renumber } from './editor/blocks.js?v=20260907082115';
-import { pending, sticky, mati } from './editor/marks.js?v=20260907082115';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907082115';
-import { resetHistory } from './editor/history.js?v=20260907082115';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260907082115';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907082115';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907082115';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907082115';
-import { state } from '../core/store.js?v=20260907082115';
-import { labelMode } from '../core/theme.js?v=20260907082115';
+  from '../core/autosave.js?v=20260907091218';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907091218';
+import { toast } from '../core/toast.js?v=20260907091218';
+import { esc } from '../core/dom.js?v=20260907091218';
+import { blocksToDom, touch } from './note-model.js?v=20260907091218';
+import { renumber } from './editor/blocks.js?v=20260907091218';
+import { pending, sticky, mati } from './editor/marks.js?v=20260907091218';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907091218';
+import { resetHistory } from './editor/history.js?v=20260907091218';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260907091218';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907091218';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907091218';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907091218';
+import { state } from '../core/store.js?v=20260907091218';
+import { labelMode } from '../core/theme.js?v=20260907091218';
 import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote }
-  from './model.js?v=20260907082115';
-import { pasangSeret } from './drag.js?v=20260907082115';
-import { muatPanels, tautkanSebutan } from './panels.js?v=20260907082115';
-import { setTag, stt } from './views/data.js?v=20260907082115';
-import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260907082115';
-import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260907082115';
+  from './model.js?v=20260907091218';
+import { pasangSeret } from './drag.js?v=20260907091218';
+import { muatPanels, tautkanSebutan } from './panels.js?v=20260907091218';
+import { setTag, stt } from './views/data.js?v=20260907091218';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260907091218';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260907091218';
+import { cadanganJson, eksporSemuaMarkdown, markdownDariCatatan, namaBerkasAman,
+         unduh, buatZip, siapImpor, terapkanImpor }
+  from './data-io.js?v=20260907091218';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -208,6 +212,71 @@ function lompatKe(noteId, bid) {
   }, 90);
 }
 
+/* ════════ DATA MASUK-KELUAR (Pengaturan & menu ···) ════════ */
+/* Ringkasan impor yang sudah dibaca, menunggu keputusan Gabung/Timpa. */
+let imporTertunda = null;
+
+function eksporMdCatatanSekarang() {
+  const n = state.notes.find(x => x.id === state.openId);
+  if (!n) return;
+  const teks = markdownDariCatatan(n);
+  unduh(`${namaBerkasAman(n.title)}.md`, teks, 'text/markdown');
+  toast(`Ekspor .md: ${namaBerkasAman(n.title)}.md`);
+}
+
+function pilihBerkasImpor() {
+  const inp = document.getElementById('impor-in');
+  if (inp) inp.click();
+}
+
+async function prosesBerkasImpor(berkas) {
+  const nama = berkas.name || 'berkas';
+  try {
+    let ringkas;
+    if (/\.zip$/i.test(nama)) {
+      const buf = new Uint8Array(await berkas.arrayBuffer());
+      ringkas = await siapImpor(nama, '', buf);
+    } else {
+      const teks = await berkas.text();
+      ringkas = await siapImpor(nama, teks, null);
+    }
+    imporTertunda = ringkas;
+    const jml = ringkas.catatan.length;
+    const detil = ringkas.jenis === 'json'
+      ? `${ringkas.catatan.length} catatan` +
+        (ringkas.jumlahBlob ? ` + ${ringkas.jumlahBlob} gambar` : '')
+      : `${ringkas.catatan.length} catatan baru`;
+    const tombol = ringkas.jenis === 'json'
+      ? `<button class="btn btn-sec" style="flex:1" data-impor-batal>Batal</button>
+         <button class="btn btn-sec" style="flex:1" data-impor-terapkan="gabung">Gabung</button>
+         <button class="btn btn-pri" style="flex:1" data-impor-terapkan="timpa">Timpa semua</button>`
+      : `<button class="btn btn-sec" style="flex:1" data-impor-batal>Batal</button>
+         <button class="btn btn-pri" style="flex:1" data-impor-terapkan="gabung">Impor ${jml}</button>`;
+    const barisTombol = document.querySelector('[data-impor]');
+    openPop(`<div class="pop-h">Impor: ${esc(nama)}</div>
+      <p class="pop-note">${detil}.${ringkas.jenis === 'json' ? ' Gabung = sisip & perbarui; Timpa semua = kembalikan persis cadangan.' : ' Tiap catatan baru ditambahkan — tidak ada yang ditimpa.'}</p>
+      <div style="display:flex;gap:8px;padding:2px 10px 10px">${tombol}</div>`,
+      barisTombol || undefined);
+  } catch (e) {
+    toast(e && e.message ? e.message : 'Impor gagal');
+  }
+}
+
+async function terapkanImporTertunda(mode) {
+  const r = imporTertunda;
+  imporTertunda = null;
+  if (!r) return;
+  try {
+    const h = await terapkanImpor(r, mode);
+    toast(mode === 'timpa' && r.jenis === 'json'
+      ? `Cadangan dipulihkan: ${h.catatan} catatan, ${h.dipulihkan} gambar`
+      : `${r.jenis === 'json' ? 'Impor JSON' : 'Impor markdown'} selesai: ${h.baru || h.catatan} catatan${h.dipulihkan ? ', ' + h.dipulihkan + ' gambar' : ''}`);
+    go(cur || 'notes');
+  } catch (e) {
+    toast('Impor gagal: ' + (e && e.message ? e.message : e));
+  }
+}
+
 /* ════════ HAPUS PERMANEN DUA KETUKAN (Sampah) ════════ */
 let timerYakin = null;
 function hapusDuaKetuk(b) {
@@ -366,6 +435,47 @@ export const notesModule = {
       if (ph) { pulihkanSampah(ph.dataset.pulih); return; }
       const pu = e.target.closest('[data-putus]');
       if (pu) { hapusDuaKetuk(pu); return; }
+    });
+
+    /* ── data masuk-keluar: ekspor / impor / konfirmasi ── */
+    document.addEventListener('click', e => {
+      const nx = e.target.closest('[data-note-act="ekspor"]');
+      if (nx) { closeAll(); eksporMdCatatanSekarang(); return; }
+
+      const eks = e.target.closest('[data-ekspor]');
+      if (eks) {
+        if (eks.dataset.ekspor === 'json') {
+          cadanganJson().then(({ nama, teks }) => {
+            unduh(nama, teks, 'application/json');
+            toast(`Cadangan diunduh: ${nama}`);
+          }).catch(() => toast('Ekspor JSON gagal'));
+        } else {
+          const { nama, entri } = eksporSemuaMarkdown();
+          if (!entri.length) { toast('Tidak ada catatan untuk diekspor'); return; }
+          if (entri.length === 1) {
+            unduh(entri[0].nama, entri[0].teks, 'text/markdown');
+            toast(`Ekspor: ${entri[0].nama}`);
+          } else {
+            unduh(nama, buatZip(entri), 'application/zip');
+            toast(`${entri.length} catatan → ${nama}`);
+          }
+        }
+        return;
+      }
+      const ip = e.target.closest('[data-impor]');
+      if (ip) { pilihBerkasImpor(); return; }
+      const tb = e.target.closest('[data-impor-batal]');
+      if (tb) { closeAll(); imporTertunda = null; return; }
+      const tt = e.target.closest('[data-impor-terapkan]');
+      if (tt) { closeAll(); terapkanImporTertunda(tt.dataset.imporTerapkan); return; }
+    });
+    document.addEventListener('change', e => {
+      const inp = e.target.closest ? e.target.closest('#impor-in') : null;
+      if (inp && inp.files && inp.files[0]) {
+        const f = inp.files[0];
+        inp.value = '';
+        prosesBerkasImpor(f);
+      }
     });
 
     /* ketik: properti langsung menempel ke model; cari langsung mencari */

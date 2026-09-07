@@ -1,11 +1,11 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260907082115';
-import { esc, stamp } from '../../core/dom.js?v=20260907082115';
-import { rowFor } from './row.js?v=20260907082115';
-import { plainText } from '../note-model.js?v=20260907082115';
-import { semuaTag } from '../tags.js?v=20260907082115';
+import { state } from '../../core/store.js?v=20260907091218';
+import { esc, stamp } from '../../core/dom.js?v=20260907091218';
+import { rowFor } from './row.js?v=20260907091218';
+import { plainText } from '../note-model.js?v=20260907091218';
+import { semuaTag } from '../tags.js?v=20260907091218';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -125,13 +125,18 @@ set:()=>`<div class="page">
   <p class="note">Undo dan Redo selalu tampil — tanpa keduanya kesalahan ketik tak bisa dibatalkan.</p>
   <div class="sec"><h2>Data</h2></div>
   <div class="card">
-    <div class="row"><div class="row-b"><div class="row-t">Impor vault Obsidian</div>
-      <div class="row-s">Wikilink & frontmatter dipertahankan</div></div>
-      <button type="button" class="btn btn-sec" data-act="Impor vault menyusul">Pilih</button></div>
-    <div class="row"><div class="row-b"><div class="row-t">Ekspor semua</div>
-      <div class="row-s">Markdown · JSON · PDF</div></div>
-      <button type="button" class="btn btn-sec" data-act="Ekspor menyusul">Ekspor</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Impor</div>
+      <div class="row-s">Cadangan JSON Hara (termasuk gambar) · berkas .md · .zip markdown</div></div>
+      <button type="button" class="btn btn-sec" data-impor>Pilih berkas…</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Ekspor cadangan JSON</div>
+      <div class="row-s">Semua catatan (sampah & arsip ikut) + gambar — bisa dipulihkan utuh kapan pun</div></div>
+      <button type="button" class="btn btn-sec" data-ekspor="json">JSON</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">Ekspor Markdown</div>
+      <div class="row-s">Satu berkas .md per catatan (frontmatter + wikilink utuh) dalam .zip — siap dibaca Obsidian</div></div>
+      <button type="button" class="btn btn-sec" data-ekspor="md">Markdown</button></div>
     <div class="row"><div class="row-b"><div class="row-t">Penyimpanan</div>
       <div class="row-s" id="ruang">menghitung…</div></div></div>
   </div>
-  <p class="note" style="padding:24px 0 0">Hara v0.1 · prototipe desain · data tersimpan di perangkat</p></div>`};
+  <input type="file" id="impor-in" hidden
+    accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
+  <p class="note" style="padding:20px 0 0">Keluar-masuk kapan saja: cadangan JSON untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan JSON; ekspor Markdown hanya membawa teks.</p></div>`};

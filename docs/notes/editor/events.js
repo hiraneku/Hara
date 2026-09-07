@@ -1,14 +1,14 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907082115';
-import { setBlock, indent } from './blocks.js?v=20260907082115';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907082115';
-import { autoFormat } from './markdown.js?v=20260907082115';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907082115';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907082115';
-import { onTitle } from '../model.js?v=20260907082115';
-import { tanganiPaste } from './paste.js?v=20260907082115';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907082115';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907082115';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907091218';
+import { setBlock, indent } from './blocks.js?v=20260907091218';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907091218';
+import { autoFormat } from './markdown.js?v=20260907091218';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907091218';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907091218';
+import { onTitle } from '../model.js?v=20260907091218';
+import { tanganiPaste } from './paste.js?v=20260907091218';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907091218';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907091218';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
