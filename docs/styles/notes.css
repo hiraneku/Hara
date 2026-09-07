@@ -326,68 +326,86 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 #pop .pop-i.pop-danger .ico{color:var(--danger)}
 
 /* ── gambar tersemat ── */
-.b-img{position:relative;margin:10px 0;border-radius:var(--r-md);overflow:hidden;
+.b-img{position:relative;margin:8px 0;border-radius:var(--r-md);
   background:var(--sunken);line-height:0;width:var(--gw,100%);
-  transform:translateX(var(--go,0px)) rotate(var(--gr,0deg));
-  transform-origin:50% 50%;transition:width .12s var(--ease)}
+  transform:rotate(var(--gr,0deg));transform-origin:50% 50%;
+  transition:width .14s var(--ease)}
 .b-img.seret{transition:none}
 .b-img img{width:100%;height:auto;display:block;max-height:70vh;object-fit:contain;
-  user-select:none}
-/* perataan kiri/tengah/kanan — margin otomatis menyesuaikan kolom.
-   Gambar yang dikecilkan tanpa perataan eksplisit otomatis di tengah. */
-.b-img.tata:not(.i-l):not(.i-c):not(.i-r){margin-left:auto;margin-right:auto}
-.b-img.i-l{margin-right:auto}
-.b-img.i-c{margin-left:auto;margin-right:auto}
-.b-img.i-r{margin-left:auto}
-/* gambar sedang dipilih (pengaturan lewat tata-gambar.js) */
+  user-select:none;border-radius:inherit}
+/* kelas lebar (data-gw menentukan): hero / baris sendiri / mengapit / kecil.
+   w-hero & w-baris & i-* memulai baris sendiri (clear) — mengapit (f-l/f-r)
+   membiarkan teks paragraf berikut mengalir di sampingnya. */
+.b-img.w-hero{margin-left:auto;margin-right:auto;clear:both}
+.b-img.w-baris.i-l{margin-right:auto;clear:both}
+.b-img.w-baris.i-c{margin-left:auto;margin-right:auto;clear:both}
+.b-img.w-baris.i-r{margin-left:auto;clear:both}
+.b-img.w-apit.f-l,.b-img.w-kecil.f-l{float:left;clear:none;margin:6px 18px 10px 0}
+.b-img.w-apit.f-r,.b-img.w-kecil.f-r{float:right;clear:none;margin:6px 0 10px 18px}
+.b-img.w-apit.i-c,.b-img.w-kecil.i-c{margin-left:auto;margin-right:auto;clear:both}
+/* bias bawah: foto mengapit turun sedikit — kesan menempel di bagian
+   bawah paragraf (kolase) */
+.b-img.gb-b.f-l{margin-top:2.4em}
+.b-img.gb-b.f-r{margin-top:2.4em}
+/* elemen struktur mulai di baris baru — mengakhiri sapuan gambar mengapit */
+.ed-doc>.b-div,.ed-doc>.b-cal,.ed-doc>h1,.ed-doc>h2,.ed-doc>h3,
+.ed-doc>.b-code,.ed-doc>.b-quote,.ed-doc>.b-ol,.ed-doc>.b-li,
+.ed-doc>.b-todo{clear:both}
+/* gambar sedang dipilih */
 .b-img.img-pilih{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-md)}
-.img-x{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:999px;
+.img-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:999px;
   background:rgba(0,0,0,.55);display:grid;place-items:center;opacity:0;
   transition:opacity .14s var(--ease)}
 .b-img:hover .img-x,.b-img:active .img-x{opacity:1}
-.img-x svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
-/* gagang seret ukuran di pojok kanan-bawah — hanya saat dipilih */
-.img-grip{position:absolute;right:6px;bottom:6px;width:26px;height:26px;border-radius:999px;
-  background:rgba(0,0,0,.55);display:grid;place-items:center;opacity:0;color:#fff;
-  transition:opacity .14s var(--ease);touch-action:none;cursor:nwse-resize}
-.b-img.img-pilih .img-grip{opacity:1}
-.img-grip svg{width:14px;height:14px;stroke:#fff;stroke-width:1.8;fill:none;
-  stroke-linecap:round;stroke-linejoin:round}
+.img-x svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
+/* gagang: ukuran (pojok kanan-bawah) · pindah (kiri-atas) · putar (atas-tengah) */
+.img-grip,.img-move{position:absolute;width:24px;height:24px;border-radius:999px;
+  background:rgba(0,0,0,.6);display:grid;place-items:center;opacity:0;color:#fff;
+  transition:opacity .14s var(--ease);touch-action:none}
+.img-grip{right:6px;bottom:6px;cursor:nwse-resize}
+.img-move{left:6px;top:6px;cursor:move}
+.img-putar{position:absolute;left:50%;top:-15px;width:24px;height:24px;border-radius:999px;
+  background:var(--accent);display:grid;place-items:center;opacity:0;color:#fff;
+  transform:translateX(-50%);transition:opacity .14s var(--ease);touch-action:none;
+  cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.b-img.img-pilih .img-grip,.b-img.img-pilih .img-move,
+.b-img.img-pilih .img-putar{opacity:1}
+.img-grip svg,.img-move svg,.img-putar svg{width:13px;height:13px;stroke:#fff;
+  stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .img-hilang{padding:14px;border:1px dashed var(--border-strong);border-radius:var(--r-md);
   color:var(--faint);font-size:13px;text-align:center}
-@media(hover:none){.img-x{opacity:.85}.img-grip{opacity:.85}}
+@media(hover:none){.img-x,.img-grip,.img-move,.img-putar{opacity:.92}}
 
-/* ── panel popup "Atur gambar" (tata-gambar.js) ── */
-.g-bag{padding:3px 13px 10px;border-top:1px solid var(--border);margin-top:6px}
-.g-lbl{display:flex;align-items:baseline;gap:6px;font-size:10.5px;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--faint);margin:7px 0 7px}
-.g-dim{margin-left:auto;font-family:var(--mono);letter-spacing:0;text-transform:none;
-  font-size:10.5px;color:var(--muted)}
-.g-chips{display:flex;gap:6px}
-.g-chip{flex:1;height:31px;border-radius:8px;border:1px solid var(--border-strong);
-  background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;
-  display:grid;place-items:center;transition:.1s var(--ease);font-family:var(--mono)}
-.g-chip:hover{background:var(--sunken);color:var(--text)}
-.g-chip.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
-.g-chip.kcil{flex:0 1 auto;padding:0 10px;min-width:38px}
-.g-row2{display:flex;align-items:center;gap:8px}
-/* penggeser buatan sendiri (bukan <input range>) — seret di lintasan */
-.g-sl{flex:1;min-width:0;height:26px;display:flex;align-items:center;touch-action:none;
-  cursor:pointer;position:relative}
-.g-sl:focus-visible{outline:2px solid var(--accent);border-radius:6px}
-.g-sl-in{position:relative;height:16px;flex:1;min-width:0}
-.g-sl-in::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;
-  border-radius:2px;background:var(--border-strong)}
-.g-sl:hover .g-sl-in::before{background:var(--border)}
-.g-th{position:absolute;top:50%;width:15px;height:15px;border-radius:999px;background:var(--accent);
-  transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.25);padding:0;border:0}
-.g-th:hover{transform:translate(-50%,-50%) scale(1.12)}
-.g-num{flex:none;width:52px;height:31px;text-align:center;font-family:var(--mono);
-  font-size:13px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);
-  color:var(--text)}
-.g-num:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-weak)}
-.g-sat{color:var(--faint);font-size:12px;font-family:var(--mono)}
-
+/* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */
+#mbar{position:fixed;z-index:70;display:none;align-items:center;gap:2px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  box-shadow:var(--shadow-modal);padding:4px 6px;max-width:min(92vw,420px);
+  overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+#mbar.on{display:flex}
+#mbar::-webkit-scrollbar{display:none}
+.mb-chip{flex:none;height:27px;min-width:38px;padding:0 8px;border-radius:8px;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);
+  font-size:11.5px;font-weight:600;display:grid;place-items:center;font-family:var(--mono);
+  transition:.1s var(--ease)}
+.mb-chip:hover{background:var(--sunken);color:var(--text)}
+.mb-chip.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+.mb-chip.mb-ico{min-width:30px;padding:0 5px}
+.mb-chip.mb-ico svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;
+  fill:none;stroke-linecap:round;stroke-linejoin:round}
+.mb-chip.bdg{min-width:44px;padding:0 6px;font-weight:700}
+.mb-deg-in{flex:none;width:56px;height:26px;text-align:center;border-radius:8px;
+  border:1px solid var(--accent);background:var(--surface);color:var(--text);
+  font-family:var(--mono);font-size:12.5px}
+.mb-deg-in:focus{outline:none;box-shadow:0 0 0 2px var(--accent-weak)}
+.mb-sep{flex:none;width:1px;height:16px;background:var(--border);margin:0 4px}
+/* hantu & label zona saat menyeret gagang pindah */
+#gbr-gh{position:fixed;z-index:65;pointer-events:none;border-radius:8px;overflow:hidden;
+  box-shadow:0 14px 30px rgba(0,0,0,.28);opacity:.9;display:none}
+#gbr-gh img{border-radius:0}
+#gbr-gh img{width:100%;height:100%;object-fit:cover;display:block}
+#gbr-gh .pil{position:absolute;inset:auto auto 6px 50%;transform:translateX(-50%);
+  background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;padding:2px 9px;
+  border-radius:99px;white-space:nowrap;letter-spacing:.02em}
 /* ── blok bertanda (tautan blok) ── */
 .ed-doc>[data-ref]{position:relative}
 .ed-doc>[data-ref]::after{content:'^' attr(data-ref);position:absolute;right:0;top:3px;
@@ -562,7 +580,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed.baca .ed-t:focus{outline:none}
 .ed.baca .cbx{cursor:pointer}
 .ed.baca .cbx:hover{border-color:var(--accent)}
-.ed.baca .img-x,.ed.baca .img-grip{display:none!important}
+.ed.baca .img-x,.ed.baca .img-grip,.ed.baca .img-move,.ed.baca .img-putar{display:none!important}
 .ed.baca .b-img.img-pilih{outline:none}
 
 /* ════════ PANEL "BELUM SELESAI" ════════ */
@@ -589,7 +607,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   #wrap{overflow:visible!important;height:auto!important}
   .ed{max-width:none!important;margin:0!important;padding:14mm 12mm 0!important}
   .ed.baca .ed-t,.ed-t{font-size:23pt;line-height:1.25;padding:0 0 3mm;border:0!important;height:auto}
-  .props,.blk-h,.img-x,.img-grip,.dm,.panel,.rec-bar{display:none!important}
+  .props,.blk-h,.img-x,.img-grip,.img-move,.img-putar,#mbar,#gbr-gh,.dm,.panel,.rec-bar{display:none!important}
+  .b-img.img-pilih{outline:none!important}
   .ed-doc{outline:0!important;min-height:0!important}
   .ed-doc>*{page-break-inside:avoid}
   .b-code,.emb{page-break-inside:avoid}

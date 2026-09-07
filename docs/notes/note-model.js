@@ -174,28 +174,33 @@ export function blockToHtml(b) {
   if (b.type === 'image') {
     const alt = escAttr(meta.alt || 'gambar');
     const blob = escAttr(meta.blobId || '');
-    /* Tata letak gambar (tata-gambar.js): lebar %, rotasi −180..180,
-       perataan kiri/tengah/kanan, geser halus px. Gambar lama tanpa
-       pengaturan apa pun dirender seperti dulu (100%, lurus). */
-    let lebar = Math.round(Number(meta.w) || 0);
-    lebar = lebar >= 20 && lebar <= 100 ? lebar : 100;
+    /* Tata letak gambar (tata-gambar.js): lebar % menentukan KELAS tata
+       letak, perataan kiri/tengah/kanan, rotasi −180..180, bias atas/
+       bawah (data-gb). Gambar lama tanpa pengaturan dirender seperti
+       dulu (100%, lurus, baris sendiri). */
+    let w = Math.round(Number(meta.w) || 0);
+    w = w >= 20 && w <= 100 ? w : 100;
     let rot = Math.round(Number(meta.rot) || 0) || 0;
     rot = Math.max(-180, Math.min(180, rot));
-    let off = Math.round(Number(meta.off) || 0) || 0;
-    off = Math.max(-400, Math.min(400, off));
     const ga = meta.align === 'l' || meta.align === 'c' || meta.align === 'r'
       ? meta.align : '';
-    const khusus = lebar !== 100 || rot !== 0 || off !== 0 || ga;
-    let cls = 'b-img';
+    const gb = meta.zb === 'b' ? 'b' : '';
+    /* kelas lebar: hero ≥90 · baris 70–89 · mengapit 50–69 · kecil ≤49 */
+    const cls = ['b-img'];
+    if (w >= 90) cls.push('w-hero');
+    else if (w >= 70) { cls.push('w-baris'); cls.push(ga ? 'i-' + ga : 'i-c'); }
+    else if (w >= 50) cls.push('w-apit', ga === 'l' || ga === 'r' ? 'f-' + ga : 'i-c');
+    else cls.push('w-kecil', ga === 'l' || ga === 'r' ? 'f-' + ga : 'i-c');
+    if (gb) cls.push('gb-b');
+    const khusus = w !== 100 || rot !== 0 || ga || gb;
     let gaya = '';
-    if (ga) cls += ' i-' + ga;
     if (khusus) {
-      cls += ' tata';
-      gaya = ` style="width:${lebar}%;--gr:${rot}deg;--go:${off}px"` +
-        ` data-gw="${lebar}" data-gr="${rot}"` +
-        (ga ? ` data-ga="${ga}"` : '') + ` data-go="${off}"`;
+      cls.push('tata');
+      gaya = ` style="width:${w}%;--gr:${rot}deg"` +
+        ` data-gw="${w}" data-gr="${rot}"` +
+        (ga ? ` data-ga="${ga}"` : '') + (gb ? ` data-gb="b"` : '');
     }
-    return `<div class="${cls}" contenteditable="false"${gaya}${bid}>` +
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="Hapus gambar" aria-label="Hapus gambar">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
@@ -294,7 +299,7 @@ export function elToBlock(el) {
       const alt = img.getAttribute('alt');
       if (alt) meta.alt = alt;
     }
-    /* tata letak: atribut data-gw/gr/ga/go pada figur (baca balik dari
+    /* tata letak: atribut data-gw/gr/ga/gb pada figur (baca balik dari
        tata-gambar.js). Gambar lama tanpa atribut tidak mendapat meta —
        tetap dirender sebagai gambar 100% lurus seperti sebelumnya. */
     const gw = el.getAttribute && el.getAttribute('data-gw');
@@ -309,11 +314,8 @@ export function elToBlock(el) {
     }
     const ga = el.getAttribute && el.getAttribute('data-ga');
     if (ga === 'l' || ga === 'c' || ga === 'r') meta.align = ga;
-    const go = el.getAttribute && el.getAttribute('data-go');
-    if (go) {
-      const o = Math.round(Number(go)) || 0;
-      meta.off = Math.max(-400, Math.min(400, o));
-    }
+    const gb = el.getAttribute && el.getAttribute('data-gb');
+    if (gb === 'b') meta.zb = 'b';
   } else if (type === 'todo') {
     meta.checked = kelas.includes('done');
     content = isiTanpa(el, ':scope > .cbx');
