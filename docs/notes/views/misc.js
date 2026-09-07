@@ -1,5 +1,8 @@
 /* Layar pendukung: reminder, tugas, cari, tag, arsip, pengaturan.
-   Masih statis — akan pindah ke tools/ masing-masing nanti. */
+   Sebagian masih statis — akan pindah ke tools/ masing-masing nanti. */
+import { state } from '../../core/store.js?v=20260907052638';
+import { rowFor } from './row.js?v=20260907052638';
+
 export const miscViews = {
 
 
@@ -30,13 +33,21 @@ tags:()=>`<div class="page"><div class="card"><button class="row" onclick="go('e
   <svg class="ico" style="color:var(--faint)"><use href="#i-tag"/></svg>
   <div class="row-b"><div class="row-t">hara</div><div class="row-s">1 catatan</div></div></button></div></div>`,
 
-arsip:()=>`<div class="page"><div class="empty"><h3>Arsip kosong</h3>
-  <p>Catatan yang diarsipkan hilang dari daftar utama tapi tetap bisa dicari.</p></div></div>`,
+arsip:()=>{
+  const a = state.notes.filter(n => n.archived);
+  return `<div class="page">
+    ${a.length
+      ? `<div class="card">${a.map(rowFor).join('')}</div>
+         <p class="note">Buka catatan lalu pilih "Kembalikan dari arsip" (menu ···) untuk memindahkannya kembali ke daftar utama.</p>`
+      : `<div class="empty"><h3>Arsip kosong</h3>
+         <p>Catatan yang diarsipkan hilang dari daftar utama tapi tetap tersimpan di sini dan bisa dikembalikan.</p></div>`}
+  </div>`;
+},
 
 set:()=>`<div class="page">
   <div class="sec"><h2>Tampilan</h2></div>
   <div class="card" style="margin-bottom:24px">
-    <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Mengikuti sistem</div></div>
+    <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Sekarang <span id="tema-st">…</span></div></div>
       <button class="btn btn-sec" onclick="toggleTheme()">Ganti</button></div>
     <div class="row"><div class="row-b"><div class="row-t">Getar saat menekan tombol</div>
       <div class="row-s">Umpan balik singkat di perangkat yang mendukung</div></div>

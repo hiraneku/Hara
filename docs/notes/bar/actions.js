@@ -1,9 +1,10 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260907040539';
-import { toggleMark } from '../editor/marks.js?v=20260907040539';
-import { undo, redo } from '../editor/history.js?v=20260907040539';
-import { pilihGambar } from '../editor/image.js?v=20260907040539';
-import { toggleRef } from '../editor/blockref.js?v=20260907040539';
+import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260907052638';
+import { toggleMark } from '../editor/marks.js?v=20260907052638';
+import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20260907052638';
+import { refresh } from '../editor/cleanup.js?v=20260907052638';
+import { pilihGambar } from '../editor/image.js?v=20260907052638';
+import { toggleRef } from '../editor/blockref.js?v=20260907052638';
 
 export const ACTIONS = {
   p:      () => setBlock('b-p'),
@@ -31,8 +32,11 @@ export const ACTIONS = {
   clear:  clearFormat,
   up:     () => moveBlock(-1),
   down:   () => moveBlock(1),
-  undo,
-  redo,
+  /* refresh() sesudah undo/redo lewat TOMBOL menyamakan perilakunya
+     dengan pintasan keyboard: hitungan huruf/kata, status tombol, dan
+     autosave ikut diperbarui — bukan hanya DOM-nya saja. */
+  undo:   () => { if (undoRiwayat()) refresh(); },
+  redo:   () => { if (redoRiwayat()) refresh(); },
 };
 
 /* Tombol yang TIDAK boleh merekam snapshot undo sebelum dijalankan. */

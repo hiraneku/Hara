@@ -1,9 +1,9 @@
 /* Tautan ke alamat web. Berbeda dari [[wikilink]] yang menuju catatan lain. */
 
-import { docEl, sel, ensureCaret } from '../editor/caret.js?v=20260907040539';
-import { refresh } from '../editor/cleanup.js?v=20260907040539';
-import { esc } from '../../core/dom.js?v=20260907040539';
-import { openPop, pop, closeAll } from './pop.js?v=20260907040539';
+import { docEl, sel, ensureCaret } from '../editor/caret.js?v=20260907052638';
+import { refresh } from '../editor/cleanup.js?v=20260907052638';
+import { esc } from '../../core/dom.js?v=20260907052638';
+import { openPop, pop, closeAll } from './pop.js?v=20260907052638';
 
 /* Rapikan alamat: "hara.app" -> "https://hara.app" */
 function rapikan(url) {
@@ -96,12 +96,13 @@ export function applyLink(aksi, simpanRange) {
   refresh();
 }
 
-/* Taruh kursor tepat setelah tautan, dengan spasi pemisah. */
+/* Taruh kursor tepat setelah tautan, dengan pijakan text node kosong —
+   \u00a0 dulu ikut tersimpan ke isi catatan. */
 function letakkanSetelah(a) {
-  const sp = document.createTextNode('\u00a0');
+  const sp = document.createTextNode('');
   a.after(sp);
   const nr = document.createRange();
-  nr.setStart(sp, 1);
+  nr.setStart(sp, 0);
   nr.collapse(true);
   const s = sel();
   s.removeAllRanges();

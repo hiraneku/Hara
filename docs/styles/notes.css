@@ -60,7 +60,9 @@
   stroke-linecap:round;stroke-linejoin:round}
 [data-theme=dark] .cbx.on svg{stroke:#131711}
 .cbx.on svg{opacity:1}
-.b-todo.done span{text-decoration:line-through;color:var(--faint)}
+/* todo selesai: seluruh isi dicoret & diredupkan — termasuk teks polos
+   yang tidak terbungkus <span> (rule `span` saja tidak menjangkaunya). */
+.b-todo.done{text-decoration:line-through;color:var(--faint)}
 /* inline */
 .wl{color:var(--link);cursor:pointer;border-bottom:1px solid transparent}
 .wl:hover{border-bottom-color:var(--link)}
@@ -161,6 +163,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   color:var(--bg);border-radius:var(--r-md);padding:10px 16px;font-size:14px;box-shadow:var(--shadow-modal);
   opacity:0;pointer-events:none;transition:.18s}
 .toast.on{opacity:1}
+.toast.has-a{pointer-events:auto}
+.toast-a{background:none;border:none;padding:0;margin-left:10px;color:inherit;
+  font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.toast-a:hover{opacity:.85}
 .bnav{display:none}
 .note{max-width:880px;margin:0 auto;padding:26px 32px 40px;font-size:13px;color:var(--faint);line-height:1.65}
 
@@ -241,6 +247,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   color:var(--faint);background:var(--sunken);padding:2px 6px;border-radius:5px}
 #pop .pop-i.on{background:var(--accent-weak);color:var(--accent)}
 #pop .pop-i.on .ico{color:var(--accent)}
+
+/* baris bahaya di menu catatan (Hapus catatan) */
+#pop .pop-i.pop-danger{color:var(--danger)}
+#pop .pop-i.pop-danger .ico{color:var(--danger)}
 
 /* ── gambar tersemat ── */
 .b-img{position:relative;margin:10px 0;border-radius:var(--r-md);overflow:hidden;

@@ -1,14 +1,14 @@
 /* Popup melayang di atas bar. */
-import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907040539';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907040539';
-import { insertInline } from './insert.js?v=20260907040539';
-import { focusKeep } from '../bar/render.js?v=20260907040539';
-import { applyLink } from './link.js?v=20260907040539';
-import { buangGaring, slashAktif, tutupSlash } from './slash-trigger.js?v=20260907040539';
-import { setFont } from '../editor/font.js?v=20260907040539';
-import { setCallout } from '../editor/blocks.js?v=20260907040539';
-import { snap as snapFont } from '../editor/history.js?v=20260907040539';
-import { getar } from '../bar/prefs.js?v=20260907040539';
+import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907052638';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907052638';
+import { insertInline } from './insert.js?v=20260907052638';
+import { focusKeep } from '../bar/render.js?v=20260907052638';
+import { applyLink } from './link.js?v=20260907052638';
+import { buangGaring, slashAktif, tutupSlash } from './slash-trigger.js?v=20260907052638';
+import { setFont } from '../editor/font.js?v=20260907052638';
+import { setCallout } from '../editor/blocks.js?v=20260907052638';
+import { snap as snapFont } from '../editor/history.js?v=20260907052638';
+import { getar } from '../bar/prefs.js?v=20260907052638';
 
 export const pop = () => document.getElementById('pop');
 
@@ -27,6 +27,11 @@ export function openPop(html, anchor) {
   const r = anchor.getBoundingClientRect();
   p.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 302)) + 'px';
   p.style.top  = Math.max(12, r.top - p.offsetHeight - 10) + 'px';
+
+  /* Form tautan: fokus kolom yang relevan — mengubah tautan: teksnya
+     diblok utk langsung diketik ulang; tautan baru: kolom alamat. */
+  const t = p.querySelector('#lk-t'), u = p.querySelector('#lk-u');
+  if (t && u) { if (t.value) t.select(); else u.focus(); }
 }
 
 export function bindPop() {
@@ -37,6 +42,16 @@ export function bindPop() {
   p.addEventListener('mousedown', e => {
     if (e.target.closest('.pop-in')) e.stopPropagation();
   }, true);
+
+  /* Enter di kolom form tautan = tekan tombol utama (Simpan/Sisipkan) */
+  p.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const inp = e.target && e.target.closest ? e.target.closest('.pop-in') : null;
+    if (!inp) return;
+    e.preventDefault();
+    const ok = p.querySelector('[data-lk="ok"]');
+    if (ok) ok.click();
+  });
 
   p.addEventListener('click', e => {
     const lk = e.target.closest('[data-lk]');
@@ -58,7 +73,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907040539').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907052638').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -67,7 +82,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907040539').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907052638').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -77,7 +92,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907040539').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907052638').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 

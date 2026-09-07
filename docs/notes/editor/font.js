@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907040539';
-import { refresh } from './cleanup.js?v=20260907040539';
+import { docEl, sel, curBlock } from './caret.js?v=20260907052638';
+import { refresh } from './cleanup.js?v=20260907052638';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -88,9 +88,31 @@ export function fontTersedia(namaUtama) {
       }
     }
   } catch (e) { ada = true; }
-  cacheAda.set(namaUtama, ada);
+  /* Hanya hasil POSITIF yang di-cache. Hasil negatif sengaja TIDAK:
+     font web (Google Fonts) bisa belum selesai dimuat saat pertama kali
+     dicek — menandainya "tidak tersedia" selamanya membuat pilihan
+     Inter/Instrument Serif/JetBrains Mono tak bisa dipilih sampai
+     halaman dimuat ulang. */
+  if (ada) cacheAda.set(namaUtama, true);
   return ada;
 }
+
+/* Sinyal saat font web selesai dimuat (atau gagal dimuat). Menu font
+   yang dibuka terlalu dini akan disegarkan setelah ini, sehingga label
+   "Tidak tersedia" yang prematur terkoreksi sendiri. */
+let janjiSiap = null;
+export function ketikaFontMuat() {
+  if (typeof document === 'undefined' || !document.fonts || !document.fonts.ready)
+    return Promise.resolve();
+  if (!janjiSiap) {
+    janjiSiap = document.fonts.ready.then(() => { cacheAda.clear(); });
+  }
+  return janjiSiap;
+}
+
+export const fontMasihMuat = () =>
+  !!(typeof document !== 'undefined' && document.fonts && document.fonts.status &&
+     document.fonts.status !== 'loaded');
 
 /* Nama font utama dari sebuah stack, tanpa tanda kutip. */
 export const namaUtama = stack =>

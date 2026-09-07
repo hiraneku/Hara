@@ -8,9 +8,9 @@
 
    Menu dipasang sebagai popup yang sudah ada, jadi tidak ada UI baru. */
 
-import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907040539';
-import { slashMenu, saringSlash } from './slash.js?v=20260907040539';
-import { openPop, closeAll, pop } from './pop.js?v=20260907040539';
+import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907052638';
+import { slashMenu, saringSlash } from './slash.js?v=20260907052638';
+import { openPop, closeAll, pop } from './pop.js?v=20260907052638';
 
 /* Posisi "/" yang sedang aktif: { node, offset } */
 let jangkar = null;
@@ -96,12 +96,14 @@ export function geserPilihan(arah) {
 }
 
 /* Apakah karakter "/" di posisi ini layak memicu menu?
-   Hanya di awal blok atau setelah spasi — supaya "and/or" tidak memicu. */
+   Hanya di awal blok atau setelah spasi — supaya "and/or" tidak memicu.
+   Di dalam blok kode "/" adalah teks biasa (path, URL), menu tidak dibuka. */
 export function garingLayak(node, offsetGaring) {
   if (!node || node.nodeType !== 3) return true;
+  const b = curBlock();
+  if (b && b.classList.contains('b-code')) return false;
   if (offsetGaring === 0) {
     /* awal node teks: layak kalau ia juga awal blok */
-    const b = curBlock();
     return !b || !b.textContent || b.textContent.trim() === '/';
   }
   const sblm = node.data[offsetGaring - 1];

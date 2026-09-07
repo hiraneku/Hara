@@ -1,15 +1,29 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load } from './core/store.js?v=20260907040539';
-import { go, onAfterRender } from './core/router.js?v=20260907040539';
-import { toast } from './core/toast.js?v=20260907040539';
-import { notesModule } from './notes/index.js?v=20260907040539';
-import { newNote, delNote, openNote } from './notes/model.js?v=20260907040539';
-import { closeAll } from './notes/menus/pop.js?v=20260907040539';
+import { load, state } from './core/store.js?v=20260907052638';
+import { go, onAfterRender } from './core/router.js?v=20260907052638';
+import { toast } from './core/toast.js?v=20260907052638';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907052638';
+import { notesModule } from './notes/index.js?v=20260907052638';
+import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
+  from './notes/model.js?v=20260907052638';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907052638';
+import { openPop, closeAll } from './notes/menus/pop.js?v=20260907052638';
 
 const MODULES = [notesModule];
 
 load();
 MODULES.forEach(m => m.init());
+terapkanTema();
+
+/* Penghitung catatan di nav — diperbarui tiap layar digambar. */
+function perbaruiJumlah() {
+  const ct = document.querySelector('.nav-i[data-go="notes"] .ct');
+  if (!ct) return;
+  const n = state.notes.filter(x => !x.archived).length;
+  ct.textContent = n;
+  ct.style.display = n ? '' : 'none';
+}
+onAfterRender(perbaruiJumlah);
 
 /* ── navigasi global ── */
 document.addEventListener('click', e => {
@@ -21,6 +35,23 @@ document.addEventListener('click', e => {
 
   if (e.target.closest('[data-act2="new"]')) return newNote();
 
+  /* menu "···" di header editor */
+  const dots = e.target.closest('#dots');
+  if (dots) return openPop(menuCatatan(), dots);
+
+  /* aksi menu catatan (Sematkan / Arsipkan / Duplikat / Hapus) */
+  const nm = e.target.closest('[data-note-act]');
+  if (nm) {
+    closeAll();
+    const a = nm.dataset.noteAct;
+    if (a === 'pin') pinNote();
+    else if (a === 'arsip') arsipNote();
+    else if (a === 'duplikat') duplikatNote();
+    else if (a === 'remind') toast('Modul Reminder menyusul');
+    else if (a === 'hapus') delNote();
+    return;
+  }
+
   const n = e.target.closest('[data-new]');
   if (n) { closeAll(); return n.dataset.new === 'note' ? newNote() : toast('Dibuat'); }
 
@@ -29,7 +60,6 @@ document.addEventListener('click', e => {
 });
 
 document.getElementById('back').onclick = () => go('notes');
-document.getElementById('del').onclick  = () => delNote();
 document.getElementById('scrim').onclick = closeAll;
 document.getElementById('fab').onclick = () => {
   document.getElementById('sheet').classList.toggle('on');
@@ -37,12 +67,7 @@ document.getElementById('fab').onclick = () => {
 };
 addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
 
-/* ── tema terang / gelap ── */
-function toggleTheme() {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-  document.querySelector('#theme use').setAttribute('href', dark ? '#i-moon' : '#i-sun');
-}
-document.getElementById('theme').onclick = toggleTheme;
+/* ── tema terang / gelap — tersimpan; awal mengikuti sistem ── */
+document.getElementById('theme').onclick = () => { toggleTema(); };
 
 go('home');

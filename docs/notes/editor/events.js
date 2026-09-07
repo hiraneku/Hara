@@ -1,14 +1,14 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907040539';
-import { setBlock, indent } from './blocks.js?v=20260907040539';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907040539';
-import { autoFormat } from './markdown.js?v=20260907040539';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907040539';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907040539';
-import { onTitle } from '../model.js?v=20260907040539';
-import { tanganiPaste } from './paste.js?v=20260907040539';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907040539';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907040539';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907052638';
+import { setBlock, indent } from './blocks.js?v=20260907052638';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907052638';
+import { autoFormat } from './markdown.js?v=20260907052638';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907052638';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907052638';
+import { onTitle } from '../model.js?v=20260907052638';
+import { tanganiPaste } from './paste.js?v=20260907052638';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907052638';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907052638';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -278,8 +278,60 @@ export function bindEditor() {
        (b.classList.contains('b-h1')||b.classList.contains('b-h2')||
         b.classList.contains('b-h3')||b.classList.contains('b-cal'))){
       e.preventDefault();
-      const nb=document.createElement('div'); nb.className='b-p';
-      b.after(nb); caretEnd(nb); refresh(); return;
+      const s=sel();
+      const r=(s&&s.rangeCount)?s.getRangeAt(0):null;
+      /* Indent ikut pindah ke blok baru, supaya bagian terusan tidak
+         melompat ke kiri saat heading/callout yang di-indent dipecah. */
+      const buatBaru=cls=>{
+        const nb=document.createElement('div');
+        nb.className=cls;
+        if(b.style && b.style.paddingLeft) nb.style.paddingLeft=b.style.paddingLeft;
+        return nb;
+      };
+      /* Paragraf kosong di bawah blok — perilaku lama untuk kasus tepi. */
+      const taruhBawah=()=>{ const nb=buatBaru('b-p'); b.after(nb); caretEnd(nb); refresh(); };
+
+      if(r && b.contains(r.startContainer)){
+        /* Apa pun yang tertulis SEBELUM kursor — untuk tahu apakah kursor
+           di awal blok. */
+        const sblm=document.createRange();
+        sblm.selectNodeContents(b);
+        try{ sblm.setEnd(r.startContainer,r.startOffset); }catch(err){}
+        if(sblm.toString().replace(/[\u200b\u00a0]/g,'')===''){
+          const kosong=(b.textContent||'').replace(/[\u200b\u00a0]/g,'')==='';
+          /* blok kosong -> paragraf di bawah (perilaku lama dipertahankan) */
+          if(kosong) return taruhBawah();
+          /* kursor di AWAL isi -> paragraf baru di ATAS, bukan di bawah */
+          const nb=buatBaru('b-p');
+          b.before(nb); caretEnd(nb); refresh(); return;
+        }
+        /* Sisa teks setelah kursor: pindahkan ke blok baru. Kalau tidak,
+           sisa teks tertinggal di blok lama dan ketikan berikutnya muncul
+           di BAWAH sisa itu — itulah bug lama. */
+        const ekor=document.createRange();
+        ekor.selectNodeContents(b);
+        try{ ekor.setStart(r.startContainer,r.startOffset); }catch(err){}
+        if(!ekor.collapsed){
+          const frag=ekor.extractContents();
+          if((frag.textContent||'').replace(/[\u200b\u00a0]/g,'')!==''){
+            /* heading: sisa teks tetap heading (seperti markdown — baris
+               baru di dalam # ikut jadi #). callout: keluar jadi paragraf. */
+            const cls=b.classList.contains('b-cal') ? 'b-p' : b.className;
+            const nb=buatBaru(cls);
+            if(frag.childNodes.length) nb.appendChild(frag);
+            b.after(nb);
+            /* caret di AWAL blok baru, sebelum sisa teks — persis perilaku
+               Enter pada pengolah kata. */
+            const tn=document.createTextNode('');
+            nb.insertBefore(tn,nb.firstChild);
+            const nr=document.createRange(); nr.setStart(tn,0); nr.collapse(true);
+            s.removeAllRanges(); s.addRange(nr);
+            refresh(); return;
+          }
+        }
+      }
+      taruhBawah();
+      return;
     }
     if(e.key==='Tab'){ e.preventDefault(); indent(e.shiftKey?-1:1); return; }
     if(e.key==='Backspace' && b && !b.classList.contains('b-p')){
@@ -297,5 +349,20 @@ export function bindEditor() {
   document.addEventListener('click',e=>{
     const c=e.target.closest('.ed-doc .cbx');
     if(c){ c.classList.toggle('on'); c.parentElement.classList.toggle('done',c.classList.contains('on')); }
+  });
+
+  /* Enter di kolom judul -> langsung lanjut mengetik isi catatan.
+     Kursor ditaruh di AKHIR blok pertama, keyboard boleh muncul. */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('ed-t')) return;
+    e.preventDefault();
+    const d = docEl();
+    if (!d) return;
+    bukaKeyboard();
+    d.focus();
+    const b = nearestEditable(d.firstElementChild || d);
+    if (b) caretEnd(b);
   });
 }

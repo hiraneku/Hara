@@ -23,3 +23,13 @@ export function tglPendek(ts) {
   const t = new Date(ts || Date.now());
   return `${t.getDate()} ${BLN[t.getMonth()]} ${t.getFullYear()}`;
 }
+
+/* Tanggal lengkap berbahasa Indonesia: "Senin, 7 September".
+   Dipakai sapaan Beranda — tanpa tahun, sesuai arah desain. */
+const NAMA_HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+                    'Agustus','September','Oktober','November','Desember'];
+export function tglHari(ts) {
+  const t = new Date(ts || Date.now());
+  return `${NAMA_HARI[t.getDay()]}, ${t.getDate()} ${NAMA_BULAN[t.getMonth()]}`;
+}

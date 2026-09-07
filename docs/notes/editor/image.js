@@ -4,10 +4,11 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907040539';
-import { refresh } from './cleanup.js?v=20260907040539';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20260907040539';
-import { toast } from '../../core/toast.js?v=20260907040539';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907052638';
+import { refresh } from './cleanup.js?v=20260907052638';
+import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260907052638';
+import { state } from '../../core/store.js?v=20260907052638';
+import { toast } from '../../core/toast.js?v=20260907052638';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -132,14 +133,50 @@ export function bersihkanSrc(html) {
   return html.replace(/(<img[^>]*?)\ssrc="blob:[^"]*"/g, '$1');
 }
 
+/* Apakah blob ini masih dipakai catatan lain / masih tampil di editor?
+   Dipakai sebelum menghapus berkas, supaya menghapus gambar di satu
+   catatan tidak merusak catatan lain yang berbagi blob yang sama. */
+function blobDipakai(id) {
+  const d = docEl();
+  if (d && d.querySelector(`img[data-blob="${id}"]`)) return true;
+  return state.notes.some(n =>
+    n.id !== state.openId && (n.blocks || []).some(b =>
+      !!(b.meta && b.meta.blobId === id)));
+}
+
+/* Hapus satu gambar dari editor.
+   Blok dicari lewat gambar ATAU tombol silangnya (data-imgx) — jadi
+   blok yang berkasnya sudah hilang ("Gambar tidak ditemukan") tetap
+   bisa dihapus. Blob di IndexedDB dihapus hanya kalau tak dipakai lagi. */
 export async function hapusGambar(id) {
   const d = docEl();
   if (d) {
     const img = d.querySelector(`img[data-blob="${id}"]`);
-    const fig = img && img.closest('.b-img');
+    const tombol = d.querySelector(`[data-imgx="${id}"]`);
+    const fig = (img || tombol) ? (img || tombol).closest('.b-img') : null;
     if (fig) fig.remove();
   }
-  try { await hapusBlob(id); } catch (e) {}
   refresh();
+  if (!blobDipakai(id)) {
+    try { await hapusBlob(id); } catch (e) {}
+  }
   toast('Gambar dihapus');
+}
+
+/* Bersihkan blob yang tidak lagi dirujuk catatan mana pun.
+   Dipanggil saat catatan dibuang permanen (setelah jendela Urungkan
+   lewat) — kalau langsung saat hapus, gambar yang bisa di-Urungkan
+   sudah keburu hilang. */
+export async function bersihkanBlobYatim() {
+  try {
+    const dipakai = new Set();
+    state.notes.forEach(n =>
+      (n.blocks || []).forEach(b => {
+        if (b.meta && b.meta.blobId) dipakai.add(b.meta.blobId);
+      }));
+    const ids = await semuaId();
+    await Promise.all(ids
+      .filter(id => !dipakai.has(id))
+      .map(id => hapusBlob(id).catch(() => {})));
+  } catch (e) { /* pembersihan gagal: biarkan, lain kali tersapu lagi */ }
 }

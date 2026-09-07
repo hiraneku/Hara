@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907040539';
-import { setBlock, setCallout } from './blocks.js?v=20260907040539';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260907040539';
-import { updateCount } from './cleanup.js?v=20260907040539';
+import { docEl, sel, curBlock } from './caret.js?v=20260907052638';
+import { setBlock, setCallout } from './blocks.js?v=20260907052638';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260907052638';
+import { updateCount } from './cleanup.js?v=20260907052638';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -48,6 +48,9 @@ export function autoFormat(){
   const s=sel(); if(!(s&&s.rangeCount)) return;
   const r=s.getRangeAt(0); if(!r.collapsed) return;
   const b=curBlock(); if(!b) return;
+  /* Di dalam blok kode, markdown otomatis TIDAK berlaku — isi ditulis
+     apa adanya (janji yang sama tertulis di menu Bantuan). */
+  if(b.classList.contains('b-code')) return;
   const node=r.startContainer;
   if(!node||node.nodeType!==3) return;
   const full=b.textContent;
@@ -94,8 +97,16 @@ export function autoFormat(){
   const todo=b.classList.contains('b-li')?/^[-*+]?\s*\[[\sx]?\]\s/:/^[-*+]\s\[[\sx]?\]\s/;
   const mt=full.match(todo);
   if(mt && !b.classList.contains('b-todo')){
+    /* `- [x] ` / `- [X] ` langsung jadi todo TERCENTANG */
+    const dicek=/\[[xX]\]/.test(mt[0]);
     eat(mt[0].length);
-    b.classList.remove('b-li'); setBlock('b-todo'); return;
+    b.classList.remove('b-li'); setBlock('b-todo');
+    if(dicek){
+      const cb=b.querySelector(':scope > .cbx');
+      if(cb) cb.classList.add('on');
+      b.classList.add('done');
+    }
+    return;
   }
   for(const [re,cls] of LINE){
     const m2=full.match(re);

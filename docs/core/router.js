@@ -24,8 +24,9 @@ export function go(v) {
 
   const isEd = v === 'editor';
   document.getElementById('back').style.display = isEd ? 'grid' : 'none';
-  document.getElementById('del').style.display  = isEd ? 'grid' : 'none';
-  document.getElementById('dots').style.display = isEd ? 'none' : 'grid';
+  /* hapus langsung dipindah ke menu "···" — mencegah salah ketuk */
+  document.getElementById('del').style.display  = 'none';
+  document.getElementById('dots').style.display = isEd ? 'grid' : 'none';
   document.getElementById('mech').classList.toggle('on', isEd);
   document.getElementById('bnav').classList.toggle('hide', isEd);
   document.getElementById('fab').classList.toggle('hide', isEd);

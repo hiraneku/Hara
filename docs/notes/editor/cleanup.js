@@ -1,14 +1,14 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907040539';
-import { renumber } from './blocks.js?v=20260907040539';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907040539';
-import { state, save } from '../../core/store.js?v=20260907040539';
-import { findNote } from '../model.js?v=20260907040539';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907040539';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907040539';
-import { cur } from '../../core/router.js?v=20260907040539';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907040539';
-import { GROUPS } from '../bar/config.js?v=20260907040539';
+import { docEl, sel, curBlock } from './caret.js?v=20260907052638';
+import { renumber } from './blocks.js?v=20260907052638';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907052638';
+import { state, save } from '../../core/store.js?v=20260907052638';
+import { findNote } from '../model.js?v=20260907052638';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907052638';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907052638';
+import { cur } from '../../core/router.js?v=20260907052638';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907052638';
+import { GROUPS } from '../bar/config.js?v=20260907052638';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -80,10 +80,9 @@ export function cleanup(){
   });
   Array.from(d.children).forEach(b=>{
     if(b.classList.contains('b-div')) return;
-    /* <br> pengganjal hanya boleh ada saat blok benar-benar kosong */
+    /* <br> hasil Shift+Enter adalah baris baru SAH dan dipertahankan —
+       hanya blok KOSONG yang tidak boleh menyimpan <br> pengganjal. */
     if(b.textContent.replace(/[\u200b\u00a0]/g,'')!==''){
-      /* blok sudah berisi teks -> <br> pengganjal tidak diperlukan lagi */
-      Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
       /* buang text node kosong sisa penempatan caret */
       const s2=sel(); const anc=s2&&s2.anchorNode;
       Array.from(b.childNodes).forEach(n=>{
