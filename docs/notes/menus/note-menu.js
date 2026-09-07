@@ -2,8 +2,8 @@
    Isi mengikuti keadaan catatan (label Sematkan/Lepas, Arsipkan/
    Kembalikan). Aksi dijalankan lewat delegasi klik global di app.js
    dengan atribut data-note-act. */
-import { state } from '../../core/store.js?v=20260907055942';
-import { esc } from '../../core/dom.js?v=20260907055942';
+import { state } from '../../core/store.js?v=20260907072821';
+import { esc } from '../../core/dom.js?v=20260907072821';
 
 export function menuCatatan() {
   const n = state.notes.find(x => x.id === state.openId);
@@ -21,5 +21,5 @@ export function menuCatatan() {
   <button class="pop-i" data-note-act="remind">
     <svg class="ico"><use href="#i-bell"/></svg>Jadikan pengingat</button>
   <button class="pop-i pop-danger" data-note-act="hapus">
-    <svg class="ico"><use href="#i-trash"/></svg>Hapus catatan</button>`;
+    <svg class="ico"><use href="#i-trash"/></svg>Hapus — masuk sampah dulu</button>`;
 }

@@ -1,7 +1,7 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260907055942';
-import { refresh } from './cleanup.js?v=20260907055942';
-import { MARKSEL } from './marks.js?v=20260907055942';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260907072821';
+import { refresh } from './cleanup.js?v=20260907072821';
+import { MARKSEL } from './marks.js?v=20260907072821';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 
@@ -16,12 +16,24 @@ export function setBlock(cls){
   if(cls==='b-todo'){
     const box=document.createElement('button');
     box.className='cbx'; box.contentEditable='false';
+    box.type='button'; box.setAttribute('role','checkbox'); box.setAttribute('aria-checked','false');
     box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
     b.insertBefore(box,b.firstChild);
   }
   if(cls!=='b-todo') b.classList.remove('done');
   /* callout kehilangan jenisnya kalau bukan callout lagi */
   if(cls!=='b-cal') b.removeAttribute('data-cal');
+  /* heading memakai elemen heading sungguhan (semantik & aksesibilitas) */
+  const tagHead={'b-h1':'h1','b-h2':'h2','b-h3':'h3'}[cls];
+  if(tagHead && b.tagName.toLowerCase()!==tagHead){
+    const nh=document.createElement(tagHead);
+    /* salin SEMUA atribut (data-bid, data-ref, gaya, kelas) — id blok
+       wajib stabil saat tipe berubah */
+    for(const at of Array.from(b.attributes)) nh.setAttribute(at.name, at.value);
+    while(b.firstChild) nh.appendChild(b.firstChild);
+    b.replaceWith(nh);
+    b=nh;
+  }
   renumber();
   caretEnd(b);
   ensureCaret();

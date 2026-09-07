@@ -14,8 +14,8 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907055942';
-import { sisipGambar } from './image.js?v=20260907055942';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907072821';
+import { sisipGambar } from './image.js?v=20260907072821';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
@@ -201,6 +201,7 @@ export function sisipBaris(baris, { kodeMentah = false } = {}) {
     if (clsAwal === 'b-todo' && !blok.querySelector(':scope > .cbx')) {
       const box = document.createElement('button');
       box.className = 'cbx'; box.contentEditable = 'false';
+      box.type = 'button'; box.setAttribute('role','checkbox'); box.setAttribute('aria-checked','false');
       box.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
       blok.insertBefore(box, blok.firstChild);
     }

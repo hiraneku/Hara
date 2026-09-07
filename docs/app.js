@@ -1,13 +1,13 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260907055942';
-import { go, onAfterRender } from './core/router.js?v=20260907055942';
-import { toast } from './core/toast.js?v=20260907055942';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907055942';
-import { notesModule } from './notes/index.js?v=20260907055942';
+import { load, state } from './core/store.js?v=20260907072821';
+import { go, onAfterRender } from './core/router.js?v=20260907072821';
+import { toast } from './core/toast.js?v=20260907072821';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907072821';
+import { notesModule } from './notes/index.js?v=20260907072821';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260907055942';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260907055942';
-import { openPop, closeAll } from './notes/menus/pop.js?v=20260907055942';
+  from './notes/model.js?v=20260907072821';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907072821';
+import { openPop, closeAll } from './notes/menus/pop.js?v=20260907072821';
 
 const MODULES = [notesModule];
 
@@ -26,7 +26,7 @@ if (state.dataRusak) {
 function perbaruiJumlah() {
   const ct = document.querySelector('.nav-i[data-go="notes"] .ct');
   if (!ct) return;
-  const n = state.notes.filter(x => !x.archived).length;
+  const n = state.notes.filter(x => !x.archived && !x.deletedAt).length;
   ct.textContent = n;
   ct.style.display = n ? '' : 'none';
 }

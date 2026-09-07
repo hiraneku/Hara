@@ -23,21 +23,3 @@ ${B('b-div','')}
 ${B('b-p','Gulir terus ke bawah untuk melihat <b>backlink</b>, <b>unlinked mention</b>, dan <b>local graph</b>.')}`;
 
 export { welcomeBody };
-
-export const panels=`<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-link"/></svg>Backlink<span class="n">1</span></div>
-  <button class="bl" data-act="Membuka Ide Produk"><div class="bl-t">Ide Produk</div>
-  <div class="bl-c">Semua ide awal dikumpulkan di <b>[[Selamat datang di Hara]]</b> sebelum dipecah jadi catatan sendiri.</div></button>
-  <div class="unl">Disebut tanpa tautan di 1 catatan
-    <button class="btn btn-sec" data-act="Tautan dibuat">Tautkan</button></div></div>
-<div class="panel"><div class="panel-h"><svg class="ico"><use href="#i-graph"/></svg>Local graph</div>
-  <div class="graph">
-    <svg style="position:absolute;inset:0;width:100%;height:100%" stroke="var(--border-strong)" stroke-width="1">
-      <line x1="50%" y1="50%" x2="22%" y2="26%"/><line x1="50%" y1="50%" x2="80%" y2="30%"/>
-      <line x1="50%" y1="50%" x2="30%" y2="80%"/><line x1="50%" y1="50%" x2="74%" y2="76%"/></svg>
-    <div class="gnode me" style="left:50%;top:50%"><span class="gdot"></span><span>Selamat datang</span></div>
-    <div class="gnode" style="left:22%;top:26%"><span class="gdot"></span><span>Ide Produk</span></div>
-    <div class="gnode" style="left:80%;top:30%"><span class="gdot"></span><span>Belum Dibuat</span></div>
-    <div class="gnode" style="left:30%;top:80%"><span class="gdot"></span><span>#hara</span></div>
-    <div class="gnode" style="left:74%;top:76%"><span class="gdot"></span><span>Harian 6 Sep</span></div>
-  </div></div>
-<p class="note">Local graph hanya tetangga 1–2 langkah — bukan graph global 3D yang berat dan jarang berguna.</p>`;

@@ -1,9 +1,10 @@
-/* Layar editor: judul, properti, isi catatan. */
-import { state } from '../../core/store.js?v=20260907055942';
-import { findNote } from '../model.js?v=20260907055942';
-import { esc, tglPendek } from '../../core/dom.js?v=20260907055942';
-import { blocksToDom } from '../note-model.js?v=20260907055942';
-import { panels } from './welcome.js?v=20260907055942';
+/* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
+   panel data (tautan/backlink/mention/graph) di bawahnya. */
+import { state } from '../../core/store.js?v=20260907072821';
+import { findNote } from '../model.js?v=20260907072821';
+import { esc } from '../../core/dom.js?v=20260907072821';
+import { blocksToDom } from '../note-model.js?v=20260907072821';
+import { barisProps } from '../meta-ui.js?v=20260907072821';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -14,13 +15,13 @@ const n=findNote(state.openId)||state.notes[0];
  const body=`<div class="ed-doc" contenteditable="true" spellcheck="false"
    data-ph="Mulai menulis. Coba ketik **tebal** atau # judul">${inner}</div>`;
  return `<div class="ed">
-  <input class="ed-t" value="${esc(n.title)}" placeholder="Judul">
-  <div class="props">
-    <div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-cal"/></svg>dibuat</span><span class="prop-v">${tglPendek(n.createdAt)}</span></div>
-    ${n.welcome?`<div class="prop"><span class="prop-k"><svg class="ico"><use href="#i-hash"/></svg>tag</span><span class="prop-v"><span class="tg">#hara</span></span></div>`:''}
-    <button class="prop-add" data-act="Tambah properti baru">+ properti</button>
+  <input class="ed-t" value="${esc(n.title)}" placeholder="Judul"
+    aria-label="Judul catatan">
+  <div class="props" id="props-box">
+    ${barisProps(n,'pv')}
+    <button type="button" class="prop-add" data-prop-add>+ properti</button>
   </div>
   <div class="blocks">${body}</div>
- </div>
- ${n.welcome?panels:''}`;
+  <div class="dm" id="dm"></div>
+ </div>`;
 }

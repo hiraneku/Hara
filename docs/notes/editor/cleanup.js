@@ -1,14 +1,16 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907055942';
-import { renumber } from './blocks.js?v=20260907055942';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907055942';
-import { state, save } from '../../core/store.js?v=20260907055942';
-import { findNote } from '../model.js?v=20260907055942';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907055942';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907055942';
-import { cur } from '../../core/router.js?v=20260907055942';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907055942';
-import { GROUPS } from '../bar/config.js?v=20260907055942';
+import { docEl, sel, curBlock } from './caret.js?v=20260907072821';
+import { renumber } from './blocks.js?v=20260907072821';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907072821';
+import { state, save } from '../../core/store.js?v=20260907072821';
+import { findNote } from '../model.js?v=20260907072821';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907072821';
+import { sinkronTag } from '../tags.js?v=20260907072821';
+import { tandaiTautan } from '../wikilink.js?v=20260907072821';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907072821';
+import { cur } from '../../core/router.js?v=20260907072821';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907072821';
+import { GROUPS } from '../bar/config.js?v=20260907072821';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -176,6 +178,8 @@ export function tulisKeCatatan(data){
   if(!n) return false;
   n.blocks=data.blocks;
   if(typeof data.title==='string') n.title=data.title;
+  /* tag diikuti isi: cache n.tags dihitung ulang dari span .tg */
+  sinkronTag(n);
   touch(n);
   return save();          /* save() mengembalikan false kalau gagal */
 }
@@ -198,6 +202,10 @@ export function refresh(){
      snapshot undo diambil — supaya id ikut terekam dan tidak berubah
      saat undo/redo memulihkan HTML. */
   pastikanBlockId(docEl());
+  /* gagang seret ikut pada blok yang baru lahir (Enter, tempel, undo) */
+  pastikanGandel(docEl());
+  /* wikilink: yang belum ada catatannya tampil putus-putus */
+  tandaiTautan(docEl());
   renumber();                     /* nomor daftar selalu berurutan */
   if(!isReplaying()) record();   /* rekam hasil akhir tiap perubahan */
   updateCount(); syncBtns(); saveSoon();

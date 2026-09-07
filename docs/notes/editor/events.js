@@ -1,14 +1,14 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907055942';
-import { setBlock, indent } from './blocks.js?v=20260907055942';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907055942';
-import { autoFormat } from './markdown.js?v=20260907055942';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907055942';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907055942';
-import { onTitle } from '../model.js?v=20260907055942';
-import { tanganiPaste } from './paste.js?v=20260907055942';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907055942';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907055942';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907072821';
+import { setBlock, indent } from './blocks.js?v=20260907072821';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907072821';
+import { autoFormat } from './markdown.js?v=20260907072821';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907072821';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907072821';
+import { onTitle } from '../model.js?v=20260907072821';
+import { tanganiPaste } from './paste.js?v=20260907072821';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907072821';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907072821';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -266,6 +266,7 @@ export function bindEditor() {
             nb.classList.remove('done');
             const box=document.createElement('button');
             box.className='cbx'; box.contentEditable='false';
+            box.type='button'; box.setAttribute('role','checkbox'); box.setAttribute('aria-checked','false');
             box.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
             nb.insertBefore(box,nb.firstChild);
           }
@@ -283,7 +284,8 @@ export function bindEditor() {
       /* Indent ikut pindah ke blok baru, supaya bagian terusan tidak
          melompat ke kiri saat heading/callout yang di-indent dipecah. */
       const buatBaru=cls=>{
-        const nb=document.createElement('div');
+        const tag={'b-h1':'h1','b-h2':'h2','b-h3':'h3'}[cls]||'div';
+        const nb=document.createElement(tag);
         nb.className=cls;
         if(b.style && b.style.paddingLeft) nb.style.paddingLeft=b.style.paddingLeft;
         return nb;
@@ -348,7 +350,12 @@ export function bindEditor() {
   });
   document.addEventListener('click',e=>{
     const c=e.target.closest('.ed-doc .cbx');
-    if(c){ c.classList.toggle('on'); c.parentElement.classList.toggle('done',c.classList.contains('on')); }
+    if(c){
+      const on=!c.classList.contains('on');
+      c.classList.toggle('on',on);
+      c.setAttribute('aria-checked',on?'true':'false');
+      c.parentElement.classList.toggle('done',on);
+    }
   });
 
   /* Enter di kolom judul -> langsung lanjut mengetik isi catatan.

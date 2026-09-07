@@ -3,9 +3,12 @@
    Bentuk resmi sebuah catatan:
 
      {
-       id, title, blocks[], tags[], folderId,
+       id, title, blocks[], tags[], props[], folderId,
        createdAt, updatedAt, pinned, archived, deletedAt
      }
+
+   `props` = properti terstruktur { k, v } yang ditampilkan sebagai
+   tabel di atas isi (pengganti frontmatter YAML, lihat DESIGN.md).
 
    Bentuk resmi sebuah blok:
 
@@ -118,7 +121,10 @@ export function makeNote(patch = {}) {
     pinned: !!patch.pinned,
     archived: !!patch.archived,
     deletedAt: patch.deletedAt ?? null,
-    /* penanda UI, bukan bagian isi: menentukan panel demo ikut tampil */
+    props: Array.isArray(patch.props)
+      ? patch.props.map(pr => ({ k: String(pr.k ?? ''), v: String(pr.v ?? '') }))
+      : [],
+    /* penanda UI, bukan bagian isi */
     ...(patch.welcome ? { welcome: true } : {}),
   };
 }
@@ -170,37 +176,74 @@ export function blockToHtml(b) {
     const blob = escAttr(meta.blobId || '');
     return `<div class="b-img" contenteditable="false"${bid}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
-      `<button class="img-x" data-imgx="${blob}" title="Hapus gambar">` +
-      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`;
+      `<button class="img-x" data-imgx="${blob}" title="Hapus gambar" aria-label="Hapus gambar">` +
+      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
   }
 
   if (b.type === 'todo') {
     const on = meta.checked ? ' on' : '';
     const done = meta.checked ? ' done' : '';
-    const kotak = `<button class="cbx${on}" contenteditable="false">` +
+    const kotak = `<button class="cbx${on}" contenteditable="false" type="button" ` +
+      `role="checkbox" aria-checked="${meta.checked ? 'true' : 'false'}">` +
       `<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
-    return `<div class="b-todo${done}"${bid}${ref}${gaya}>${kotak}${b.content || ''}</div>`;
+    return `<div class="b-todo${done}"${bid}${ref}${gaya}>${kotak}${b.content || ''}${pegangan()}</div>`;
   }
 
   if (b.type === 'heading') {
     const cls = HEADING_CLASS[meta.level] || 'b-h2';
-    return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}</div>`;
+    const tag = 'h' + (meta.level || 2);
+    return `<${tag} class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</${tag}>`;
   }
 
   if (b.type === 'callout') {
     const jenis = meta.variant ? ` data-cal="${escAttr(meta.variant)}"` : '';
     const label = meta.label ? ` data-cal-label="${escAttr(meta.label)}"` : '';
-    return `<div class="b-cal"${bid}${jenis}${label}${ref}${gaya}>${b.content || ''}</div>`;
+    return `<div class="b-cal"${bid}${jenis}${label}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
   }
 
   const cls = TYPE_TO_CLASS[b.type] || 'b-p';
-  return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}</div>`;
+  return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
 }
+
+/* Pegangan seret blok (desktop). Elemen asli di DOM, tapi DIBUANG saat
+   disimpan (lihat bersihkanIsi) — jadi ia tidak pernah ikut tersimpan
+   ke isi catatan.
+
+   `blockToHtml` menyisipkannya saat merender editor; blok yang lahir
+   kemudian (Enter, tempel, undo/redo, pemulihan draf) mendapatkannya
+   lewat `pastikanGandel()` yang dipanggil setiap refresh(). */
+const GANDEL = '<button class="blk-h" data-blkh type="button" contenteditable="false" ' +
+  'title="Seret untuk memindahkan blok" aria-label="Pindahkan blok">' +
+  '<svg class="ico"><use href="#i-grip"/></svg></button>';
+const GANDEL_REG = /<button\s[^>]*\bblk-h\b[^>]*>[\s\S]*?<\/button>/g;
+function pegangan() { return GANDEL; }
 
 export function blocksToDom(blocks) {
   if (!Array.isArray(blocks) || !blocks.length)
     return blockToHtml(makeBlock({ type: 'paragraph' }));
   return blocks.map(blockToHtml).join('');
+}
+
+/* Sisipkan gagang seret pada setiap blok editor yang belum memilikinya.
+   Idempoten — aman dipanggil tiap refresh. */
+export function pastikanGandel(root) {
+  if (!root || !root.children || !document) return;
+  Array.from(root.children).forEach(el => {
+    if (!el.classList || !el.querySelector) return;
+    const kelas = Array.from(el.classList);
+    if (!kelas.some(c => c.startsWith('b-'))) return;
+    if (kelas.includes('b-div')) return;                 /* bukan blok isi */
+    if (el.querySelector('.blk-h')) return;              /* sudah ada */
+    const g = document.createElement('button');
+    g.className = 'blk-h';
+    g.type = 'button';
+    g.setAttribute('data-blkh', '');
+    g.contentEditable = 'false';
+    g.title = 'Seret untuk memindahkan blok';
+    g.setAttribute('aria-label', 'Pindahkan blok');
+    g.innerHTML = '<svg class="ico"><use href="#i-grip"/></svg>';
+    el.appendChild(g);
+  });
 }
 
 /* ════════ DOM -> blocks ════════ */
@@ -275,6 +318,8 @@ function isiTanpa(el, selector) {
 /* Buang jejak yang murni urusan tampilan, bukan isi. */
 function bersihkanIsi(html) {
   return String(html || '')
+    /* pegangan seret tidak pernah ikut tersimpan */
+    .replace(GANDEL_REG, '')
     /* objectURL gambar tidak berlaku di sesi berikutnya */
     .replace(/(<img[^>]*?)\ssrc="blob:[^"]*"/g, '$1')
     /* <br> pengganjal blok kosong */

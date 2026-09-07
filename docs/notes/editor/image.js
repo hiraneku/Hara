@@ -4,12 +4,12 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907055942';
-import { refresh } from './cleanup.js?v=20260907055942';
-import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260907055942';
-import { state } from '../../core/store.js?v=20260907055942';
-import { cur } from '../../core/router.js?v=20260907055942';
-import { toast } from '../../core/toast.js?v=20260907055942';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907072821';
+import { refresh } from './cleanup.js?v=20260907072821';
+import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260907072821';
+import { state } from '../../core/store.js?v=20260907072821';
+import { cur } from '../../core/router.js?v=20260907072821';
+import { toast } from '../../core/toast.js?v=20260907072821';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -97,7 +97,9 @@ export async function sisipGambar(file) {
   const hapus = document.createElement('button');
   hapus.className = 'img-x';
   hapus.setAttribute('data-imgx', id);
+  hapus.setAttribute('type','button');
   hapus.title = 'Hapus gambar';
+  hapus.setAttribute('aria-label', 'Hapus gambar');
   hapus.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   fig.appendChild(hapus);
 

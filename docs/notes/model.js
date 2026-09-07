@@ -1,21 +1,28 @@
 /* Operasi CRUD catatan. Bentuk datanya didefinisikan di note-model.js.
 
-   Penghapusan TIDAK langsung permanen: catatan dipegang sebentar dan
-   toast "Urungkan" memberi kesempatan mengembalikannya (pola yang
-   disyaratkan DESIGN.md — tanpa dialog konfirmasi untuk aksi yang bisa
-   diurungkan). Setelah jendela itu lewat, catatan dibuang dan blob
-   gambar yatim ikut dibersihkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907055942';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260907055942';
-import { toast } from '../core/toast.js?v=20260907055942';
-import { go } from '../core/router.js?v=20260907055942';
-import { saveSoon } from './editor/cleanup.js?v=20260907055942';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907055942';
-import { hapusDrafMilik } from '../core/recovery.js?v=20260907055942';
-import { bersihkanBlobYatim } from './editor/image.js?v=20260907055942';
+   Penghapusan memakai TEMPAT SAMPAH (soft delete): catatan ditandai
+   deletedAt dan dipindah dari daftar utama ke layar Sampah. Selama
+   6 detik pertama masih ada toast "Urungkan" untuk mengembalikannya
+   dengan cepat; sesudah itu ia tetap ada di Sampah sampai pengguna
+   menghapus permanen atau lewat 30 hari (disapu otomatis saat aplikasi
+   dibuka). Pola ini sesuai DESIGN.md §3.9 & NOTES.md ("tempat sampah
+   30 hari") — tanpa dialog konfirmasi untuk aksi yang bisa diurungkan. */
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907072821';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260907072821';
+import { toast } from '../core/toast.js?v=20260907072821';
+import { go } from '../core/router.js?v=20260907072821';
+import { saveSoon } from './editor/cleanup.js?v=20260907072821';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907072821';
+import { hapusDrafMilik } from '../core/recovery.js?v=20260907072821';
+import { bersihkanBlobYatim } from './editor/image.js?v=20260907072821';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
+
+/* Catatan yang ikut daftar utama (belum dihapus). */
+export const belumDihapus = () => state.notes.filter(n => !n.deletedAt);
+/* Catatan di tempat sampah. */
+export const diSampah = () => state.notes.filter(n => n.deletedAt);
 
 export function newNote() {
   /* Tuntaskan dulu perubahan catatan yang sedang dibuka. Kalau openId
@@ -31,60 +38,103 @@ export function newNote() {
   toast('Catatan baru dibuat');
 }
 
-/* ── hapus dengan jendela "Urungkan" ── */
+/* Buat catatan baru dengan judul tertentu (dipakai tautan [[mati]]). */
+export function buatNoteBerjudul(judul) {
+  flush();
+  const n = makeNote({ title: typeof judul === 'string' ? judul.trim() : '' });
+  state.seq++;
+  state.notes.unshift(n);
+  state.openId = n.id;
+  save();
+  go('editor');
+  toast('Catatan dibuat');
+  return n;
+}
+
+/* ── hapus: pindah ke sampah, dengan jendela "Urungkan" ── */
 const JEDA_UNDO = 6000;          /* ms — cukup untuk mengetuk Urungkan */
-let hapusTertunda = null;        /* { note, index } */
-let timerPurga = null;
+const UMUR_SAMPAH = 30 * 24 * 3600 * 1000;   /* 30 hari */
+
+let hapusTerakhir = null;        /* { note } — yang masih bisa di-Urungkan */
+let timerUndo = null;
 
 export function delNote() {
-  /* catatan dibuang: perubahan tertunda & drafnya tidak relevan lagi */
+  /* catatan dibuang dari editor: perubahan tertunda & drafnya dibuang */
   resetAutosave();
   hapusDrafMilik(state.openId);
-  const i = state.notes.findIndex(n => n.id === state.openId);
-  if (i < 0) return go('notes');
+  const n = findNote(state.openId);
+  if (!n) return go('notes');
 
-  const [note] = state.notes.splice(i, 1);
-
-  /* Penghapusan SEBELUMNYA yang masih bisa di-Urungkan diganti entri
-     ini: yang lama dibuang permanen sekarang (blob-nya dibersihkan). */
-  if (hapusTertunda) {
-    clearTimeout(timerPurga);
-    hapusTertunda = null;
-    bersihkanBlobYatim();
-  }
-
+  n.deletedAt = Date.now();
+  n.archived = false;
   save();
-  hapusTertunda = { note, index: i };
-  timerPurga = setTimeout(purgaHapus, JEDA_UNDO);
-  toast('Catatan dihapus', { label: 'Urungkan', cb: batalkanHapus }, JEDA_UNDO);
+
+  /* ganti entri "Urungkan" sebelumnya (kalau masih ada) */
+  clearTimeout(timerUndo);
+  hapusTerakhir = n;
+  timerUndo = setTimeout(() => { hapusTerakhir = null; }, JEDA_UNDO);
+  toast('Catatan dipindah ke sampah', { label: 'Urungkan', cb: batalkanHapus }, JEDA_UNDO);
   go('notes');
 }
 
-/* Jendela Urungkan lewat: buang catatan sungguhan. Kalau itu catatan
-   terakhir, catatan sambutan dikembalikan supaya aplikasi tak kosong. */
-function purgaHapus() {
-  if (!hapusTertunda) return;
-  hapusTertunda = null;
-  if (!state.notes.length) {
-    state.notes = DEFAULT_NOTES();
-    state.openId = state.notes[0].id;
-    save();
-  }
+/* Urungkan dalam jendela 6 detik: kembalikan dari sampah. */
+function batalkanHapus() {
+  if (!hapusTerakhir) return;
+  const n = hapusTerakhir;
+  hapusTerakhir = null;
+  clearTimeout(timerUndo);
+  n.deletedAt = null;
+  save();
+  state.openId = n.id;
+  toast('Catatan dikembalikan');
+  go('editor');
+}
+
+/* Pulihkan satu catatan dari layar Sampah. */
+export function pulihkanSampah(id) {
+  const n = findNote(id);
+  if (!n) return;
+  n.deletedAt = null;
+  save();
+  toast('Catatan dikembalikan');
+  go('notes');
+}
+
+/* Hapus permanen dari Sampah. Blob gambar yatim ikut dibersihkan. */
+export function hapusPermanen(id) {
+  const i = state.notes.findIndex(x => x.id === id);
+  if (i < 0) return;
+  state.notes.splice(i, 1);
+  if (hapusTerakhir && hapusTerakhir.id === id) { hapusTerakhir = null; clearTimeout(timerUndo); }
+  save();
+  pastikanAdaCatatan();
+  bersihkanBlobYatim();
+  toast('Catatan dihapus permanen');
+  go('trash');
+}
+
+/* Sapuan otomatis: buang catatan yang sudah >30 hari di sampah.
+   Dipanggil saat aplikasi dibuka. */
+export function purgeSampahOtomatis() {
+  const batas = Date.now() - UMUR_SAMPAH;
+  const sisa = state.notes.filter(n => !n.deletedAt || n.deletedAt > batas);
+  if (sisa.length === state.notes.length) return;
+  state.notes = sisa;
+  pastikanAdaCatatan();
+  /* openId tidak boleh menggantung ke catatan yang baru terpurge */
+  if (state.openId && !state.notes.some(n => n.id === state.openId))
+    state.openId = state.notes[0] ? state.notes[0].id : null;
+  save();
   bersihkanBlobYatim();
 }
 
-/* Pulihkan catatan yang barusan dihapus, di posisi semula. */
-function batalkanHapus() {
-  if (!hapusTertunda) return;
-  clearTimeout(timerPurga);
-  const { note, index } = hapusTertunda;
-  hapusTertunda = null;
-  const i = Math.min(index, state.notes.length);
-  state.notes.splice(i, 0, note);
-  state.openId = note.id;
-  save();
-  toast('Catatan dikembalikan');
-  go('editor');
+/* Kalau tidak ada catatan sama sekali, kembalikan catatan sambutan —
+   aplikasi tidak pernah dibiarkan benar-benar kosong. */
+function pastikanAdaCatatan() {
+  if (!state.notes.length) {
+    state.notes = DEFAULT_NOTES();
+    state.openId = state.notes[0].id;
+  }
 }
 
 export function openNote(id) {
@@ -124,8 +174,7 @@ export function arsipNote() {
 
 /* Gandakan catatan yang sedang dibuka.
    Blok baru dapat id BARU (duplicateBlock) — block reference yang
-   disalin dilepas dulu, karena id rujukan dijamin unik lintas catatan
-   dan tidak boleh ada kembar. Gambar tetap berbagi blob dengan aslinya. */
+   disalin dilepas dulu, karena id rujukan dijamin uniq lintas catatan. */
 export function duplikatNote() {
   flush();
   const n = current();
@@ -138,6 +187,7 @@ export function duplikatNote() {
       return d;
     }),
     tags: n.tags,
+    props: n.props,
     folderId: n.folderId,
     pinned: false,
     archived: false,

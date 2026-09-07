@@ -18,11 +18,11 @@
       editor, berpindah catatan, atau menutup aplikasi.
 */
 
-import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907055942';
+import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907072821';
 
 /* Jeda cukup panjang untuk menggabungkan ketikan, cukup pendek supaya
    kehilangan terasa sepele kalau aplikasi mati mendadak. */
-export const JEDA_SIMPAN = 700;
+export const JEDA_SIMPAN = 600;   /* template DESIGN: simpan 600 ms setelah berhenti mengetik */
 export const JEDA_DRAF   = 250;   /* draf lebih cepat: ia jaring pengaman */
 
 /* ── status ── */

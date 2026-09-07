@@ -1,29 +1,37 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907055942';
-import { homeView, notesView } from './views/list.js?v=20260907055942';
-import { editorView } from './views/editor.js?v=20260907055942';
-import { miscViews } from './views/misc.js?v=20260907055942';
-import { bindEditor } from './editor/events.js?v=20260907055942';
-import { renderBar }  from './bar/render.js?v=20260907055942';
-import { bindPop, closeAll } from './menus/pop.js?v=20260907055942';
-import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907055942';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907072821';
+import { homeView, notesView } from './views/list.js?v=20260907072821';
+import { editorView } from './views/editor.js?v=20260907072821';
+import { miscViews, renderHasilCari } from './views/misc.js?v=20260907072821';
+import { bindEditor } from './editor/events.js?v=20260907072821';
+import { renderBar }  from './bar/render.js?v=20260907072821';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260907072821';
+import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
+  from './editor/cleanup.js?v=20260907072821';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20260907055942';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907055942';
-import { toast } from '../core/toast.js?v=20260907055942';
-import { blocksToDom } from './note-model.js?v=20260907055942';
-import { renumber } from './editor/blocks.js?v=20260907055942';
-import { pending, sticky, mati } from './editor/marks.js?v=20260907055942';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907055942';
-import { resetHistory } from './editor/history.js?v=20260907055942';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260907055942';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907055942';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907055942';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907055942';
-import { state } from '../core/store.js?v=20260907055942';
-import { labelMode } from '../core/theme.js?v=20260907055942';
+  from '../core/autosave.js?v=20260907072821';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907072821';
+import { toast } from '../core/toast.js?v=20260907072821';
+import { blocksToDom, touch } from './note-model.js?v=20260907072821';
+import { renumber } from './editor/blocks.js?v=20260907072821';
+import { pending, sticky, mati } from './editor/marks.js?v=20260907072821';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907072821';
+import { resetHistory } from './editor/history.js?v=20260907072821';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260907072821';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907072821';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907072821';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907072821';
+import { state } from '../core/store.js?v=20260907072821';
+import { labelMode } from '../core/theme.js?v=20260907072821';
+import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote }
+  from './model.js?v=20260907072821';
+import { pasangSeret } from './drag.js?v=20260907072821';
+import { muatPanels, tautkanSebutan } from './panels.js?v=20260907072821';
+import { setTag, stt } from './views/data.js?v=20260907072821';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260907072821';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260907072821';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -59,7 +67,7 @@ function tampilkanStatus(s) {
   if (!el) return;
   const teks = {
     [STATUS.IDLE]:   '',
-    [STATUS.DIRTY]:  '',
+    [STATUS.DIRTY]:  'Belum tersimpan',
     [STATUS.SAVING]: 'Menyimpan…',
     [STATUS.SAVED]:  'Tersimpan',
     [STATUS.ERROR]:  'Gagal menyimpan <button class="st-retry" data-retry>Coba lagi</button>',
@@ -138,6 +146,83 @@ function pulihkanDraf() {
   toast('Perubahan dipulihkan');
 }
 
+/* ════════ PROPERTI CATATAN (frontmatter yang bisa disunting) ════════ */
+function catatanBuka() {
+  return state.notes.find(x => x.id === state.openId);
+}
+
+/* Gambar ulang area properti di editor (setelah tambah/hapus baris). */
+function renderPropsArea() {
+  const box = document.getElementById('props-box');
+  const n = catatanBuka();
+  if (!box || !n) return;
+  box.innerHTML = barisProps(n, 'pv') +
+    `<button type="button" class="prop-add" data-prop-add>+ properti</button>`;
+}
+
+/* Isi popup "Tambah properti": kunci bawaan yang belum terpakai +
+   kolom kunci bebas. */
+function menuTambahProp() {
+  const n = catatanBuka();
+  if (!n) return '';
+  const ada = new Set((n.props || []).map(p => p.k));
+  const opsi = Object.keys(KET_PROP).filter(k => !ada.has(k));
+  const rows = opsi.map(k => {
+    const ket = KET_PROP[k];
+    const sub = (ket.contoh || []).slice(0, 2).join(' · ');
+    return `<button type="button" class="pop-i" data-prop-opt="${k}">
+      <svg class="ico"><use href="#i-plus"/></svg>${namaProp(k)}${sub ? `<span class="sub">${sub}</span>` : ''}</button>`;
+  }).join('');
+  return `<div class="pop-h">Tambah properti</div>
+    ${rows || '<p class="prop-pop-hint">Semua properti bawaan sudah terpasang — pakai kunci lain di bawah.</p>'}
+    <div style="display:flex;gap:6px;padding:4px 10px 10px">
+      <input id="prop-baru" class="pop-in" placeholder="kunci lain… (mis. klien)" aria-label="Nama properti baru">
+      <button type="button" class="btn btn-pri" data-prop-ok style="height:34px;flex:none">Tambah</button>
+    </div>`;
+}
+
+function tambahProp(k) {
+  const n = catatanBuka();
+  if (!n) return;
+  aturProp(n, k, '');
+  touch(n);
+  saveSoon();
+  renderPropsArea();
+  const inp = document.querySelector(`#props-box [data-prop-k="${k}"]`);
+  if (inp) { inp.focus(); inp.select && inp.select(); }
+}
+
+/* ════════ PANEL BAWAH EDITOR: lompat ke catatan & blok ════════ */
+function lompatKe(noteId, bid) {
+  if (!noteId) return;
+  openNote(noteId);
+  if (!bid) return;
+  setTimeout(() => {
+    const d = docEl();
+    if (!d) return;
+    const el = d.querySelector(`[data-bid="${bid}"]`);
+    if (!el) return;
+    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* tua */ }
+    el.classList.add('blk-lompat');
+    setTimeout(() => el.classList.remove('blk-lompat'), 1900);
+  }, 90);
+}
+
+/* ════════ HAPUS PERMANEN DUA KETUKAN (Sampah) ════════ */
+let timerYakin = null;
+function hapusDuaKetuk(b) {
+  if (b.classList.contains('yakin')) { hapusPermanen(b.dataset.putus); return; }
+  b.classList.add('yakin');
+  b.textContent = 'Yakin?';
+  clearTimeout(timerYakin);
+  timerYakin = setTimeout(() => {
+    document.querySelectorAll('[data-putus].yakin').forEach(x => {
+      x.classList.remove('yakin');
+      x.textContent = 'Hapus';
+    });
+  }, 3500);
+}
+
 export const notesModule = {
   id: 'notes',
   name: 'Catatan',
@@ -147,17 +232,23 @@ export const notesModule = {
     registerViews(
       { home: homeView, notes: notesView, editor: editorView, ...miscViews },
       { home: 'Beranda', notes: 'Catatan', editor: '', rem: 'Reminder', task: 'Tugas',
-        search: 'Cari', tags: 'Tag', arsip: 'Arsip', set: 'Pengaturan' }
+        search: 'Cari', tags: 'Tag', arsip: 'Arsip', trash: 'Sampah', set: 'Pengaturan' }
     );
 
     /* Hubungkan editor <-> autosave manager. Editor tidak menyentuh
        storage; manager yang mengatur debounce, urutan, dan draf. */
     konfigurasi({ baca: bacaEditor, tulis: tulisKeCatatan });
     onStatus(tampilkanStatus);
+    /* panel bawah editor ikut segar setiap kali simpan tuntas */
+    onStatus(s => { if (s === STATUS.SAVED && cur === 'editor') muatPanels(); });
 
     renderBar();
     bindEditor();
     bindPop();
+
+    /* sapuan sampah: catatan yang sudah >30 hari di tempat sampah
+       dibuang saat aplikasi dibuka */
+    purgeSampahOtomatis();
 
     /* simpan sebelum meninggalkan editor */
     onBeforeLeave(from => {
@@ -189,6 +280,127 @@ export const notesModule = {
       if (x) hapusGambar(x.dataset.imgx);
     });
 
+    /* klik: properti, tag, wikilink, panel, sampah.
+       TERDAFTAR SEBELUM delegasi app.js — tag di dalam baris catatan
+       (data-open) memakai stopImmediatePropagation supaya barisnya
+       tidak ikut terbuka. */
+    document.addEventListener('click', e => {
+      /* ── properti ── */
+      const pa = e.target.closest('[data-prop-add]');
+      if (pa) { openPop(menuTambahProp(), pa); return; }
+      const po = e.target.closest('[data-prop-opt]');
+      if (po) { tambahProp(po.dataset.propOpt); closeAll(); return; }
+      const pok = e.target.closest('[data-prop-ok]');
+      if (pok) {
+        const inp = document.getElementById('prop-baru');
+        const v = (inp ? inp.value : '').trim().toLowerCase();
+        if (!/^[a-z0-9][a-z0-9_-]{0,24}$/.test(v)) {
+          toast('Kunci properti: huruf/angka kecil tanpa spasi');
+          if (inp) inp.focus();
+          return;
+        }
+        tambahProp(v);
+        closeAll();
+        return;
+      }
+      const pd = e.target.closest('[data-prop-del]');
+      if (pd) {
+        const n = catatanBuka();
+        if (!n) return;
+        hapusProp(n, pd.dataset.propDel);
+        touch(n);
+        saveSoon();
+        renderPropsArea();
+        return;
+      }
+
+      /* ── tag: chip daftar, baris halaman tag, atau #tag di editor ── */
+      const tg = e.target.closest('[data-tag], .ed-doc .tg');
+      if (tg) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        let nama = tg.dataset ? tg.dataset.tag : null;
+        if (!nama && tg.textContent) nama = tg.textContent.replace(/^#/, '').trim();
+        if (!nama) return;
+        setTag(stt.tag === nama ? null : nama);
+        go('notes');
+        return;
+      }
+      const tx = e.target.closest('[data-tag-x]');
+      if (tx) { e.preventDefault(); setTag(null); go('notes'); return; }
+
+      /* ── wikilink dalam editor ──
+         Mati (belum ada catatannya): satu ketukan langsung membuatnya.
+         Hidup: klik biasa = sunting teks; Ctrl/Cmd/Alt+klik = buka. */
+      const wl = e.target.closest('.ed-doc .wl');
+      if (wl) {
+        const judul = judulSpan(wl);
+        if (!judul) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const ada = cariJudul(judul);
+        if (!ada) buatNoteBerjudul(judul);
+        else if (e.ctrlKey || e.metaKey || e.altKey) openNote(ada.id);
+        return;
+      }
+
+      /* ── panel data bawah editor ── */
+      const taut = e.target.closest('[data-sebut-taut]');
+      if (taut) {
+        const [sid, bid] = taut.dataset.sebutTaut.split(':');
+        const n = catatanBuka();
+        const judul = n ? String(n.title || '').trim() : '';
+        if (sid && bid && judul && tautkanSebutan(sid, bid, judul)) {
+          muatPanels();
+          toast('Mention diubah jadi tautan');
+        }
+        return;
+      }
+      const buat = e.target.closest('[data-dm-buat]');
+      if (buat) { buatNoteBerjudul(buat.dataset.dmBuat); return; }
+      const buka = e.target.closest('[data-dm-buka]');
+      if (buka) { lompatKe(buka.dataset.dmBuka, buka.dataset.dmBid || null); return; }
+
+      /* ── sampah ── */
+      const ph = e.target.closest('[data-pulih]');
+      if (ph) { pulihkanSampah(ph.dataset.pulih); return; }
+      const pu = e.target.closest('[data-putus]');
+      if (pu) { hapusDuaKetuk(pu); return; }
+    });
+
+    /* ketik: properti langsung menempel ke model; cari langsung mencari */
+    document.addEventListener('input', e => {
+      const pi = e.target.closest ? e.target.closest('.props [data-prop-k]') : null;
+      if (pi) {
+        const n = catatanBuka();
+        if (!n) return;
+        aturProp(n, pi.dataset.propK, pi.value);
+        touch(n);
+        saveSoon();
+        return;
+      }
+      if (cur === 'search' && e.target && e.target.id === 'cari-in') {
+        renderHasilCari(e.target.value);
+      }
+    });
+
+    /* tombol: Enter kunci properti bebas + akses keyboard panel/graph */
+    document.addEventListener('keydown', e => {
+      const b = document.getElementById('prop-baru');
+      if (b && e.target === b && e.key === 'Enter') {
+        e.preventDefault();
+        const ok = document.querySelector('#pop [data-prop-ok]');
+        if (ok) ok.click();
+        return;
+      }
+      const t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t && t.matches &&
+          t.matches('[data-dm-buka],[data-dm-buat]')) {
+        e.preventDefault();
+        t.click();
+      }
+    });
+
     /* siapkan editor tiap kali layar selesai digambar */
     onAfterRender(() => {
       closeAll();
@@ -197,6 +409,7 @@ export const notesModule = {
       mati.clear();
       const d = docEl();
       if (d && d.firstElementChild) caretEnd(d.firstElementChild);
+      pasangSeret(d);
       /* undo tidak boleh melintas antar catatan */
       if (d) resetHistory();
       /* nomor daftar tampil sejak render pertama, bukan menunggu ketikan */
@@ -206,6 +419,13 @@ export const notesModule = {
       pasangGambar();
       isiPengaturan();
       tawarkanRecovery();
+      tandaiTautan(docEl());
+      /* panel data (tautan/backlink/mention/graph) & hasil cari */
+      muatPanels();
+      if (cur === 'search') {
+        const ci = document.getElementById('cari-in');
+        if (ci) ci.focus();
+      }
     });
 
     /* simpan saat aplikasi ditutup / dipindah ke belakang */
@@ -243,5 +463,6 @@ export const notesModule = {
       if (r.dataset.rec === 'restore') pulihkanDraf();
       else { hapusDraf(); tutupBilahRecovery(); toast('Perubahan dibuang'); }
     });
+
   }
 };
