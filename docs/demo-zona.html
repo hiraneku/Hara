@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo zona gambar — Hara</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --card:#fffdf8; --teks:#3a362f; --lembut:#8a8374;
+    --garis:#e4ddd0; --aksen:#3F6F5B; --aksen2:#e4efe9;
+    --zona:#cfe6da; --zona-garis:#2f7a5b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);
+    color:var(--teks);line-height:1.55}
+  header{padding:24px 22px 4px;max-width:1200px;margin:0 auto}
+  header h1{font-size:20px;margin:0 0 6px}
+  header p{margin:0;color:var(--lembut);font-size:13.5px;max-width:900px}
+  .wrap{display:flex;flex-wrap:wrap;gap:18px;padding:18px 22px 70px;max-width:1200px;margin:0 auto;align-items:flex-start}
+  .panel{flex:1 1 350px;background:var(--card);border:1px solid var(--garis);border-radius:16px;
+    padding:14px 16px 16px;min-width:300px;box-shadow:0 1px 4px rgba(60,50,30,.07)}
+  .panel h2{font-size:14px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .panel .bab{background:var(--aksen);color:#fff;border-radius:7px;font-size:11px;
+    padding:2px 8px;font-weight:700;flex:none}
+  .panel .ket{font-size:12.5px;color:var(--lembut);margin:0 0 10px;min-height:40px}
+  .page{position:relative;border:1.5px dashed #d8d0c0;border-radius:12px;padding:12px;
+    background:#fff;overflow:hidden;min-height:300px}
+  .teks{font-size:13px;color:#57503f;margin:0 0 9px}
+  .foto{width:112px;height:82px;border-radius:9px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,#9fd3e8,#f3d9a4);
+    box-shadow:0 2px 7px rgba(60,50,30,.18);cursor:grab;user-select:none;line-height:1;
+    touch-action:none;z-index:3}
+  .foto span{font-size:10px;color:#5b5345;background:rgba(255,255,255,.72);
+    padding:0 7px;border-radius:99px;margin-top:5px;font-family:inherit}
+  .foto.ghost{opacity:.35;filter:saturate(.5)}
+  .foto.klon{position:fixed;z-index:60;pointer-events:none;opacity:.95;margin:0;
+    transform:rotate(-3deg);box-shadow:0 14px 30px rgba(0,0,0,.3)}
+  .sorot{position:absolute;background:var(--zona);border:2px dashed var(--zona-garis);
+    border-radius:10px;opacity:0;pointer-events:none}
+  .sorot.on{opacity:.6}
+  .sorot.kiri{left:7px;top:7px;bottom:7px;width:30%}
+  .sorot.kanan{right:7px;top:7px;bottom:7px;width:30%}
+  .sorot.atas{left:7px;right:7px;top:7px;height:26%}
+  .sorot.bawah{left:7px;right:7px;bottom:7px;height:26%}
+  .sorot.tengah{left:50%;top:50%;width:42%;height:34%;transform:translate(-50%,-50%)}
+  .pageA .foto.il{float:left;width:42%;margin:3px 16px 9px 0}
+  .pageA .foto.ir{float:right;width:42%;margin:3px 0 9px 16px}
+  .pageA .foto.ic{display:block;width:58%;margin:8px auto;float:none}
+  .pageA .foto.ia{display:block;width:100%;margin:0 0 10px;float:none}
+  .pageA .foto.ib{display:block;width:100%;margin:10px 0 0;float:none}
+  .pageB .foto{width:140px}
+  .pageB .foto.il{margin-right:auto}
+  .pageB .foto.ic{margin-left:auto;margin-right:auto}
+  .pageB .foto.ir{margin-left:auto}
+  .pageC .foto{width:100px;height:74px;position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);transition:left .16s ease,top .16s ease,right .16s ease,bottom .16s ease}
+  .pageC .foto.b1{left:12px;top:12px;transform:none}
+  .pageC .foto.b2{left:auto;right:12px;top:12px;transform:none}
+  .pageC .foto.b3{left:12px;top:auto;bottom:12px;transform:none}
+  .pageC .foto.b4{left:auto;right:12px;top:auto;bottom:12px;transform:none}
+  .sorot.tl{left:7px;top:7px;width:36%;height:32%}
+  .sorot.tr{right:7px;top:7px;width:36%;height:32%}
+  .sorot.bl{left:7px;bottom:7px;width:36%;height:32%}
+  .sorot.br{right:7px;bottom:7px;width:36%;height:32%}
+  .cat{position:absolute;left:12px;right:12px;top:12px;bottom:12px;font-size:12.5px;
+    color:#57503f;pointer-events:none;transition:padding .16s ease}
+  .cat.p0{padding:0}
+  .cat.p1{padding-top:100px}
+  .cat.p2{padding-top:100px}
+  .cat.p3{padding-bottom:96px}
+  .cat.p4{padding-bottom:96px}
+  .petunjuk{font-size:12.5px;color:var(--aksen);background:var(--aksen2);
+    border-radius:9px;padding:7px 11px;margin-top:10px;display:none}
+  .petunjuk.on{display:block}
+</style>
+</head>
+<body>
+<header>
+  <h1>Demo zona gambar — silakan dicoba, lalu pilih yang paling kamu suka</h1>
+  <p>Seret fotonya (mouse atau jari). Area yang menyala = tempat foto akan menempel saat dilepas. Ketiga contoh tetap memakai alur teks (flow/auto layout): tidak ada teks yang tertimpa.</p>
+</header>
+<div class="wrap">
+
+  <!-- A -->
+  <section class="panel">
+    <h2><span class="bab">A</span> Zona sisi — teks mengapit</h2>
+    <p class="ket">Foto mengambang di kiri/kanan, teks paragraf mengalir di sebelahnya — gaya buku cerita/majalah. Atas/bawah = foto sendiri selebar kolom; tengah = di tengah.</p>
+    <div class="page pageA" id="pageA">
+      <div class="teks" id="a-t1">Pagi ini matahari masuk lewat jendela. Aku menuang teh dan membuka buku catatan kecil — halaman pertama masih kosong, seperti hari ini. Teh lebih cocok untuk cuaca begini.</div>
+      <div class="teks" id="a-t2">Setelah sarapan aku menyusuri pantai. Angin membawa bau garam dan suara ombak yang tenang. Seorang anak melambai dari kejauhan.</div>
+      <div class="foto ic" id="fotoA">🌄<span>foto</span></div>
+      <div class="teks" id="a-t3">Sorenya aku duduk di beranda sambil menulis ulang rencana mingguan. Ada satu hal yang selalu kusukai dari menulis: dunia terasa lebih rapi setelah dituangkan ke kertas.</div>
+      <div class="teks" id="a-t4">Malam tiba lebih cepat dari dugaanku. Lampu kota berkelip di kejauhan, dan aku menutup buku dengan perasaan ringan. Sampai jumpa besok, halaman kosong.</div>
+      <div class="sorot kiri"></div><div class="sorot kanan"></div>
+      <div class="sorot atas"></div><div class="sorot bawah"></div><div class="sorot tengah"></div>
+    </div>
+    <p class="petunjuk" id="petA">✅ Foto menempel di zona itu — coba juga zona lain.</p>
+  </section>
+
+  <!-- B -->
+  <section class="panel">
+    <h2><span class="bab">B</span> Zona dalam satu baris</h2>
+    <p class="ket">Foto punya barisnya sendiri: geser mendatar = kiri/tengah/kanan; geser jauh ke atas/bawah = barisnya pindah sebelum/sesudah paragraf. Teks tidak pernah berada di samping foto.</p>
+    <div class="page pageB" id="pageB">
+      <div class="teks" id="b-t1">Rencana hari ini: menuntaskan bab tiga, membalas surel yang menumpuk, dan tidak lupa membeli beras. Daftar ini kutulis pagi agar tidak menguap sebelum siang.</div>
+      <div class="foto ic" id="fotoB">🌄<span>foto</span></div>
+      <div class="teks" id="b-t2">Sore harinya aku menandai semua item: bab tiga selesai, surel terbalas, beras sudah di dapur. Ada kepuasan kecil saat setiap kotak berhasil dicentang.</div>
+      <div class="sorot atas"></div><div class="sorot bawah"></div>
+    </div>
+    <p class="petunjuk" id="petB">✅ Posisi foto diubah.</p>
+  </section>
+
+  <!-- C -->
+  <section class="panel">
+    <h2><span class="bab">C</span> Empat pojok halaman</h2>
+    <p class="ket">Foto kecil "menempel" ke salah satu dari empat pojok halaman; teks otomatis menghindari pojok yang dipakai — tampilan kolase scrapbook.</p>
+    <div class="page pageC" id="pageC">
+      <div class="cat p0" id="catC">Di tengah halaman ini mengalir catatan harianku. Cerita tentang hujan, tentang rencana besar yang masih disembunyikan, dan tentang orang-orang yang membuat hari terasa hangat. Kadang satu halaman cukup untuk menampung semuanya — kadang tidak, dan itu tidak apa-apa. Yang penting terus menulis, sedikit demi sedikit, sampai cerita itu menemukan bentuknya sendiri.</div>
+      <div class="foto" id="fotoC">🌄<span>foto</span></div>
+      <div class="sorot tl"></div><div class="sorot tr"></div>
+      <div class="sorot bl"></div><div class="sorot br"></div>
+    </div>
+    <p class="petunjuk" id="petC">✅ Foto menempel di pojok — teks menyesuaikan.</p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const A={f:document.getElementById('fotoA'),p:document.getElementById('pageA'),pet:document.getElementById('petA')};
+  const B={f:document.getElementById('fotoB'),p:document.getElementById('pageB'),pet:document.getElementById('petB')};
+  const C={f:document.getElementById('fotoC'),p:document.getElementById('pageC'),pet:document.getElementById('petC')};
+
+  const klon=document.createElement('div');
+  klon.className='foto klon';
+  document.body.appendChild(klon);
+
+  let aktif=null;
+
+  function mulai(e,o){
+    e.preventDefault();
+    const r=o.f.getBoundingClientRect();
+    aktif={o,w:r.width,h:r.height};
+    klon.style.width=r.width+'px';
+    klon.style.height=r.height+'px';
+    klon.innerHTML=o.f.innerHTML;
+    klon.style.left='-999px';
+    o.f.classList.add('ghost');
+    window.addEventListener('pointermove',gerak);
+    window.addEventListener('pointerup',lepas);
+    window.addEventListener('pointercancel',lepas);
+    tampil();
+  }
+  function tampil(){klon.style.display='flex';}
+  function sembunyi(){klon.style.display='none';}
+  function matiZona(o){o.p.querySelectorAll('.sorot').forEach(s=>s.classList.remove('on'));}
+
+  function zonaXY(e,o){
+    const hr=o.p.getBoundingClientRect();
+    const dx=e.clientX-(hr.left+hr.width/2);
+    const dy=e.clientY-(hr.top+hr.height/2);
+    return {dx,dy,hr};
+  }
+
+  function gerak(e){
+    if(!aktif)return;
+    klon.style.left=(e.clientX-aktif.w/2)+'px';
+    klon.style.top=(e.clientY-aktif.h/2)+'px';
+    const {dx,dy,hr}=zonaXY(e,aktif.o);
+    matiZona(aktif.o);
+    const z=zona(aktif.o,dx,dy,hr);
+    if(z){const s=aktif.o.p.querySelector('.sorot.'+z);if(s)s.classList.add('on');}
+  }
+
+  /* nama zona yang sedang dituju */
+  function zona(o,dx,dy,hr){
+    if(o.p.classList.contains('pageC')){
+      const kiri=dx<0,atas=dy<0;
+      if(Math.abs(dx)<hr.width*.18||Math.abs(dy)<hr.height*.16)return null;
+      if(atas)return kiri?'tl':'tr';
+      return kiri?'bl':'br';
+    }
+    if(Math.abs(dy)<hr.height*.16){
+      if(Math.abs(dx)<hr.width*.3)return 'tengah';
+      return dx<0?'kiri':'kanan';
+    }
+    return dy<0?'atas':'bawah';
+  }
+
+  function lepas(e){
+    window.removeEventListener('pointermove',gerak);
+    window.removeEventListener('pointerup',lepas);
+    window.removeEventListener('pointercancel',lepas);
+    if(!aktif)return;
+    const o=aktif.o;
+    aktif=null;
+    o.f.classList.remove('ghost');
+    sembunyi();
+    matiZona(o);
+    const {dx,dy,hr}=zonaXY(e,o);
+    const z=zona(o,dx,dy,hr);
+    if(z)terapkan(o,z);
+  }
+
+  function kedip(pet){
+    pet.classList.add('on');
+    clearTimeout(pet._t);
+    pet._t=setTimeout(()=>pet.classList.remove('on'),2200);
+  }
+
+  /* ── A: kiri/kanan/tengah/atas/bawah ── */
+  function terapkanA(z){
+    const f=A.f,p=A.p;
+    f.classList.remove('il','ir','ic','ia','ib');
+    const teks=()=>p.querySelectorAll('.teks');
+    if(z==='atas'||z==='bawah'){
+      if(z==='atas')p.insertBefore(f,teks()[0]);
+      else p.appendChild(f);
+      f.classList.add(z==='atas'?'ia':'ib');
+    }else{
+      /* letakkan setelah 2 paragraf pertama supaya teks mengapit terlihat */
+      const ts=teks();
+      p.insertBefore(f,ts[2]?ts[2]:ts[ts.length-1].nextSibling);
+      f.classList.add(z==='kiri'?'il':z==='kanan'?'ir':'ic');
+    }
+    kedip(A.pet);
+  }
+
+  /* ── B: kiri/tengah/kanan + pindah baris ── */
+  function terapkanB(z){
+    const f=B.f,p=B.p;
+    f.classList.remove('il','ic','ir');
+    if(z==='atas'||z==='bawah'){
+      const t1=document.getElementById('b-t1');
+      const t2=document.getElementById('b-t2');
+      if(z==='atas')p.insertBefore(f,t1);
+      else p.insertBefore(f,t2.nextSibling);
+    }else{
+      const t2=document.getElementById('b-t2');
+      p.insertBefore(f,t2);          /* kembali ke antara paragraf */
+      f.classList.add(z==='kiri'?'il':z==='kanan'?'ir':'ic');
+    }
+    kedip(B.pet);
+  }
+
+  /* ── C: empat pojok ── */
+  function terapkanC(z){
+    const f=C.f,c=document.getElementById('catC');
+    const map={tl:['b1','p1'],tr:['b2','p2'],bl:['b3','p3'],br:['b4','p4']};
+    const [fb,pc]=map[z];
+    f.className='foto '+fb;
+    c.className='cat '+pc;
+    kedip(C.pet);
+  }
+
+  A.f.addEventListener('pointerdown',e=>mulai(e,A));
+  B.f.addEventListener('pointerdown',e=>mulai(e,B));
+  C.f.addEventListener('pointerdown',e=>mulai(e,C));
+
+  window.terapkan={A:terapkanA,B:terapkanB,C:terapkanC};
+})();
+</script>
+</body>
+</html>
