@@ -6,7 +6,7 @@
    dengan tombol pengubah (Ctrl/⌘/Alt) membuka catatan yang sudah ada —
    klik biasa tetap untuk meletakkan kursor/menyunting teks. */
 
-import { state } from '../core/store.js?v=20260907100318';
+import { state } from '../core/store.js?v=20260907103335';
 
 /* Judul sasaran sebuah span wikilink, tanpa [[ ]] dan tanpa alias |… */
 export function judulSpan(span) {

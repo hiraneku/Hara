@@ -49,14 +49,60 @@ await sleep(60);
 /* ── 1. tombol kelompok warna ada di bar ── */
 oke('w1 tombol kelompok warna ada',!!d.querySelector('.mb-g[data-g="warna"]'));
 
-/* ── 2. menu berisi palet + pemilih bebas + hapus ── */
+/* ── 2. menu: strip hitam→putih + warna umum, roda, hex, hapus ── */
 const html=menu.warnaMenu();
 oke('w2 menu punya judul',html.includes('Warna teks'));
 const sw=(html.match(/class="wsw/g)||[]).length;
-oke('w3 deretan 16 warna umum',sw===16,`sw=${sw}`);
-oke('w4 pemilih bulat + kolom hex + Pakai',html.includes('type="color"')&&html.includes('warna-hex')&&html.includes('data-warna-pakai'));
+oke('w3 strip = hitam di awal, putih ikut, jumlah = WARNA_UMUM',
+  sw===menu.WARNA_UMUM.length && html.includes('data-warna="#000000"') &&
+  html.includes('data-warna="#ffffff"'),`sw=${sw}`);
+oke('w3b urutan: hitam-putih sebelum warna-warna lain',
+  html.indexOf('data-warna="#000000"')<html.indexOf('data-warna="#e53935"') &&
+  html.indexOf('data-warna="#ffffff"')<html.indexOf('data-warna="#e53935"'));
+oke('w4 roda bulat + gelap-terang + kolom kode + Pakai (tanpa dialog sistem)',
+  html.includes('id="roda-w"')&&html.includes('id="roda-g"')&&
+  html.includes('warna-hex')&&html.includes('data-warna-pakai')&&
+  !html.includes('type="color"'));
 oke('w5 opsi hapus warna (Bawaan)',html.includes('data-warna-hapus')&&html.includes('hapus warna'));
-oke('w6 normalisasi hex',wrn.normalizeWarna('3b82f6')==='#3b82f6'&&wrn.normalizeWarna('#e62')==='#ee6622'&&wrn.normalizeWarna('xyz')===null&&wrn.normalizeWarna('')===null);
+oke('w6a normalisasi hex: pendek, panjang, dgn/tanpa #',
+  wrn.normalizeWarna('3b82f6')==='#3b82f6'&&wrn.normalizeWarna('#e62')==='#ee6622'&&
+  wrn.normalizeWarna('#abc')==='#aabbcc'&&wrn.normalizeWarna('#ff0000cc')==='#ff0000');
+oke('w6b normalisasi rgb()/rgba()/hsl() — kode RGB benar diterima',
+  wrn.normalizeWarna('rgb(59, 130, 246)')==='#3b82f6'&&
+  wrn.normalizeWarna('rgba(59,130,246,0.4)')==='#3b82f6'&&
+  wrn.normalizeWarna('RGB(0,0,0)')==='#000000'&&
+  wrn.normalizeWarna('hsl(220,100%,50%)')==='#0055ff',
+  `rgb=${wrn.normalizeWarna('rgb(59, 130, 246)')} hsl=${wrn.normalizeWarna('hsl(220,100%,50%)')}`);
+oke('w6c kode buruk/format lain tetap ditolak',
+  wrn.normalizeWarna('xyz')===null&&wrn.normalizeWarna('')===null&&
+  wrn.normalizeWarna('rgb(59,x,246)')===null&&wrn.normalizeWarna('12')===null);
+
+/* ── 2b. roda sungguhan: slider gelap-terang & kolom kode dua arah ── */
+const popEl=d.getElementById('pop');
+popEl.innerHTML=menu.warnaMenu();
+menu.rodaPasang();
+const rhex=popEl.querySelector('#warna-hex');
+const rsl=popEl.querySelector('#roda-g');
+const chip=popEl.querySelector('#warna-chip');
+oke('w6d roda mulai dari warna hex yang valid',/^#[0-9a-f]{6}$/.test(rhex.value),rhex.value);
+rsl.value=0; rsl.dispatchEvent(new w.Event('input',{bubbles:true}));
+oke('w6e gelap penuh → hitam',rhex.value==='#000000',rhex.value);
+rsl.value=100; rsl.dispatchEvent(new w.Event('input',{bubbles:true}));
+oke('w6f terang penuh → putih',rhex.value==='#ffffff',rhex.value);
+rhex.value='rgb(59,130,246)';
+rhex.dispatchEvent(new w.Event('input',{bubbles:true}));
+oke('w6g kode rgb() diterima & slider ikut',rhex.value==='#3b82f6'&&rsl.value==='60',`${rhex.value} sl=${rsl.value}`);
+oke('w6h chip mengikuti warna',wrn.normalizeWarna(chip.style.background||'')==='#3b82f6',chip.style.background);
+rhex.value='nope'; rhex.dispatchEvent(new w.Event('input',{bubbles:true}));
+oke('w6i kode buruk ditandai (salah)',rhex.classList.contains('salah'));
+/* ketuk roda: tepi kanan = rona 0° jenuh penuh, gelap-terang tetap */
+const rcv=popEl.querySelector('#roda-w');
+rcv.getBoundingClientRect=()=>({left:100,top:50,right:292,bottom:242,width:192,height:192,x:100,y:50});
+const lsekarang=menu.hexKeHsl('#3b82f6')[2];
+rcv.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,cancelable:true,clientX:292,clientY:146}));
+oke('w6j ketukan roda: rona 0° jenuh penuh (gelap-terang tetap)',
+  rhex.value===menu.hslKeHex(0,1,lsekarang),`${rhex.value} ≠ ${menu.hslKeHex(0,1,lsekarang)}`);
+popEl.innerHTML='';
 
 /* ── 3. seleksi teks lalu beri warna ── */
 function selTeks(tn,o,len){

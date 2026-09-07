@@ -442,19 +442,47 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc u{text-decoration:underline;text-underline-offset:2px}
 
 /* ── warna teks (bar mekanik) ── */
-.wpal{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;padding:6px 14px 12px}
-.wsw{width:100%;aspect-ratio:1;border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 22%,transparent);
-  position:relative;padding:0;transition:.1s var(--ease)}
+/* strip warna umum: satu baris memanjang, digeser kalau panjang.
+   Hitam → putih ada di ujung kiri, lalu warna-warna umum. */
+.wpal{display:flex;gap:9px;overflow-x:auto;padding:8px 14px 12px;
+  scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.wpal::-webkit-scrollbar{height:4px}
+.wpal::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.wsw{flex:none;width:36px;height:36px;border-radius:999px;padding:0;position:relative;
+  border:1px solid color-mix(in srgb,var(--text) 22%,transparent);
+  transition:transform .1s var(--ease)}
 .wsw:hover{transform:scale(1.12)}
 .wsw.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
 .wsw.on::after{content:'';position:absolute;inset:0;border-radius:999px;
   border:1.5px solid var(--surface);opacity:.55}
+/* roda warna sungguhan (lingkaran) + pengatur gelap–terang */
+.wroda{display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:0 10px 8px}
+.wroda-l{width:192px;height:192px;border-radius:50%;touch-action:none;
+  cursor:crosshair;flex:none;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 18%,transparent)}
+.wroda-s{position:relative;width:30px;height:192px;flex:none}
+.wroda-s input{position:absolute;left:50%;top:50%;width:192px;height:22px;
+  margin:0;padding:0;transform:translate(-50%,-50%) rotate(-90deg);
+  -webkit-appearance:none;appearance:none;background:none;cursor:pointer}
+.wroda-s input::-webkit-slider-runnable-track{height:8px;border-radius:99px;
+  border:1px solid color-mix(in srgb,var(--text) 26%,transparent);
+  background:linear-gradient(90deg,#000,#fff)}
+.wroda-s input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+  margin-top:-7px;border-radius:50%;background:#fff;
+  border:2px solid color-mix(in srgb,var(--text) 55%,transparent);
+  box-shadow:0 1px 3px rgba(0,0,0,.45)}
+.wroda-s input::-moz-range-track{height:8px;border-radius:99px;
+  border:1px solid color-mix(in srgb,var(--text) 26%,transparent);
+  background:linear-gradient(90deg,#000,#fff)}
+.wroda-s input::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
+  background:#fff;border:2px solid color-mix(in srgb,var(--text) 55%,transparent);
+  box-shadow:0 1px 3px rgba(0,0,0,.45)}
 .wcus{display:flex;align-items:center;gap:8px;padding:4px 14px 10px;
   border-top:1px solid var(--border)}
-.wpel{width:40px;height:40px;flex:none;padding:0;border:none;background:none;cursor:pointer}
-.wpel::-webkit-color-swatch-wrapper{padding:0}
-.wpel::-webkit-color-swatch{border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 30%,transparent)}
-.wpel::-moz-color-swatch{border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 30%,transparent)}
+.wchip{width:26px;height:26px;border-radius:50%;flex:none;
+  border:1px solid color-mix(in srgb,var(--text) 30%,transparent)}
 .whex{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px}
+.whex.salah{box-shadow:0 0 0 2px color-mix(in srgb,#ff3b30 55%,transparent)}
 .wpakai{flex:none;height:34px;font-size:12.5px}
 .wcus + [data-warna-hapus]{border-top:1px solid var(--border);border-radius:0}

@@ -206,7 +206,7 @@ export const HELP = {
 
 /* Penjelasan tiap kelompok, muncul di kepala menunya. */
 export const HELP_GRUP = {
-  warna:  'Mewarnai teks. Tanpa blok, warna dipakai untuk ketikan berikutnya; blok teks dulu untuk mengubah tulisan yang sudah ada. Pilih "Bawaan" untuk kembali ke warna tema.',
+  warna:  'Mewarnai teks. Pilih dari strip warna (hitam sampai putih, lalu warna umum), roda warna, atau ketik kode sendiri — mis. #3b82f6, rgb(59,130,246), hsl(220,100%,50%). Tanpa blok teks, warna dipakai untuk ketikan berikutnya. "Bawaan" kembali ke warna tema.',
   huruf:  'Mengganti jenis huruf. Pilihan berlaku untuk teks yang diketik setelahnya; blok teks dulu untuk mengubah tulisan yang sudah ada. Font yang tidak ada di perangkat ditandai dan tidak akan tampil berbeda.',
   gaya:   'Mengubah peran satu blok: judul, kutipan, kode, atau callout. Berlaku ke seluruh blok tempat kursor berada.',
   tandai: 'Memberi penanda pada potongan teks yang diblok. Bisa ditumpuk, dan dilepas dengan memilih ulang.',

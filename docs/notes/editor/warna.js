@@ -14,19 +14,82 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907100318';
-import { refresh } from './cleanup.js?v=20260907100318';
+import { docEl, sel, curBlock } from './caret.js?v=20260907103335';
+import { refresh } from './cleanup.js?v=20260907103335';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
-   Menerima: "e6194b", "#e6194b", "#e62", "e62". */
+   Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
+   benar-benar RGB:
+     hex 3/4/6/8 digit  ("#e62", "3b82f6", "#ff0000cc" → alpha dibuang)
+     rgb()/rgba()       ("rgb(59,130,246)", "rgba(59 130 246 / .4)")
+                        angka 0-255 atau persen, koma atau spasi
+     hsl()/hsla()       ("hsl(220,100%,50%)") */
 export function normalizeWarna(masukan) {
   let s = String(masukan || '').trim().toLowerCase();
   if (!s) return null;
-  if (s[0] === '#') s = s.slice(1);
-  if (/^[0-9a-f]{3}$/.test(s))
-    s = s.split('').map(c => c + c).join('');
-  if (!/^[0-9a-f]{6}$/.test(s)) return null;
-  return '#' + s;
+
+  /* jalur hex */
+  let t = s[0] === '#' ? s.slice(1) : s;
+  if (/^[0-9a-f]+$/.test(t)) {
+    if (t.length === 3 || t.length === 4) t = t.split('').map(c => c + c).join('');
+    if (t.length === 8) t = t.slice(0, 6);          /* alpha diabaikan */
+    return t.length === 6 ? '#' + t : null;
+  }
+
+  /* jalur rgb() / rgba() — koma atau spasi, angka atau persen */
+  const rgb = s.match(/^rgba?\(([\s\S]*)\)$/);
+  if (rgb) {
+    const isi = rgb[1].split('/')[0].trim();
+    const ch = isi.split(/[\s,]+/).map(x => x.trim()).filter(Boolean);
+    if (ch.length < 3) return null;
+    const konv = v => {
+      const pct = /%$/.test(v);
+      const n = parseFloat(v);
+      if (Number.isNaN(n)) return null;
+      return Math.max(0, Math.min(255, Math.round(pct ? n * 2.55 : n)));
+    };
+    const rr = konv(ch[0]), gg = konv(ch[1]), bb = konv(ch[2]);
+    if (rr === null || gg === null || bb === null) return null;
+    return '#' + [rr, gg, bb].map(k => k.toString(16).padStart(2, '0')).join('');
+  }
+
+  /* jalur hsl() / hsla() */
+  const hsl = s.match(/^hsla?\(([\s\S]*)\)$/);
+  if (hsl) {
+    const isi = hsl[1].split('/')[0].trim();
+    const ch = isi.split(/[\s,]+/).map(x => x.trim()).filter(Boolean);
+    if (ch.length < 3) return null;
+    const h = (parseFloat(ch[0]) % 360 + 360) % 360;
+    if (Number.isNaN(h)) return null;
+    const konv = v => {
+      const pct = /%$/.test(v);
+      const n = parseFloat(v);
+      if (Number.isNaN(n)) return null;
+      return Math.max(0, Math.min(1, pct ? n / 100 : n));
+    };
+    const ss = konv(ch[1]), ll = konv(ch[2]);
+    if (ss === null || ll === null) return null;
+    const [rr, gg, bb] = hslKeRgb(h, ss, ll);
+    return '#' + [rr, gg, bb].map(k => k.toString(16).padStart(2, '0')).join('');
+  }
+
+  return null;
+}
+
+/* hsl(h dalam derajat, s 0-1, l 0-1) → [r,g,b] 0-255. Dipakai roda warna. */
+export function hslKeRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const f = t => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  return [f(h + 1 / 3), f(h), f(h - 1 / 3)].map(k => Math.round(k * 255));
 }
 
 /* Elemen warna yang membungkus sebuah node. */

@@ -1,16 +1,17 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907100318';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907100318';
-import { insertInline } from './insert.js?v=20260907100318';
-import { focusKeep } from '../bar/render.js?v=20260907100318';
-import { applyLink } from './link.js?v=20260907100318';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907100318';
-import { setFont } from '../editor/font.js?v=20260907100318';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907100318';
-import { setCallout } from '../editor/blocks.js?v=20260907100318';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907100318';
-import { getar } from '../bar/prefs.js?v=20260907100318';
-import { toast } from '../../core/toast.js?v=20260907100318';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907103335';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907103335';
+import { insertInline } from './insert.js?v=20260907103335';
+import { focusKeep } from '../bar/render.js?v=20260907103335';
+import { applyLink } from './link.js?v=20260907103335';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907103335';
+import { setFont } from '../editor/font.js?v=20260907103335';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907103335';
+import { rodaPasang } from './warna.js?v=20260907103335';
+import { setCallout } from '../editor/blocks.js?v=20260907103335';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907103335';
+import { getar } from '../bar/prefs.js?v=20260907103335';
+import { toast } from '../../core/toast.js?v=20260907103335';
 
 export const pop = () => document.getElementById('pop');
 
@@ -65,6 +66,7 @@ export function openPop(html, anchor) {
   simpanRange = (s && s.rangeCount && d && d.contains(s.getRangeAt(0).startContainer))
     ? s.getRangeAt(0).cloneRange() : null;
   setPopIsi(html);
+  if (p.querySelector('#roda-w')) rodaPasang();   /* roda warna menu */
   tambat = (anchor && anchor.nodeType === 1) ? anchor : null;
   p.classList.add('on');
   const r = anchor.getBoundingClientRect();
@@ -118,16 +120,6 @@ export function bindPop() {
     if (ok) ok.click();
   });
 
-  /* pemilih warna bulat bawaan sistem: terapkan begitu dipilih */
-  p.addEventListener('change', e => {
-    const pel = e.target && e.target.closest ? e.target.closest('#warna-pel') : null;
-    if (!pel) return;
-    getar(); kunciKeyboard(); focusKeep(); ensureCaret();
-    snapWarna();
-    setWarna(pel.value);
-    closeAll();
-  });
-
   p.addEventListener('click', e => {
     const lk = e.target.closest('[data-lk]');
     if (lk) { applyLink(lk.dataset.lk, simpanRange); closeAll(); return; }
@@ -164,7 +156,11 @@ export function bindPop() {
     if (wp) {
       const inp = p.querySelector('#warna-hex');
       const hex = normalizeWarna(inp ? inp.value : '');
-      if (!hex) { toast('Kode warna tak dikenal — pakai 6 digit hex'); if (inp) inp.focus(); return; }
+      if (!hex) {
+        toast('Kode warna tak dikenal — pakai mis. #3b82f6 atau rgb(59,130,246)');
+        if (inp) inp.focus();
+        return;
+      }
       getar(); kunciKeyboard(); focusKeep(); ensureCaret();
       snapWarna();
       setWarna(hex);
@@ -179,7 +175,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907100318').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907103335').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -188,7 +184,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907100318').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907103335').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -198,7 +194,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907100318').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907103335').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
