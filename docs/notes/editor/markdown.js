@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907013646';
-import { setBlock, setCallout } from './blocks.js?v=20260907013646';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260907013646';
-import { updateCount } from './cleanup.js?v=20260907013646';
+import { docEl, sel, curBlock } from './caret.js?v=20260907015135';
+import { setBlock, setCallout } from './blocks.js?v=20260907015135';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260907015135';
+import { updateCount } from './cleanup.js?v=20260907015135';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -131,8 +131,10 @@ export function replaceAbs(b,end,len,tag,cls,text){
   const r=document.createRange();
   try{ r.setStart(p1.node,p1.off); r.setEnd(p2.node,p2.off); }catch(e){ return; }
   r.deleteContents(); r.insertNode(el);
-  const sp=document.createTextNode('\u200b'); el.after(sp);
-  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  /* text node kosong, BUKAN zero-width: penanda yang tersimpan merusak
+     spasi saat browser menggabungkan elemen bersebelahan */
+  const sp=document.createTextNode(''); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,0); nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
   updateCount();
 }
@@ -144,8 +146,10 @@ export function replaceWith(node,end,len,tag,cls,text){
   const r=document.createRange();
   r.setStart(node,start); r.setEnd(node,end);
   r.deleteContents(); r.insertNode(el);
-  const sp=document.createTextNode('\u200b'); el.after(sp);
-  const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
+  /* text node kosong, BUKAN zero-width: penanda yang tersimpan merusak
+     spasi saat browser menggabungkan elemen bersebelahan */
+  const sp=document.createTextNode(''); el.after(sp);
+  const nr=document.createRange(); nr.setStart(sp,0); nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
   updateCount();
 }

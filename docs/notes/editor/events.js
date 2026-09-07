@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907013646';
-import { setBlock, indent } from './blocks.js?v=20260907013646';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907013646';
-import { autoFormat } from './markdown.js?v=20260907013646';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907013646';
-import { onTitle } from '../model.js?v=20260907013646';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907013646';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907013646';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907015135';
+import { setBlock, indent } from './blocks.js?v=20260907015135';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907015135';
+import { autoFormat } from './markdown.js?v=20260907015135';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907015135';
+import { onTitle } from '../model.js?v=20260907015135';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907015135';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907015135';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:

@@ -73,6 +73,12 @@ docs/
    Berpindah catatan WAJIB `flush()` dulu — kalau `openId` diganti lebih
    dulu, isi editor lama tertulis ke catatan yang salah.
 
+0d. **Jangan pernah menyisipkan `U+200B` ke DOM editor.** Penanda itu ikut
+   tersimpan, mengacaukan deteksi posisi caret, dan merusak spasi saat
+   browser menggabungkan elemen inline bersebelahan. Pakai text node
+   kosong sebagai pijakan caret. Suite `tools/uji/spasi-dan-penanda.mjs`
+   menjaga aturan ini.
+
 1. **Semua tulis data lewat `core/store.js`.** Tidak ada modul yang menyentuh
    `localStorage` langsung. Saat pindah ke Dexie, cukup satu file yang berubah.
 

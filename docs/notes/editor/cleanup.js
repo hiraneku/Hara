@@ -1,17 +1,37 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907013646';
-import { renumber } from './blocks.js?v=20260907013646';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907013646';
-import { state, save } from '../../core/store.js?v=20260907013646';
-import { findNote } from '../model.js?v=20260907013646';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907013646';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907013646';
-import { cur } from '../../core/router.js?v=20260907013646';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907013646';
-import { GROUPS } from '../bar/config.js?v=20260907013646';
+import { docEl, sel, curBlock } from './caret.js?v=20260907015135';
+import { renumber } from './blocks.js?v=20260907015135';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907015135';
+import { state, save } from '../../core/store.js?v=20260907015135';
+import { findNote } from '../model.js?v=20260907015135';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907015135';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907015135';
+import { cur } from '../../core/router.js?v=20260907015135';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907015135';
+import { GROUPS } from '../bar/config.js?v=20260907015135';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
+
+  /* ── Buang penanda zero-width warisan ──
+     Versi lama menyisipkan U+200B sebagai pijakan caret. Penanda itu ikut
+     tersimpan dan merusak spasi saat browser menggabungkan elemen mark
+     bersebelahan ("satu dua tiga" jadi "satu duatiga"). Sekarang penanda
+     tidak pernah dibuat lagi; sisa yang sudah terlanjur ada dibersihkan
+     di sini — kecuali node tempat caret sedang berada, supaya posisi
+     mengetik tidak melompat. */
+  {
+    const s0=sel();
+    const anc=s0&&s0.anchorNode;
+    const jalan=document.createTreeWalker(d,4,null);
+    const buang=[];
+    let n;
+    while((n=jalan.nextNode())){
+      if(n!==anc && n.data && n.data.indexOf('\u200b')>=0) buang.push(n);
+    }
+    buang.forEach(t=>{ t.data=t.data.replace(/\u200b/g,''); });
+  }
+
   Object.keys(MARKSEL).forEach(m=>{
     Array.from(d.querySelectorAll(MARKSEL[m])).forEach(e=>{
       if(e.textContent.replace(/[\u200b\u00a0]/g,'')==='' && !e.contains(sel().anchorNode))

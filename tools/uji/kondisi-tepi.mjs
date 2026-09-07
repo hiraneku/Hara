@@ -2,6 +2,10 @@
 import {JSDOM} from 'jsdom';
 import fs from 'fs';
 import { indexedDB as fakeIDB } from 'fake-indexeddb';
+import path from 'path';
+import { fileURLToPath } from 'url';
+/* selalu jalan dari akar repo, apa pun cwd pemanggil */
+process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
 const dom=new JSDOM(fs.readFileSync('docs/index.html','utf8'),{url:'https://x.test/',pretendToBeVisual:true});
 const {window:w}=dom; w.indexedDB=fakeIDB;
 for(const k of ['document','getSelection','HTMLElement','Node','Range','MouseEvent','Event','InputEvent','localStorage','Image','Blob'])
@@ -10,10 +14,11 @@ globalThis.window=w; globalThis.self=w; globalThis.indexedDB=w.indexedDB;
 globalThis.addEventListener=w.addEventListener.bind(w);
 Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true});
 w.URL.createObjectURL=()=>'blob:x/1';w.URL.revokeObjectURL=()=>{};globalThis.URL=w.URL;
+const AKAR=process.cwd();
 const V=fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
-await import(`./docs/app.js?v=${V}`);
-const {go}=await import(`./docs/core/router.js?v=${V}`);
-const M=await import(`./docs/notes/editor/marks.js?v=${V}`);
+await import(`${AKAR}/docs/app.js?v=${V}`);
+const {go}=await import(`${AKAR}/docs/core/router.js?v=${V}`);
+const M=await import(`${AKAR}/docs/notes/editor/marks.js?v=${V}`);
 const d=w.document,SEL=w.getSelection();
 const click=el=>el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
 const mb=m=>d.querySelector(`.mb[data-m="${m}"]`);

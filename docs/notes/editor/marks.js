@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907013646';
-import { refresh } from './cleanup.js?v=20260907013646';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907015135';
+import { refresh } from './cleanup.js?v=20260907015135';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', s:'s', hl:'span', code:'code' };
@@ -172,10 +172,14 @@ export function flushPending(){
   if(!pending.size) return;
   const r=ensureCaret(); if(!r) return;
   const marks=[...pending]; pending.clear();
-  let inner=document.createTextNode('\u200b'), node=inner;
+  /* Wadah kosong TANPA penanda zero-width. Penanda itu dulu dipakai
+     sebagai pijakan caret, tapi ia ikut tersimpan dan — saat browser
+     menggabungkan dua elemen mark bersebelahan — mendarat di antara
+     spasi dan kata berikutnya sehingga spasinya ikut termakan. */
+  let inner=document.createTextNode(''), node=inner;
   marks.forEach(m=>{ const e=markEl(m); e.appendChild(node); node=e; });
   r.insertNode(node);
-  const nr=document.createRange(); nr.setStart(inner,1); nr.collapse(true);
+  const nr=document.createRange(); nr.setStart(inner,0); nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
 }
 
@@ -208,6 +212,7 @@ export function keluarDariMark(m){
     titik.after(kanan);
   }
   if(host.textContent.replace(/[\u200b\u00a0]/g,'')==='') host.remove();
+  /* jangan tinggalkan elemen mark kosong bersebelahan */
 
   const nr=document.createRange();
   nr.setStart(titik,titik.length);      /* di AKHIR teks yang sudah ada */
