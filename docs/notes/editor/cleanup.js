@@ -1,13 +1,13 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260906155231';
-import { renumber } from './blocks.js?v=20260906155231';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260906155231';
-import { state, save } from '../../core/store.js?v=20260906155231';
-import { findNote } from '../model.js?v=20260906155231';
-import { cur } from '../../core/router.js?v=20260906155231';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260906155231';
-import { GROUPS } from '../bar/config.js?v=20260906155231';
-import { bersihkanSrc } from './image.js?v=20260906155231';
+import { docEl, sel, curBlock } from './caret.js?v=20260907001515';
+import { renumber } from './blocks.js?v=20260907001515';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907001515';
+import { state, save } from '../../core/store.js?v=20260907001515';
+import { findNote } from '../model.js?v=20260907001515';
+import { domToBlocks, touch } from '../note-model.js?v=20260907001515';
+import { cur } from '../../core/router.js?v=20260907001515';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907001515';
+import { GROUPS } from '../bar/config.js?v=20260907001515';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -46,7 +46,9 @@ export function updateCount(){
   const chars=t.length;
   const words=t?t.split(/\s+/).filter(Boolean).length:0;
   el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span><b>${words.toLocaleString('id')}</b> kata`;
-  const n=findNote(state.openId); if(n) n.ex=t.slice(0,80);
+  /* Cuplikan TIDAK disimpan di sini — ia diturunkan dari blocks lewat
+     excerptOf() saat daftar catatan digambar. Menyimpannya di dua tempat
+     adalah persis sumber-ganda yang ingin dihindari. */
 }
 export function syncBtns(){
   const bu=document.querySelector('.mb[data-m="undo"]');
@@ -105,11 +107,11 @@ export function saveNow(){
   clearTimeout(saveT); saveT=null;   /* jangan biarkan jadwal lama menimpa */
   const d=docEl(); const n=findNote(state.openId);
   if(d&&n){
-    n.html=bersihkanSrc(d.innerHTML);
-    const t=((d.innerText!==undefined?d.innerText:d.textContent)||'')
-              .replace(/[\u200b\u00a0]/g,' ').trim();
-    n.ex=t.slice(0,80);
-    n.ts=Date.now(); n.mod='baru saja';
+    /* DOM dibaca balik jadi blocks — inilah satu-satunya yang disimpan.
+       Cuplikan & hitungan kata dihitung ulang dari blocks saat dibutuhkan,
+       jadi tidak ada dua sumber data yang bisa berselisih. */
+    n.blocks = domToBlocks(d);
+    touch(n);
   }
   save();
 }

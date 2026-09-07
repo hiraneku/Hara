@@ -1,17 +1,16 @@
-/* Bentuk data catatan + operasi CRUD. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260906155231';
-import { toast } from '../core/toast.js?v=20260906155231';
-import { go } from '../core/router.js?v=20260906155231';
-import { saveSoon } from './editor/cleanup.js?v=20260906155231';
+/* Operasi CRUD catatan. Bentuk datanya didefinisikan di note-model.js. */
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907001515';
+import { makeNote, touch, excerptOf } from './note-model.js?v=20260907001515';
+import { toast } from '../core/toast.js?v=20260907001515';
+import { go } from '../core/router.js?v=20260907001515';
+import { saveSoon } from './editor/cleanup.js?v=20260907001515';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
 
 export function newNote() {
-  const n = {
-    id: 'n' + (state.seq++), t: '', welcome: false,
-    mod: 'baru saja', ex: '', html: '', ts: Date.now()
-  };
+  const n = makeNote();          /* selalu valid: punya blocks, tags, waktu */
+  state.seq++;
   state.notes.unshift(n);
   state.openId = n.id;
   save();
@@ -34,8 +33,10 @@ export function openNote(id) { state.openId = id; go('editor'); }
 export function onTitle(el) {
   const n = current();
   if (!n) return;
-  n.t = el.value;
-  n.ts = Date.now();
-  n.mod = 'baru saja';
+  n.title = el.value;
+  touch(n);
   saveSoon();
 }
+
+/* Cuplikan untuk daftar — dihitung dari blocks, tidak disimpan. */
+export const excerpt = n => excerptOf(n);

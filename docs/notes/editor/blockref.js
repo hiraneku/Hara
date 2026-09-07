@@ -4,10 +4,10 @@
    Blok yang ditandai mendapat atribut `data-ref`. Penandanya ditampilkan
    CSS lewat ::after, jadi tidak ikut terbaca sebagai teks catatan. */
 
-import { docEl, curBlock, nearestEditable } from './caret.js?v=20260906155231';
-import { refresh } from './cleanup.js?v=20260906155231';
-import { state } from '../../core/store.js?v=20260906155231';
-import { toast } from '../../core/toast.js?v=20260906155231';
+import { docEl, curBlock, nearestEditable } from './caret.js?v=20260907001515';
+import { refresh } from './cleanup.js?v=20260907001515';
+import { state } from '../../core/store.js?v=20260907001515';
+import { toast } from '../../core/toast.js?v=20260907001515';
 
 const acak = () => Math.random().toString(36).slice(2, 6);
 
@@ -15,8 +15,9 @@ const acak = () => Math.random().toString(36).slice(2, 6);
 function idBebas() {
   const pakai = new Set();
   state.notes.forEach(n => {
-    const m = (n.html || '').match(/data-ref="([^"]+)"/g) || [];
-    m.forEach(x => pakai.add(x.slice(10, -1)));
+    (n.blocks || []).forEach(bl => {
+      if (bl.meta && bl.meta.ref) pakai.add(bl.meta.ref);
+    });
   });
   let id;
   do { id = acak(); } while (pakai.has(id));
@@ -47,7 +48,7 @@ export function toggleRef() {
 /* Salin rujukan lengkap ke papan klip. */
 function salin(teks) {
   const n = state.notes.find(x => x.id === state.openId);
-  const judul = (n && n.t) || 'Tanpa judul';
+  const judul = (n && n.title) || 'Tanpa judul';
   const penuh = `[[${judul}#${teks}]]`;
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {

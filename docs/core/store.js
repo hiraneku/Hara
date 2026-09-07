@@ -1,17 +1,37 @@
-/* Satu-satunya jalan menulis data. Ganti isi file ini saat pindah ke Dexie. */
-const KEY = 'hara.v1';
+/* Satu-satunya jalan menulis data. Ganti isi file ini saat pindah ke Dexie.
 
-const DEFAULT_NOTES = () => [{
-  id: 'w', t: 'Selamat datang di Hara', welcome: true, mod: 'baru saja',
-  ex: 'Ini catatan bawaan Hara. Hapus saja kalau sudah selesai membaca…'
-}];
+   Skema disimpan bersama data (`schema`) supaya migrasi berikutnya tahu
+   dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
+   isi catatan disimpan sebagai `blocks`. */
+
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907001515';
+import { welcomeBody } from '../notes/views/welcome.js?v=20260907001515';
+
+const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
+const SCHEMA = 2;
+
+/* Catatan bawaan. Isinya dibangun dari HTML sambutan lalu langsung
+   dinormalkan jadi blocks — jadi bahkan catatan bawaan pun tidak
+   menyimpan HTML sebagai sumber kebenaran. */
+export const DEFAULT_NOTES = () => [
+  makeNote({
+    id: 'w',
+    title: 'Selamat datang di Hara',
+    blocks: htmlToBlocks(welcomeBody),
+    tags: ['hara'],
+    welcome: true,
+  }),
+];
 
 export const state = { seq: 1, notes: DEFAULT_NOTES(), openId: 'w' };
 
 export function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify({
-      seq: state.seq, openId: state.openId, notes: state.notes
+      schema: SCHEMA,
+      seq: state.seq,
+      openId: state.openId,
+      notes: state.notes,
     }));
   } catch (e) { /* penyimpanan penuh / mode privat */ }
 }
@@ -22,11 +42,21 @@ export function load() {
     if (!raw) return;
     const data = JSON.parse(raw);
     if (!data || !Array.isArray(data.notes)) return;
-    state.notes = data.notes.length ? data.notes : DEFAULT_NOTES();
-    state.seq   = data.seq || 1;
+
+    /* normalizeNotes menerima bentuk lama maupun baru, jadi tidak perlu
+       cabang khusus per versi selama migrasinya masih satu langkah. */
+    const notes = normalizeNotes(data.notes);
+    state.notes = notes.length ? notes : DEFAULT_NOTES();
+    state.seq = data.seq || 1;
     state.openId = (data.openId && state.notes.some(n => n.id === data.openId))
       ? data.openId : state.notes[0].id;
-  } catch (e) { state.notes = DEFAULT_NOTES(); }
+
+    /* data lama baru saja dinaikkan versinya -> tulis ulang sekali,
+       supaya pemuatan berikutnya tidak perlu migrasi lagi */
+    if ((data.schema || 1) < SCHEMA) save();
+  } catch (e) {
+    state.notes = DEFAULT_NOTES();
+  }
 }
 
-export { DEFAULT_NOTES };
+export { SCHEMA };

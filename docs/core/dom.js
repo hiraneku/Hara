@@ -16,3 +16,10 @@ export function stamp(ts) {
   if (s < 86400) return Math.floor(s / 3600) + ' jam lalu';
   return Math.floor(s / 86400) + ' hari lalu';
 }
+
+/* Tanggal ringkas: "6 Sep 2026". */
+const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+export function tglPendek(ts) {
+  const t = new Date(ts || Date.now());
+  return `${t.getDate()} ${BLN[t.getMonth()]} ${t.getFullYear()}`;
+}

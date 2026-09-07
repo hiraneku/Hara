@@ -22,6 +22,7 @@ docs/
 │
 ├── notes/              SEMUA fungsi fitur Catatan
 │   ├── index.js        modul mendaftarkan diri: view, bar, event, autosave
+│   ├── note-model.js   BENTUK DATA: makeNote/makeBlock, blocks<->DOM, migrasi
 │   ├── model.js        CRUD catatan: newNote, delNote, findNote, onTitle
 │   │
 │   ├── editor/         mesin editor — bagian paling rawan
@@ -49,6 +50,11 @@ docs/
 ```
 
 ## Aturan yang menjaga kode tetap rapi
+
+0. **`blocks` adalah sumber kebenaran isi catatan.** Tidak ada field `html`
+   yang disimpan berdampingan. HTML hanya hasil render (`blocksToDom`) dan
+   hasil baca balik (`domToBlocks`). Nilai turunan seperti cuplikan dihitung
+   saat dibutuhkan (`excerptOf`), tidak pernah disimpan ganda.
 
 1. **Semua tulis data lewat `core/store.js`.** Tidak ada modul yang menyentuh
    `localStorage` langsung. Saat pindah ke Dexie, cukup satu file yang berubah.
