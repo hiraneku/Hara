@@ -1,11 +1,11 @@
 /* Operasi CRUD catatan. Bentuk datanya didefinisikan di note-model.js. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907005847';
-import { makeNote, touch, excerptOf } from './note-model.js?v=20260907005847';
-import { toast } from '../core/toast.js?v=20260907005847';
-import { go } from '../core/router.js?v=20260907005847';
-import { saveSoon } from './editor/cleanup.js?v=20260907005847';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907005847';
-import { hapusDrafMilik } from '../core/recovery.js?v=20260907005847';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907011202';
+import { makeNote, touch, excerptOf } from './note-model.js?v=20260907011202';
+import { toast } from '../core/toast.js?v=20260907011202';
+import { go } from '../core/router.js?v=20260907011202';
+import { saveSoon } from './editor/cleanup.js?v=20260907011202';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907011202';
+import { hapusDrafMilik } from '../core/recovery.js?v=20260907011202';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);

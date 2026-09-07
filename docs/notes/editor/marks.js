@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907005847';
-import { refresh } from './cleanup.js?v=20260907005847';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907011202';
+import { refresh } from './cleanup.js?v=20260907011202';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', s:'s', hl:'span', code:'code' };
@@ -14,6 +14,12 @@ export const pending = new Set();
    tombol tetap menyala walau teksnya dihapus sampai blok kosong.
    Dimatikan hanya oleh: klik tombol lagi, pindah blok, atau seleksi teks. */
 export const sticky = new Set();
+
+/* Mark yang sengaja DIMATIKAN pengguna. Melekat lintas ketikan: selama
+   masih di sini, tiap karakter dipastikan ditulis DI LUAR elemen mark —
+   karena browser kerap menarik caret kembali masuk. Berakhir saat mark
+   dinyalakan lagi, pindah blok, atau ada seleksi baru. */
+export const mati = new Set();
 
 /* Apakah caret sedang di blok kosong? Saat kosong, elemen format sudah
    dibuang cleanup() sehingga DOM tidak bisa dijadikan penanda status —
@@ -44,6 +50,8 @@ export function markActive(m){
   /* niat 'pending' hanya berlaku saat kursor kosong; kalau ada teks terpilih
      yang menentukan adalah isi DOM, bukan niat sebelumnya */
   if(r.collapsed && pending.has(m)) return true;
+  /* sengaja dimatikan -> tombol padam walau caret masih di dalam elemen */
+  if(r.collapsed && mati.has(m)) return false;
   /* sticky menjaga tombol tetap menyala setelah teks dihapus habis */
   if(r.collapsed && sticky.has(m)) return true;
   if(markAround(m,r.startContainer)) return true;
@@ -64,25 +72,30 @@ export function toggleMark(m){
   const r=ensureCaret(); if(!r) return;
 
   if(r.collapsed){                       // tak ada teks terpilih -> niat ketik
-    const nyala = pending.has(m) || sticky.has(m) || markAround(m,r.startContainer);
+    /* Mark yang sedang dimatikan tidak boleh dianggap nyala, walau caret
+       masih bertetangga dengan elemen lamanya. */
+    const nyala = mati.has(m) ? false
+      : (pending.has(m) || sticky.has(m) || !!markAround(m,r.startContainer));
     if(nyala){                           // MATIKAN
       pending.delete(m);
       sticky.delete(m);
-      const host=markAround(m,r.startContainer);
-      if(host){                          // keluar dari format
-        const sp=document.createTextNode('\u200b');
-        host.after(sp);
-        const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
-        sel().removeAllRanges(); sel().addRange(nr);
-      }
+      /* Jangan cuma memindahkan caret — browser akan menariknya kembali.
+         Tandai niat "mati", lalu pecah keluar saat mengetik. */
+      if(markAround(m,r.startContainer)) mati.add(m);
+      else mati.delete(m);
     } else {                             // NYALAKAN
+      /* Caret mungkin masih di dalam elemen mark lama (sisa mode mati).
+         Keluar dulu — kalau tidak, teks baru bersarang di elemen lama
+         dan tersisip di posisi yang salah. */
+      if(mati.has(m) && markAround(m,r.startContainer)) keluarDariMark(m);
+      mati.delete(m);
       pending.add(m);
       sticky.add(m);
     }
     refresh(); return;
   }
 
-  pending.clear(); sticky.clear(); /* seleksi nyata mengalahkan niat lama */
+  pending.clear(); sticky.clear(); mati.clear(); /* seleksi nyata mengalahkan niat lama */
   const on=markActive(m);
   const host=markAround(m,r.startContainer);
   const whole = host && host.textContent.replace(/[\u200b\u00a0]/g,'')
@@ -142,4 +155,49 @@ export function flushPending(){
   r.insertNode(node);
   const nr=document.createRange(); nr.setStart(inner,1); nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
+}
+
+/* Pecah keluar dari elemen mark `m` di posisi caret, lalu tempatkan caret
+   di text node DI LUAR elemen itu. Dipakai saat mark dimatikan tapi caret
+   masih berada di dalamnya. Meniru keluarDariFont() di font.js. */
+export function keluarDariMark(m){
+  const s=sel();
+  if(!(s&&s.rangeCount)) return false;
+  const r=s.getRangeAt(0);
+  const host=markAround(m,r.startContainer);
+  if(!host) return false;
+
+  /* pisahkan isi host: sebelum-caret tetap, sesudah-caret jadi elemen baru */
+  const sisa=document.createRange();
+  sisa.selectNodeContents(host);
+  try{ sisa.setStart(r.startContainer,r.startOffset); }catch(e){ return false; }
+  const buntut=sisa.extractContents();
+
+  /* pakai kembali text node polos setelah host — kalau bikin node baru
+     tiap kali, caret balik ke offset 0 dan huruf tersisip terbalik */
+  let titik=host.nextSibling;
+  if(!(titik && titik.nodeType===3 && !markAround(m,titik))){
+    titik=document.createTextNode('');
+    host.after(titik);
+  }
+  if(buntut.textContent!==''){
+    const kanan=host.cloneNode(false);
+    kanan.appendChild(buntut);
+    titik.after(kanan);
+  }
+  if(host.textContent.replace(/[\u200b\u00a0]/g,'')==='') host.remove();
+
+  const nr=document.createRange();
+  nr.setStart(titik,titik.length);      /* di AKHIR teks yang sudah ada */
+  nr.collapse(true);
+  s.removeAllRanges(); s.addRange(nr);
+  return true;
+}
+
+/* Mark mana saja yang sedang dimatikan TAPI caret masih di dalamnya. */
+export function markPerluKeluar(){
+  const s=sel();
+  if(!(s&&s.rangeCount)||!mati.size) return [];
+  const n=s.getRangeAt(0).startContainer;
+  return [...mati].filter(m=>markAround(m,n));
 }

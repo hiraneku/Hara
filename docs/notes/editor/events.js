@@ -1,12 +1,26 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907005847';
-import { setBlock, indent } from './blocks.js?v=20260907005847';
-import { pending, sticky, flushPending, wrapTypedPending, markAround } from './marks.js?v=20260907005847';
-import { autoFormat } from './markdown.js?v=20260907005847';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907005847';
-import { onTitle } from '../model.js?v=20260907005847';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907005847';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907005847';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907011202';
+import { setBlock, indent } from './blocks.js?v=20260907011202';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907011202';
+import { autoFormat } from './markdown.js?v=20260907011202';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907011202';
+import { onTitle } from '../model.js?v=20260907011202';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907011202';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907011202';
+
+/* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
+   melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
+   handler `input` biasa, dan jalur beforeinput yang kita kendalikan. */
+function terapkanFormatAktif(){
+  if(pending.size){ wrapTypedPending(); return; }
+  if(!sticky.size) return;
+  const s=sel();
+  if(!(s&&s.rangeCount)) return;
+  const perlu=[...sticky].filter(m=>!markAround(m,s.getRangeAt(0).startContainer));
+  if(!perlu.length) return;
+  perlu.forEach(m=>pending.add(m));
+  wrapTypedPending();
+}
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -31,13 +45,20 @@ export function bindEditor() {
          setelah karakter sebelumnya — di sini kita pecah keluar lagi. */
       const perluKeluar = modeBawaan() &&
         fontAround(sel().rangeCount ? sel().getRangeAt(0).startContainer : null);
+      /* Mark yang dimatikan tapi caret masih di dalamnya — diperiksa TIAP
+         karakter, karena browser menarik caret kembali masuk setelah
+         karakter sebelumnya. */
+      /* Mark yang sedang sticky JANGAN dikeluarkan — ia baru saja
+         dinyalakan lagi oleh pengguna. */
+      const markKeluar = markPerluKeluar().filter(m => !sticky.has(m));
 
-      if (fontPending() || adaPendingNone() || perluKeluar) {
+      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length) {
         e.preventDefault();
         /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
            hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
         if (adaPendingNone() || fontPending()) bungkusFontPending();
         else if (perluKeluar) keluarDariFont();
+        markKeluar.forEach(m => keluarDariMark(m));
         const s2 = sel();
         if (s2 && s2.rangeCount) {
           const r2 = s2.getRangeAt(0);
@@ -52,6 +73,9 @@ export function bindEditor() {
           const nr2 = document.createRange();
           nr2.setStart(t2, o2 + e.data.length); nr2.collapse(true);
           s2.removeAllRanges(); s2.addRange(nr2);
+          /* Kita sudah preventDefault, jadi handler `input` tidak akan
+             menerapkan format. Bungkus karakter ini di sini. */
+          terapkanFormatAktif();
           autoFormat(); refresh();
         }
       }
@@ -95,21 +119,11 @@ export function bindEditor() {
   document.addEventListener('input',e=>{
     if(inDoc(e.target)){
       if(isReplaying()) return;
-      if(pending.size) wrapTypedPending();
+      if(pending.size || sticky.size) terapkanFormatAktif();
       /* Sticky menyala tapi karakter barusan mendarat DI LUAR elemen format
          (mis. teks tadi dihapus habis sehingga <b> ikut dibuang). Bungkus
          ulang karakter itu supaya format benar-benar berlaku, bukan cuma
          tombolnya yang menyala. */
-      else if(sticky.size){
-        const s2=sel();
-        if(s2 && s2.rangeCount){
-          const perlu=[...sticky].filter(m=>!markAround(m,s2.getRangeAt(0).startContainer));
-          if(perlu.length){
-            perlu.forEach(m=>pending.add(m));
-            wrapTypedPending();
-          }
-        }
-      }
       autoFormat(); refresh();
     }
     else if(e.target.classList && e.target.classList.contains('ed-t')){ onTitle(e.target); updateCount(); }
@@ -120,7 +134,7 @@ export function bindEditor() {
     const s=sel();
     const a=s&&s.anchorNode;
     const blk=curBlock();
-    if(_lastAnchor && blk!==_lastAnchor){ pending.clear(); sticky.clear(); }
+    if(_lastAnchor && blk!==_lastAnchor){ pending.clear(); sticky.clear(); mati.clear(); }
     _lastAnchor=blk;
     syncBtns();
   });
