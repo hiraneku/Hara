@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907093429';
-import { refresh } from './cleanup.js?v=20260907093429';
+import { docEl, sel, curBlock } from './caret.js?v=20260907100318';
+import { refresh } from './cleanup.js?v=20260907100318';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -155,6 +155,25 @@ function lepasDalam(frag) {
    ikut terbarui di modul yang mengimpornya. */
 const NONE = '\u0000none';        /* penanda "kembali ke bawaan" */
 let _pending = null;
+/* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai
+   setelah normalize() menggabungkan text node. */
+function pilihTeks(induk, dari, panjang) {
+  const s = sel();
+  if (!s || !panjang) return;
+  let sisa = dari;
+  const jalan = document.createTreeWalker(induk, 4, null);  /* SHOW_TEXT */
+  let n;
+  while ((n = jalan.nextNode())) {
+    if (sisa <= n.data.length) break;
+    sisa -= n.data.length;
+  }
+  if (!n) return;
+  const r = document.createRange();
+  r.setStart(n, sisa);
+  r.setEnd(n, Math.min(n.data.length, sisa + panjang));
+  s.removeAllRanges(); s.addRange(r);
+}
+
 /* Font yang sedang "dinyalakan" pengguna. Melekat lintas ketikan, persis
    seperti `sticky` pada marks. Tanpa ini, ketikan setelah karakter pertama
    bisa jatuh ke span font LAMA saat browser menarik caret ke sana. */
@@ -201,15 +220,17 @@ export function setFont(id) {
   if (induk && induk === fontAround(r.endContainer) &&
       induk.textContent === r.toString()) {
     const anak = Array.from(induk.childNodes), ind = induk.parentNode;
+    /* simpan posisi KARAKTER dulu — normalize() menggabungkan text node
+       sehingga referensi node lama menjadi yatim */
+    const pra = document.createRange();
+    pra.selectNodeContents(ind);
+    pra.setEnd(induk, 0);
+    const awal = pra.toString().length;
+    const panjang = induk.textContent.length;
     anak.forEach(k => ind.insertBefore(k, induk));
     induk.remove();
     ind.normalize();
-    if (anak.length) {
-      const nr = document.createRange();
-      nr.setStartBefore(anak[0]);
-      nr.setEndAfter(anak[anak.length - 1]);
-      s.removeAllRanges(); s.addRange(nr);
-    }
+    if (panjang) pilihTeks(ind, awal, panjang);
     if (!id) { refresh(); return; }
     return setFont(id);
   }
@@ -273,16 +294,15 @@ function keluarSatuLapis() {
   try { sisa.setStart(r.startContainer, r.startOffset); } catch (e) { return false; }
   const buntut = sisa.extractContents();
 
-  /* Titik sisip harus SAUDARA host, bukan keturunan span font mana pun.
-     Cek `fontAround(titik)` di sini sengaja memeriksa leluhur — kalau
-     host masih dibungkus span lain, node itu belum benar-benar bebas,
-     dan perulangan di atas akan mengurusnya pada putaran berikutnya. */
-  let titik = host.nextSibling;
-  if (!(titik && titik.nodeType === 3 && titik.parentNode === host.parentNode)) {
-    titik = document.createTextNode('');
-    host.after(titik);
-  }
+  /* Titik ketik: text node kosong SEGAR tepat sesudah host. Tidak boleh
+     memakai text node yang sudah ada di sebelah kanan host — isinya milik
+     teks lanjutan, dan caret di AKHIR node itu akan melompati teks
+     (kasus: span font yang disusul teks polos). */
+  const titik = document.createTextNode('');
+  host.after(titik);
   if (buntut.textContent !== '') {
+    /* sisa font tetap berfont dan tetap MENDAHULUI teks lanjutan,
+       supaya urutan karakter tidak berubah: host, titik, kanan */
     const kanan = host.cloneNode(false);
     kanan.appendChild(buntut);
     titik.after(kanan);
@@ -291,7 +311,7 @@ function keluarSatuLapis() {
   if (host.textContent === '') host.remove();
 
   const nr = document.createRange();
-  nr.setStart(titik, titik.length);   /* di AKHIR teks yang sudah ada */
+  nr.setStart(titik, 0);
   nr.collapse(true);
   s.removeAllRanges();
   s.addRange(nr);

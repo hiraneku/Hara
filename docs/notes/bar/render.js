@@ -1,18 +1,19 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260907093429';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907093429';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907093429';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260907093429';
-import { slashMenu } from '../menus/slash.js?v=20260907093429';
-import { wlMenu }    from '../menus/wikilink.js?v=20260907093429';
-import { tagMenu }   from '../menus/tag.js?v=20260907093429';
-import { linkMenu }  from '../menus/link.js?v=20260907093429';
-import { fontMenu } from '../menus/font.js?v=20260907093429';
-import { calloutMenu } from '../menus/callout.js?v=20260907093429';
-import { snap } from '../editor/history.js?v=20260907093429';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260907093429';
-import { tersembunyi, getar } from './prefs.js?v=20260907093429';
-import { HELP, HELP_GRUP } from './help.js?v=20260907093429';
+import { BAR, GROUPS } from './config.js?v=20260907100318';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907100318';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907100318';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260907100318';
+import { slashMenu } from '../menus/slash.js?v=20260907100318';
+import { wlMenu }    from '../menus/wikilink.js?v=20260907100318';
+import { tagMenu }   from '../menus/tag.js?v=20260907100318';
+import { linkMenu }  from '../menus/link.js?v=20260907100318';
+import { fontMenu } from '../menus/font.js?v=20260907100318';
+import { warnaMenu } from '../menus/warna.js?v=20260907100318';
+import { calloutMenu } from '../menus/callout.js?v=20260907100318';
+import { snap } from '../editor/history.js?v=20260907100318';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260907100318';
+import { tersembunyi, getar } from './prefs.js?v=20260907100318';
+import { HELP, HELP_GRUP } from './help.js?v=20260907100318';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -63,6 +64,7 @@ function groupMenu(g) {
   const grp = GROUPS.find(x => x.g === g);
   if (!grp) return '';
   if (grp.menu === 'font') return fontMenu();
+  if (grp.menu === 'warna') return warnaMenu();
   const b = curBlock();
   const BLK = { p:'b-p', h:'b-h1', h2:'b-h2', h3:'b-h3', quote:'b-quote',
                 code:'b-code', cal:'b-cal', li:'b-li', ol:'b-ol', todo:'b-todo' };

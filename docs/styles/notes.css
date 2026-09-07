@@ -440,3 +440,21 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 /* garis bawah */
 .ed-doc u{text-decoration:underline;text-underline-offset:2px}
+
+/* ── warna teks (bar mekanik) ── */
+.wpal{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;padding:6px 14px 12px}
+.wsw{width:100%;aspect-ratio:1;border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 22%,transparent);
+  position:relative;padding:0;transition:.1s var(--ease)}
+.wsw:hover{transform:scale(1.12)}
+.wsw.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.wsw.on::after{content:'';position:absolute;inset:0;border-radius:999px;
+  border:1.5px solid var(--surface);opacity:.55}
+.wcus{display:flex;align-items:center;gap:8px;padding:4px 14px 10px;
+  border-top:1px solid var(--border)}
+.wpel{width:40px;height:40px;flex:none;padding:0;border:none;background:none;cursor:pointer}
+.wpel::-webkit-color-swatch-wrapper{padding:0}
+.wpel::-webkit-color-swatch{border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 30%,transparent)}
+.wpel::-moz-color-swatch{border-radius:999px;border:1px solid color-mix(in srgb,var(--text) 30%,transparent)}
+.whex{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px}
+.wpakai{flex:none;height:34px;font-size:12.5px}
+.wcus + [data-warna-hapus]{border-top:1px solid var(--border);border-radius:0}

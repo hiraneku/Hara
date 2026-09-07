@@ -1,13 +1,13 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260907093429';
-import { go, onAfterRender } from './core/router.js?v=20260907093429';
-import { toast } from './core/toast.js?v=20260907093429';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907093429';
-import { notesModule } from './notes/index.js?v=20260907093429';
+import { load, state } from './core/store.js?v=20260907100318';
+import { go, onAfterRender } from './core/router.js?v=20260907100318';
+import { toast } from './core/toast.js?v=20260907100318';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907100318';
+import { notesModule } from './notes/index.js?v=20260907100318';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260907093429';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260907093429';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260907093429';
+  from './notes/model.js?v=20260907100318';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907100318';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260907100318';
 
 const MODULES = [notesModule];
 

@@ -45,6 +45,11 @@ export const BAR = [
     items: []
   },
   {
+    g: 'warna', label: '<svg class="bi"><use href="#i-drop"/></svg>', title: 'Warna teks',
+    menu: 'warna',          /* menu khusus: palet warna + pemilih bebas */
+    items: []
+  },
+  {
     g: 'tandai', label: '<svg class="bi"><use href="#i-pen"/></svg>', title: 'Penandaan',
     items: [
       { m: 'u',      ikon: 'i-under', nama: 'Garis bawah',  kunci: '' },

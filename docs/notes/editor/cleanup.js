@@ -1,16 +1,17 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907093429';
-import { renumber } from './blocks.js?v=20260907093429';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907093429';
-import { state, save } from '../../core/store.js?v=20260907093429';
-import { findNote } from '../model.js?v=20260907093429';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907093429';
-import { sinkronTag } from '../tags.js?v=20260907093429';
-import { tandaiTautan } from '../wikilink.js?v=20260907093429';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907093429';
-import { cur } from '../../core/router.js?v=20260907093429';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907093429';
-import { GROUPS } from '../bar/config.js?v=20260907093429';
+import { docEl, sel, curBlock } from './caret.js?v=20260907100318';
+import { renumber } from './blocks.js?v=20260907100318';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907100318';
+import { state, save } from '../../core/store.js?v=20260907100318';
+import { findNote } from '../model.js?v=20260907100318';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907100318';
+import { sinkronTag } from '../tags.js?v=20260907100318';
+import { tandaiTautan } from '../wikilink.js?v=20260907100318';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907100318';
+import { cur } from '../../core/router.js?v=20260907100318';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907100318';
+import { GROUPS } from '../bar/config.js?v=20260907100318';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260907100318';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -34,19 +35,18 @@ export function cleanup(){
     buang.forEach(t=>{ t.data=t.data.replace(/\u200b/g,''); });
   }
 
-  /* ── Ratakan span font BERSARANG ──
-     Span di dalam span membuat "keluar dari font" hanya melepas satu
-     lapis, sehingga font LUAR yang lama muncul lagi. Yang paling dalam
+  /* ── Ratakan span BERSARANG (font fnt & warna wrn) ──
+     Span di dalam span membuat "keluar dari bungkus" hanya melepas satu
+     lapis, sehingga bungkus LUAR yang lama muncul lagi. Yang paling dalam
      yang berlaku, jadi bungkus luarnya dibuang. */
-  {
+  ['fnt', 'wrn'].forEach(kls => {
     let putar = 0;
     while (putar++ < 8) {
-      const sarang = d.querySelector('span.fnt span.fnt');
+      const sarang = d.querySelector(`span.${kls} span.${kls}`);
       if (!sarang) break;
-      const luar = sarang.parentNode.closest ? sarang.closest('span.fnt:not(:scope)') : null;
       const induk = sarang.parentNode;
-      if (!induk || !induk.classList || !induk.classList.contains('fnt')) break;
-      /* isi induk selain span dalam tetap memakai font induk */
+      if (!induk || !induk.classList || !induk.classList.contains(kls)) break;
+      /* isi induk selain span dalam tetap memakai bungkus induk */
       const sisaTeks = Array.from(induk.childNodes).some(
         n => n !== sarang && (n.textContent || '').replace(/[\u200b\u00a0]/g, '') !== '');
       if (sisaTeks) {
@@ -57,22 +57,17 @@ export function cleanup(){
         induk.replaceWith(sarang);
       }
     }
-  }
-
-  /* Span font kosong = sisa pergantian font. Kalau dibiarkan ia menumpuk
-     dan caret bisa tersangkut di dalamnya, sehingga font baru tampak
-     tidak berlaku sementara menu tetap menampilkan font lama. */
-  Array.from(d.querySelectorAll('span.fnt')).forEach(el=>{
-    const s1=sel();
-    if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
-       !(s1 && s1.anchorNode && el.contains(s1.anchorNode))) el.remove();
   });
 
-  /* span font kosong = sisa pergantian font; kalau dibiarkan ia
-     menumpuk dan caret bisa tersangkut di dalamnya */
-  Array.from(d.querySelectorAll('span.fnt')).forEach(el=>{
-    if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
-       !(sel().anchorNode && el.contains(sel().anchorNode))) el.remove();
+  /* Span bungkus kosong = sisa pergantian font/warna. Kalau dibiarkan ia
+     menumpuk dan caret bisa tersangkut di dalamnya, sehingga pengaturan
+     baru tampak tidak berlaku sementara menu menampilkan yang lama. */
+  ['fnt', 'wrn'].forEach(kls => {
+    Array.from(d.querySelectorAll(`span.${kls}`)).forEach(el=>{
+      const s1=sel();
+      if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
+         !(s1 && s1.anchorNode && el.contains(s1.anchorNode))) el.remove();
+    });
   });
   Object.keys(MARKSEL).forEach(m=>{
     Array.from(d.querySelectorAll(MARKSEL[m])).forEach(e=>{
@@ -148,6 +143,9 @@ export function syncBtns(){
       const mk={hl:'hl',strike:'s',icode:'code',b:'b',i:'i',u:'u'}[it.m];
       if(mk && markActive(mk)) aktif=true;
     });
+    /* kelompok warna: aktif kalau teks di kursor berwarna atau warna
+       sedang menunggu ketikan berikutnya */
+    if (grp.g === 'warna') aktif = warnaSekarang() !== '' || warnaPending() !== '';
     btn.classList.toggle('active',aktif);
     /* label ikut berubah, mis. "A" -> "H1" */
     if(grp.reflect){

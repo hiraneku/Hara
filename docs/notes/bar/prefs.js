@@ -14,6 +14,7 @@ export const BISA_SEMBUNYI = [
   { m: 'link',   nama: 'Tautan web' },
   { g: 'gaya',   nama: 'Gaya paragraf' },
   { g: 'huruf',  nama: 'Jenis huruf' },
+  { g: 'warna',  nama: 'Warna teks' },
   { g: 'tandai', nama: 'Penandaan' },
   { g: 'daftar', nama: 'Daftar' },
   { g: 'sisip',  nama: 'Sisipkan' },

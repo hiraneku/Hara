@@ -1,14 +1,15 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907093429';
-import { setBlock, indent } from './blocks.js?v=20260907093429';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907093429';
-import { autoFormat } from './markdown.js?v=20260907093429';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907093429';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907093429';
-import { onTitle } from '../model.js?v=20260907093429';
-import { tanganiPaste } from './paste.js?v=20260907093429';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907093429';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907093429';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907100318';
+import { setBlock, indent } from './blocks.js?v=20260907100318';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907100318';
+import { autoFormat } from './markdown.js?v=20260907100318';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907100318';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907100318';
+import { onTitle } from '../model.js?v=20260907100318';
+import { tanganiPaste } from './paste.js?v=20260907100318';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907100318';
+import { bungkusWarnaPending, warnaPending, adaPendingHapus, modeBawaanWarna, keluarDariWarna, warnaAround, warnaPerluKeluar, reBungkusLekat } from './warna.js?v=20260907100318';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907100318';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -109,8 +110,14 @@ export function bindEditor() {
          lalu bungkus ulang dengan font yang benar. Diperiksa TIAP karakter,
          karena browser menarik caret kembali ke span lama. */
       const fontKeluar = fontPerluKeluar();
+      /* Warna teks: padanan warna dari dua aturan di atas. */
+      const perluKeluarWarna = modeBawaanWarna() &&
+        warnaAround(sel().rangeCount ? sel().getRangeAt(0).startContainer : null);
+      const warnaKeluar = warnaPerluKeluar();
+      const adaWarna = warnaPending() || adaPendingHapus();
 
-      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length || fontKeluar) {
+      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length ||
+          fontKeluar || adaWarna || perluKeluarWarna || warnaKeluar) {
         e.preventDefault();
         /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
            hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
@@ -132,6 +139,10 @@ export function bindEditor() {
             sx.removeAllRanges(); sx.addRange(rx);
           }
         }
+        /* warna teks: bungkus/hapus/keluar, berjalan sendiri setelah font */
+        if (adaWarna) bungkusWarnaPending();
+        else if (perluKeluarWarna) keluarDariWarna();
+        else if (warnaKeluar) { keluarDariWarna(); reBungkusLekat(); }
         markKeluar.forEach(m => keluarDariMark(m));
         const s2 = sel();
         if (s2 && s2.rangeCount) {
@@ -178,6 +189,8 @@ export function bindEditor() {
     e.preventDefault();
     /* font yang menunggu -> bungkus dulu, huruf masuk ke dalamnya */
     if (fontPending() || adaPendingNone()) { bungkusFontPending(); r = sel().getRangeAt(0); }
+    /* warna yang menunggu -> bungkus juga (bisa berdampingan dengan font) */
+    if (warnaPending() || adaPendingHapus()) { bungkusWarnaPending(); r = sel().getRangeAt(0); }
     /* buang <br> pengganjal — ia pemaksa baris baru yang mendorong teks */
     Array.from(b.querySelectorAll(':scope > br')).forEach(br=>br.remove());
 
