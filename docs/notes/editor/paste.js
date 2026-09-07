@@ -14,8 +14,8 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907113349';
-import { sisipGambar } from './image.js?v=20260907113349';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260907130443';
+import { sisipGambar } from './image.js?v=20260907130443';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */

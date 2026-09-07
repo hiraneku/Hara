@@ -1,15 +1,16 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907113349';
-import { setBlock, indent } from './blocks.js?v=20260907113349';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260907113349';
-import { autoFormat } from './markdown.js?v=20260907113349';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907113349';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907113349';
-import { onTitle } from '../model.js?v=20260907113349';
-import { tanganiPaste } from './paste.js?v=20260907113349';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260907113349';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260907113349';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907113349';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260907130443';
+import { setBlock, indent } from './blocks.js?v=20260907130443';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260907130443';
+import { autoFormat } from './markdown.js?v=20260907130443';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260907130443';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907130443';
+import { onTitle } from '../model.js?v=20260907130443';
+import { tanganiPaste } from './paste.js?v=20260907130443';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260907130443';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260907130443';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260907130443';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907130443';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -103,21 +104,26 @@ export function bindEditor() {
          karakter sebelumnya. Mark yang sedang sticky JANGAN dikeluarkan —
          ia baru saja dinyalakan lagi oleh pengguna. */
       const markKeluar = markPerluKeluar().filter(m => !sticky.has(m));
-      /* Font & warna perlu dibungkus untuk karakter ini: ada yang
-         menunggu, mode "Bawaan" di dalam span, caret di span yang tidak
-         cocok dengan yang lekat, ATAU format lekat yang caret-nya sedang
-         di luar span — mis. semua teks barusan dihapus sampai span-nya
-         ikut hilang. Dalam kasus terakhir, karakter berikutnya harus
-         dibungkus lagi supaya format tidak "mati sendiri". */
+      /* Font, sorotan & warna perlu dibungkus untuk karakter ini: ada
+         yang menunggu, mode "Bawaan" di dalam span, caret di span yang
+         tidak cocok dengan yang lekat, ATAU format lekat yang caret-nya
+         sedang di luar span — mis. semua teks barusan dihapus sampai
+         span-nya ikut hilang. Dalam kasus terakhir, karakter berikutnya
+         harus dibungkus lagi supaya format tidak "mati sendiri". */
       const fontBungkus = fontPerluBungkus();
+      const sorotBungkus = sorotPerluBungkus();
       const warnaBungkus = warnaPerluBungkus();
 
-      if (markKeluar.length || fontBungkus || warnaBungkus) {
+      if (markKeluar.length || fontBungkus || sorotBungkus || warnaBungkus) {
         e.preventDefault();
         /* Bungkus dulu — untuk "Bawaan" fungsi mengembalikan null, itu
            wajar: ia hanya memecah keluar dari span, karakternya tetap
-           harus ditulis. */
+           harus ditulis. Urutan bungkus: font paling luar, sorotan
+           (latar) di tengah, warna teks paling dalam — supaya teks yang
+           diketik langsung masuk ke lapisan yang tepat tanpa sarang
+           silang. */
         if (fontBungkus) bungkusFontPending();
+        if (sorotBungkus) bungkusSorotanPending();
         if (warnaBungkus) bungkusWarnaPending();
         markKeluar.forEach(m => keluarDariMark(m));
         const s2 = sel();
@@ -165,7 +171,10 @@ export function bindEditor() {
     e.preventDefault();
     /* font yang menunggu/lekat -> bungkus dulu, huruf masuk ke dalamnya */
     if (fontPerluBungkus()) { bungkusFontPending(); r = sel().getRangeAt(0); }
-    /* warna yang menunggu/lekat -> bungkus juga (bisa berdampingan dgn font) */
+    /* sorotan yang menunggu/lekat -> bungkus di lapisan tengah */
+    if (sorotPerluBungkus()) { bungkusSorotanPending(); r = sel().getRangeAt(0); }
+    /* warna yang menunggu/lekat -> bungkus paling dalam (bisa
+       berdampingan dgn font/sorotan) */
     if (warnaPerluBungkus()) { bungkusWarnaPending(); r = sel().getRangeAt(0); }
     /* mark lekat (tebal/dll.) tanpa elemen di posisi caret — mis. blok
        dikosongkan sehingga <b> ikut dibuang — sediakan wadah kosong

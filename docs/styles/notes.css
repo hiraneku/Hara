@@ -442,6 +442,21 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc u{text-decoration:underline;text-underline-offset:2px}
 
 /* ── warna teks (bar mekanik) ── */
+/* sasaran warna: Teks (warna huruf) atau Sorotan (latar teks) */
+.wsas{display:flex;gap:6px;padding:2px 14px 10px}
+.wsas-b{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  height:34px;border:1px solid var(--border);border-radius:999px;background:none;
+  color:var(--muted);font-size:12.5px;font-weight:600;transition:.12s var(--ease);
+  touch-action:manipulation}
+.wsas-b:hover{background:var(--sunken);color:var(--text)}
+.wsas-b.on{background:var(--accent-weak);color:var(--accent);
+  border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.wsas-c{width:13px;height:13px;border-radius:4px;flex:none;display:inline-block;
+  border:1px solid color-mix(in srgb,var(--text) 28%,transparent);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.wsas-c.kosong{background:
+  linear-gradient(135deg,transparent 44%,var(--faint) 46%,var(--faint) 54%,transparent 56%)}
+
 /* strip warna umum: satu baris memanjang, digeser kalau panjang.
    Hitam → putih ada di ujung kiri, lalu warna-warna umum. */
 .wpal{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding:8px 14px 12px;

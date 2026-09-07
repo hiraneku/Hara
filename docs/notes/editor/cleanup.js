@@ -1,17 +1,18 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907113349';
-import { renumber } from './blocks.js?v=20260907113349';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907113349';
-import { state, save } from '../../core/store.js?v=20260907113349';
-import { findNote } from '../model.js?v=20260907113349';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907113349';
-import { sinkronTag } from '../tags.js?v=20260907113349';
-import { tandaiTautan } from '../wikilink.js?v=20260907113349';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907113349';
-import { cur } from '../../core/router.js?v=20260907113349';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907113349';
-import { GROUPS } from '../bar/config.js?v=20260907113349';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260907113349';
+import { docEl, sel, curBlock } from './caret.js?v=20260907130443';
+import { renumber } from './blocks.js?v=20260907130443';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907130443';
+import { state, save } from '../../core/store.js?v=20260907130443';
+import { findNote } from '../model.js?v=20260907130443';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907130443';
+import { sinkronTag } from '../tags.js?v=20260907130443';
+import { tandaiTautan } from '../wikilink.js?v=20260907130443';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907130443';
+import { cur } from '../../core/router.js?v=20260907130443';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907130443';
+import { GROUPS } from '../bar/config.js?v=20260907130443';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260907130443';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260907130443';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -35,11 +36,11 @@ export function cleanup(){
     buang.forEach(t=>{ t.data=t.data.replace(/\u200b/g,''); });
   }
 
-  /* ── Ratakan span BERSARANG (font fnt & warna wrn) ──
+  /* ── Ratakan span BERSARANG (font fnt, warna wrn, sorotan wsr) ──
      Span di dalam span membuat "keluar dari bungkus" hanya melepas satu
      lapis, sehingga bungkus LUAR yang lama muncul lagi. Yang paling dalam
      yang berlaku, jadi bungkus luarnya dibuang. */
-  ['fnt', 'wrn'].forEach(kls => {
+  ['fnt', 'wrn', 'wsr'].forEach(kls => {
     let putar = 0;
     while (putar++ < 8) {
       const sarang = d.querySelector(`span.${kls} span.${kls}`);
@@ -62,7 +63,7 @@ export function cleanup(){
   /* Span bungkus kosong = sisa pergantian font/warna. Kalau dibiarkan ia
      menumpuk dan caret bisa tersangkut di dalamnya, sehingga pengaturan
      baru tampak tidak berlaku sementara menu menampilkan yang lama. */
-  ['fnt', 'wrn'].forEach(kls => {
+  ['fnt', 'wrn', 'wsr'].forEach(kls => {
     Array.from(d.querySelectorAll(`span.${kls}`)).forEach(el=>{
       const s1=sel();
       if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
@@ -143,9 +144,10 @@ export function syncBtns(){
       const mk={hl:'hl',strike:'s',icode:'code',b:'b',i:'i',u:'u'}[it.m];
       if(mk && markActive(mk)) aktif=true;
     });
-    /* kelompok warna: aktif kalau teks di kursor berwarna atau warna
-       sedang menunggu ketikan berikutnya */
-    if (grp.g === 'warna') aktif = warnaSekarang() !== '' || warnaPending() !== '';
+    /* kelompok warna: aktif kalau teks di kursor berwarna/bersorotan,
+       atau ada yang sedang menunggu ketikan berikutnya */
+    if (grp.g === 'warna') aktif = warnaSekarang() !== '' || warnaPending() !== '' ||
+                                   sorotSekarang() !== '' || sorotPending() !== '';
     btn.classList.toggle('active',aktif);
     /* label ikut berubah, mis. "A" -> "H1" */
     if(grp.reflect){

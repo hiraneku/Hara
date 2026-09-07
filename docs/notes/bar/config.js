@@ -45,7 +45,7 @@ export const BAR = [
     items: []
   },
   {
-    g: 'warna', label: '<svg class="bi"><use href="#i-drop"/></svg>', title: 'Warna teks',
+    g: 'warna', label: '<svg class="bi"><use href="#i-drop"/></svg>', title: 'Warna teks & sorotan',
     menu: 'warna',          /* menu khusus: palet warna + pemilih bebas */
     items: []
   },

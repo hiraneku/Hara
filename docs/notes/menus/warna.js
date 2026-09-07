@@ -14,7 +14,9 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20260907113349';
+  from '../editor/warna.js?v=20260907130443';
+import { sorotSekarang, sorotPending, sorotLekat }
+  from '../editor/sorotan.js?v=20260907130443';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */
@@ -24,12 +26,40 @@ export const WARNA_UMUM = [
   '#3949ab', '#8e24aa', '#d81b60', '#795548',
 ];
 
-const WARNA_MULAI = '#b91c1c';      /* warna awal roda saat teks polos */
+const WARNA_MULAI = '#b91c1c';      /* warna awal roda saat belum ada warna */
+
+/* Sasaran pewarnaan: 'teks' (warna huruf) atau 'sorotan' (latar teks).
+   Pengguna memilih dulu yang mana yang sedang digarap — supaya dua warna
+   itu tidak bentrok, masing-masing punya simpanan sendiri. Ingatan ini
+   bertahan selama halaman terbuka (bukan per popup). */
+let sasaran = 'teks';
+export const sasaranSekarang = () => sasaran;
+let draf = { teks: '', sorotan: '' };   /* kode yang sedang digarap per sasaran */
+
+/* Warna yang TAMPAK untuk satu sasaran: niat (pending) didahulukan, lalu
+   yang lekat, lalu isi DOM di posisi kursor. '' kalau tidak ada. */
+function tampilSasaran(t) {
+  const p = t === 'sorotan' ? sorotPending() : warnaPending();
+  const l = t === 'sorotan' ? sorotLekat() : warnaLekat();
+  const s = t === 'sorotan' ? sorotSekarang() : warnaSekarang();
+  const k = p !== null ? (p || l || '') : s;
+  return /^#[0-9a-f]{6}$/i.test(k) ? k.toLowerCase() : '';
+}
+
+const NAMA_SASARAN = { teks: 'Teks', sorotan: 'Sorotan' };
+
+function chipSasaran(t, paksa) {
+  const c = paksa && paksa.sas === t && /^#[0-9a-f]{6}$/i.test(paksa.hex)
+    ? paksa.hex.toLowerCase() : tampilSasaran(t);
+  return `<span class="wsas-c${c ? '' : ' kosong'}" data-c="${t}"${c ? ` style="background:${c}"` : ''}></span>`;
+}
+function tombolSasaran(t, paksa) {
+  return `<button type="button" class="wsas-b${sasaran === t ? ' on' : ''}" data-sas="${t}"
+    aria-pressed="${sasaran === t}">${chipSasaran(t, paksa)}${NAMA_SASARAN[t]}</button>`;
+}
 
 export function warnaMenu() {
-  const menunggu = warnaPending();
-  const kini = menunggu !== null ? (menunggu || warnaLekat() || '') : warnaSekarang();
-  const hexKini = /^#[0-9a-f]{6}$/i.test(kini) ? kini.toLowerCase() : '';
+  const hexKini = tampilSasaran(sasaran);
   const hexAwal = hexKini || WARNA_MULAI;
 
   const swatch = WARNA_UMUM.map(w => {
@@ -39,8 +69,9 @@ export function warnaMenu() {
       style="background:${w}"></button>`;
   }).join('');
 
-  return `<div class="pop-h">Warna teks</div>
-    <p class="pop-note">Tanpa blok teks, warna dipakai untuk yang diketik setelah ini.</p>
+  return `<div class="pop-h">Warna teks &amp; sorotan</div>
+    <p class="pop-note">Pilih sasaran dulu: <b>Teks</b> mewarnai huruf, <b>Sorotan</b> mewarnai latarnya. Keduanya bisa aktif bersamaan.</p>
+    <div class="wsas" role="group" aria-label="Yang diberi warna">${tombolSasaran('teks')}${tombolSasaran('sorotan')}</div>
     <div class="wpal">${swatch}</div>
     <div class="wroda">
       <canvas id="roda-w" class="wroda-l" width="192" height="192"
@@ -171,6 +202,51 @@ function rodaSegar() {
   el.hex.classList.remove('salah');
   if (el.g) el.g.value = Math.round(rodaL * 100);
   rodaGambar(el.cv, rodaH, rodaS, rodaL);
+}
+
+/* Pindahkan cincin penanda di strip ke warna milik sasaran yang aktif. */
+function terapkanCincin(akarmenu) {
+  const target = tampilSasaran(sasaran);
+  akarmenu.querySelectorAll('.wsw').forEach(b => {
+    const on = b.dataset.warna === target;
+    b.classList.toggle('on', on);
+    if (on) b.setAttribute('aria-pressed', 'true');
+    else b.removeAttribute('aria-pressed');
+  });
+}
+
+/* Ganti sasaran pewarnaan (Teks <-> Sorotan) di popup yang sedang terbuka.
+   Kode yang sedang digarap di kolom hex disimpan sebagai draf sasaran
+   lama, lalu kolom hex + roda + cincin dipindah ke warna sasaran baru.
+   Popup tidak digambar ulang — posisi strip yang sedang digeser tetap. */
+export function pilihSasaran(t) {
+  if (!NAMA_SASARAN[t]) return;
+  const p = document.getElementById('pop');
+  const hexEl = p && p.querySelector('#warna-hex');
+  if (t === sasaran && hexEl) { rodaPasang(); return; }
+  if (hexEl && /^#[0-9a-f]{6}$/i.test(hexEl.value)) draf[sasaran] = hexEl.value.toLowerCase();
+  sasaran = t;
+  if (hexEl) {
+    hexEl.value = draf[t] || tampilSasaran(t) || WARNA_MULAI;
+    hexEl.classList.remove('salah');
+  }
+  const wsasEl = p && p.querySelector('.wsas');
+  if (wsasEl) wsasEl.innerHTML = tombolSasaran('teks') + tombolSasaran('sorotan');
+  if (p) {
+    if (p.querySelector('#roda-w')) rodaPasang();
+    terapkanCincin(p);
+  }
+}
+
+/* Segarkan ulang label segmen + chip warna sasaran di popup yang sedang
+   terbuka (dipakai setelah swatch dipakai — chip harus ikut berubah).
+   Hanya area .wsas yang diganti, strip & roda tidak disentuh.
+   `paksa` = warna yang barusan dipakai ({sas,hex}); dipakai sebagai
+   sumber chip sasaran itu (seleksi bisa belum terbaca saat itu). */
+export function perbaruiSasaranPop(paksa) {
+  const p = document.getElementById('pop');
+  const w = p && p.querySelector('.wsas');
+  if (w) w.innerHTML = tombolSasaran('teks', paksa) + tombolSasaran('sorotan', paksa);
 }
 
 /* Pasang interaksi roda. Dipanggil saat popup dibuka DAN saat swatch strip

@@ -1,19 +1,19 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260907113349';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907113349';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907113349';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260907113349';
-import { slashMenu } from '../menus/slash.js?v=20260907113349';
-import { wlMenu }    from '../menus/wikilink.js?v=20260907113349';
-import { tagMenu }   from '../menus/tag.js?v=20260907113349';
-import { linkMenu }  from '../menus/link.js?v=20260907113349';
-import { fontMenu } from '../menus/font.js?v=20260907113349';
-import { warnaMenu } from '../menus/warna.js?v=20260907113349';
-import { calloutMenu } from '../menus/callout.js?v=20260907113349';
-import { snap } from '../editor/history.js?v=20260907113349';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260907113349';
-import { tersembunyi, getar } from './prefs.js?v=20260907113349';
-import { HELP, HELP_GRUP } from './help.js?v=20260907113349';
+import { BAR, GROUPS } from './config.js?v=20260907130443';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907130443';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907130443';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260907130443';
+import { slashMenu } from '../menus/slash.js?v=20260907130443';
+import { wlMenu }    from '../menus/wikilink.js?v=20260907130443';
+import { tagMenu }   from '../menus/tag.js?v=20260907130443';
+import { linkMenu }  from '../menus/link.js?v=20260907130443';
+import { fontMenu } from '../menus/font.js?v=20260907130443';
+import { warnaMenu } from '../menus/warna.js?v=20260907130443';
+import { calloutMenu } from '../menus/callout.js?v=20260907130443';
+import { snap } from '../editor/history.js?v=20260907130443';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260907130443';
+import { tersembunyi, getar } from './prefs.js?v=20260907130443';
+import { HELP, HELP_GRUP } from './help.js?v=20260907130443';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 

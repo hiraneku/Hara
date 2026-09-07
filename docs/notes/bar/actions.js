@@ -1,10 +1,10 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260907113349';
-import { toggleMark } from '../editor/marks.js?v=20260907113349';
-import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20260907113349';
-import { refresh } from '../editor/cleanup.js?v=20260907113349';
-import { pilihGambar } from '../editor/image.js?v=20260907113349';
-import { toggleRef } from '../editor/blockref.js?v=20260907113349';
+import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260907130443';
+import { toggleMark } from '../editor/marks.js?v=20260907130443';
+import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20260907130443';
+import { refresh } from '../editor/cleanup.js?v=20260907130443';
+import { pilihGambar } from '../editor/image.js?v=20260907130443';
+import { toggleRef } from '../editor/blockref.js?v=20260907130443';
 
 export const ACTIONS = {
   p:      () => setBlock('b-p'),
