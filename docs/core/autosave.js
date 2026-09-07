@@ -18,7 +18,7 @@
       editor, berpindah catatan, atau menutup aplikasi.
 */
 
-import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907072821';
+import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907082115';
 
 /* Jeda cukup panjang untuk menggabungkan ketikan, cukup pendek supaya
    kehilangan terasa sepele kalau aplikasi mati mendadak. */
@@ -37,7 +37,6 @@ export const STATUS = {
 let status = STATUS.IDLE;
 const pendengar = new Set();
 
-export const statusSekarang = () => status;
 export const onStatus = fn => { pendengar.add(fn); return () => pendengar.delete(fn); };
 
 function setStatus(s) {

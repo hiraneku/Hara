@@ -6,7 +6,7 @@
    dengan tombol pengubah (Ctrl/⌘/Alt) membuka catatan yang sudah ada —
    klik biasa tetap untuk meletakkan kursor/menyunting teks. */
 
-import { state } from '../core/store.js?v=20260907072821';
+import { state } from '../core/store.js?v=20260907082115';
 
 /* Judul sasaran sebuah span wikilink, tanpa [[ ]] dan tanpa alias |… */
 export function judulSpan(span) {
@@ -31,19 +31,4 @@ export function tandaiTautan(root) {
     const judul = judulSpan(span);
     span.classList.toggle('dead', !(judul && cariJudul(judul)));
   }
-}
-
-/* Jumlah catatan lain yang menaut KE judul ini (untuk badge backlink). */
-export function penaut(judul) {
-  if (!judul) return 0;
-  const j = judul.toLowerCase();
-  return state.notes.filter(n => !n.deletedAt && n.id !== state.openId).reduce((jum, n) => {
-    (n.blocks || []).forEach(b => {
-      if (b && b.type !== 'code' && b.type !== 'divider' &&
-          new RegExp(`\\[\\[\\s*${j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\||\\s*\\]\\])`, 'i')
-            .test(String(b.content || '').replace(/<[^>]*>/g, '')))
-        jum++;
-    });
-    return jum;
-  }, 0);
 }

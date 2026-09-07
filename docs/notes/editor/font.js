@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907072821';
-import { refresh } from './cleanup.js?v=20260907072821';
+import { docEl, sel, curBlock } from './caret.js?v=20260907082115';
+import { refresh } from './cleanup.js?v=20260907082115';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -43,8 +43,6 @@ export const FONT_GRUP = [
   ['mono',  'Lebar sama'],
   ['gaya',  'Bergaya'],
 ];
-
-export const cariFont = id => FONTS.find(f => f.id === id);
 
 /* ── Apakah font benar-benar ada di perangkat? ──
    Android hanya membawa Roboto dan Noto; Arial, Georgia, Verdana, dan
@@ -169,8 +167,6 @@ let _modeBawaan = false;
 export const fontPending = () => (_pending === NONE ? '' : _pending);
 export const adaPendingNone = () => _pending === NONE;
 export const modeBawaan = () => _modeBawaan;
-export const matikanModeBawaan = () => { _modeBawaan = false; };
-export const bersihkanPending = () => { _pending = null; _modeBawaan = false; };
 
 export function setFont(id) {
   const d = docEl();
@@ -340,15 +336,6 @@ export function bungkusFontPending() {
   s.removeAllRanges();
   s.addRange(nr);
   return el;
-}
-
-function taruhCaretAkhir(b) {
-  const r = document.createRange();
-  r.selectNodeContents(b);
-  r.collapse(false);
-  const s = sel();
-  s.removeAllRanges();
-  s.addRange(r);
 }
 
 /* Pindah blok membatalkan font yang menunggu — sama seperti tebal/miring. */

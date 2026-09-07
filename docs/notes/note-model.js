@@ -429,5 +429,3 @@ export function touch(note) {
   return note;
 }
 
-export const findBlock = (note, id) =>
-  note && Array.isArray(note.blocks) ? note.blocks.find(b => b.id === id) : undefined;

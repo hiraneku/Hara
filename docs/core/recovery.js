@@ -58,4 +58,3 @@ export function hapusDrafMilik(noteId) {
   if (d && d.noteId === noteId) hapusDraf();
 }
 
-export const adaDraf = noteId => !!bacaDraf(noteId);

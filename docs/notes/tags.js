@@ -6,7 +6,7 @@
    dua sumber yang bisa berselisih. Cache inilah yang dipakai daftar,
    halaman tag, dan filter. */
 
-import { state } from '../core/store.js?v=20260907072821';
+import { state } from '../core/store.js?v=20260907082115';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang
@@ -63,17 +63,3 @@ export function semuaTag() {
     .sort((a, b) => b.jumlah - a.jumlah || a.nama.localeCompare(b.nama));
 }
 
-/* Hapus satu tag dari cache + dari isi (span .tg yang cocok dibuang). */
-export function hapusTagDariIsi(n, nama) {
-  const sasaran = '#' + nama;
-  n.tags = (n.tags || []).filter(t => t !== nama);
-  (n.blocks || []).forEach(b => {
-    if (!b || typeof b.content !== 'string' || b.type === 'code' || b.type === 'divider') return;
-    b.content = b.content.replace(
-      new RegExp(`<span\\s+class="tg"[^>]*>#${nama.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<\\/span>`, 'g'),
-      ''
-    );
-    /* bersihkan spasi ganda yang mungkin tertinggal */
-    b.content = b.content.replace(/\s\s+/g, ' ');
-  });
-}

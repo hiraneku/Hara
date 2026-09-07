@@ -85,14 +85,5 @@ export const BAR = [
   },
 ];
 
-/* Tombol/menu mana yang menyala mengikuti jenis blok saat ini. */
-export const BLOCK_BTN = {
-  h: 'b-h1', h2: 'b-h2', h3: 'b-h3', quote: 'b-quote', code: 'b-code',
-  todo: 'b-todo', li: 'b-li', ol: 'b-ol', cal: 'b-cal'
-};
-
-/* Tombol mana yang menyala mengikuti format inline. */
-export const MARK_BTN = { b: 'b', i: 'i', u: 'u', strike: 's', hl: 'hl', icode: 'code' };
-
 /* Semua kelompok, untuk pencarian cepat. */
 export const GROUPS = BAR.filter(x => x.g);

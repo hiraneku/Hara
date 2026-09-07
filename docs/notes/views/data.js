@@ -18,9 +18,3 @@ export function setTag(tag) {
   stt.cari = '';
 }
 
-export function resetTampilan() {
-  stt.tag = null;
-  stt.cari = '';
-  stt.tampil = 'daftar';
-  stt.sort = 'ubah';
-}

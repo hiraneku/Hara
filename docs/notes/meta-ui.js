@@ -2,7 +2,7 @@
    Keduanya didefinisikan di sini karena dipakai dua layar: editor dan
    "Properties" (lihat views/props.js). */
 
-import { html } from './html-util.js?v=20260907072821';
+import { html } from './html-util.js?v=20260907082115';
 
 export const KET_PROP = {
   /* ini juga urutan tampil default (di editor & layar properties) */
@@ -25,9 +25,6 @@ export const KET_PROP = {
   tenggat: { nama: 'Tenggat', lebar: 120 },
 };
 
-/* urutan default (tombol "tambah properti") */
-export const PROP_DEFAULT = ['status', 'jenis', 'prioritas', 'tanggal', 'tenggat'];
-
 export function namaProp(k) {
   return KET_PROP[k] ? KET_PROP[k].nama : k;
 }
@@ -35,11 +32,6 @@ export function namaProp(k) {
 /* label manusia untuk kunci asing (tidak dirender sebagai input) */
 export function propDikenal(k) {
   return k in KET_PROP;
-}
-
-export function propNilai(n, k) {
-  const p = (n.props || []).find(x => x.k === k);
-  return p ? p.v : '';
 }
 
 /* Simpan nilai properti. Nilai KOSONG tetap disimpan (baris input

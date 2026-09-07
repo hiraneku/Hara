@@ -13,7 +13,6 @@
 .prop-input:hover{border-color:var(--border)}
 .prop-input:focus{border-color:var(--border-strong);background:var(--surface)}
 .prop-saran{font-size:11px;color:var(--faint);padding:1px 8px 0}
-.prop-baris-x{display:flex;align-items:center;gap:2px}
 .prop-x{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:6px;
   color:var(--faint);margin-top:3px}
 .prop-x:hover{background:var(--sunken);color:var(--danger)}
@@ -106,9 +105,6 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .bl-t{font-size:14px;font-weight:500;margin-bottom:4px}
 .bl-c{font-size:13px;color:var(--muted);line-height:1.55}
 .bl-c b{background:var(--accent-weak);color:var(--accent);font-weight:500;border-radius:3px;padding:0 3px}
-.unl{display:flex;align-items:center;gap:10px;border:1px dashed var(--border-strong);border-radius:var(--r-md);
-  padding:11px 14px;font-size:13px;color:var(--muted)}
-.unl .btn{height:28px;font-size:12.5px;margin-left:auto;flex:none}
 
 /* ── BAR MEKANIK (di atas keyboard) ── */
 .mech{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--surface);
@@ -223,7 +219,6 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   background:var(--sunken);color:var(--muted);font-size:10.5px;font-weight:600;cursor:pointer;
   max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tg-chip:hover{background:var(--accent-weak);color:var(--accent)}
-.tg-chip.tg-on{background:var(--accent-weak);color:var(--accent)}
 .tg-more{font-size:10.5px;color:var(--faint);align-self:center}
 /* blok yang dituju lompatan dari panel */
 .blk-lompat{animation:lompat 1.8s ease}

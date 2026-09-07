@@ -1,6 +1,6 @@
 /* Posisi kursor. Bagian paling rawan — semua bug "aloH" berasal dari sini.
    Aturan: caret HARUS bertumpu pada text node, tidak pernah pada elemen. */
-import { BLOCKCLS } from './blocks.js?v=20260907072821';
+import { BLOCKCLS } from './blocks.js?v=20260907082115';
 
 export const docEl = () => document.querySelector('.ed-doc');
 
@@ -33,7 +33,7 @@ export function nearestEditable(el){
   while(n&&!editable(n)) n=n.previousElementSibling;
   if(n) return n;
   const nb=document.createElement('div'); nb.className='b-p';
-  
+
   d.appendChild(nb); return nb;
 }
 export function curBlock(){
@@ -83,7 +83,7 @@ export function ensureCaret(){
       tn=document.createTextNode(''); el.insertBefore(tn,kid);
     } else {
       const prev=el.childNodes[r.startOffset-1];
-      if(prev && prev.nodeType===3){ 
+      if(prev && prev.nodeType===3){
         const nr=document.createRange(); nr.setStart(prev,prev.data.length); nr.collapse(true);
         s.removeAllRanges(); s.addRange(nr); return s.getRangeAt(0);
       }
@@ -95,10 +95,6 @@ export function ensureCaret(){
     r=s.getRangeAt(0);
   }
   return r;
-}
-export function selectContents(node){
-  const r=document.createRange(); r.selectNodeContents(node);
-  const s=sel(); s.removeAllRanges(); s.addRange(r);
 }
 /* Apakah blok ini tidak punya teks sama sekali (hanya <br>/checkbox)? */
 function blokKosong(node){

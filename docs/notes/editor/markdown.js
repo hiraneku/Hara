@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907072821';
-import { setBlock, setCallout } from './blocks.js?v=20260907072821';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260907072821';
-import { updateCount } from './cleanup.js?v=20260907072821';
+import { docEl, sel, curBlock } from './caret.js?v=20260907082115';
+import { setBlock, setCallout } from './blocks.js?v=20260907082115';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260907082115';
+import { updateCount } from './cleanup.js?v=20260907082115';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -141,21 +141,6 @@ export function replaceAbs(b,end,len,tag,cls,text){
   el.textContent=text;
   const r=document.createRange();
   try{ r.setStart(p1.node,p1.off); r.setEnd(p2.node,p2.off); }catch(e){ return; }
-  r.deleteContents(); r.insertNode(el);
-  /* text node kosong, BUKAN zero-width: penanda yang tersimpan merusak
-     spasi saat browser menggabungkan elemen bersebelahan */
-  const sp=document.createTextNode(''); el.after(sp);
-  const nr=document.createRange(); nr.setStart(sp,0); nr.collapse(true);
-  sel().removeAllRanges(); sel().addRange(nr);
-  updateCount();
-}
-export function replaceWith(node,end,len,tag,cls,text){
-  const start=end-len; if(start<0) return;
-  const el=document.createElement(tag);
-  if(cls) el.className=cls;
-  el.textContent=text;
-  const r=document.createRange();
-  r.setStart(node,start); r.setEnd(node,end);
   r.deleteContents(); r.insertNode(el);
   /* text node kosong, BUKAN zero-width: penanda yang tersimpan merusak
      spasi saat browser menggabungkan elemen bersebelahan */

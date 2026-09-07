@@ -1,12 +1,11 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907072821';
-import { refresh } from './cleanup.js?v=20260907072821';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907082115';
+import { refresh } from './cleanup.js?v=20260907082115';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };
 export const MARKCLS = { hl:'hl', code:'ic' };
-export const CMD     = { b:'bold', i:'italic', u:'underline', s:'strikeThrough' };
 export const pending = new Set();
 
 /* Format yang sedang "dinyalakan" lewat tombol. Berbeda dari `pending`:
@@ -36,17 +35,6 @@ export function markEl(m){
   const e=document.createElement(MARKTAG[m]);
   if(MARKCLS[m]) e.className=MARKCLS[m];
   return e;
-}
-/* Apakah caret benar-benar BERADA DI DALAM elemen mark, bukan sekadar
-   bertetangga dengannya? Dipakai saat memutuskan perlu-tidaknya keluar. */
-export function benarDiDalam(m,node,offset){
-  const host=markAround(m,node);
-  if(!host) return false;
-  /* caret di text node yang memang keturunan host -> di dalam */
-  if(node.nodeType===3) return host.contains(node);
-  /* caret bertumpu elemen: cek anak pada posisi offset */
-  const anak=node.childNodes[offset];
-  return !!(anak ? host.contains(anak) : host.contains(node));
 }
 export function markAround(m,node){
   const d=docEl(); let n=node;

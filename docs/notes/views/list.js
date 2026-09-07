@@ -3,11 +3,11 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260907072821';
-import { esc, tglHari } from '../../core/dom.js?v=20260907072821';
-import { rowFor } from './row.js?v=20260907072821';
-import { stt } from './data.js?v=20260907072821';
-import { tagDariIsi } from '../tags.js?v=20260907072821';
+import { state } from '../../core/store.js?v=20260907082115';
+import { esc, tglHari } from '../../core/dom.js?v=20260907082115';
+import { rowFor } from './row.js?v=20260907082115';
+import { stt } from './data.js?v=20260907082115';
+import { tagDariIsi } from '../tags.js?v=20260907082115';
 
 /* Catatan yang muncul di daftar utama: belum diarsip & belum dihapus. */
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
@@ -42,7 +42,6 @@ export const notesView = () => {
   const tag = stt.tag;
   if (tag) daftar = daftar.filter(n => punyaTag(n, tag));
   const diSampah = state.notes.filter(n => n.deletedAt).length;
-
 
   const pin = daftar.filter(n => n.pinned);
   const lain = daftar.filter(n => !n.pinned);
