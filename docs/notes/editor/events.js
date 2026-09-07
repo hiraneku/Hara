@@ -1,13 +1,14 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907032909';
-import { setBlock, indent } from './blocks.js?v=20260907032909';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907032909';
-import { autoFormat } from './markdown.js?v=20260907032909';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907032909';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907032909';
-import { onTitle } from '../model.js?v=20260907032909';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907032909';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907032909';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907035221';
+import { setBlock, indent } from './blocks.js?v=20260907035221';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907035221';
+import { autoFormat } from './markdown.js?v=20260907035221';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907035221';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907035221';
+import { onTitle } from '../model.js?v=20260907035221';
+import { tanganiPaste } from './paste.js?v=20260907035221';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907035221';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907035221';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -61,6 +62,22 @@ function terapkanFormatAktif(){
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
+  /* ── PASTE ──
+     Clipboard tidak boleh masuk mentah. Dibersihkan dulu, lalu disisipkan
+     sebagai blok/inline yang sah. Satu paste = satu langkah undo, dan
+     penyimpanan memakai jalur refresh() -> autosave yang sudah ada. */
+  document.addEventListener('paste', e => {
+    if (!inDoc(e.target)) return;
+    snap();                       /* rekam keadaan SEBELUM paste */
+    let berhasil = false;
+    try { berhasil = tanganiPaste(e); }
+    catch (err) { berhasil = false; }   /* clipboard aneh: jangan crash */
+    if (!berhasil) return;              /* biarkan browser menangani */
+    e.preventDefault();
+    autoFormat();
+    refresh();                    /* pastikanBlockId + record + autosave */
+  });
+
   document.addEventListener('beforeinput',e=>{
     if(!inDoc(e.target)) return;
     if(pending.size && e.inputType==='insertText') flushPending();

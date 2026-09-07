@@ -36,6 +36,7 @@ docs/
 │   │   ├── history.js  undo/redo — snapshot sendiri, bukan execCommand
 │   │   ├── image.js    sisip/pasang/hapus gambar
 │   │   ├── blockref.js tandai blok dengan ^id
+│   │   ├── paste.js    bersihkan clipboard -> blok; HTML tak pernah mentah
 │   │   └── events.js   input, beforeinput, keydown, selectionchange
 │   │
 │   ├── bar/

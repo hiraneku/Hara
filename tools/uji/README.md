@@ -18,6 +18,7 @@ for f in tools/uji/*.mjs; do node $f; done
 | `kondisi-tepi.mjs` | pending nyangkut, sisip di tengah, toggle tanpa ketik |
 | `spasi-dan-penanda.mjs` | spasi termakan, huruf berpindah saat ganti format |
 | `editor-dasar.mjs` | acceptance criteria editor dasar: tipe blok, Enter/ID, todo meta, slash menu |
+| `paste.mjs` | paste plain/rich, keamanan clipboard, ID blok, caret, undo |
 | `font-menyeluruh.mjs` | matriks lengkap pergantian font + span BERSARANG |
 | `font-ganti.mjs` | ganti font nyangkut ke font lama, span font kosong menumpuk |
 
