@@ -1,13 +1,13 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260907091218';
-import { go, onAfterRender } from './core/router.js?v=20260907091218';
-import { toast } from './core/toast.js?v=20260907091218';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907091218';
-import { notesModule } from './notes/index.js?v=20260907091218';
+import { load, state } from './core/store.js?v=20260907092650';
+import { go, onAfterRender } from './core/router.js?v=20260907092650';
+import { toast } from './core/toast.js?v=20260907092650';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907092650';
+import { notesModule } from './notes/index.js?v=20260907092650';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260907091218';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260907091218';
-import { openPop, closeAll } from './notes/menus/pop.js?v=20260907091218';
+  from './notes/model.js?v=20260907092650';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907092650';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260907092650';
 
 const MODULES = [notesModule];
 
@@ -42,9 +42,12 @@ document.addEventListener('click', e => {
 
   if (e.target.closest('[data-act2="new"]')) return newNote();
 
-  /* menu "···" di header editor */
+  /* menu "···" di header editor — ketuk lagi = tutup (toggle) */
   const dots = e.target.closest('#dots');
-  if (dots) return openPop(menuCatatan(), dots);
+  if (dots) {
+    if (penambatAdalah(dots)) return closeAll();
+    return openPop(menuCatatan(), dots);
+  }
 
   /* aksi menu catatan (Sematkan / Arsipkan / Duplikat / Hapus) */
   const nm = e.target.closest('[data-note-act]');

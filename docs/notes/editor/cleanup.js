@@ -1,16 +1,16 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907091218';
-import { renumber } from './blocks.js?v=20260907091218';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907091218';
-import { state, save } from '../../core/store.js?v=20260907091218';
-import { findNote } from '../model.js?v=20260907091218';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907091218';
-import { sinkronTag } from '../tags.js?v=20260907091218';
-import { tandaiTautan } from '../wikilink.js?v=20260907091218';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907091218';
-import { cur } from '../../core/router.js?v=20260907091218';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907091218';
-import { GROUPS } from '../bar/config.js?v=20260907091218';
+import { docEl, sel, curBlock } from './caret.js?v=20260907092650';
+import { renumber } from './blocks.js?v=20260907092650';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907092650';
+import { state, save } from '../../core/store.js?v=20260907092650';
+import { findNote } from '../model.js?v=20260907092650';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260907092650';
+import { sinkronTag } from '../tags.js?v=20260907092650';
+import { tandaiTautan } from '../wikilink.js?v=20260907092650';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907092650';
+import { cur } from '../../core/router.js?v=20260907092650';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907092650';
+import { GROUPS } from '../bar/config.js?v=20260907092650';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

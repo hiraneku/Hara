@@ -8,9 +8,9 @@
 
    Menu dipasang sebagai popup yang sudah ada, jadi tidak ada UI baru. */
 
-import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907091218';
-import { slashMenu } from './slash.js?v=20260907091218';
-import { openPop, closeAll, pop } from './pop.js?v=20260907091218';
+import { docEl, sel, curBlock } from '../editor/caret.js?v=20260907092650';
+import { slashMenu } from './slash.js?v=20260907092650';
+import { openPop, closeAll, pop, setPopIsi } from './pop.js?v=20260907092650';
 
 /* Posisi "/" yang sedang aktif: { node, offset } */
 let jangkar = null;
@@ -51,7 +51,7 @@ export function perbaruiSlash() {
   if (q === null || /\s/.test(q) || q.length > 20) { tutupSlash(); return; }
   const p = pop();
   if (!p) return;
-  p.innerHTML = slashMenu(q);
+  setPopIsi(slashMenu(q));
 }
 
 /* Buang "/" beserta kata kunci sebelum blok diterapkan. */

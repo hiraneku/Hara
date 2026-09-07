@@ -1,16 +1,32 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907091218';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907091218';
-import { insertInline } from './insert.js?v=20260907091218';
-import { focusKeep } from '../bar/render.js?v=20260907091218';
-import { applyLink } from './link.js?v=20260907091218';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907091218';
-import { setFont } from '../editor/font.js?v=20260907091218';
-import { setCallout } from '../editor/blocks.js?v=20260907091218';
-import { snap as snapFont } from '../editor/history.js?v=20260907091218';
-import { getar } from '../bar/prefs.js?v=20260907091218';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907092650';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907092650';
+import { insertInline } from './insert.js?v=20260907092650';
+import { focusKeep } from '../bar/render.js?v=20260907092650';
+import { applyLink } from './link.js?v=20260907092650';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907092650';
+import { setFont } from '../editor/font.js?v=20260907092650';
+import { setCallout } from '../editor/blocks.js?v=20260907092650';
+import { snap as snapFont } from '../editor/history.js?v=20260907092650';
+import { getar } from '../bar/prefs.js?v=20260907092650';
 
 export const pop = () => document.getElementById('pop');
+const isiEl = () => document.getElementById('pop-isi') || pop();
+
+/* Ganti isi area daftar popup (tombol × dan bingkai tidak ikut terganti). */
+export function setPopIsi(html) {
+  const b = isiEl();
+  if (b) b.innerHTML = html;
+}
+
+/* Elemen pemicu popup yang sedang terbuka — dipakai untuk memutuskan
+   "klik di luar" dan perilaku toggle tombol yang sama. */
+let tambat = null;
+export const penambatAdalah = el => {
+  const p = pop();
+  return !!(el && el.nodeType === 1 && p && p.classList.contains('on') && tambat &&
+    (tambat === el || (tambat.contains && tambat.contains(el))));
+};
 
 /* seleksi terakhir sebelum popup dibuka — dipakai form tautan */
 export let simpanRange = null;
@@ -22,7 +38,8 @@ export function openPop(html, anchor) {
   const d = document.querySelector('.ed-doc');
   simpanRange = (s && s.rangeCount && d && d.contains(s.getRangeAt(0).startContainer))
     ? s.getRangeAt(0).cloneRange() : null;
-  p.innerHTML = html;
+  setPopIsi(html);
+  tambat = (anchor && anchor.nodeType === 1) ? anchor : null;
   p.classList.add('on');
   const r = anchor.getBoundingClientRect();
   p.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 302)) + 'px';
@@ -37,6 +54,22 @@ export function openPop(html, anchor) {
 export function bindPop() {
   const p = pop();
   if (!p) return;
+
+  /* tombol × di pojok kanan atas — menutup popup apa pun */
+  const xb = p.querySelector('.pop-x');
+  if (xb) xb.addEventListener('click', closeAll);
+
+  /* klik/ketuk DI LUAR popup menutupnya — kecuali pada tombol pemicu
+     yang sama (biar logika toggle tombol itu yang bicara). */
+  document.addEventListener('pointerdown', e => {
+    if (!p.classList.contains('on')) return;
+    const t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('#pop')) return;
+    if (penambatAdalah(t)) return;
+    closeAll();
+  });
+
   p.addEventListener('mousedown', e => { if (!e.target.closest('.pop-in')) e.preventDefault(); });
   /* form tautan: jangan tutup popup saat mengetik di kolom */
   p.addEventListener('mousedown', e => {
@@ -73,7 +106,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907091218').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907092650').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -82,7 +115,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907091218').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907092650').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -92,7 +125,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907091218').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907092650').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
