@@ -1,16 +1,40 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907011202';
-import { setBlock, indent } from './blocks.js?v=20260907011202';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907011202';
-import { autoFormat } from './markdown.js?v=20260907011202';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907011202';
-import { onTitle } from '../model.js?v=20260907011202';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907011202';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907011202';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907013646';
+import { setBlock, indent } from './blocks.js?v=20260907013646';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907013646';
+import { autoFormat } from './markdown.js?v=20260907013646';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907013646';
+import { onTitle } from '../model.js?v=20260907013646';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907013646';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907013646';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
    handler `input` biasa, dan jalur beforeinput yang kita kendalikan. */
+/* Pastikan caret berada tepat setelah karakter terakhir yang ditulis.
+   `node` bisa sudah terlepas dari DOM kalau format membungkusnya ulang —
+   dalam kasus itu caret ditaruh di akhir blok. */
+function pastikanCaretSetelah(node, offset){
+  const s=sel();
+  if(!s) return;
+  const kini=s.rangeCount?s.getRangeAt(0):null;
+  /* caret sudah berada di node teks yang hidup -> itu posisi sah,
+     entah node asli atau node hasil pembungkusan format */
+  if(kini && kini.collapsed && kini.startContainer &&
+     kini.startContainer.isConnected && kini.startContainer.nodeType===3) return;
+  if(node && node.isConnected && node.nodeType===3){
+    try{
+      const r=document.createRange();
+      r.setStart(node, Math.min(offset, node.length));
+      r.collapse(true);
+      s.removeAllRanges(); s.addRange(r);
+      return;
+    }catch(err){}
+  }
+  const b=curBlock();
+  if(b) caretEnd(b);
+}
+
 function terapkanFormatAktif(){
   if(pending.size){ wrapTypedPending(); return; }
   if(!sticky.size) return;
@@ -74,8 +98,14 @@ export function bindEditor() {
           nr2.setStart(t2, o2 + e.data.length); nr2.collapse(true);
           s2.removeAllRanges(); s2.addRange(nr2);
           /* Kita sudah preventDefault, jadi handler `input` tidak akan
-             menerapkan format. Bungkus karakter ini di sini. */
+             menerapkan format. Bungkus karakter ini di sini — termasuk
+             mark sticky yang barusan dikeluarkan dari elemen lamanya. */
           terapkanFormatAktif();
+          /* PENJAGA: pastikan caret berada tepat setelah karakter yang
+             barusan ditulis. Membungkus format mengganti node, dan caret
+             yang tertinggal di node lama membuat huruf berikutnya
+             tersisip di posisi salah ("aabbccdd" -> "aaccddbb"). */
+          pastikanCaretSetelah(t2, o2 + e.data.length);
           autoFormat(); refresh();
         }
       }

@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907011202';
-import { refresh } from './cleanup.js?v=20260907011202';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907013646';
+import { refresh } from './cleanup.js?v=20260907013646';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', s:'s', hl:'span', code:'code' };
@@ -36,6 +36,17 @@ export function markEl(m){
   const e=document.createElement(MARKTAG[m]);
   if(MARKCLS[m]) e.className=MARKCLS[m];
   return e;
+}
+/* Apakah caret benar-benar BERADA DI DALAM elemen mark, bukan sekadar
+   bertetangga dengannya? Dipakai saat memutuskan perlu-tidaknya keluar. */
+export function benarDiDalam(m,node,offset){
+  const host=markAround(m,node);
+  if(!host) return false;
+  /* caret di text node yang memang keturunan host -> di dalam */
+  if(node.nodeType===3) return host.contains(node);
+  /* caret bertumpu elemen: cek anak pada posisi offset */
+  const anak=node.childNodes[offset];
+  return !!(anak ? host.contains(anak) : host.contains(node));
 }
 export function markAround(m,node){
   const d=docEl(); let n=node;
@@ -128,12 +139,17 @@ export function toggleMark(m){
   refresh();
 }
 export function wrapTypedPending(){
-  const s2=sel(); if(!(s2&&s2.rangeCount)) return;
+  const s2=sel();
+  if(!(s2&&s2.rangeCount)) return false;
   const r=s2.getRangeAt(0);
   const node=r.startContainer;
-  if(node.nodeType!==3 || r.startOffset===0) return;
+  /* Tidak ada karakter untuk dibungkus (caret di elemen, atau di awal
+     node). Bersihkan pending supaya niat lama TIDAK nyangkut lalu
+     terpakai pada karakter yang salah di kemudian hari. */
+  if(node.nodeType!==3 || r.startOffset===0){ pending.clear(); return false; }
   /* sticky sengaja TIDAK dibuang — tombol harus tetap menyala */
   const marks=[...pending]; pending.clear();
+  if(!marks.length) return false;
   const start=r.startOffset-1;
   const rr=document.createRange();
   rr.setStart(node,start); rr.setEnd(node,r.startOffset);
@@ -141,10 +157,16 @@ export function wrapTypedPending(){
   let outer=frag;
   marks.forEach(m=>{ const e=markEl(m); e.appendChild(outer); outer=e; });
   rr.insertNode(outer);
-  let deep=outer; while(deep.firstChild) deep=deep.firstChild;
+  /* Caret WAJIB berada tepat setelah karakter yang baru dibungkus.
+     Kalau tidak, ketikan berikutnya tersisip di posisi lama dan urutan
+     huruf jadi kacau ("aabbccdd" -> "aaccddbb"). */
+  let deep=outer; while(deep.lastChild) deep=deep.lastChild;
   const nr=document.createRange();
-  nr.setStart(deep,deep.length!==undefined?deep.length:0); nr.collapse(true);
+  if(deep.nodeType===3) nr.setStart(deep,deep.length);
+  else nr.setStartAfter(deep);
+  nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
+  return true;
 }
 export function flushPending(){
   if(!pending.size) return;
