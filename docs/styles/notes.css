@@ -444,8 +444,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 /* ── warna teks (bar mekanik) ── */
 /* strip warna umum: satu baris memanjang, digeser kalau panjang.
    Hitam → putih ada di ujung kiri, lalu warna-warna umum. */
-.wpal{display:flex;gap:9px;overflow-x:auto;padding:8px 14px 12px;
-  scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.wpal{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding:8px 14px 12px;
+  overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .wpal::-webkit-scrollbar{height:4px}
 .wpal::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 .wsw{flex:none;width:36px;height:36px;border-radius:999px;padding:0;position:relative;

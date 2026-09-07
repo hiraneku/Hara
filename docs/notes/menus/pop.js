@@ -1,17 +1,17 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907111650';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907111650';
-import { insertInline } from './insert.js?v=20260907111650';
-import { focusKeep } from '../bar/render.js?v=20260907111650';
-import { applyLink } from './link.js?v=20260907111650';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907111650';
-import { setFont } from '../editor/font.js?v=20260907111650';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907111650';
-import { warnaMenu, rodaPasang } from './warna.js?v=20260907111650';
-import { setCallout } from '../editor/blocks.js?v=20260907111650';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907111650';
-import { getar } from '../bar/prefs.js?v=20260907111650';
-import { toast } from '../../core/toast.js?v=20260907111650';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907111935';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907111935';
+import { insertInline } from './insert.js?v=20260907111935';
+import { focusKeep } from '../bar/render.js?v=20260907111935';
+import { applyLink } from './link.js?v=20260907111935';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20260907111935';
+import { setFont } from '../editor/font.js?v=20260907111935';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260907111935';
+import { warnaMenu, rodaPasang } from './warna.js?v=20260907111935';
+import { setCallout } from '../editor/blocks.js?v=20260907111935';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260907111935';
+import { getar } from '../bar/prefs.js?v=20260907111935';
+import { toast } from '../../core/toast.js?v=20260907111935';
 
 export const pop = () => document.getElementById('pop');
 
@@ -189,7 +189,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907111650').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907111935').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -198,7 +198,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907111650').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907111935').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -208,7 +208,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907111650').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907111935').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
