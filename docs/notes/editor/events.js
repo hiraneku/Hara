@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907015135';
-import { setBlock, indent } from './blocks.js?v=20260907015135';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907015135';
-import { autoFormat } from './markdown.js?v=20260907015135';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907015135';
-import { onTitle } from '../model.js?v=20260907015135';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907015135';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907015135';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907023932';
+import { setBlock, indent } from './blocks.js?v=20260907023932';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907023932';
+import { autoFormat } from './markdown.js?v=20260907023932';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907023932';
+import { onTitle } from '../model.js?v=20260907023932';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907023932';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907023932';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -75,13 +75,33 @@ export function bindEditor() {
       /* Mark yang sedang sticky JANGAN dikeluarkan — ia baru saja
          dinyalakan lagi oleh pengguna. */
       const markKeluar = markPerluKeluar().filter(m => !sticky.has(m));
+      /* Font melekat tapi caret berada di span font LAIN -> pecah keluar
+         lalu bungkus ulang dengan font yang benar. Diperiksa TIAP karakter,
+         karena browser menarik caret kembali ke span lama. */
+      const fontKeluar = fontPerluKeluar();
 
-      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length) {
+      if (fontPending() || adaPendingNone() || perluKeluar || markKeluar.length || fontKeluar) {
         e.preventDefault();
         /* Untuk "Bawaan" fungsi ini mengembalikan null — itu wajar, ia
            hanya memecah keluar dari span. Karakternya tetap harus ditulis. */
         if (adaPendingNone() || fontPending()) bungkusFontPending();
         else if (perluKeluar) keluarDariFont();
+        else if (fontKeluar) {
+          /* keluar dari span font lama, lalu bungkus dgn font yang dipilih */
+          keluarDariFont();
+          const el = document.createElement('span');
+          el.className = 'fnt';
+          el.setAttribute('data-font', fontLekat());
+          const t0 = document.createTextNode('');
+          el.appendChild(t0);
+          const sx = sel();
+          if (sx && sx.rangeCount) {
+            sx.getRangeAt(0).insertNode(el);
+            const rx = document.createRange();
+            rx.setStart(t0, 0); rx.collapse(true);
+            sx.removeAllRanges(); sx.addRange(rx);
+          }
+        }
         markKeluar.forEach(m => keluarDariMark(m));
         const s2 = sel();
         if (s2 && s2.rangeCount) {

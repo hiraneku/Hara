@@ -1,10 +1,10 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load } from './core/store.js?v=20260907015135';
-import { go, onAfterRender } from './core/router.js?v=20260907015135';
-import { toast } from './core/toast.js?v=20260907015135';
-import { notesModule } from './notes/index.js?v=20260907015135';
-import { newNote, delNote, openNote } from './notes/model.js?v=20260907015135';
-import { closeAll } from './notes/menus/pop.js?v=20260907015135';
+import { load } from './core/store.js?v=20260907023932';
+import { go, onAfterRender } from './core/router.js?v=20260907023932';
+import { toast } from './core/toast.js?v=20260907023932';
+import { notesModule } from './notes/index.js?v=20260907023932';
+import { newNote, delNote, openNote } from './notes/model.js?v=20260907023932';
+import { closeAll } from './notes/menus/pop.js?v=20260907023932';
 
 const MODULES = [notesModule];
 

@@ -1,14 +1,14 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907015135';
-import { renumber } from './blocks.js?v=20260907015135';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907015135';
-import { state, save } from '../../core/store.js?v=20260907015135';
-import { findNote } from '../model.js?v=20260907015135';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907015135';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907015135';
-import { cur } from '../../core/router.js?v=20260907015135';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907015135';
-import { GROUPS } from '../bar/config.js?v=20260907015135';
+import { docEl, sel, curBlock } from './caret.js?v=20260907023932';
+import { renumber } from './blocks.js?v=20260907023932';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907023932';
+import { state, save } from '../../core/store.js?v=20260907023932';
+import { findNote } from '../model.js?v=20260907023932';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907023932';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907023932';
+import { cur } from '../../core/router.js?v=20260907023932';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907023932';
+import { GROUPS } from '../bar/config.js?v=20260907023932';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -32,6 +32,21 @@ export function cleanup(){
     buang.forEach(t=>{ t.data=t.data.replace(/\u200b/g,''); });
   }
 
+  /* Span font kosong = sisa pergantian font. Kalau dibiarkan ia menumpuk
+     dan caret bisa tersangkut di dalamnya, sehingga font baru tampak
+     tidak berlaku sementara menu tetap menampilkan font lama. */
+  Array.from(d.querySelectorAll('span.fnt')).forEach(el=>{
+    const s1=sel();
+    if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
+       !(s1 && s1.anchorNode && el.contains(s1.anchorNode))) el.remove();
+  });
+
+  /* span font kosong = sisa pergantian font; kalau dibiarkan ia
+     menumpuk dan caret bisa tersangkut di dalamnya */
+  Array.from(d.querySelectorAll('span.fnt')).forEach(el=>{
+    if(el.textContent.replace(/[\u200b\u00a0]/g,'')==='' &&
+       !(sel().anchorNode && el.contains(sel().anchorNode))) el.remove();
+  });
   Object.keys(MARKSEL).forEach(m=>{
     Array.from(d.querySelectorAll(MARKSEL[m])).forEach(e=>{
       if(e.textContent.replace(/[\u200b\u00a0]/g,'')==='' && !e.contains(sel().anchorNode))

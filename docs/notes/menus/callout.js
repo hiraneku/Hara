@@ -1,5 +1,5 @@
 /* Menu jenis callout. */
-import { CALLOUTS } from '../editor/blocks.js?v=20260907015135';
+import { CALLOUTS } from '../editor/blocks.js?v=20260907023932';
 
 export const calloutMenu = () =>
   `<div class="pop-h">Jenis callout</div>` +

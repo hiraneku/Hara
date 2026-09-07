@@ -17,6 +17,7 @@ for f in tools/uji/*.mjs; do node $f; done
 | `caret-elemen.mjs` | caret bertumpu pada ELEMEN, bukan text node |
 | `kondisi-tepi.mjs` | pending nyangkut, sisip di tengah, toggle tanpa ketik |
 | `spasi-dan-penanda.mjs` | spasi termakan, huruf berpindah saat ganti format |
+| `font-ganti.mjs` | ganti font nyangkut ke font lama, span font kosong menumpuk |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —
 telusuri sampai akar, lalu tambahkan kasusnya ke suite ini.

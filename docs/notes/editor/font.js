@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260907015135';
-import { refresh } from './cleanup.js?v=20260907015135';
+import { docEl, sel, curBlock } from './caret.js?v=20260907023932';
+import { refresh } from './cleanup.js?v=20260907023932';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -112,6 +112,9 @@ export function fontAround(node) {
 export function fontSekarang() {
   const d = docEl();
   if (!d) return '';
+  /* niat pengguna mengalahkan isi DOM — kalau tidak, menu menampilkan
+     font LAMA sebagai terpilih padahal sudah diganti */
+  if (_lekat) return _lekat;
   const s = sel();
   if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return '';
   const el = fontAround(s.getRangeAt(0).startContainer);
@@ -132,6 +135,11 @@ function lepasDalam(frag) {
    ikut terbarui di modul yang mengimpornya. */
 const NONE = '\u0000none';        /* penanda "kembali ke bawaan" */
 let _pending = null;
+/* Font yang sedang "dinyalakan" pengguna. Melekat lintas ketikan, persis
+   seperti `sticky` pada marks. Tanpa ini, ketikan setelah karakter pertama
+   bisa jatuh ke span font LAMA saat browser menarik caret ke sana. */
+let _lekat = null;
+export const fontLekat = () => _lekat;
 /* Mode bawaan MELEKAT: bertahan lintas ketikan sampai dibatalkan.
    Tanpa ini, huruf ke-2 diserahkan ke browser yang menarik caret
    kembali ke dalam span font lama. */
@@ -154,12 +162,13 @@ export function setFont(id) {
      untuk yang diketik SETELAH ini, persis seperti tombol tebal/miring.
      Untuk mengubah teks lama, pengguna harus memblok teksnya dulu. */
   if (r.collapsed) {
-    if (id) { _pending = id; _modeBawaan = false; refresh(); return; }
+    if (id) { _pending = id; _lekat = id; _modeBawaan = false; refresh(); return; }
 
     /* ── "Bawaan" ──
        Caret sedang di dalam span font? Jangan cuma memindahkan caret ke
        luar — browser akan menariknya kembali masuk. Catat niatnya, lalu
        pecah keluar tepat saat huruf pertama diketik. */
+    _lekat = null;
     if (fontAround(r.startContainer)) { _pending = NONE; _modeBawaan = true; }
     else { _pending = null; _modeBawaan = false; }
     refresh();
@@ -167,7 +176,7 @@ export function setFont(id) {
   }
 
   /* ── Ada teks terpilih: ganti font pada bagian itu saja ── */
-  _pending = null; _modeBawaan = false;
+  _pending = null; _lekat = null; _modeBawaan = false;
   /* Kalau seleksi persis mengisi sebuah span font, buka bungkusnya dulu —
      kalau tidak, span lama tetap tertinggal dan "Bawaan" tampak gagal. */
   const induk = fontAround(r.startContainer);
@@ -302,6 +311,17 @@ function taruhCaretAkhir(b) {
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _modeBawaan = false; }
+  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
   blokTerakhir = b;
 });
+
+/* Apakah caret berada di span font yang BUKAN font yang sedang dipilih?
+   Kalau ya, ketikan berikutnya harus dipecah keluar dulu — kalau tidak,
+   ia ikut font lama dan pilihan baru tampak "nyangkut". */
+export function fontPerluKeluar() {
+  if (!_lekat) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = fontAround(s.getRangeAt(0).startContainer);
+  return !!(host && host.getAttribute('data-font') !== _lekat);
+}

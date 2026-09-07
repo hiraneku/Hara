@@ -1,17 +1,17 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260907015135';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907015135';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907015135';
-import { openPop, closeAll } from '../menus/pop.js?v=20260907015135';
-import { slashMenu } from '../menus/slash.js?v=20260907015135';
-import { wlMenu }    from '../menus/wikilink.js?v=20260907015135';
-import { tagMenu }   from '../menus/tag.js?v=20260907015135';
-import { linkMenu }  from '../menus/link.js?v=20260907015135';
-import { fontMenu } from '../menus/font.js?v=20260907015135';
-import { calloutMenu } from '../menus/callout.js?v=20260907015135';
-import { snap } from '../editor/history.js?v=20260907015135';
-import { tersembunyi, getar } from './prefs.js?v=20260907015135';
-import { HELP, HELP_GRUP } from './help.js?v=20260907015135';
+import { BAR, GROUPS } from './config.js?v=20260907023932';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260907023932';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260907023932';
+import { openPop, closeAll } from '../menus/pop.js?v=20260907023932';
+import { slashMenu } from '../menus/slash.js?v=20260907023932';
+import { wlMenu }    from '../menus/wikilink.js?v=20260907023932';
+import { tagMenu }   from '../menus/tag.js?v=20260907023932';
+import { linkMenu }  from '../menus/link.js?v=20260907023932';
+import { fontMenu } from '../menus/font.js?v=20260907023932';
+import { calloutMenu } from '../menus/callout.js?v=20260907023932';
+import { snap } from '../editor/history.js?v=20260907023932';
+import { tersembunyi, getar } from './prefs.js?v=20260907023932';
+import { HELP, HELP_GRUP } from './help.js?v=20260907023932';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
