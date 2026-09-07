@@ -44,7 +44,7 @@ docs/
 │   │   ├── actions.js  peta aksi tiap tombol
 │   │   └── render.js   gambar bar + focusKeep
 │   │
-│   ├── menus/          pop, slash, wikilink, tag, insert
+│   ├── menus/          pop, slash, slash-trigger, wikilink, tag, insert, link, font
 │   └── views/          list, editor, row, welcome, misc
 │
 ├── styles/             tokens → base → shell → notes  (urutan cascade penting)

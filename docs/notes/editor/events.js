@@ -1,12 +1,13 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907023932';
-import { setBlock, indent } from './blocks.js?v=20260907023932';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907023932';
-import { autoFormat } from './markdown.js?v=20260907023932';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907023932';
-import { onTitle } from '../model.js?v=20260907023932';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907023932';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907023932';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907025521';
+import { setBlock, indent } from './blocks.js?v=20260907025521';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark } from './marks.js?v=20260907025521';
+import { autoFormat } from './markdown.js?v=20260907025521';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907025521';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260907025521';
+import { onTitle } from '../model.js?v=20260907025521';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround, fontLekat, fontPerluKeluar } from './font.js?v=20260907025521';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907025521';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -33,6 +34,18 @@ function pastikanCaretSetelah(node, offset){
   }
   const b=curBlock();
   if(b) caretEnd(b);
+}
+
+/* Deteksi "/" yang baru saja diketik lalu buka menu blok. */
+function cekPemicuGaring(){
+  const s=sel();
+  if(!(s&&s.rangeCount)) return;
+  const r=s.getRangeAt(0);
+  const n=r.startContainer;
+  if(n.nodeType!==3 || r.startOffset===0) return;
+  if(n.data[r.startOffset-1]!=='/') return;
+  if(!garingLayak(n, r.startOffset-1)) return;
+  bukaSlash(n, r.startOffset);
 }
 
 function terapkanFormatAktif(){
@@ -121,6 +134,7 @@ export function bindEditor() {
              menerapkan format. Bungkus karakter ini di sini — termasuk
              mark sticky yang barusan dikeluarkan dari elemen lamanya. */
           terapkanFormatAktif();
+          if(slashAktif()) perbaruiSlash(); else cekPemicuGaring();
           /* PENJAGA: pastikan caret berada tepat setelah karakter yang
              barusan ditulis. Membungkus format mengganti node, dan caret
              yang tertinggal di node lama membuat huruf berikutnya
@@ -164,11 +178,15 @@ export function bindEditor() {
     const nr=document.createRange();
     nr.setStart(node,off); nr.collapse(true);
     s.removeAllRanges(); s.addRange(nr);
+    if(slashAktif()) perbaruiSlash(); else cekPemicuGaring();
     autoFormat(); refresh();
   });
   document.addEventListener('input',e=>{
     if(inDoc(e.target)){
       if(isReplaying()) return;
+      /* menu "/" mengikuti apa yang diketik */
+      if(slashAktif()) perbaruiSlash();
+      else cekPemicuGaring();
       if(pending.size || sticky.size) terapkanFormatAktif();
       /* Sticky menyala tapi karakter barusan mendarat DI LUAR elemen format
          (mis. teks tadi dihapus habis sehingga <b> ikut dibuang). Bungkus
@@ -190,6 +208,16 @@ export function bindEditor() {
   });
   document.addEventListener('keydown',e=>{
     if(!inDoc(e.target)) return;
+    /* ── menu "/" sedang terbuka: kuasai tombol navigasi ── */
+    if(slashAktif()){
+      if(e.key==='Escape'){ e.preventDefault(); tutupSlash(); return; }
+      if(e.key==='ArrowDown'){ e.preventDefault(); geserPilihan(1); return; }
+      if(e.key==='ArrowUp'){ e.preventDefault(); geserPilihan(-1); return; }
+      if(e.key==='Enter'||e.key==='Tab'){
+        const p=pilihanSlash();
+        if(p){ e.preventDefault(); p.dispatchEvent(new MouseEvent('click',{bubbles:true})); return; }
+      }
+    }
     const mod=e.ctrlKey||e.metaKey;
     if(mod && (e.key==='z'||e.key==='Z')){
       e.preventDefault();

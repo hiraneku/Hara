@@ -15,6 +15,9 @@ export const BAR = [
   { sep: true },
 
   /* ── yang paling sering dipakai: langsung, tanpa menu ── */
+  { m: 'slash', label: '/', accent: true, title: 'Sisipkan blok' },
+  { sep: true },
+
   { m: 'b',    label: '<b>B</b>',  title: 'Tebal' },
   { m: 'i',    label: '<i>I</i>',  title: 'Miring' },
   { m: 'link', label: '<svg class="bi"><use href="#i-link2"/></svg>', title: 'Tautan web' },
@@ -44,6 +47,7 @@ export const BAR = [
   {
     g: 'tandai', label: '<svg class="bi"><use href="#i-pen"/></svg>', title: 'Penandaan',
     items: [
+      { m: 'u',      ikon: 'i-under', nama: 'Garis bawah',  kunci: '' },
       { m: 'hl',     ikon: 'i-pen',   nama: 'Sorot',        kunci: '==' },
       { m: 'strike', ikon: 'i-strike',nama: 'Coret',        kunci: '~~' },
       { m: 'icode',  ikon: 'i-code',  nama: 'Kode inline',  kunci: '`' },
@@ -88,7 +92,7 @@ export const BLOCK_BTN = {
 };
 
 /* Tombol mana yang menyala mengikuti format inline. */
-export const MARK_BTN = { b: 'b', i: 'i', strike: 's', hl: 'hl', icode: 'code' };
+export const MARK_BTN = { b: 'b', i: 'i', u: 'u', strike: 's', hl: 'hl', icode: 'code' };
 
 /* Semua kelompok, untuk pencarian cepat. */
 export const GROUPS = BAR.filter(x => x.g);

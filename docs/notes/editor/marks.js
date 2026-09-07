@@ -1,12 +1,12 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907023932';
-import { refresh } from './cleanup.js?v=20260907023932';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907025521';
+import { refresh } from './cleanup.js?v=20260907025521';
 
-export const MARKSEL = { b:'b,strong', i:'i,em', s:'s,strike', hl:'.hl', code:'code.ic' };
-export const MARKTAG = { b:'b', i:'i', s:'s', hl:'span', code:'code' };
+export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
+export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };
 export const MARKCLS = { hl:'hl', code:'ic' };
-export const CMD     = { b:'bold', i:'italic', s:'strikeThrough' };
+export const CMD     = { b:'bold', i:'italic', u:'underline', s:'strikeThrough' };
 export const pending = new Set();
 
 /* Format yang sedang "dinyalakan" lewat tombol. Berbeda dari `pending`:

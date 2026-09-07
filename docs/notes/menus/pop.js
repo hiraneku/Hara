@@ -1,13 +1,14 @@
 /* Popup melayang di atas bar. */
-import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907023932';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907023932';
-import { insertInline } from './insert.js?v=20260907023932';
-import { focusKeep } from '../bar/render.js?v=20260907023932';
-import { applyLink } from './link.js?v=20260907023932';
-import { setFont } from '../editor/font.js?v=20260907023932';
-import { setCallout } from '../editor/blocks.js?v=20260907023932';
-import { snap as snapFont } from '../editor/history.js?v=20260907023932';
-import { getar } from '../bar/prefs.js?v=20260907023932';
+import { docEl, ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260907025521';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260907025521';
+import { insertInline } from './insert.js?v=20260907025521';
+import { focusKeep } from '../bar/render.js?v=20260907025521';
+import { applyLink } from './link.js?v=20260907025521';
+import { buangGaring, slashAktif, tutupSlash } from './slash-trigger.js?v=20260907025521';
+import { setFont } from '../editor/font.js?v=20260907025521';
+import { setCallout } from '../editor/blocks.js?v=20260907025521';
+import { snap as snapFont } from '../editor/history.js?v=20260907025521';
+import { getar } from '../bar/prefs.js?v=20260907025521';
 
 export const pop = () => document.getElementById('pop');
 
@@ -57,7 +58,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260907023932').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260907025521').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -66,7 +67,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260907023932').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260907025521').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -76,15 +77,18 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260907023932').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260907025521').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
     const t = e.target.closest('[data-blk],[data-ins],[data-wl]');
     if (!t) return;
+    /* buang "/" beserta kata kunci SEBELUM blok diterapkan */
+    if (slashAktif() && t.dataset.blk) buangGaring();
     focusKeep();
     ensureCaret();
     if (t.dataset.blk === 'date') insertTanggal();
+    else if (t.dataset.blk === 'img') { closeAll(); pilihGambar(); return; }
     else if (t.dataset.blk === 'hr') insertHr();
     else if (t.dataset.blk)     setBlock(t.dataset.blk);
     else if (t.dataset.ins)     insertInline('tg', t.dataset.ins);
@@ -94,6 +98,7 @@ export function bindPop() {
 }
 
 export function closeAll() {
+  /* status menu "/" ikut berakhir saat popup ditutup dari mana pun */
   document.querySelectorAll('.mb-g.open').forEach(x => x.classList.remove('open'));
   pop()?.classList.remove('on');
   document.getElementById('sheet')?.classList.remove('on');

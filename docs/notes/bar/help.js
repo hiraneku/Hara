@@ -18,6 +18,13 @@ export const HELP = {
     tahu: 'Kalau kamu mengetik sesuatu yang baru setelah membatalkan, jalur ulangi terputus dan tidak bisa dipakai lagi.'
   },
 
+  slash: {
+    nama: 'Sisipkan blok',
+    apa: 'Membuka daftar jenis blok: heading, daftar, to-do, kutipan, kode, pembatas, gambar.',
+    cara: 'Ketuk tombol, atau ketik "/" di awal baris. Ketik lanjutannya untuk menyaring.',
+    tahu: 'Panah atas/bawah untuk memilih, Enter untuk menerapkan, Esc untuk batal. Karakter "/" ikut terhapus saat blok dipilih.'
+  },
+
   /* ── format inline ── */
   b: {
     nama: 'Tebal',
@@ -30,6 +37,12 @@ export const HELP = {
     apa: 'Memiringkan teks, biasanya untuk istilah asing atau penekanan halus.',
     cara: 'Blok teks lalu ketuk, atau ketuk dulu lalu mulai mengetik.',
     tahu: 'Mengetik *teks* juga memiringkannya.'
+  },
+  u: {
+    nama: 'Garis bawah',
+    apa: 'Memberi garis di bawah teks.',
+    cara: 'Blok teks lalu pilih, atau nyalakan dulu lalu mulai mengetik.',
+    tahu: 'Di web, garis bawah biasanya berarti tautan — pakai seperlunya agar tidak membingungkan.'
   },
   hl: {
     nama: 'Sorot',

@@ -8,6 +8,7 @@ const KEY = 'hara.bar.v1';
 /* Kontrol yang boleh disembunyikan. `undo`/`redo` sengaja tidak
    dimasukkan — tanpa keduanya, kesalahan ketik jadi tak bisa dibatalkan. */
 export const BISA_SEMBUNYI = [
+  { m: 'slash',  nama: 'Sisipkan blok (/)' },
   { m: 'b',      nama: 'Tebal' },
   { m: 'i',      nama: 'Miring' },
   { m: 'link',   nama: 'Tautan web' },

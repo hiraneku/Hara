@@ -354,3 +354,6 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   border-radius:var(--r-md);padding:10px 12px;margin:0 0 14px}
 .rec-t{flex:1;min-width:150px;font-size:13px;color:var(--text)}
 .rec-bar .btn{padding:6px 12px;font-size:13px}
+
+/* garis bawah */
+.ed-doc u{text-decoration:underline;text-underline-offset:2px}

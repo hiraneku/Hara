@@ -1,14 +1,14 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907023932';
-import { renumber } from './blocks.js?v=20260907023932';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907023932';
-import { state, save } from '../../core/store.js?v=20260907023932';
-import { findNote } from '../model.js?v=20260907023932';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907023932';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907023932';
-import { cur } from '../../core/router.js?v=20260907023932';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907023932';
-import { GROUPS } from '../bar/config.js?v=20260907023932';
+import { docEl, sel, curBlock } from './caret.js?v=20260907025521';
+import { renumber } from './blocks.js?v=20260907025521';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907025521';
+import { state, save } from '../../core/store.js?v=20260907025521';
+import { findNote } from '../model.js?v=20260907025521';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907025521';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907025521';
+import { cur } from '../../core/router.js?v=20260907025521';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907025521';
+import { GROUPS } from '../bar/config.js?v=20260907025521';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -119,7 +119,7 @@ export function syncBtns(){
       const bc=map[it.m];
       if(bc && b && b.classList.contains(bc)) aktif=true;
       /* nama tombol -> kunci mark; ikut menyala kalau sticky/pending aktif */
-      const mk={hl:'hl',strike:'s',icode:'code',b:'b',i:'i'}[it.m];
+      const mk={hl:'hl',strike:'s',icode:'code',b:'b',i:'i',u:'u'}[it.m];
       if(mk && markActive(mk)) aktif=true;
     });
     btn.classList.toggle('active',aktif);
