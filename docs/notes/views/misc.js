@@ -1,7 +1,7 @@
 /* Layar pendukung: reminder, tugas, cari, tag, arsip, pengaturan.
    Sebagian masih statis — akan pindah ke tools/ masing-masing nanti. */
-import { state } from '../../core/store.js?v=20260907052638';
-import { rowFor } from './row.js?v=20260907052638';
+import { state } from '../../core/store.js?v=20260907055942';
+import { rowFor } from './row.js?v=20260907055942';
 
 export const miscViews = {
 

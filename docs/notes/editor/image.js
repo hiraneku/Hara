@@ -4,17 +4,25 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907052638';
-import { refresh } from './cleanup.js?v=20260907052638';
-import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260907052638';
-import { state } from '../../core/store.js?v=20260907052638';
-import { toast } from '../../core/toast.js?v=20260907052638';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260907055942';
+import { refresh } from './cleanup.js?v=20260907055942';
+import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260907055942';
+import { state } from '../../core/store.js?v=20260907055942';
+import { cur } from '../../core/router.js?v=20260907055942';
+import { toast } from '../../core/toast.js?v=20260907055942';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
 
-let urut = Date.now() % 100000;
-const idBaru = () => 'b' + (urut++).toString(36);
+/* Id blob dengan pola waktu+acak+urut (sama seperti id blok/catatan) —
+   id model lama (`Date.now() % 100000` + counter sesi) bisa terbit lagi
+   setelah ~28 jam atau di sesi lain, lalu blob lama TERTIMPA. Prefiks 'f'
+   sekaligus memisahkannya dari id model lama ('b…') yang masih dirujuk
+   catatan lama. */
+let _urut = 0;
+const idBaru = () =>
+  'f' + Date.now().toString(36).slice(-6) +
+  Math.random().toString(36).slice(2, 6) + (_urut++).toString(36);
 
 /* Kecilkan gambar besar supaya hemat ruang & cepat dimuat. */
 function kecilkan(file) {
@@ -39,20 +47,34 @@ function kecilkan(file) {
   });
 }
 
-/* Sisipkan satu berkas gambar sebagai blok tersendiri. */
+/* Sisipkan satu berkas gambar sebagai blok tersendiri.
+   Prosesnya ASYNC (kecilkan → simpan blob). Selama menunggu itu pengguna
+   bisa pindah catatan/keluar editor — jadi setelah setiap `await` dicek
+   lagi apakah catatan yang dibuka masih sama dan DOM editor masih yang
+   sama. Kalau sudah pindah, blob yang barusan disimpan dibuang dan
+   sisipan dibatalkan (kalau diteruskan, gambar bisa mendarat di catatan
+   yang SALAH). */
 export async function sisipGambar(file) {
   const d = docEl();
   if (!d || !file) return;
   if (!/^image\//.test(file.type)) { toast('Hanya berkas gambar'); return; }
+  const idCatatan = state.openId;
 
   const kecil = await kecilkan(file);
   const id = idBaru();
+
+  /* sasaran sudah bergeser? buang blob yang belum sempat dipakai */
+  const masihSama = () =>
+    cur === 'editor' && state.openId === idCatatan && docEl() === d && d.isConnected;
+  if (!masihSama()) return;
+
   try {
     await simpanBlob(id, kecil);
   } catch (e) {
     toast('Gagal menyimpan gambar');
     return;
   }
+  if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
 
   ensureCaret();
   const b = (() => {
@@ -166,7 +188,12 @@ export async function hapusGambar(id) {
 /* Bersihkan blob yang tidak lagi dirujuk catatan mana pun.
    Dipanggil saat catatan dibuang permanen (setelah jendela Urungkan
    lewat) — kalau langsung saat hapus, gambar yang bisa di-Urungkan
-   sudah keburu hilang. */
+   sudah keburu hilang.
+
+   Referensi dihitung dari catatan tersimpan DAN dari DOM editor yang
+   sedang terbuka: autosave menunggu 700 ms, jadi blob yang baru saja
+   disisipkan belum tentu sudah tercatat di state.notes — membaca DOM
+   mencegah sapuan ini menghapus gambar yang masih tampil. */
 export async function bersihkanBlobYatim() {
   try {
     const dipakai = new Set();
@@ -174,6 +201,13 @@ export async function bersihkanBlobYatim() {
       (n.blocks || []).forEach(b => {
         if (b.meta && b.meta.blobId) dipakai.add(b.meta.blobId);
       }));
+    const dd = docEl();
+    if (dd) {
+      Array.from(dd.querySelectorAll('img[data-blob]')).forEach(img => {
+        const id = img.getAttribute('data-blob');
+        if (id) dipakai.add(id);
+      });
+    }
     const ids = await semuaId();
     await Promise.all(ids
       .filter(id => !dipakai.has(id))

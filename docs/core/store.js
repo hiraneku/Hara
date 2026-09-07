@@ -4,8 +4,8 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907052638';
-import { welcomeBody } from '../notes/views/welcome.js?v=20260907052638';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260907055942';
+import { welcomeBody } from '../notes/views/welcome.js?v=20260907055942';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
@@ -23,7 +23,14 @@ export const DEFAULT_NOTES = () => [
   }),
 ];
 
-export const state = { seq: 1, notes: DEFAULT_NOTES(), openId: 'w' };
+export const state = {
+  seq: 1,
+  notes: DEFAULT_NOTES(),
+  openId: 'w',
+  /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
+     untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
+  dataRusak: false,
+};
 
 export function save() {
   try {
@@ -41,12 +48,33 @@ export function save() {
   }
 }
 
+/* Data tersimpan ada tapi tidak bisa dibaca (JSON rusak / bentuk tak
+   dikenal). Jangan diam-diam membuangnya: salinan mentahnya disimpan ke
+   kunci cadangan dan kunci utama dibersihkan — kalau tidak, pemuatan
+   berikutnya akan menemukan data rusak yang sama lagi. Aplikasi mulai
+   dari catatan bawaan, dan pengguna diberi tahu lewat state.dataRusak. */
+function cadangkanDataRusak(raw) {
+  /* tidak ada data mentah sama sekali (mis. storage diblokir total) —
+     bukan berarti data rusak, jangan menyalakan bendera */
+  if (!raw) return;
+  state.dataRusak = true;
+  try {
+    localStorage.setItem(KEY + '.rusak-' + Date.now(), raw);
+    localStorage.removeItem(KEY);
+  } catch (e) { /* penyimpanan penuh: biarkan data lama utuh di tempatnya */ }
+}
+
 export function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.notes)) return;
+
+    let data = null;
+    try { data = JSON.parse(raw); } catch (e) { data = null; }
+    if (!data || !Array.isArray(data.notes)) {
+      cadangkanDataRusak(raw);
+      return;
+    }
 
     /* normalizeNotes menerima bentuk lama maupun baru, jadi tidak perlu
        cabang khusus per versi selama migrasinya masih satu langkah. */
@@ -60,6 +88,11 @@ export function load() {
        supaya pemuatan berikutnya tidak perlu migrasi lagi */
     if ((data.schema || 1) < SCHEMA) save();
   } catch (e) {
+    /* jaring pengaman terakhir: mulai dari bawaan, jangan sampai
+       aplikasi mati hanya karena satu data bermasalah */
+    let mentah = '';
+    try { mentah = localStorage.getItem(KEY) || ''; } catch (e2) {}
+    cadangkanDataRusak(mentah);
     state.notes = DEFAULT_NOTES();
   }
 }

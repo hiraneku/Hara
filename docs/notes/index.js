@@ -1,28 +1,29 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907052638';
-import { homeView, notesView } from './views/list.js?v=20260907052638';
-import { editorView } from './views/editor.js?v=20260907052638';
-import { miscViews } from './views/misc.js?v=20260907052638';
-import { bindEditor } from './editor/events.js?v=20260907052638';
-import { renderBar }  from './bar/render.js?v=20260907052638';
-import { bindPop, closeAll } from './menus/pop.js?v=20260907052638';
-import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907052638';
-import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang }
-  from '../core/autosave.js?v=20260907052638';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907052638';
-import { toast } from '../core/toast.js?v=20260907052638';
-import { blocksToDom } from './note-model.js?v=20260907052638';
-import { renumber } from './editor/blocks.js?v=20260907052638';
-import { pending, sticky, mati } from './editor/marks.js?v=20260907052638';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907052638';
-import { resetHistory } from './editor/history.js?v=20260907052638';
-import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907052638';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907052638';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907052638';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907052638';
-import { state } from '../core/store.js?v=20260907052638';
-import { labelMode } from '../core/theme.js?v=20260907052638';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907055942';
+import { homeView, notesView } from './views/list.js?v=20260907055942';
+import { editorView } from './views/editor.js?v=20260907055942';
+import { miscViews } from './views/misc.js?v=20260907055942';
+import { bindEditor } from './editor/events.js?v=20260907055942';
+import { renderBar }  from './bar/render.js?v=20260907055942';
+import { bindPop, closeAll } from './menus/pop.js?v=20260907055942';
+import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan } from './editor/cleanup.js?v=20260907055942';
+import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
+         adaPerubahanTertunda }
+  from '../core/autosave.js?v=20260907055942';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260907055942';
+import { toast } from '../core/toast.js?v=20260907055942';
+import { blocksToDom } from './note-model.js?v=20260907055942';
+import { renumber } from './editor/blocks.js?v=20260907055942';
+import { pending, sticky, mati } from './editor/marks.js?v=20260907055942';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907055942';
+import { resetHistory } from './editor/history.js?v=20260907055942';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260907055942';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907055942';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907055942';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907055942';
+import { state } from '../core/store.js?v=20260907055942';
+import { labelMode } from '../core/theme.js?v=20260907055942';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -128,6 +129,12 @@ function pulihkanDraf() {
   saveNow();
   pasangGambar();
   updateCount();
+  /* riwayat undo direset supaya tidak ada snapshot lama yang bisa
+     memulihkan keadaan SEBELUM draf dipulihkan */
+  resetHistory();
+  syncBtns();
+  const d2 = docEl();
+  if (d2 && d2.firstElementChild) caretEnd(d2.firstElementChild);
   toast('Perubahan dipulihkan');
 }
 
@@ -202,14 +209,27 @@ export const notesModule = {
     });
 
     /* simpan saat aplikasi ditutup / dipindah ke belakang */
-    /* ── lifecycle: jangan sampai ada yang tertinggal ── */
-    const tuntaskan = () => { if (cur === 'editor') { saveNow(); } };
+    /* ── lifecycle: jangan sampai ada yang tertinggal ──
+       Hanya menyimpan kalau ADA perubahan tertunda. Sebelumnya `blur`
+       selalu memaksa tulis ulang penuh — untuk catatan panjang itu
+       pemborosan tiap kali jendela kehilangan fokus (mis. membuka
+       panel devtools atau berpindah tab). */
+    const tuntaskan = () => {
+      if (cur === 'editor' && adaPerubahanTertunda()) saveNow();
+    };
     window.addEventListener('pagehide', tuntaskan);
     window.addEventListener('beforeunload', tuntaskan);
     window.addEventListener('blur', tuntaskan);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') tuntaskan();
     });
+
+    /* ── sapuan blob yatim saat aplikasi dibuka ──
+       Jalur yang tidak kita kendalikan langsung (undo sisip gambar,
+       simpan gagal di tengah, dsb.) bisa meninggalkan berkas di
+       IndexedDB yang tidak dirujuk catatan mana pun. Sapuan ringan ini
+       membersihkannya sekali tiap sesi. */
+    setTimeout(() => bersihkanBlobYatim(), 4000);
 
     /* tombol "Coba lagi" pada indikator status */
     document.addEventListener('click', e => {

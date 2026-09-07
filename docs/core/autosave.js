@@ -18,7 +18,7 @@
       editor, berpindah catatan, atau menutup aplikasi.
 */
 
-import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907052638';
+import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20260907055942';
 
 /* Jeda cukup panjang untuk menggabungkan ketikan, cukup pendek supaya
    kehilangan terasa sepele kalau aplikasi mati mendadak. */
@@ -49,6 +49,8 @@ function setStatus(s) {
 /* ── konfigurasi: dipasang sekali oleh modul catatan ── */
 let ambilData = null;   /* () => { noteId, title, blocks } | null   */
 let tulisData = null;   /* (data) => boolean | Promise<boolean>     */
+                        /* tulisData BOLEH async (mis. Dexie nanti) —
+                           manager sudah menangani Promise. */
 
 export function konfigurasi({ baca, tulis }) {
   ambilData = baca;
@@ -159,11 +161,19 @@ export function flush() {
 export function cobaUlang() { return simpan(true); }
 
 /* Bersihkan keadaan saat berpindah catatan — supaya perubahan catatan
-   lama tidak ikut tertulis ke catatan baru. */
+   lama tidak ikut tertulis ke catatan baru.
+
+   `seqSelesai` dinaikkan ke nomor permintaan terbaru: simpan yang MASIH
+   BERJALAN dari catatan lama (kalau tulisData async) akan dianggap basi
+   saat selesai, jadi status/penghitungannya tidak mengganggu catatan
+   yang baru dibuka. Urutan simpan berikutnya otomatis lebih besar,
+   sehingga tidak ada penulisan yang tertahan. */
 export function reset() {
   clearTimeout(timerSimpan); timerSimpan = null;
   clearTimeout(timerDraf);   timerDraf = null;
   adaTertunda = false;
   mintaLagi = false;
+  sedangSimpan = false;
+  seqSelesai = ++seqMinta;
   setStatus(STATUS.IDLE);
 }

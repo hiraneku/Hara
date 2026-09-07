@@ -1,14 +1,14 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907052638';
-import { renumber } from './blocks.js?v=20260907052638';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907052638';
-import { state, save } from '../../core/store.js?v=20260907052638';
-import { findNote } from '../model.js?v=20260907052638';
-import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907052638';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907052638';
-import { cur } from '../../core/router.js?v=20260907052638';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907052638';
-import { GROUPS } from '../bar/config.js?v=20260907052638';
+import { docEl, sel, curBlock } from './caret.js?v=20260907055942';
+import { renumber } from './blocks.js?v=20260907055942';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907055942';
+import { state, save } from '../../core/store.js?v=20260907055942';
+import { findNote } from '../model.js?v=20260907055942';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907055942';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260907055942';
+import { cur } from '../../core/router.js?v=20260907055942';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907055942';
+import { GROUPS } from '../bar/config.js?v=20260907055942';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

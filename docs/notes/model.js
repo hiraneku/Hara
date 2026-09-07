@@ -5,14 +5,14 @@
    disyaratkan DESIGN.md — tanpa dialog konfirmasi untuk aksi yang bisa
    diurungkan). Setelah jendela itu lewat, catatan dibuang dan blob
    gambar yatim ikut dibersihkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907052638';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260907052638';
-import { toast } from '../core/toast.js?v=20260907052638';
-import { go } from '../core/router.js?v=20260907052638';
-import { saveSoon } from './editor/cleanup.js?v=20260907052638';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907052638';
-import { hapusDrafMilik } from '../core/recovery.js?v=20260907052638';
-import { bersihkanBlobYatim } from './editor/image.js?v=20260907052638';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260907055942';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260907055942';
+import { toast } from '../core/toast.js?v=20260907055942';
+import { go } from '../core/router.js?v=20260907055942';
+import { saveSoon } from './editor/cleanup.js?v=20260907055942';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260907055942';
+import { hapusDrafMilik } from '../core/recovery.js?v=20260907055942';
+import { bersihkanBlobYatim } from './editor/image.js?v=20260907055942';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);

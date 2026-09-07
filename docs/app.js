@@ -1,19 +1,26 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260907052638';
-import { go, onAfterRender } from './core/router.js?v=20260907052638';
-import { toast } from './core/toast.js?v=20260907052638';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907052638';
-import { notesModule } from './notes/index.js?v=20260907052638';
+import { load, state } from './core/store.js?v=20260907055942';
+import { go, onAfterRender } from './core/router.js?v=20260907055942';
+import { toast } from './core/toast.js?v=20260907055942';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260907055942';
+import { notesModule } from './notes/index.js?v=20260907055942';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260907052638';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260907052638';
-import { openPop, closeAll } from './notes/menus/pop.js?v=20260907052638';
+  from './notes/model.js?v=20260907055942';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260907055942';
+import { openPop, closeAll } from './notes/menus/pop.js?v=20260907055942';
 
 const MODULES = [notesModule];
 
 load();
 MODULES.forEach(m => m.init());
 terapkanTema();
+
+/* Data lama yang tidak terbaca: beri tahu, bukan sembunyikan. */
+if (state.dataRusak) {
+  setTimeout(() =>
+    toast('Data tersimpan tidak terbaca — dicadangkan, aplikasi dimulai kosong'),
+    500);
+}
 
 /* Penghitung catatan di nav — diperbarui tiap layar digambar. */
 function perbaruiJumlah() {

@@ -11,17 +11,24 @@ const DB   = 'hara-files';
 const TOKO = 'blobs';
 let dbp = null;
 
+/* Buka database. Kalau pembukaan GAGAL (mode privat, kuota, dsb.) `dbp`
+   di-null-kan, sehingga panggilan berikutnya mencoba lagi — tanpa ini,
+   janji yang tertolak tersimpan selamanya dan semua penyimpanan gambar
+   mati sampai halaman dimuat ulang. */
 function buka() {
   if (dbp) return dbp;
+  if (!self.indexedDB) return Promise.reject(new Error('IndexedDB tidak ada'));
   dbp = new Promise((res, rej) => {
-    if (!self.indexedDB) return rej(new Error('IndexedDB tidak ada'));
-    const req = indexedDB.open(DB, 1);
+    let req;
+    try { req = indexedDB.open(DB, 1); } catch (e) { dbp = null; rej(e); return; }
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(TOKO)) db.createObjectStore(TOKO);
     };
     req.onsuccess = () => res(req.result);
-    req.onerror   = () => rej(req.error);
+    const gagal = err => { dbp = null; rej(err); };
+    req.onerror   = () => gagal(req.error || new Error('gagal membuka IndexedDB'));
+    req.onblocked = () => gagal(new Error('IndexedDB diblokir'));
   });
   return dbp;
 }
