@@ -1,12 +1,12 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907003342';
-import { setBlock, indent } from './blocks.js?v=20260907003342';
-import { pending, flushPending, wrapTypedPending } from './marks.js?v=20260907003342';
-import { autoFormat } from './markdown.js?v=20260907003342';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907003342';
-import { onTitle } from '../model.js?v=20260907003342';
-import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907003342';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907003342';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260907004453';
+import { setBlock, indent } from './blocks.js?v=20260907004453';
+import { pending, sticky, flushPending, wrapTypedPending, markAround } from './marks.js?v=20260907004453';
+import { autoFormat } from './markdown.js?v=20260907004453';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260907004453';
+import { onTitle } from '../model.js?v=20260907004453';
+import { bungkusFontPending, fontPending, adaPendingNone, modeBawaan, keluarDariFont, fontAround } from './font.js?v=20260907004453';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260907004453';
 
 export function bindEditor() {
   const inDoc=t=>t&&t.closest&&t.closest('.ed-doc');
@@ -96,6 +96,20 @@ export function bindEditor() {
     if(inDoc(e.target)){
       if(isReplaying()) return;
       if(pending.size) wrapTypedPending();
+      /* Sticky menyala tapi karakter barusan mendarat DI LUAR elemen format
+         (mis. teks tadi dihapus habis sehingga <b> ikut dibuang). Bungkus
+         ulang karakter itu supaya format benar-benar berlaku, bukan cuma
+         tombolnya yang menyala. */
+      else if(sticky.size){
+        const s2=sel();
+        if(s2 && s2.rangeCount){
+          const perlu=[...sticky].filter(m=>!markAround(m,s2.getRangeAt(0).startContainer));
+          if(perlu.length){
+            perlu.forEach(m=>pending.add(m));
+            wrapTypedPending();
+          }
+        }
+      }
       autoFormat(); refresh();
     }
     else if(e.target.classList && e.target.classList.contains('ed-t')){ onTitle(e.target); updateCount(); }
@@ -106,7 +120,7 @@ export function bindEditor() {
     const s=sel();
     const a=s&&s.anchorNode;
     const blk=curBlock();
-    if(pending.size && _lastAnchor && blk!==_lastAnchor) pending.clear();
+    if(_lastAnchor && blk!==_lastAnchor){ pending.clear(); sticky.clear(); }
     _lastAnchor=blk;
     syncBtns();
   });

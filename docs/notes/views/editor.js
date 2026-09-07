@@ -1,9 +1,9 @@
 /* Layar editor: judul, properti, isi catatan. */
-import { state } from '../../core/store.js?v=20260907003342';
-import { findNote } from '../model.js?v=20260907003342';
-import { esc, tglPendek } from '../../core/dom.js?v=20260907003342';
-import { blocksToDom } from '../note-model.js?v=20260907003342';
-import { panels } from './welcome.js?v=20260907003342';
+import { state } from '../../core/store.js?v=20260907004453';
+import { findNote } from '../model.js?v=20260907004453';
+import { esc, tglPendek } from '../../core/dom.js?v=20260907004453';
+import { blocksToDom } from '../note-model.js?v=20260907004453';
+import { panels } from './welcome.js?v=20260907004453';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];

@@ -1,13 +1,28 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907003342';
-import { refresh } from './cleanup.js?v=20260907003342';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260907004453';
+import { refresh } from './cleanup.js?v=20260907004453';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', s:'s', hl:'span', code:'code' };
 export const MARKCLS = { hl:'hl', code:'ic' };
 export const CMD     = { b:'bold', i:'italic', s:'strikeThrough' };
 export const pending = new Set();
+
+/* Format yang sedang "dinyalakan" lewat tombol. Berbeda dari `pending`:
+   pending habis begitu diterapkan ke DOM, sedangkan sticky bertahan supaya
+   tombol tetap menyala walau teksnya dihapus sampai blok kosong.
+   Dimatikan hanya oleh: klik tombol lagi, pindah blok, atau seleksi teks. */
+export const sticky = new Set();
+
+/* Apakah caret sedang di blok kosong? Saat kosong, elemen format sudah
+   dibuang cleanup() sehingga DOM tidak bisa dijadikan penanda status —
+   di situlah sticky mengambil alih. */
+export function blokKosong(){
+  const b = curBlock();
+  if (!b) return false;
+  return (b.textContent || '').replace(/[\u200b\u00a0]/g, '') === '';
+}
 
 try { document.execCommand('styleWithCSS', false, false); } catch (e) {}
 
@@ -29,6 +44,8 @@ export function markActive(m){
   /* niat 'pending' hanya berlaku saat kursor kosong; kalau ada teks terpilih
      yang menentukan adalah isi DOM, bukan niat sebelumnya */
   if(r.collapsed && pending.has(m)) return true;
+  /* sticky menjaga tombol tetap menyala setelah teks dihapus habis */
+  if(r.collapsed && sticky.has(m)) return true;
   if(markAround(m,r.startContainer)) return true;
   if(!r.collapsed){
     const f=r.cloneContents();
@@ -47,20 +64,25 @@ export function toggleMark(m){
   const r=ensureCaret(); if(!r) return;
 
   if(r.collapsed){                       // tak ada teks terpilih -> niat ketik
-    if(pending.has(m)) pending.delete(m);
-    else {
+    const nyala = pending.has(m) || sticky.has(m) || markAround(m,r.startContainer);
+    if(nyala){                           // MATIKAN
+      pending.delete(m);
+      sticky.delete(m);
       const host=markAround(m,r.startContainer);
       if(host){                          // keluar dari format
         const sp=document.createTextNode('\u200b');
         host.after(sp);
         const nr=document.createRange(); nr.setStart(sp,1); nr.collapse(true);
         sel().removeAllRanges(); sel().addRange(nr);
-      } else pending.add(m);
+      }
+    } else {                             // NYALAKAN
+      pending.add(m);
+      sticky.add(m);
     }
     refresh(); return;
   }
 
-  pending.clear();                 /* seleksi nyata mengalahkan niat lama */
+  pending.clear(); sticky.clear(); /* seleksi nyata mengalahkan niat lama */
   const on=markActive(m);
   const host=markAround(m,r.startContainer);
   const whole = host && host.textContent.replace(/[\u200b\u00a0]/g,'')
@@ -97,6 +119,7 @@ export function wrapTypedPending(){
   const r=s2.getRangeAt(0);
   const node=r.startContainer;
   if(node.nodeType!==3 || r.startOffset===0) return;
+  /* sticky sengaja TIDAK dibuang — tombol harus tetap menyala */
   const marks=[...pending]; pending.clear();
   const start=r.startOffset-1;
   const rr=document.createRange();

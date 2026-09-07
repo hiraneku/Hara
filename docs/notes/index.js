@@ -1,21 +1,21 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907003342';
-import { homeView, notesView } from './views/list.js?v=20260907003342';
-import { editorView } from './views/editor.js?v=20260907003342';
-import { miscViews } from './views/misc.js?v=20260907003342';
-import { bindEditor } from './editor/events.js?v=20260907003342';
-import { renderBar }  from './bar/render.js?v=20260907003342';
-import { bindPop, closeAll } from './menus/pop.js?v=20260907003342';
-import { saveNow, updateCount, syncBtns } from './editor/cleanup.js?v=20260907003342';
-import { pending } from './editor/marks.js?v=20260907003342';
-import { docEl, caretEnd } from './editor/caret.js?v=20260907003342';
-import { resetHistory } from './editor/history.js?v=20260907003342';
-import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907003342';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907003342';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907003342';
-import { renderBar as gambarBar } from './bar/render.js?v=20260907003342';
-import { state } from '../core/store.js?v=20260907003342';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260907004453';
+import { homeView, notesView } from './views/list.js?v=20260907004453';
+import { editorView } from './views/editor.js?v=20260907004453';
+import { miscViews } from './views/misc.js?v=20260907004453';
+import { bindEditor } from './editor/events.js?v=20260907004453';
+import { renderBar }  from './bar/render.js?v=20260907004453';
+import { bindPop, closeAll } from './menus/pop.js?v=20260907004453';
+import { saveNow, updateCount, syncBtns } from './editor/cleanup.js?v=20260907004453';
+import { pending, sticky } from './editor/marks.js?v=20260907004453';
+import { docEl, caretEnd } from './editor/caret.js?v=20260907004453';
+import { resetHistory } from './editor/history.js?v=20260907004453';
+import { pasangGambar, hapusGambar } from './editor/image.js?v=20260907004453';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260907004453';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260907004453';
+import { renderBar as gambarBar } from './bar/render.js?v=20260907004453';
+import { state } from '../core/store.js?v=20260907004453';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -90,6 +90,7 @@ export const notesModule = {
     onAfterRender(() => {
       closeAll();
       pending.clear();
+      sticky.clear();
       const d = docEl();
       if (d && d.firstElementChild) caretEnd(d.firstElementChild);
       /* undo tidak boleh melintas antar catatan */
