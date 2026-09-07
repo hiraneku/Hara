@@ -246,8 +246,18 @@ export function elToBlock(el) {
     content = el.innerHTML || '';
   }
 
+  /* Id HARUS berasal dari DOM supaya stabil lintas pembacaan.
+     Kalau elemen belum bertanda (jalur yang melewatkan pastikanBlockId,
+     mis. migrasi HTML lama), id dibuat lalu DITANAM BALIK — jadi
+     pembacaan berikutnya memakai id yang sama, bukan bikin baru. */
+  let bid = el.getAttribute && el.getAttribute('data-bid');
+  if (!bid) {
+    bid = newBlockId();
+    if (el.setAttribute) el.setAttribute('data-bid', bid);
+  }
+
   return makeBlock({
-    id: el.getAttribute && el.getAttribute('data-bid') || undefined,
+    id: bid,
     type,
     content: bersihkanIsi(content),
     meta,
@@ -273,15 +283,51 @@ function bersihkanIsi(html) {
     .replace(/\sdata-n="[^"]*"/g, '');
 }
 
+/* ── Penjamin id blok di DOM ──
+   Dipanggil setiap kali DOM editor mungkin berubah. Elemen blok yang
+   belum punya `data-bid` (mis. blok baru hasil Enter, atau hasil clone
+   browser yang menyalin bid kembar) diberi id sekali di sini.
+
+   Ini titik TUNGGAL pembuatan id blok saat menyunting. Tanpa ini,
+   id akan dibuat ulang tiap kali domToBlocks() berjalan — artinya
+   berubah setiap simpan, yang persis dilarang. */
+export function pastikanBlockId(root) {
+  if (!root) return;
+  const terpakai = new Set();
+  Array.from(root.children).forEach(el => {
+    if (!el.getAttribute) return;
+    let id = el.getAttribute('data-bid');
+    /* kosong ATAU kembar (browser menyalin atribut saat Enter/duplikat)
+       -> blok ini efektif blok baru, beri id sendiri */
+    if (!id || terpakai.has(id)) {
+      id = newBlockId();
+      el.setAttribute('data-bid', id);
+    }
+    terpakai.add(id);
+  });
+}
+
 /* Baca seluruh editor jadi array blok. */
 export function domToBlocks(root) {
   if (!root) return [makeBlock({ type: 'paragraph' })];
+  pastikanBlockId(root);          /* id dibuat di sini, sekali seumur blok */
   const hasil = [];
   Array.from(root.children).forEach(el => {
     const b = elToBlock(el);
     if (b) hasil.push(b);
   });
   return hasil.length ? hasil : [makeBlock({ type: 'paragraph' })];
+}
+
+/* Duplikat blok: isi & meta disalin, ID WAJIB baru.
+   Tanpa ini, dua blok berbagi id dan block reference jadi ambigu. */
+export function duplicateBlock(b) {
+  return makeBlock({
+    type: b.type,
+    content: b.content,
+    meta: { ...(b.meta || {}) },
+    /* id sengaja tidak diteruskan -> makeBlock memberi id baru */
+  });
 }
 
 /* ════════ MIGRASI ════════ */

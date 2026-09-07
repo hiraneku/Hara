@@ -1,13 +1,13 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260907001515';
-import { renumber } from './blocks.js?v=20260907001515';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260907001515';
-import { state, save } from '../../core/store.js?v=20260907001515';
-import { findNote } from '../model.js?v=20260907001515';
-import { domToBlocks, touch } from '../note-model.js?v=20260907001515';
-import { cur } from '../../core/router.js?v=20260907001515';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907001515';
-import { GROUPS } from '../bar/config.js?v=20260907001515';
+import { docEl, sel, curBlock } from './caret.js?v=20260907003342';
+import { renumber } from './blocks.js?v=20260907003342';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260907003342';
+import { state, save } from '../../core/store.js?v=20260907003342';
+import { findNote } from '../model.js?v=20260907003342';
+import { domToBlocks, touch, pastikanBlockId } from '../note-model.js?v=20260907003342';
+import { cur } from '../../core/router.js?v=20260907003342';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260907003342';
+import { GROUPS } from '../bar/config.js?v=20260907003342';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -117,6 +117,10 @@ export function saveNow(){
 }
 export function refresh(){
   cleanup();
+  /* Beri id pada blok yang baru lahir (Enter, tombol bar, tempel) SEBELUM
+     snapshot undo diambil — supaya id ikut terekam dan tidak berubah
+     saat undo/redo memulihkan HTML. */
+  pastikanBlockId(docEl());
   renumber();                     /* nomor daftar selalu berurutan */
   if(!isReplaying()) record();   /* rekam hasil akhir tiap perubahan */
   updateCount(); syncBtns(); saveSoon();

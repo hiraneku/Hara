@@ -56,6 +56,15 @@ docs/
    hasil baca balik (`domToBlocks`). Nilai turunan seperti cuplikan dihitung
    saat dibutuhkan (`excerptOf`), tidak pernah disimpan ganda.
 
+0b. **Id blok dibuat SEKALI, lewat `newBlockId()` saja.** Id hidup di DOM
+   sebagai `data-bid` dan dibaca balik dari sana — jadi ia tidak berubah
+   saat isi diedit, blok dipindah, catatan dirender ulang, atau disimpan
+   dan dibuka lagi. `pastikanBlockId()` adalah satu-satunya titik yang
+   memberi id ke blok baru (Enter, tombol bar, tempel, clone browser);
+   ia juga mendeteksi id kembar akibat clone dan memberi id baru.
+   Duplikat blok WAJIB lewat `duplicateBlock()` agar dapat id baru.
+   Jangan pernah memakai index atau `blocks.length` sebagai id.
+
 1. **Semua tulis data lewat `core/store.js`.** Tidak ada modul yang menyentuh
    `localStorage` langsung. Saat pindah ke Dexie, cukup satu file yang berubah.
 
