@@ -4,13 +4,13 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908040442';
-import { refresh } from './cleanup.js?v=20260908040442';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908042543';
+import { refresh } from './cleanup.js?v=20260908042543';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260908040442';
-import { state } from '../../core/store.js?v=20260908040442';
-import { cur } from '../../core/router.js?v=20260908040442';
-import { toast } from '../../core/toast.js?v=20260908040442';
+  from '../../core/blobs.js?v=20260908042543';
+import { state } from '../../core/store.js?v=20260908042543';
+import { cur } from '../../core/router.js?v=20260908042543';
+import { toast } from '../../core/toast.js?v=20260908042543';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -148,6 +148,14 @@ export async function pasangGambar() {
     const u = await urlUntuk(id);
     if (u) {
       img.setAttribute('src', u);
+      /* simpan rasio begitu dimensi diketahui — render ulang berikutnya
+         (ganti mode) langsung memakai ukuran yang benar tanpa menunggu */
+      const ingat = () => {
+        if (img.naturalWidth && img.naturalHeight)
+          img.style.aspectRatio = img.naturalWidth + '/' + img.naturalHeight;
+      };
+      if (img.complete && img.naturalWidth) ingat();
+      else img.addEventListener('load', ingat, { once: true });
       continue;
     }
     /* Berkasnya tidak ada: gambar disembunyikan & placeholder ditampilkan.

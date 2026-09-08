@@ -1,14 +1,14 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260908040442';
-import { go, onAfterRender } from './core/router.js?v=20260908040442';
-import { toast } from './core/toast.js?v=20260908040442';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260908040442';
-import { notesModule } from './notes/index.js?v=20260908040442';
+import { load, state } from './core/store.js?v=20260908042543';
+import { go, onAfterRender } from './core/router.js?v=20260908042543';
+import { toast } from './core/toast.js?v=20260908042543';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260908042543';
+import { notesModule } from './notes/index.js?v=20260908042543';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260908040442';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260908040442';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260908040442';
-import { simpanTemplatNote } from './notes/templat.js?v=20260908040442';
+  from './notes/model.js?v=20260908042543';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260908042543';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260908042543';
+import { simpanTemplatNote } from './notes/templat.js?v=20260908042543';
 
 const MODULES = [notesModule];
 

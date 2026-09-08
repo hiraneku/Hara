@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908040442';
-import { refresh } from './editor/cleanup.js?v=20260908040442';
-import { snap } from './editor/history.js?v=20260908040442';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908040442';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908042543';
+import { refresh } from './editor/cleanup.js?v=20260908042543';
+import { snap } from './editor/history.js?v=20260908042543';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908042543';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -255,6 +255,7 @@ function mulaiUkuran(e) {
   window.addEventListener('pointermove', gerak);
   window.addEventListener('pointerup', lepas);
   window.addEventListener('pointercancel', lepas);
+  document.body.classList.add('drag-blk');   /* cegah seleksi teks saat menyeret */
 }
 
 /* ── gesture putar (gagang atas) ── */
@@ -271,6 +272,7 @@ function mulaiPutar(e) {
   window.addEventListener('pointermove', gerak);
   window.addEventListener('pointerup', lepas);
   window.addEventListener('pointercancel', lepas);
+  document.body.classList.add('drag-blk');   /* cegah seleksi teks saat menyeret */
 }
 
 /* ── gesture pindah (gagang kiri-atas) ── */
@@ -320,9 +322,11 @@ function mulaiPindah(e) {
   g.style.display = 'block';
   g.style.left = (e.clientX - lebar / 2) + 'px';
   g.style.top = (e.clientY - 20) + 'px';
+  fig.classList.add('img-pindah-src');   /* redup: sedang dipindahkan */
   window.addEventListener('pointermove', gerak);
   window.addEventListener('pointerup', lepas);
   window.addEventListener('pointercancel', lepas);
+  document.body.classList.add('drag-blk');   /* cegah seleksi teks saat menyeret */
 }
 
 /* hasil penempatan: { i, align, zb } */
@@ -373,6 +377,15 @@ function gerak(e) {
     snap();   /* satu langkah undo utk seluruh gerakan */
     if (g.jenis === 'ukuran') pilih.classList.add('seret');
   }
+  /* seret pindah di dekat tepi layar → gulir halaman sedikit, supaya
+     gambar bisa dipindah ke paragraf yang di luar layar */
+  if (g.jenis === 'pindah') {
+    const H = window.innerHeight || 0;
+    if (H > 100) {
+      if (e.clientY < 90) window.scrollBy(0, -16);
+      else if (e.clientY > H - 90) window.scrollBy(0, 16);
+    }
+  }
   const fig = pilih;
   if (g.jenis === 'ukuran') {
     const w = Math.round(jepit(((e.clientX - g.kiri) / (g.kolom || 1)) * 100, 20, 100));
@@ -408,13 +421,15 @@ function lepas() {
   if (!geser) return;
   const g = geser;
   geser = null;
-  const fig = pilih;
-  if (!fig) return;
-  fig.classList.remove('seret');
-  if (g.jenis === 'pindah') {
+  /* bersihkan selalu, apa pun nasib seleksi (hantu jangan tersisa) */
+  document.body.classList.remove('drag-blk');
+  if (g.jenis === 'pindah' && g.g) {
     g.g.style.display = 'none';
     g.g.innerHTML = '';
   }
+  const fig = pilih;
+  if (!fig || !fig.isConnected) return;
+  fig.classList.remove('seret', 'img-pindah-src');
   if (!g.jalan) return;
   if (g.jenis === 'ukuran') {
     /* lebar baru sudah live; rekam + segarkan bar */
@@ -489,7 +504,7 @@ function deseleksi() {
   if (!pilih) return;
   const f = pilih;
   pilih = null;
-  f.classList.remove('img-pilih', 'seret', 'sempit');
+  f.classList.remove('img-pilih', 'seret', 'sempit', 'img-pindah-src');
   ['img-grip', 'img-move', 'img-putar'].forEach(c => {
     const h = f.querySelector('.' + c);
     if (h) h.remove();
@@ -504,6 +519,7 @@ function deseleksi() {
 export function bindTataGambar() {
   document.addEventListener('pointerdown', e => {
     if (e.button !== undefined && e.button !== 0) return;
+    if (geser) return;   /* satu gesture pada satu waktu */
     if (pilih && !pilih.isConnected) deseleksi(); /* figur terhapus */
     /* gagang-gagang pada figur yang dipilih */
     const grip = e.target.closest ? e.target.closest('.img-grip') : null;
@@ -601,4 +617,29 @@ export function bindTataGambar() {
 
 export function bersihkanPilihanGambar() {
   deseleksi();
+}
+
+/* Diseimbangkan setiap refresh(): undo/redo mengganti isi DOM dari
+   snapshot — snapshot bisa memuat gambar terpilih + gagang dari keadaan
+   lama. Kalau seleksi aktif masih hidup, biarkan; kalau tidak, gagang
+   hantu & kelas sisa di semua figur dibersihkan. */
+export function seimbangkanGagangGambar() {
+  const d = docEl();
+  if (!d) return;
+  if (pilih) {
+    if (!pilih.isConnected || !pilih.classList.contains('img-pilih')) deseleksi();
+    return;
+  }
+  const sisa = d.querySelectorAll('.b-img.img-pilih');
+  if (!sisa.length) return;
+  sisa.forEach(f => {
+    f.classList.remove('img-pilih', 'seret', 'sempit', 'img-pindah-src');
+    ['img-grip', 'img-move', 'img-putar'].forEach(c => {
+      const h = f.querySelector('.' + c);
+      if (h) h.remove();
+    });
+  });
+  sembunyikanBar();
+  const g = ghost();
+  if (g.style.display !== 'none') { g.style.display = 'none'; g.innerHTML = ''; }
 }

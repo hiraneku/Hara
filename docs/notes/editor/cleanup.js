@@ -1,18 +1,19 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908040442';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908040442';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260908040442';
-import { state, save } from '../../core/store.js?v=20260908040442';
-import { findNote } from '../model.js?v=20260908040442';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908040442';
-import { sinkronTag } from '../tags.js?v=20260908040442';
-import { tandaiTautan } from '../wikilink.js?v=20260908040442';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908040442';
-import { cur } from '../../core/router.js?v=20260908040442';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908040442';
-import { GROUPS } from '../bar/config.js?v=20260908040442';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260908040442';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908040442';
+import { docEl, sel, curBlock } from './caret.js?v=20260908042543';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908042543';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260908042543';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260908042543';
+import { state, save } from '../../core/store.js?v=20260908042543';
+import { findNote } from '../model.js?v=20260908042543';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908042543';
+import { sinkronTag } from '../tags.js?v=20260908042543';
+import { tandaiTautan } from '../wikilink.js?v=20260908042543';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908042543';
+import { cur } from '../../core/router.js?v=20260908042543';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908042543';
+import { GROUPS } from '../bar/config.js?v=20260908042543';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260908042543';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908042543';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -206,6 +207,8 @@ export function refresh(){
   pastikanGandel(docEl());
   /* gambar tidak boleh menjadi blok terakhir — sediakan kolom ketik */
   pastikanKolomAkhir(docEl());
+  /* seleksi gambar & gagangnya seimbang dengan DOM (undo/redo) */
+  seimbangkanGagangGambar();
   /* wikilink: yang belum ada catatannya tampil putus-putus */
   tandaiTautan(docEl());
   renumber();                     /* nomor daftar selalu berurutan */
