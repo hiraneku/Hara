@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908230043';
-import { refresh } from './editor/cleanup.js?v=20260908230043';
-import { snap } from './editor/history.js?v=20260908230043';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908230043';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908235230';
+import { refresh } from './editor/cleanup.js?v=20260908235230';
+import { snap } from './editor/history.js?v=20260908235230';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908235230';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -162,9 +162,11 @@ function segarkanBar() {
 }
 
 /* Gambar sempit, menempel tepi kiri layar, atau mengapit kiri/kanan
-   memakai gagang yang sedikit lebih besar dan digeser ke dalam
-   (kelas .sempit — lihat notes.css) supaya tetap gampang digenggam dan
-   tidak menggantung di tepi layar (zona usapan balik sistem). */
+   memakai gagang yang sedikit lebih besar (kelas .sempit — lihat
+   notes.css) supaya tetap gampang digenggam. Khusus gambar yang
+   menempel kiri DAN dekat tepi layar, gagang pindah digeser ke dalam
+   (.f-tepi) supaya tidak menggantung di tepi layar / masuk zona usapan
+   balik sistem — di layar lebar gagang tidak bergeser. */
 function perbaruiKelasSempit() {
   const f = pilih;
   if (!f || !f.isConnected) return;
@@ -179,6 +181,9 @@ function perbaruiKelasSempit() {
     }
   }
   f.classList.toggle('sempit', kecil);
+  const r = f.getBoundingClientRect();
+  const dekatTepi = !!r && r.left >= 0 && r.left < 60;
+  f.classList.toggle('f-tepi', kecil && f.classList.contains('f-l') && dekatTepi);
 }
 
 function sembunyikanBar() {
@@ -222,7 +227,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20260908230043')
+    import('./editor/image.js?v=20260908235230')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();

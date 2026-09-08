@@ -6,9 +6,9 @@
    Thumbnail (B C16): gambar PERTAMA catatan tampil sebagai miniatur di
    kiri — dipasang lewat urlUntuk oleh pasangThumbDaftar() tiap daftar
    digambar (lihat index.js); <img> di sini hanya memuat data-blob. */
-import { esc, stamp } from '../../core/dom.js?v=20260908230043';
-import { excerptOf } from '../note-model.js?v=20260908230043';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260908230043';
+import { esc, stamp } from '../../core/dom.js?v=20260908235230';
+import { excerptOf } from '../note-model.js?v=20260908235230';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260908235230';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {
