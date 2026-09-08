@@ -358,6 +358,11 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc>.b-div,.ed-doc>.b-cal,.ed-doc>h1,.ed-doc>h2,.ed-doc>h3,
 .ed-doc>.b-code,.ed-doc>.b-quote,.ed-doc>.b-ol,.ed-doc>.b-li,
 .ed-doc>.b-todo{clear:both}
+/* Penahan akhir kolom: tinggi .ed-doc ikut menghitung gambar mengapit
+   (float tidak menambah tinggi induknya secara alami). Tanpa ini, gambar
+   yang ditaruh di akhir catatan bisa menembus batas bawah kolom dan
+   menimpa panel data di bawahnya (tautan keluar/backlink/dll). */
+.ed-doc::after{content:'';display:block;clear:both}
 /* gambar sedang dipilih */
 .b-img.img-pilih{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-md)}
 .img-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:999px;
