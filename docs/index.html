@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20260908054158">
-<link rel="stylesheet" href="./styles/base.css?v=20260908054158">
-<link rel="stylesheet" href="./styles/shell.css?v=20260908054158">
-<link rel="stylesheet" href="./styles/notes.css?v=20260908054158">
+<link rel="stylesheet" href="./styles/tokens.css?v=20260908133031">
+<link rel="stylesheet" href="./styles/base.css?v=20260908133031">
+<link rel="stylesheet" href="./styles/shell.css?v=20260908133031">
+<link rel="stylesheet" href="./styles/notes.css?v=20260908133031">
 </head>
 <body>
 <svg style="display:none">
@@ -71,6 +71,8 @@
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H11v3H6.5A2.5 2.5 0 0 1 4 18.5z"/></symbol>
 <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3h10v5"/><rect x="4" y="8" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></symbol>
 <symbol id="i-tpl" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 14h6M12 11v6"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="m8.3 10.8 7.4-3.6M8.3 13.2l7.4 3.6"/></symbol>
+<symbol id="i-zen" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
 </svg>
 
 <div class="app">
@@ -115,6 +117,7 @@
 </div>
 
 <div class="pop" id="pop"></div>
+<button type="button" class="iconbtn" id="zen-x" aria-label="Keluar mode fokus" title="Keluar mode fokus (Esc)"><svg class="ico"><use href="#i-x"/></svg></button>
 <div class="toast" id="toast"></div>
 
 <nav class="bnav" id="bnav">
@@ -124,6 +127,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
 </nav>
 
-<script type="module" src="./app.js?v=20260908054158"></script>
+<script type="module" src="./app.js?v=20260908133031"></script>
 </body>
 </html>

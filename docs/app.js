@@ -1,14 +1,15 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260908054158';
-import { go, onAfterRender } from './core/router.js?v=20260908054158';
-import { toast } from './core/toast.js?v=20260908054158';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260908054158';
-import { notesModule } from './notes/index.js?v=20260908054158';
+import { load, state } from './core/store.js?v=20260908133031';
+import { go, onAfterRender } from './core/router.js?v=20260908133031';
+import { toast } from './core/toast.js?v=20260908133031';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260908133031';
+import { notesModule } from './notes/index.js?v=20260908133031';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260908054158';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260908054158';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260908054158';
-import { simpanTemplatNote } from './notes/templat.js?v=20260908054158';
+  from './notes/model.js?v=20260908133031';
+import { bagikanCatatan } from './notes/share.js?v=20260908133031';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260908133031';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260908133031';
+import { simpanTemplatNote } from './notes/templat.js?v=20260908133031';
 
 const MODULES = [notesModule];
 
@@ -69,6 +70,7 @@ document.addEventListener('click', e => {
       simpanTemplatNote(n);
       return;
     }
+    else if (a === 'bagi') { bagikanCatatan(); return; }
     else if (a === 'remind') toast('Modul Reminder menyusul');
     else if (a === 'hapus') delNote();
     return;

@@ -666,3 +666,120 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   .ed-doc>*{page-break-inside:avoid}
   .b-code,.emb{page-break-inside:avoid}
 }
+
+/* ════════════ BACA PLUS — Bagian A roadmap ════════════
+   A1 ukuran teks · A2 zen · A3 cari di catatan · A4 pin baris ·
+   A6 pilihan aksen (UI swatch) — kendali A−/A+/zen ada di .ed-aksi. */
+
+/* A1 — skala teks bacaan: --tsx (1 = 100%) diatur JS (baca-plus.js),
+   dipakai seluruh teks kolom catatan — mode baca & tulis sama. */
+.ed{position:relative}
+.ed-t{padding-right:120px}
+.ed-doc{font-size:calc(16px*var(--tsx,1))}
+.ed-doc .b-p,.ed-doc .b-ol,.ed-doc .b-li,.ed-doc .b-todo,.ed-doc .b-quote
+{font-size:calc(16px*var(--tsx,1))}
+.ed-doc .b-code{font-size:calc(13px*var(--tsx,1))}
+.ed-doc .b-cal{font-size:calc(15px*var(--tsx,1))}
+.ed-doc .b-cal .t{font-size:calc(13px*var(--tsx,1))}
+.ed-doc .b-h1{font-size:calc(25px*var(--tsx,1))}
+.ed-doc .b-h2{font-size:calc(20px*var(--tsx,1))}
+.ed-doc .b-h3{font-size:calc(16.5px*var(--tsx,1))}
+
+/* kendali baca — pojok kanan atas kolom catatan */
+.ed-aksi{position:absolute;top:30px;right:4px;display:flex;align-items:center;gap:1px;z-index:4}
+.ea-b{width:31px;height:31px;display:grid;place-items:center;border-radius:999px;
+  color:var(--muted);font-size:12.5px;font-weight:700;letter-spacing:.02em;
+  transition:.12s var(--ease)}
+.ea-b:hover{background:var(--sunken);color:var(--text)}
+.ea-b:active{transform:scale(.92)}
+.ea-b.ea-ico .ico{width:16px;height:16px}
+.ea-b.on{background:var(--accent-weak);color:var(--accent)}
+.ea-v{min-width:40px;text-align:center;font-size:10.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums;user-select:none}
+.ea-sep{width:1px;height:15px;background:var(--border);margin:0 3px}
+.et-cari{display:none}
+.ed.baca .et-cari{display:grid}
+
+/* A2 — mode fokus/zen: hanya kolom catatan yang tampil */
+#zen-x{display:none}
+body.zen .side,body.zen .head,body.zen .mech,
+body.zen .bnav,body.zen .fab{display:none!important}
+body.zen #zen-x{display:grid;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));
+  width:46px;height:46px;border-radius:999px;place-items:center;
+  background:var(--accent);color:#fff;box-shadow:var(--shadow-modal);z-index:90}
+[data-theme=dark] body.zen #zen-x{color:#131711}
+body.zen #zen-x .ico{width:20px;height:20px}
+body.zen #zen-x:hover{filter:brightness(1.08)}
+
+/* A3 — panel cari di dalam catatan (mode baca) */
+#cari-note{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:70;
+  display:none;align-items:center;gap:2px;width:min(440px,calc(100vw - 24px));
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+  padding:3px 4px 3px 14px;box-shadow:var(--shadow-pop)}
+#cari-note.on{display:flex}
+#cari-note>svg.ico{width:16px;height:16px;flex:none}
+#cari-note input{flex:1;min-width:0;background:none;border:none;outline:none;
+  color:var(--text);font-size:13.5px;padding:7px 8px}
+#cari-note input::placeholder{color:var(--faint)}
+.cn-hasil{min-width:36px;text-align:center;font-size:11.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums;flex:none}
+.cn-b{width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+  color:var(--muted);transition:.12s var(--ease)}
+.cn-b:hover{background:var(--sunken);color:var(--text)}
+.cn-b .ico{width:15px;height:15px}
+body.zen #cari-note{top:16px}
+
+/* sorotan hasil cari — dipakai juga sebagai sorotan sementara lain */
+.cari{background:color-mix(in srgb,var(--accent) 22%,transparent);
+  border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.cari.cari-kini{background:var(--accent);color:#fff;box-shadow:none}
+[data-theme=dark] .cari.cari-kini{color:#131711}
+
+/* A4 — tombol semat kecil di baris daftar (baris sendiri <button>,
+   jadi tombol ini <span role=button>; baris di-klik = buka catatan).
+   Selalu tampil samar; disemat = aksen. Satu ketukan langsung
+   semat/lepas tanpa membuka catatan. */
+.row .pinx{width:28px;height:28px;flex:none;display:grid;place-items:center;
+  border-radius:999px;color:var(--faint);opacity:.55;transition:.12s var(--ease);
+  cursor:pointer}
+.row .pinx .ico{width:15px;height:15px}
+.row .pinx:hover{background:var(--sunken);color:var(--muted);opacity:1}
+.row .pinx:focus-visible{outline:2px solid var(--accent);opacity:1}
+.row .pinx.on{color:var(--accent);opacity:1}
+.row .pinx.on:hover{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+
+/* A6 — pilihan warna aksen di Pengaturan (nilai palet di tokens.css) */
+.aksen{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ak-dot{width:31px;height:31px;border-radius:999px;flex:none;display:grid;place-items:center;
+  background:var(--w,var(--accent));color:#fff;border:2px solid transparent;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);transition:.12s var(--ease)}
+.ak-dot::after{content:"";width:0;height:0;border-radius:999px;background:currentColor;
+  transition:.12s var(--ease)}
+.ak-dot.on{border-color:var(--text);box-shadow:none}
+.ak-dot.on::after{width:11px;height:11px}
+.ak-dot:hover{transform:scale(1.12)}
+[data-theme=dark] .ak-dot{color:#131711}
+
+@media(max-width:560px){
+  .ed-t{padding-right:64px}
+  .ed-aksi{right:2px}
+  .ea-b{width:29px;height:29px}
+  .ea-v{min-width:30px}
+}
+
+@media print{
+  .ed-aksi,#cari-note,#zen-x,.pinx,.ak-dot{display:none!important}
+}
+
+/* ════ Palet warna aksen (Pengaturan → Warna aksen, Bagian A6) ════
+   data-ak dipasang di <html> oleh core/theme.js; tanpa data-ak nilai
+   default tetap hijau Hara (tokens.css/base.css). --m-notes ikut
+   mewarnai agar ikon modul Catatan serasi dengan aksen. */
+[data-ak=biru]{--accent:#2E6D9B;--accent-weak:#E6EFF5;--m-notes:var(--accent)}
+[data-ak=ungu]{--accent:#6B5B9E;--accent-weak:#EFEBF7;--m-notes:var(--accent)}
+[data-ak=bata]{--accent:#A44E3B;--accent-weak:#F8ECE7;--m-notes:var(--accent)}
+[data-ak=emas]{--accent:#8A6B2C;--accent-weak:#F6EEDC;--m-notes:var(--accent)}
+[data-theme=dark][data-ak=biru]{--accent:#7FB0CC;--accent-weak:#20303B;--m-notes:var(--accent)}
+[data-theme=dark][data-ak=ungu]{--accent:#A99CD3;--accent-weak:#2B2437;--m-notes:var(--accent)}
+[data-theme=dark][data-ak=bata]{--accent:#D98D7C;--accent-weak:#382421;--m-notes:var(--accent)}
+[data-theme=dark][data-ak=emas]{--accent:#D0AE6E;--accent-weak:#332B1B;--m-notes:var(--accent)}

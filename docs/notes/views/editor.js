@@ -1,10 +1,10 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20260908054158';
-import { findNote } from '../model.js?v=20260908054158';
-import { esc } from '../../core/dom.js?v=20260908054158';
-import { blocksToDom } from '../note-model.js?v=20260908054158';
-import { barisProps } from '../meta-ui.js?v=20260908054158';
+import { state } from '../../core/store.js?v=20260908133031';
+import { findNote } from '../model.js?v=20260908133031';
+import { esc } from '../../core/dom.js?v=20260908133031';
+import { blocksToDom } from '../note-model.js?v=20260908133031';
+import { barisProps } from '../meta-ui.js?v=20260908133031';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -15,6 +15,14 @@ const n=findNote(state.openId)||state.notes[0];
  const body=`<div class="ed-doc" contenteditable="true" spellcheck="false"
    data-ph="Mulai menulis. Coba ketik **tebal** atau # judul">${inner}</div>`;
  return `<div class="ed">
+  <div class="ed-aksi" role="group" aria-label="Kendali baca">
+    <button type="button" class="ea-b" data-et="kecil" aria-label="Perkecil teks bacaan" title="Perkecil teks bacaan">A−</button>
+    <span class="ea-v" id="ed-ukur" aria-hidden="true">16px</span>
+    <button type="button" class="ea-b" data-et="besar" aria-label="Perbesar teks bacaan" title="Perbesar teks bacaan">A+</button>
+    <span class="ea-sep" aria-hidden="true"></span>
+    <button type="button" class="ea-b ea-ico" data-et="zen" aria-label="Mode fokus" aria-pressed="false" title="Mode fokus — sembunyikan semua kecuali catatan"><svg class="ico"><use href="#i-zen"/></svg></button>
+    <button type="button" class="ea-b ea-ico et-cari" data-et="cari" aria-label="Cari di dalam catatan" title="Cari di dalam catatan (mode baca)"><svg class="ico"><use href="#i-search"/></svg></button>
+  </div>
   <input class="ed-t" value="${esc(n.title)}" placeholder="Judul"
     aria-label="Judul catatan">
   <div class="props" id="props-box">

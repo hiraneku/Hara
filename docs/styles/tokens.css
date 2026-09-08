@@ -5,6 +5,7 @@
   --accent:#3F6F5B; --accent-weak:#E8F0EB; --danger:#A34434;
   --link:#2F6E8F; --link-dead:#B0715E;
   --m-notes:#3F6F5B; --m-rem:#B5723A; --m-task:#4A6B8A;
+  --tsx:1;   /* skala ukuran teks bacaan — diubah A−/A+ (baca-plus.js) */
   --r-sm:6px; --r-md:10px; --r-lg:14px;
   --shadow-pop:0 4px 16px rgba(28,27,24,.08);
   --shadow-modal:0 16px 48px rgba(28,27,24,.16);

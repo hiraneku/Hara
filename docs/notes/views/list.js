@@ -3,11 +3,11 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260908054158';
-import { esc, tglHari } from '../../core/dom.js?v=20260908054158';
-import { rowFor } from './row.js?v=20260908054158';
-import { stt } from './data.js?v=20260908054158';
-import { tagDariIsi } from '../tags.js?v=20260908054158';
+import { state } from '../../core/store.js?v=20260908133031';
+import { esc, tglHari } from '../../core/dom.js?v=20260908133031';
+import { rowFor } from './row.js?v=20260908133031';
+import { stt } from './data.js?v=20260908133031';
+import { tagDariIsi } from '../tags.js?v=20260908133031';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -62,7 +62,10 @@ const kartu = daftar => `<div class="card">${daftar.map(rowFor).join('')}</div>`
 
 export const homeView = () => {
   const daftar = aktif();
-  const terbaru = [...daftar].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 4);
+  /* yang disemat selalu menang di beranda, sisanya urut terbaru */
+  const urut = a => [...a].sort((x, y) => y.updatedAt - x.updatedAt);
+  const terbaru = [...urut(daftar.filter(n => n.pinned)),
+                   ...urut(daftar.filter(n => !n.pinned))].slice(0, 4);
   return `<div class="page">
   <div class="hello"><div class="d">${tglHari()}</div>
   <div class="s">${daftar.length ? daftar.length + ' catatan tersimpan.' : 'Belum ada apa-apa.'}</div></div>

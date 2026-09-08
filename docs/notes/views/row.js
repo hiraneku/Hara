@@ -2,8 +2,8 @@
    Chip tag di bawah cuplikan: sinkron dengan isi catatan (tags.js).
    Chip memfilter daftar lewat data-tag — ditangani delegasi klik di
    notes/index.js (berjalan lebih dulu dari pembuka catatan data-open). */
-import { esc, stamp } from '../../core/dom.js?v=20260908054158';
-import { excerptOf } from '../note-model.js?v=20260908054158';
+import { esc, stamp } from '../../core/dom.js?v=20260908133031';
+import { excerptOf } from '../note-model.js?v=20260908133031';
 
 export const rowFor=n=>{
   const cuplikan=excerptOf(n);      /* diturunkan dari blocks, tidak disimpan */
@@ -15,8 +15,14 @@ export const rowFor=n=>{
         `<span class="tg-chip" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}
         ${tg.length > 3 ? `<span class="tg-more">+${tg.length - 3}</span>` : ''}</div>`
     : '';
+  /* tombol semat kecil di ujung baris (span, karena baris sendiri <button>) */
+  const pinx = (!n.archived && !n.deletedAt)
+    ? `<span class="pinx${n.pinned ? ' on' : ''}" role="button" tabindex="0"
+        data-pinx="${n.id}" aria-label="${n.pinned ? 'Lepas sematan' : 'Sematkan'}">
+        <svg class="ico"><use href="#i-pin"/></svg></span>`
+    : '';
   return `<button class="row" data-open="${n.id}">
   <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${esc(n.title) || 'Tanpa judul'}</div>
   ${cuplikan ? `<div class="row-s">${esc(cuplikan)}</div>` : ''}${chips}</div>
-  <span class="row-m">${stamp(n.updatedAt)}</span></button>`;
+  <span class="row-m">${stamp(n.updatedAt)}</span>${pinx}</button>`;
 };

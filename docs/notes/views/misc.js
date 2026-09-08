@@ -1,11 +1,12 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260908054158';
-import { esc, stamp } from '../../core/dom.js?v=20260908054158';
-import { rowFor } from './row.js?v=20260908054158';
-import { plainText } from '../note-model.js?v=20260908054158';
-import { semuaTag } from '../tags.js?v=20260908054158';
+import { state } from '../../core/store.js?v=20260908133031';
+import { esc, stamp } from '../../core/dom.js?v=20260908133031';
+import { rowFor } from './row.js?v=20260908133031';
+import { plainText } from '../note-model.js?v=20260908133031';
+import { semuaTag } from '../tags.js?v=20260908133031';
+import { AK, akSekarang } from '../../core/theme.js?v=20260908133031';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -111,7 +112,12 @@ trash:()=>{
   </div>`;
 },
 
-set:()=>`<div class="page">
+set:()=>{ const akPilih = akSekarang() || '';
+  const swAksen = AK.map(a =>
+    `<button type="button" class="ak-dot${(a.k || '') === akPilih ? ' on' : ''}"
+       data-ak="${a.k || ''}" aria-pressed="${(a.k || '') === akPilih}"
+       title="${esc(a.nama)}" aria-label="${esc(a.nama)}" style="--w:${a.w}"></button>`).join('');
+  return `<div class="page">
   <div class="sec"><h2>Tampilan</h2></div>
   <div class="card" style="margin-bottom:24px">
     <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Sekarang <span id="tema-st">…</span></div></div>
@@ -119,6 +125,10 @@ set:()=>`<div class="page">
     <div class="row"><div class="row-b"><div class="row-t">Getar saat menekan tombol</div>
       <div class="row-s">Umpan balik singkat di perangkat yang mendukung</div></div>
       <button class="sw" data-getar role="switch"><span></span></button></div>
+    <div class="row" style="flex-wrap:wrap;gap:8px 0">
+      <div class="row-b"><div class="row-t">Warna aksen</div>
+        <div class="row-s">Tombol utama, sorotan, dan tanda aktif</div></div>
+      <div class="aksen" role="group" aria-label="Warna aksen">${swAksen}</div></div>
   </div>
   <div class="sec"><h2>Isi bar mekanik</h2></div>
   <div class="card" style="margin-bottom:24px" id="bar-prefs"></div>
@@ -139,4 +149,4 @@ set:()=>`<div class="page">
   </div>
   <input type="file" id="impor-in" hidden
     accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
-  <p class="note" style="padding:20px 0 0">Keluar-masuk kapan saja: cadangan JSON untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan JSON; ekspor Markdown hanya membawa teks.</p></div>`};
+  <p class="note" style="padding:20px 0 0">Keluar-masuk kapan saja: cadangan JSON untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan JSON; ekspor Markdown hanya membawa teks.</p></div>`}};
