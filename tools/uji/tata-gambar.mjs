@@ -29,7 +29,7 @@ const V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
 const st = (...p) => import(`${AKAR}/docs/${p.join('/')}?v=${V}`);
 await st('app.js');
 const { state } = await st('core/store.js');
-const { makeNote, makeBlock, blockToHtml } = await st('notes/note-model.js');
+const { makeNote, makeBlock, blockToHtml, elToBlock } = await st('notes/note-model.js');
 const { openNote } = await st('notes/model.js');
 const { saveNow } = await st('notes/editor/cleanup.js');
 const mode = await st('notes/mode-baca.js');
@@ -143,6 +143,18 @@ if (BAG === 'A') {
   const meta = baca(dd.firstElementChild);
   ok('A14 baca balik dari DOM sama', meta.w === 62 && meta.rot === -15 &&
      meta.align === 'l' && meta.zb === 'b', JSON.stringify(meta));
+
+  const slotH = blockToHtml(makeBlock({
+    type: 'paragraph', content: 'lanjut di bawah gambar',
+    meta: { gslot: true } }));
+  ok('A15 render paragraf gslot → class g-slot ikut',
+     slotH.includes('g-slot'), slotH.slice(0, 90));
+  const wadah2 = d.createElement('div');
+  wadah2.innerHTML = slotH;
+  const blok2 = elToBlock(wadah2.firstElementChild);
+  ok('A16 baca balik g-slot dari DOM → meta.gslot',
+     blok2 && blok2.meta && blok2.meta.gslot === true,
+     JSON.stringify(blok2 && blok2.meta));
   selesai();
 }
 
@@ -281,9 +293,10 @@ if (BAG === 'B') {
     .map(c => /b-p/.test(c) ? 'p' : 'img').join('-');
   ok('B17 pindah ke bawah → urut p-p-img (gambar jadi paling akhir)',
      ordo === 'p-p-img' && anakAkhir[2].classList.contains('b-img'), ordo);
-  ok('B17b gambar di akhir mendapat kolom ketik di bawahnya',
+  ok('B17b gambar di akhir mendapat slot ketik di bawahnya (g-slot, baris penuh)',
      DOC().children.length === 4 &&
      DOC().lastElementChild.classList.contains('b-p') &&
+     DOC().lastElementChild.classList.contains('g-slot') &&
      (DOC().lastElementChild.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
      anakAkhir[2] === DOC().children[2],
      'jumlah=' + DOC().children.length + ' terakhir=' + DOC().lastElementChild.className);
@@ -495,8 +508,9 @@ if (BAG === 'C') {
   const anak9 = DOC().children;
   const img9 = DOC().querySelector('.b-img');
   const last9 = anak9[anak9.length - 1];
-  ok('C19 catatan berakhir gambar → kolom ketik otomatis di bawahnya',
+  ok('C19 catatan berakhir gambar → slot ketik otomatis di bawahnya (g-slot)',
      anak9.length >= 3 && last9.classList.contains('b-p') &&
+     last9.classList.contains('g-slot') &&
      (last9.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
      anak9[anak9.length - 2] === img9 && img9.classList.contains('f-r'),
      'jumlah=' + anak9.length + ' last=' + last9.className);
@@ -505,6 +519,46 @@ if (BAG === 'C') {
   ok('C20 kolom ketik tersimpan tanpa merusak meta gambar',
      m9 && m9.meta && m9.meta.blobId === 'f-g9' && m9.meta.w === 60 &&
      m9.meta.align === 'r', JSON.stringify(m9 && m9.meta));
+
+  /* catatan yang sudah punya paragraf kosong penutup setelah gambar:
+     paragraf itu otomatis menjadi slot baris-penuh di bawah gambar */
+  state.notes.push(makeNote({ id: 'g10', title: 'g10', blocks: [
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g10', alt: 'g10.png', w: 60, rot: 0, align: 'r' } }),
+    makeBlock({ type: 'paragraph', content: '' }),
+  ] }));
+  await simpanBlob('f-g10', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g10'); await sleep(100);
+  const last10 = DOC().lastElementChild;
+  ok('C21 paragraf kosong penutup yang sudah ada → dijadikan g-slot',
+     last10.classList.contains('b-p') && last10.classList.contains('g-slot') &&
+     (last10.textContent || '').replace(/[\u200b\u00a0]/g, '') === '',
+     'last=' + last10.className);
+  saveNow();
+  const m10 = blokGambar();
+  ok('C22 slot penutup tidak menambah blok ganda & meta utuh',
+     m10 && m10.meta && m10.meta.blobId === 'f-g10' &&
+     DOC().querySelectorAll(':scope > .b-p.g-slot').length === 1,
+     JSON.stringify(m10 && m10.meta));
+
+  /* slot yang sudah berisi teks tetap utuh setelah simpan & buka ulang —
+     posisinya tidak berubah (tanda g-slot ikut tersimpan di meta) */
+  state.notes.push(makeNote({ id: 'g11', title: 'g11', blocks: [
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g11', alt: 'g11.png', w: 60, rot: 0, align: 'r' } }),
+    makeBlock({ type: 'paragraph', content: 'teks lanjutan di bawah gambar', meta: { gslot: true } }),
+  ] }));
+  await simpanBlob('f-g11', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g11'); await sleep(100);
+  const last11 = DOC().lastElementChild;
+  ok('C23 slot berisi tetap g-slot setelah buka ulang',
+     last11.classList.contains('g-slot') &&
+     (last11.textContent || '').indexOf('teks lanjutan di bawah gambar') >= 0,
+     last11.outerHTML.slice(0, 120));
+  saveNow();
+  const m11 = blokGambar();
+  ok('C24 meta.gslot tersimpan utuh',
+     m11 && m11.meta && m11.meta.w === 60 && m11.meta.align === 'r' &&
+     DOC().lastElementChild.classList.contains('g-slot'),
+     JSON.stringify(m11 && m11.meta));
 
   await openNote('g1'); await sleep(80);    /* kembali ke catatan awal */
   selesai();

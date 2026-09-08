@@ -227,7 +227,8 @@ export function blockToHtml(b) {
     return `<div class="b-cal"${bid}${jenis}${label}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
   }
 
-  const cls = TYPE_TO_CLASS[b.type] || 'b-p';
+  const cls = (TYPE_TO_CLASS[b.type] || 'b-p') +
+    (meta.gslot ? ' g-slot' : '');
   return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
 }
 
@@ -287,6 +288,9 @@ export function elToBlock(el) {
   if (indent) meta.indent = indent;
   const ref = el.getAttribute && el.getAttribute('data-ref');
   if (ref) meta.ref = ref;
+  /* slot ketik penutup gambar — tanda dibawa lewat meta supaya posisi
+     teks (baris penuh di bawah gambar) konsisten setelah simpan/buka */
+  if (el.classList && el.classList.contains('g-slot')) meta.gslot = true;
 
   let content = '';
 

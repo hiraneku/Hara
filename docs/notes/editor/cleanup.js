@@ -1,19 +1,19 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908042543';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908042543';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260908042543';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260908042543';
-import { state, save } from '../../core/store.js?v=20260908042543';
-import { findNote } from '../model.js?v=20260908042543';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908042543';
-import { sinkronTag } from '../tags.js?v=20260908042543';
-import { tandaiTautan } from '../wikilink.js?v=20260908042543';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908042543';
-import { cur } from '../../core/router.js?v=20260908042543';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908042543';
-import { GROUPS } from '../bar/config.js?v=20260908042543';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260908042543';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908042543';
+import { docEl, sel, curBlock } from './caret.js?v=20260908050813';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908050813';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260908050813';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260908050813';
+import { state, save } from '../../core/store.js?v=20260908050813';
+import { findNote } from '../model.js?v=20260908050813';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908050813';
+import { sinkronTag } from '../tags.js?v=20260908050813';
+import { tandaiTautan } from '../wikilink.js?v=20260908050813';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908050813';
+import { cur } from '../../core/router.js?v=20260908050813';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908050813';
+import { GROUPS } from '../bar/config.js?v=20260908050813';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260908050813';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908050813';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

@@ -1,6 +1,6 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908042543';
-import { refresh } from './cleanup.js?v=20260908042543';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908050813';
+import { refresh } from './cleanup.js?v=20260908050813';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 
@@ -13,11 +13,27 @@ export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b
 export function pastikanKolomAkhir(d) {
   const el = d || docEl();
   if (!el) return;
-  const t = el.lastElementChild;
-  if (!t || !t.classList || !t.classList.contains('b-img')) return;
-  const nb = document.createElement('div');
-  nb.className = 'b-p';
-  el.appendChild(nb);
+  const kosong = s => (s.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
+    !s.querySelector('img');
+  let t = el.lastElementChild;
+  /* 1) catatan tidak boleh berakhir dengan gambar — sediakan paragraf
+     kosong di bawahnya sebagai slot ketik */
+  if (t && t.classList && t.classList.contains('b-img')) {
+    const nb = document.createElement('div');
+    nb.className = 'b-p g-slot';
+    el.appendChild(nb);
+    t = nb;
+  }
+  /* 2) paragraf kosong yang MENUTUP catatan tepat setelah gambar = slot
+     ketik di bawah gambar: mulai di baris baru penuh (clear), sehingga
+     ketukan di mana pun di bawah gambar langsung memberi tempat mengetik.
+     (Paragraf yang mengikuti gambar di TENGAH catatan tidak disentuh —
+     teksnya tetap mengalir di sisi gambar seperti biasa.) */
+  if (t && t.classList && t.classList.contains('b-p') && kosong(t)) {
+    const prev = t.previousElementSibling;
+    if (prev && prev.classList && prev.classList.contains('b-img'))
+      t.classList.add('g-slot');
+  }
 }
 
 export function setBlock(cls){
