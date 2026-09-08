@@ -21,6 +21,12 @@ for f in tools/uji/*.mjs; do node $f; done
 | `paste.mjs` | paste plain/rich, keamanan clipboard, ID blok, caret, undo |
 | `font-menyeluruh.mjs` | matriks lengkap pergantian font + span BERSARANG |
 | `font-ganti.mjs` | ganti font nyangkut ke font lama, span font kosong menumpuk |
+| `baca-todo-tpl.mjs` | mode baca, simpan templat, panel todo (Bagian A/B) |
+| `tata-gambar.mjs` | tata letak gambar: gagang, bilah mini, undo/redo |
+| `sorotan.mjs` | sorot `==teks==` & ganti warna |
+| `warna.mjs` | warna teks & roda warna |
+| `bagian-b.mjs` | B7 urut/filter · B8 daftar isi · B9 Tugas/Reminder · B10 tag berwarna · B11 templat · B12 jurnal · B13 slash |
+| `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —
 telusuri sampai akar, lalu tambahkan kasusnya ke suite ini.

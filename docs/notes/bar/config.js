@@ -73,6 +73,7 @@ export const BAR = [
     items: [
       { m: 'wl',   ikon: 'i-note',  nama: 'Tautan catatan', kunci: '[[' },
       { m: 'img',  ikon: 'i-img',   nama: 'Gambar',         kunci: '' },
+      { m: 'gal',  ikon: 'i-img',   nama: 'Dari galeri',    kunci: '' },
       { m: 'tag',  ikon: 'i-tag',   nama: 'Tag',            kunci: '#' },
       { m: 'tagwarna', ikon: 'i-drop', nama: 'Warna tag',   kunci: '' },
       { m: 'ref',  ikon: 'i-anchor',nama: 'Tandai blok',    kunci: '^' },

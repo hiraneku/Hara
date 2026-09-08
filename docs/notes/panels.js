@@ -12,9 +12,9 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20260908154914';
-import { cur } from '../core/router.js?v=20260908154914';
-import { touch } from './note-model.js?v=20260908154914';
+import { state, save } from '../core/store.js?v=20260908222631';
+import { cur } from '../core/router.js?v=20260908222631';
+import { touch } from './note-model.js?v=20260908222631';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

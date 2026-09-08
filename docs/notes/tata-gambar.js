@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908154914';
-import { refresh } from './editor/cleanup.js?v=20260908154914';
-import { snap } from './editor/history.js?v=20260908154914';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908154914';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908222631';
+import { refresh } from './editor/cleanup.js?v=20260908222631';
+import { snap } from './editor/history.js?v=20260908222631';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908222631';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -116,12 +116,17 @@ function mbarHtml(t) {
       ` aria-pressed="${on}">${IKON[k]}</button>`;
   }).join('');
   const rotOn = t.rot === 0;
+  const GANTI =
+    '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8"/><path d="M20 4v4h-4"/>' +
+    '<path d="M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M4 20v-4h4"/></svg>';
   return `<button type="button" class="mb-chip${rotOn ? ' on' : ''}" data-mz="0"` +
     ` title="Luruskan (0°)" aria-label="Luruskan">0°</button>` +
     `<button type="button" class="mb-chip bdg${rotOn ? ' on' : ''}" data-mdeg title="Ketuk untuk mengetik derajat">${t.rot}°</button>` +
     `<span class="mb-sep"></span>` +
     [40, 60, 80, 100].map(v => chip(v, t.w === v)).join('') +
-    `<span class="mb-sep"></span>` + pos;
+    `<span class="mb-sep"></span>` + pos +
+    `<button type="button" class="mb-chip mb-ico mb-ganti" data-mganti` +
+    ` title="Ganti gambar (posisi & ukuran tetap)" aria-label="Ganti gambar">${GANTI}</button>`;
 }
 
 function bar() {
@@ -204,6 +209,32 @@ function pasangGagang(fig) {
 }
 
 /* ── terapkan nilai jadi (satu langkah undo) ── */
+/* Ganti berkas gambar yang sedang dipilih (C14). Buka pemilih berkas;
+   gantiGambar() di editor/image.js menukar blob & mempertahankan
+   tata letak (lebar/rotasi/posisi) gambar lama. */
+function bukaPilihGanti() {
+  const fig = pilih;
+  if (!fig || !fig.isConnected || modeBacaBerlaku()) return;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0];
+    inp.remove();
+    if (!f) return;
+    import('./editor/image.js?v=20260908222631')
+      .then(async m => {
+        await m.gantiGambar(fig, f);
+        const t = baca();
+        if (t && pilih === fig && fig.isConnected) segarkanBar();
+      })
+      .catch(() => {});
+  };
+  inp.click();
+}
+
 function terapkan(patch) {
   const fig = pilih;
   if (!fig || !fig.isConnected || modeBacaBerlaku()) return;
@@ -579,6 +610,8 @@ export function bindTataGambar() {
     }
     const mz = e.target.closest('[data-mz]');
     if (mz) { terapkan({ rot: 0 }); return; }
+    const mg = e.target.closest('[data-mganti]');
+    if (mg) { bukaPilihGanti(); return; }
     const deg = e.target.closest('[data-mdeg]');
     if (deg) {
       const t = baca();

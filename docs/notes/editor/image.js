@@ -4,14 +4,14 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908154914';
-import { refresh } from './cleanup.js?v=20260908154914';
-import { pastikanKolomAkhir } from './blocks.js?v=20260908154914';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908222631';
+import { refresh } from './cleanup.js?v=20260908222631';
+import { pastikanKolomAkhir } from './blocks.js?v=20260908222631';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260908154914';
-import { state } from '../../core/store.js?v=20260908154914';
-import { cur } from '../../core/router.js?v=20260908154914';
-import { toast } from '../../core/toast.js?v=20260908154914';
+  from '../../core/blobs.js?v=20260908222631';
+import { state } from '../../core/store.js?v=20260908222631';
+import { cur } from '../../core/router.js?v=20260908222631';
+import { toast } from '../../core/toast.js?v=20260908222631';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -78,6 +78,16 @@ export async function sisipGambar(file) {
   }
   if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
 
+  await sematkanBlokGambar(id, file.name || 'gambar');
+  toast('Gambar disisipkan');
+}
+
+/* Sematkan satu blob gambar sebagai blok baru di posisi kursor.
+   Dipakai sisipGambar (setelah blob disimpan) dan galeri (C15, blob
+   sudah ada — tidak disalin). Tata letak awal: 100% baris sendiri. */
+export async function sematkanBlokGambar(id, alt) {
+  const d = docEl();
+  if (!d || !id) return;
   ensureCaret();
   const b = (() => {
     const s = sel();
@@ -93,7 +103,7 @@ export async function sisipGambar(file) {
   fig.setAttribute('contenteditable','false');
   const img = document.createElement('img');
   img.setAttribute('data-blob', id);
-  img.alt = file.name || 'gambar';
+  img.alt = alt || 'gambar';
   fig.appendChild(img);
 
   const hapus = document.createElement('button');
@@ -117,9 +127,8 @@ export async function sisipGambar(file) {
   caretEnd(nb);
 
   const u = await urlUntuk(id);
-  if (u) img.setAttribute('src', u);
+  if (u && fig.isConnected) img.setAttribute('src', u);
   refresh();
-  toast('Gambar disisipkan');
 }
 
 /* Buka pemilih berkas. */
@@ -247,4 +256,77 @@ export async function bersihkanBlobYatim() {
       })
       .map(id => hapusBlob(id).catch(() => {})));
   } catch (e) { /* pembersihan gagal: biarkan, lain kali tersapu lagi */ }
+}
+
+/* Pasang gambar mini di daftar catatan (C16).
+   Baris daftar memuat <img class="row-th" data-blob=…> TANPA src (baris
+   tetap ringan). Begitu daftar digambar, di sini tiap miniatur diberi
+   objectURL; blob yang sudah hilang membuat miniatur dibuang. */
+export async function pasangThumbDaftar(root) {
+  if (!root || !root.querySelectorAll) return;
+  const list = Array.from(root.querySelectorAll('img.row-th[data-blob]:not([src])'));
+  if (!list.length) return;
+  const kerja = list.map(async img => {
+    const id = img.getAttribute('data-blob');
+    if (!id) return;
+    const u = await urlUntuk(id);
+    if (!u) { img.remove(); return; }
+    if (img.isConnected) img.setAttribute('src', u);
+  });
+  await Promise.all(kerja);
+}
+
+/* Ganti gambar yang sedang dipilih dengan berkas lain (C14).
+   Hanya elemen <img> dalam figur yang diganti — kelas tata letak, lebar,
+   rotasi, posisi, dan paragraf pengapit di sekitarnya TIDAK disentuh,
+   jadi tata letak gambar tetap persis seperti sebelumnya. */
+export async function gantiGambar(fig, file) {
+  const d = docEl();
+  if (!d || !fig || !file) return;
+  if (!/^image\//.test(file.type)) { toast('Hanya berkas gambar'); return; }
+  const img = fig.querySelector('img[data-blob]');
+  if (!img) return;
+  const idLama = img.getAttribute('data-blob');
+  const idCatatan = state.openId;
+
+  const kecil = await kecilkan(file);
+  const id = idBaru();
+  const masihSama = () =>
+    cur === 'editor' && state.openId === idCatatan && docEl() === d &&
+    d.isConnected && fig.isConnected;
+  if (!masihSama()) return;
+  try { await simpanBlob(id, kecil); }
+  catch (e) { toast('Gagal menyimpan gambar'); return; }
+  if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
+
+  img.setAttribute('data-blob', id);
+  img.alt = file.name || 'gambar';
+  /* rasio lama (style dari gambar sebelumnya) tidak berlaku lagi */
+  img.style.aspectRatio = '';
+  img.style.display = '';
+  fig.classList.remove('img-rusak');
+  const hilang = fig.querySelector('.img-hilang');
+  if (hilang) hilang.remove();
+  img.removeAttribute('src');
+  const ingat = () => {
+    if (img.naturalWidth && img.naturalHeight) {
+      img.style.aspectRatio = img.naturalWidth + '/' + img.naturalHeight;
+      pastikanKolomAkhir(d);
+    }
+  };
+  const u = await urlUntuk(id);
+  if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
+  if (u) {
+    img.setAttribute('src', u);
+    if (img.complete && img.naturalWidth) ingat();
+    else img.addEventListener('load', ingat, { once: true });
+  } else {
+    img.style.display = 'none';
+  }
+  refresh();
+  /* blob lama dibuang hanya kalau tak dipakai catatan lain / DOM lain */
+  if (idLama && idLama !== id && !blobDipakai(idLama)) {
+    try { await hapusBlob(idLama); } catch (e) {}
+  }
+  toast('Gambar diganti');
 }

@@ -20,9 +20,9 @@
 - [x] B13. Aksi cepat "/" tambahan
 
 ## Bagian C — gambar & media
-- [ ] C14. Ganti gambar (tanpa mengubah posisi/ukuran/rotasi)
-- [ ] C15. Sisipkan ulang gambar dari galeri catatan
-- [ ] C16. Thumbnail gambar di daftar catatan
+- [x] C14. Ganti gambar (tanpa mengubah posisi/ukuran/rotasi)
+- [x] C15. Sisipkan ulang gambar dari galeri catatan
+- [x] C16. Thumbnail gambar di daftar catatan
 - [ ] C17. Pilihan mutu/kompresi gambar di Pengaturan
 
 ## Bagian D — ketenangan pikiran & keandalan
