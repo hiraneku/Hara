@@ -4,10 +4,10 @@
    Blok yang ditandai mendapat atribut `data-ref`. Penandanya ditampilkan
    CSS lewat ::after, jadi tidak ikut terbaca sebagai teks catatan. */
 
-import { docEl, curBlock, nearestEditable } from './caret.js?v=20260908152800';
-import { refresh } from './cleanup.js?v=20260908152800';
-import { state } from '../../core/store.js?v=20260908152800';
-import { toast } from '../../core/toast.js?v=20260908152800';
+import { docEl, curBlock, nearestEditable } from './caret.js?v=20260908154914';
+import { refresh } from './cleanup.js?v=20260908154914';
+import { state } from '../../core/store.js?v=20260908154914';
+import { toast } from '../../core/toast.js?v=20260908154914';
 
 const acak = () => Math.random().toString(36).slice(2, 6);
 

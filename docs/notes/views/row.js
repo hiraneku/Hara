@@ -2,9 +2,9 @@
    Chip tag di bawah cuplikan: sinkron dengan isi catatan (tags.js).
    Chip memfilter daftar lewat data-tag — ditangani delegasi klik di
    notes/index.js (berjalan lebih dulu dari pembuka catatan data-open). */
-import { esc, stamp } from '../../core/dom.js?v=20260908152800';
-import { excerptOf } from '../note-model.js?v=20260908152800';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260908152800';
+import { esc, stamp } from '../../core/dom.js?v=20260908154914';
+import { excerptOf } from '../note-model.js?v=20260908154914';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260908154914';
 
 export const rowFor=n=>{
   const cuplikan=excerptOf(n);      /* diturunkan dari blocks, tidak disimpan */

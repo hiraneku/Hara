@@ -9,7 +9,7 @@
    offset karakter). Offset dipakai, bukan objek Range, karena Range
    langsung basi begitu innerHTML ditulis ulang. */
 
-import { docEl, sel, caretEnd } from './caret.js?v=20260908152800';
+import { docEl, sel, caretEnd } from './caret.js?v=20260908154914';
 
 const LIMIT = 100;      /* cukup dalam, tetap ringan */
 const JEDA  = 500;      /* ms — ketikan beruntun digabung jadi satu langkah */
