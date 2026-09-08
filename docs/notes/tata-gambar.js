@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908222631';
-import { refresh } from './editor/cleanup.js?v=20260908222631';
-import { snap } from './editor/history.js?v=20260908222631';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908222631';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908225047';
+import { refresh } from './editor/cleanup.js?v=20260908225047';
+import { snap } from './editor/history.js?v=20260908225047';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908225047';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -116,16 +116,14 @@ function mbarHtml(t) {
       ` aria-pressed="${on}">${IKON[k]}</button>`;
   }).join('');
   const rotOn = t.rot === 0;
-  const GANTI =
-    '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8"/><path d="M20 4v4h-4"/>' +
-    '<path d="M20 12a8 8 0 0 1-13.7 5.6L4 16"/><path d="M4 20v-4h4"/></svg>';
+  const GANTI = '<svg class="bi" aria-hidden="true"><use href="#i-img"/></svg>Ganti';
   return `<button type="button" class="mb-chip${rotOn ? ' on' : ''}" data-mz="0"` +
     ` title="Luruskan (0°)" aria-label="Luruskan">0°</button>` +
     `<button type="button" class="mb-chip bdg${rotOn ? ' on' : ''}" data-mdeg title="Ketuk untuk mengetik derajat">${t.rot}°</button>` +
     `<span class="mb-sep"></span>` +
     [40, 60, 80, 100].map(v => chip(v, t.w === v)).join('') +
     `<span class="mb-sep"></span>` + pos +
-    `<button type="button" class="mb-chip mb-ico mb-ganti" data-mganti` +
+    `<button type="button" class="mb-chip mb-ganti" data-mganti` +
     ` title="Ganti gambar (posisi & ukuran tetap)" aria-label="Ganti gambar">${GANTI}</button>`;
 }
 
@@ -224,7 +222,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20260908222631')
+    import('./editor/image.js?v=20260908225047')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();

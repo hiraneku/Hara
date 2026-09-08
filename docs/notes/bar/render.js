@@ -1,19 +1,19 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260908222631';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260908222631';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260908222631';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260908222631';
-import { slashMenu } from '../menus/slash.js?v=20260908222631';
-import { wlMenu }    from '../menus/wikilink.js?v=20260908222631';
-import { tagMenu }   from '../menus/tag.js?v=20260908222631';
-import { linkMenu }  from '../menus/link.js?v=20260908222631';
-import { fontMenu } from '../menus/font.js?v=20260908222631';
-import { warnaMenu } from '../menus/warna.js?v=20260908222631';
-import { calloutMenu } from '../menus/callout.js?v=20260908222631';
-import { snap } from '../editor/history.js?v=20260908222631';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260908222631';
-import { tersembunyi, getar } from './prefs.js?v=20260908222631';
-import { HELP, HELP_GRUP } from './help.js?v=20260908222631';
+import { BAR, GROUPS } from './config.js?v=20260908225047';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260908225047';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260908225047';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260908225047';
+import { slashMenu } from '../menus/slash.js?v=20260908225047';
+import { wlMenu }    from '../menus/wikilink.js?v=20260908225047';
+import { tagMenu }   from '../menus/tag.js?v=20260908225047';
+import { linkMenu }  from '../menus/link.js?v=20260908225047';
+import { fontMenu } from '../menus/font.js?v=20260908225047';
+import { warnaMenu } from '../menus/warna.js?v=20260908225047';
+import { calloutMenu } from '../menus/callout.js?v=20260908225047';
+import { snap } from '../editor/history.js?v=20260908225047';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260908225047';
+import { tersembunyi, getar } from './prefs.js?v=20260908225047';
+import { HELP, HELP_GRUP } from './help.js?v=20260908225047';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -118,10 +118,10 @@ function jalankan(m, btn) {
   if (m === 'slash') return openPop(slashMenu(), btn);
   if (m === 'wl')    return openPop(wlMenu(),    btn);
   if (m === 'tag')   return openPop(tagMenu(),   btn);
-  if (m === 'tagwarna') { import('../tagwarna.js?v=20260908222631').then(({panelTag}) => panelTag(btn)); return; }
+  if (m === 'tagwarna') { import('../tagwarna.js?v=20260908225047').then(({panelTag}) => panelTag(btn)); return; }
   if (m === 'gal') {
     const mb = document.querySelector('.mb-g.open');
-    import('../galeri.js?v=20260908222631').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
+    import('../galeri.js?v=20260908225047').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
     return;
   }
   if (m === 'link')  return openPop(linkMenu(),  btn);

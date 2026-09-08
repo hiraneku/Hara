@@ -869,9 +869,12 @@ span.tg[data-tt]{color:var(--lc,var(--accent))}
 .row-th[src=""]{visibility:hidden}
 @media(max-width:768px){.row-th{width:42px;height:42px}}
 
-/* tombol ganti gambar di bilah mini (C14) */
-#mbar .mb-ganti{color:var(--muted)}
-#mbar .mb-ganti:hover{color:var(--accent)}
+/* tombol ganti gambar di bilah mini (C14): ikon foto + label "Ganti"
+   supaya tidak ambigu dengan tombol posisi/rotasi */
+#mbar .mb-ganti{display:inline-flex;align-items:center;gap:5px;min-width:0;color:var(--muted)}
+#mbar .mb-ganti .bi{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#mbar .mb-ganti:hover{color:var(--accent);border-color:var(--accent)}
 
 /* galeri gambar (C15) */
 .gal-kisi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:2px 13px 13px}

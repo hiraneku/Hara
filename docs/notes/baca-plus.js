@@ -8,11 +8,11 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260908222631';
-import { closeAll } from './menus/pop.js?v=20260908222631';
-import { docEl } from './editor/caret.js?v=20260908222631';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908222631';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20260908222631';
+import { toast } from '../core/toast.js?v=20260908225047';
+import { closeAll } from './menus/pop.js?v=20260908225047';
+import { docEl } from './editor/caret.js?v=20260908225047';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908225047';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20260908225047';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
