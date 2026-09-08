@@ -1,8 +1,24 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908031211';
-import { refresh } from './cleanup.js?v=20260908031211';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908033335';
+import { refresh } from './cleanup.js?v=20260908033335';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
+
+/* Pastikan isi catatan TIDAK berakhir dengan gambar — kalau ya, tambahkan
+   paragraf kosong di bawahnya sebagai kolom mengetik. Gambar yang
+   mengapit (float) tidak menambah tinggi kolomnya; tanpa paragraf
+   penutup, gambar paling bawah menempel ke garis pembatas dan tidak ada
+   tempat melanjutkan teks (teks malah menumpuk di paragraf SEBELUM
+   gambar sehingga gambar terus terdorong ke bawah). */
+export function pastikanKolomAkhir(d) {
+  const el = d || docEl();
+  if (!el) return;
+  const t = el.lastElementChild;
+  if (!t || !t.classList || !t.classList.contains('b-img')) return;
+  const nb = document.createElement('div');
+  nb.className = 'b-p';
+  el.appendChild(nb);
+}
 
 export function setBlock(cls){
   const d=docEl(); if(!d) return;

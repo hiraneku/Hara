@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908031211';
-import { refresh } from './editor/cleanup.js?v=20260908031211';
-import { snap } from './editor/history.js?v=20260908031211';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908031211';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908033335';
+import { refresh } from './editor/cleanup.js?v=20260908033335';
+import { snap } from './editor/history.js?v=20260908033335';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908033335';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -450,7 +450,21 @@ function lepas() {
       const rr = tr.getBoundingClientRect();
       zb = (g.y1 < rr.top + (rr.height || 0) / 2) ? 't' : 'b';
     }
-    d.insertBefore(fig, anak[i] || null);
+    /* Gambar ditaruh di paling bawah: jangan sampai menimpa kolom ketik.
+       Kalau blok terakhir adalah paragraf kosong, gambar disisipkan
+       SEBELUM paragraf itu — kolom ketik tetap di bawah gambar, sehingga
+       ketikan berikutnya mengalir di sisi gambar (kiri untuk f-r) dan
+       gambar tidak terdorong ke bawah. */
+    let sisip = anak[i] || null;
+    if (!sisip) {
+      const ujung = d.lastElementChild;
+      if (ujung && ujung !== fig && ujung.classList &&
+          ujung.classList.contains('b-p') && !ujung.querySelector('img') &&
+          (ujung.textContent || '').replace(/[\u200b\u00a0]/g, '') === '') {
+        sisip = ujung;
+      }
+    }
+    d.insertBefore(fig, sisip);
     tulisTata(fig, kl === 'hero' ? { ...t, align: null } : { ...t, align, zb });
     refresh();
     segarkanBar();

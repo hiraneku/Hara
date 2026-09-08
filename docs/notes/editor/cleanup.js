@@ -1,18 +1,18 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908031211';
-import { renumber } from './blocks.js?v=20260908031211';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260908031211';
-import { state, save } from '../../core/store.js?v=20260908031211';
-import { findNote } from '../model.js?v=20260908031211';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908031211';
-import { sinkronTag } from '../tags.js?v=20260908031211';
-import { tandaiTautan } from '../wikilink.js?v=20260908031211';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908031211';
-import { cur } from '../../core/router.js?v=20260908031211';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908031211';
-import { GROUPS } from '../bar/config.js?v=20260908031211';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260908031211';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908031211';
+import { docEl, sel, curBlock } from './caret.js?v=20260908033335';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908033335';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260908033335';
+import { state, save } from '../../core/store.js?v=20260908033335';
+import { findNote } from '../model.js?v=20260908033335';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908033335';
+import { sinkronTag } from '../tags.js?v=20260908033335';
+import { tandaiTautan } from '../wikilink.js?v=20260908033335';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908033335';
+import { cur } from '../../core/router.js?v=20260908033335';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908033335';
+import { GROUPS } from '../bar/config.js?v=20260908033335';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260908033335';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908033335';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -204,6 +204,8 @@ export function refresh(){
   pastikanBlockId(docEl());
   /* gagang seret ikut pada blok yang baru lahir (Enter, tempel, undo) */
   pastikanGandel(docEl());
+  /* gambar tidak boleh menjadi blok terakhir — sediakan kolom ketik */
+  pastikanKolomAkhir(docEl());
   /* wikilink: yang belum ada catatannya tampil putus-putus */
   tandaiTautan(docEl());
   renumber();                     /* nomor daftar selalu berurutan */

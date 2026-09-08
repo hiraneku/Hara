@@ -281,6 +281,12 @@ if (BAG === 'B') {
     .map(c => /b-p/.test(c) ? 'p' : 'img').join('-');
   ok('B17 pindah ke bawah → urut p-p-img (gambar jadi paling akhir)',
      ordo === 'p-p-img' && anakAkhir[2].classList.contains('b-img'), ordo);
+  ok('B17b gambar di akhir mendapat kolom ketik di bawahnya',
+     DOC().children.length === 4 &&
+     DOC().lastElementChild.classList.contains('b-p') &&
+     (DOC().lastElementChild.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
+     anakAkhir[2] === DOC().children[2],
+     'jumlah=' + DOC().children.length + ' terakhir=' + DOC().lastElementChild.className);
   ok('B18 hasil pindah: kanan-bawah menempel (f-r + gb-b)',
      figP.getAttribute('data-ga') === 'r' && figP.classList.contains('f-r') &&
      figP.classList.contains('gb-b') && figP.getAttribute('data-gb') === 'b',
@@ -469,6 +475,30 @@ if (BAG === 'C') {
      !ed8b.classList.contains('baca') && !!fig8b &&
      fig8b.classList.contains('f-l') && fig8b.getAttribute('data-ga') === 'l',
      fig8b ? fig8b.className : 'fig hilang');
+
+  /* catatan yang modelnya BERAKHIR di gambar: begitu dibuka, kolom ketik
+     kosong otomatis tersedia di bawah gambar (gambar tak menempel garis
+     pembatas & teks lanjutan bisa mengalir di sisinya) */
+  state.notes.push(makeNote({ id: 'g9', title: 'g9', blocks: [
+    makeBlock({ type: 'paragraph', content: 'teks sebelum gambar' }),
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g9', alt: 'g9.png', w: 60, rot: 0, align: 'r' } }),
+  ] }));
+  await simpanBlob('f-g9', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g9'); await sleep(100);
+  const anak9 = DOC().children;
+  const img9 = DOC().querySelector('.b-img');
+  const last9 = anak9[anak9.length - 1];
+  ok('C19 catatan berakhir gambar → kolom ketik otomatis di bawahnya',
+     anak9.length >= 3 && last9.classList.contains('b-p') &&
+     (last9.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
+     anak9[anak9.length - 2] === img9 && img9.classList.contains('f-r'),
+     'jumlah=' + anak9.length + ' last=' + last9.className);
+  saveNow();
+  const m9 = blokGambar();
+  ok('C20 kolom ketik tersimpan tanpa merusak meta gambar',
+     m9 && m9.meta && m9.meta.blobId === 'f-g9' && m9.meta.w === 60 &&
+     m9.meta.align === 'r', JSON.stringify(m9 && m9.meta));
+
   await openNote('g1'); await sleep(80);    /* kembali ke catatan awal */
   selesai();
 }
