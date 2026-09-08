@@ -178,7 +178,7 @@ if (BAG === 'B') {
      fig().classList.contains('img-pilih') && barOn());
 
   /* gambar selebar kolom (300px) → mode sempit dilepas */
-  sembunyi(fig())({ left: 40, top: 0, width: 300, height: 200 });
+  sembunyi(fig())({ left: 100, top: 0, width: 300, height: 200 });
   const chip = v => bar().querySelector(`[data-mw="${v}"]`);
   klik(chip(60));
   ok('B4 preset 60% → w-apit tengah (i-c)', fig().getAttribute('data-gw') === '60' &&

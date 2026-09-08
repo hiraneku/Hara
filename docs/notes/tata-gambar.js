@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908014742';
-import { refresh } from './editor/cleanup.js?v=20260908014742';
-import { snap } from './editor/history.js?v=20260908014742';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908014742';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908021448';
+import { refresh } from './editor/cleanup.js?v=20260908021448';
+import { snap } from './editor/history.js?v=20260908021448';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908021448';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -158,9 +158,10 @@ function segarkanBar() {
   tempatkanBar();
 }
 
-/* Gambar sempit atau mengapit kiri/kanan memakai tata letak gagang
-   .sempit (bilah pindah+putar di tepi atas gambar — lihat notes.css)
-   supaya tetap gampang digenggam walau menempel di tepi layar. */
+/* Gambar sempit, menempel tepi kiri layar, atau mengapit kiri/kanan
+   memakai gagang yang sedikit lebih besar dan digeser ke dalam
+   (kelas .sempit — lihat notes.css) supaya tetap gampang digenggam dan
+   tidak menggantung di tepi layar (zona usapan balik sistem). */
 function perbaruiKelasSempit() {
   const f = pilih;
   if (!f || !f.isConnected) return;
@@ -168,7 +169,11 @@ function perbaruiKelasSempit() {
   let kecil = mengapit;
   if (!kecil) {
     const r = f.getBoundingClientRect();
-    if (r && r.width > 0) kecil = r.width < 280;
+    if (r && r.width > 0) {
+      if (r.width < 280) kecil = true;
+      /* menempel tepi kiri layar & tidak selebar kolom (hero aman) */
+      else if (r.left >= 0 && r.left < 48 && r.width < 380) kecil = true;
+    }
   }
   f.classList.toggle('sempit', kecil);
 }
