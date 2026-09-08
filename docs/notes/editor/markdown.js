@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908225047';
-import { setBlock, setCallout } from './blocks.js?v=20260908225047';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260908225047';
-import { updateCount } from './cleanup.js?v=20260908225047';
+import { docEl, sel, curBlock } from './caret.js?v=20260908230043';
+import { setBlock, setCallout } from './blocks.js?v=20260908230043';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260908230043';
+import { updateCount } from './cleanup.js?v=20260908230043';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},

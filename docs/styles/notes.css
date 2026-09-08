@@ -386,10 +386,15 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc>.b-p.g-slot.sisi{clear:none;min-height:0}
 /* gambar sedang dipilih */
 .b-img.img-pilih{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-md)}
+/* Tombol hapus (✕) hanya muncul saat gambar DIPILIH (diklik) — tidak
+   muncul saat hover/tekan. Layar sentuh tidak punya hover, jadi ini
+   juga yang membuat tombolnya sulit muncul; kini perilakunya konsisten
+   di semua perangkat: klik gambar dulu, baru ✕ tampil. */
 .img-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:999px;
   background:rgba(0,0,0,.55);display:grid;place-items:center;opacity:0;
-  transition:opacity .14s var(--ease)}
-.b-img:hover .img-x,.b-img:active .img-x{opacity:1}
+  transition:opacity .14s var(--ease);z-index:4}
+.b-img.img-pilih .img-x{opacity:1}
+.b-img.img-pilih .img-x:hover{background:rgba(160,44,44,.92)}
 .img-x svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
 /* gagang: pindah (kiri-atas) · ukuran (pojok kanan-bawah) · putar
    (mengambang di atas-tengah gambar).
@@ -418,7 +423,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   -webkit-touch-callout:none}
 .img-grip:active,.img-move:active,.img-putar:active{cursor:grabbing}
 /* gambar sempit/mengapit: gagang tetap di posisi biasa, sedikit lebih
-   besar; silang-hapus disembunyikan agar tidak saling tindih */
+   besar; silang-hapus ikut tampil saat dipilih (lebih mungil, di pojok
+   kanan-atas — tidak menabrak gagang pindah/putar/ukuran) */
 .b-img.sempit .img-move{width:44px;height:44px}
 .b-img.sempit .img-putar{top:-46px;width:48px;height:48px}
 .b-img.sempit .img-grip{width:48px;height:48px;right:4px;bottom:4px}
@@ -427,7 +433,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .b-img.sempit .img-move svg,.b-img.sempit .img-putar svg,
 .b-img.sempit .img-grip svg{width:17px;height:17px}
 .b-img.sempit.f-l .img-move{left:26px;top:6px}
-.b-img.sempit.img-pilih .img-x{display:none}
+.b-img.sempit.img-pilih .img-x{width:24px;height:24px;top:6px;right:6px}
 
 /* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */
 #mbar{position:fixed;z-index:70;display:none;align-items:center;gap:2px;
