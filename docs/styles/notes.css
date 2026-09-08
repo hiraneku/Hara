@@ -333,6 +333,13 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .b-img.seret{transition:none}
 .b-img img{width:100%;height:auto;display:block;max-height:70vh;object-fit:contain;
   user-select:none;border-radius:inherit}
+/* gambar yang berkasnya hilang: <img> disembunyikan (referensi data-blob
+   dipertahankan) dan placeholder ditampilkan menggantikannya */
+.b-img.img-rusak{background:none;line-height:1.6}
+.b-img.img-rusak img{display:none}
+.b-img .img-hilang{padding:24px 14px;text-align:center;color:var(--faint);
+  font-size:13px;line-height:1.6;border:1.5px dashed var(--border-strong);
+  border-radius:var(--r-md);background:var(--sunken)}
 /* kelas lebar (data-gw menentukan): hero / baris sendiri / mengapit / kecil.
    w-hero & w-baris & i-* memulai baris sendiri (clear) — mengapit (f-l/f-r)
    membiarkan teks paragraf berikut mengalir di sampingnya. */

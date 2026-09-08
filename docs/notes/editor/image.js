@@ -4,12 +4,13 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908025103';
-import { refresh } from './cleanup.js?v=20260908025103';
-import { simpanBlob, urlUntuk, hapusBlob, semuaId } from '../../core/blobs.js?v=20260908025103';
-import { state } from '../../core/store.js?v=20260908025103';
-import { cur } from '../../core/router.js?v=20260908025103';
-import { toast } from '../../core/toast.js?v=20260908025103';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260908031211';
+import { refresh } from './cleanup.js?v=20260908031211';
+import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
+  from '../../core/blobs.js?v=20260908031211';
+import { state } from '../../core/store.js?v=20260908031211';
+import { cur } from '../../core/router.js?v=20260908031211';
+import { toast } from '../../core/toast.js?v=20260908031211';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -145,10 +146,23 @@ export async function pasangGambar() {
     const id = img.getAttribute('data-blob');
     if (img.getAttribute('src')) continue;
     const u = await urlUntuk(id);
-    if (u) img.setAttribute('src', u);
-    else img.replaceWith(Object.assign(document.createElement('div'), {
-      className: 'img-hilang', textContent: 'Gambar tidak ditemukan'
-    }));
+    if (u) {
+      img.setAttribute('src', u);
+      continue;
+    }
+    /* Berkasnya tidak ada: gambar disembunyikan & placeholder ditampilkan.
+       Elemen <img data-blob> SENG AJA dipertahankan (tersembunyi) supaya
+       referensi blob tetap terbaca saat menyimpan — menggantinya dengan
+       div akan menghilangkan id gambar dari catatan. */
+    img.style.display = 'none';
+    const fig = img.closest('.b-img');
+    if (fig) fig.classList.add('img-rusak');
+    if (fig && !fig.querySelector('.img-hilang')) {
+      fig.appendChild(Object.assign(document.createElement('div'), {
+        className: 'img-hilang',
+        textContent: 'Gambar tidak ditemukan',
+      }));
+    }
   }
 }
 
@@ -184,13 +198,18 @@ export async function hapusGambar(id) {
 
 /* Bersihkan blob yang tidak lagi dirujuk catatan mana pun.
    Dipanggil saat catatan dibuang permanen (setelah jendela Urungkan
-   lewat) — kalau langsung saat hapus, gambar yang bisa di-Urungkan
-   sudah keburu hilang.
+   lewat) dan sekali tiap sesi — kalau langsung saat hapus, gambar yang
+   bisa di-Urungkan sudah keburu hilang.
 
    Referensi dihitung dari catatan tersimpan DAN dari DOM editor yang
    sedang terbuka: autosave menunggu 700 ms, jadi blob yang baru saja
    disisipkan belum tentu sudah tercatat di state.notes — membaca DOM
-   mencegah sapuan ini menghapus gambar yang masih tampil. */
+   mencegah sapuan ini menghapus gambar yang masih tampil.
+
+   PENGAMAN: blob yang berusia < 24 jam tidak pernah disapu. Gambar bisa
+   direferensikan dari tempat yang belum terbaca di sini (mis. draf
+   pemulihan yang belum dipulihkan, langkah undo/redo), jadi sapuan hanya
+   berani menghapus berkas yang sudah lama tak dirujuk. */
 export async function bersihkanBlobYatim() {
   try {
     const dipakai = new Set();
@@ -206,8 +225,15 @@ export async function bersihkanBlobYatim() {
       });
     }
     const ids = await semuaId();
+    const hidup = new Set(ids);
+    prunUsiaBlob(hidup);
+    const BATAS = 24 * 60 * 60 * 1000;
     await Promise.all(ids
       .filter(id => !dipakai.has(id))
+      .filter(id => {
+        const u = usiaBlob(id);
+        return u !== null && u > BATAS;
+      })
       .map(id => hapusBlob(id).catch(() => {})));
   } catch (e) { /* pembersihan gagal: biarkan, lain kali tersapu lagi */ }
 }

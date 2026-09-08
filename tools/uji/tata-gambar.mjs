@@ -33,7 +33,8 @@ const { makeNote, makeBlock, blockToHtml } = await st('notes/note-model.js');
 const { openNote } = await st('notes/model.js');
 const { saveNow } = await st('notes/editor/cleanup.js');
 const mode = await st('notes/mode-baca.js');
-const { simpanBlob } = await st('core/blobs.js');
+const { simpanBlob, semuaId } = await st('core/blobs.js');
+const { bersihkanBlobYatim } = await st('notes/editor/image.js');
 const d = w.document;
 const sleep = (ms = 25) => new Promise(r => setTimeout(r, ms));
 let no = 0, g = 0;
@@ -412,5 +413,62 @@ if (BAG === 'C') {
      fig6.classList.contains('b-img') && !!anc &&
      (p6.contains(anc) || (anc === p6)) && !fig6.contains(anc),
      'anchor=' + (anc && (anc.nodeName + ':' + (anc.textContent || '').slice(0, 12))));
+
+  /* gambar rusak (berkas tidak ada): placeholder tampil, tapi referensi
+     blob TIDAK hilang saat disimpan, dan bloknya tetap bisa dihapus via X */
+  state.notes.push(makeNote({ id: 'g7', title: 'g7', blocks: [
+    makeBlock({ type: 'paragraph', content: 'awal' }),
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g7', alt: 'g7.png' } }),
+    makeBlock({ type: 'paragraph', content: 'akhir' }),
+  ] }));
+  await openNote('g7'); await sleep(120);   /* tanpa simpanBlob → rusak */
+  const fig7 = DOC().querySelector('.b-img');
+  const img7 = fig7.querySelector('img[data-blob]');
+  ok('C12 gambar tanpa berkas → placeholder + kelas rusak',
+     fig7.classList.contains('img-rusak') &&
+     !!fig7.querySelector('.img-hilang') &&
+     /Gambar tidak ditemukan/.test(fig7.textContent), fig7.outerHTML.slice(0, 160));
+  ok('C13 referensi blob dipertahankan (img tersembunyi, bukan dibuang)',
+     !!img7 && img7.getAttribute('data-blob') === 'f-g7' &&
+     img7.style.display === 'none', fig7.outerHTML.slice(0, 200));
+  saveNow();
+  const m7 = blokGambar();
+  ok('C14 menyimpan tidak menghapus id gambar rusak',
+     m7 && m7.meta && m7.meta.blobId === 'f-g7', JSON.stringify(m7 && m7.meta));
+  klik(fig7.querySelector('.img-x'));
+  await sleep(30);
+  ok('C15 gambar rusak tetap bisa dihapus via X',
+     !DOC().querySelector('.b-img'), 'masih ada .b-img');
+
+  /* sapuan blob yatim tidak boleh menghapus blob yang masih muda */
+  const idMuda = 'f-muda';
+  await simpanBlob(idMuda, new w.Blob(['x'], { type: 'image/png' }));
+  await bersihkanBlobYatim();
+  const ids = await semuaId();
+  ok('C16 sapuan tidak menghapus blob berusia muda', ids.includes(idMuda),
+     'ids=' + ids.join(','));
+
+  /* ganti mode lewat tombol #mode: render baca disegarkan dari model —
+     gambar mengapit tetap mengapit, tidak berubah tata letak */
+  state.notes.push(catatanBergambar('g8', { w: 60, rot: 0, align: 'l' }));
+  await openNote('g8'); await sleep(100);
+  const mb8 = d.getElementById('mode');
+  klik(mb8);                       /* → mode baca */
+  await sleep(60);
+  const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
+  const ed8 = d.querySelector('.ed');
+  ok('C17 mode baca lewat tombol: render segar, gambar tetap f-l',
+     !!ed8 && ed8.classList.contains('baca') && !!fig8 &&
+     fig8.classList.contains('w-apit') && fig8.classList.contains('f-l'),
+     fig8 ? fig8.className : 'fig hilang');
+  klik(mb8);                       /* → kembali mode tulis */
+  await sleep(60);
+  const ed8b = d.querySelector('.ed');
+  const fig8b = DOC() ? DOC().querySelector('.b-img') : null;
+  ok('C18 kembali ke mode tulis: kelas gambar utuh',
+     !ed8b.classList.contains('baca') && !!fig8b &&
+     fig8b.classList.contains('f-l') && fig8b.getAttribute('data-ga') === 'l',
+     fig8b ? fig8b.className : 'fig hilang');
+  await openNote('g1'); await sleep(80);    /* kembali ke catatan awal */
   selesai();
 }

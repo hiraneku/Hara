@@ -6,7 +6,7 @@
    dua sumber yang bisa berselisih. Cache inilah yang dipakai daftar,
    halaman tag, dan filter. */
 
-import { state } from '../core/store.js?v=20260908025103';
+import { state } from '../core/store.js?v=20260908031211';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang

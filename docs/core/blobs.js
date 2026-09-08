@@ -52,7 +52,14 @@ async function tx(mode, fn) {
 }
 
 export async function simpanBlob(id, blob) {
-  return tx('readwrite', s => s.put(blob, id));
+  await tx('readwrite', s => s.put(blob, id));
+  /* catat kapan disimpan — dipakai sapuan blob yatim supaya tidak
+     menghapus berkas yang baru dibuat (lihat bersihkanBlobYatim) */
+  try {
+    const peta = usiaPeta();
+    peta[id] = Date.now();
+    localStorage.setItem(KUNCI_USIA, JSON.stringify(peta));
+  } catch (e) { /* privat: tanpa catatan, sapuan menganggap tua */ }
 }
 
 export async function ambilBlob(id) {
@@ -61,11 +68,50 @@ export async function ambilBlob(id) {
 
 export async function hapusBlob(id) {
   await tx('readwrite', s => s.delete(id));
+  try {
+    const peta = usiaPeta();
+    if (id in peta) { delete peta[id]; localStorage.setItem(KUNCI_USIA, JSON.stringify(peta)); }
+  } catch (e) { /* privat */ }
   return true;
 }
 
 export async function semuaId() {
   return tx('readonly', s => s.getAllKeys());
+}
+
+/* Usia blob dalam milidetik (sejak disimpan), atau null bila tidak
+   tercatat (blob warisan dari versi lama — diperlakukan tak tentu). */
+export function usiaBlob(id) {
+  try {
+    const t = usiaPeta()[id];
+    return typeof t === 'number' ? Date.now() - t : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Rapikan catatan usia yang id-nya sudah tidak ada di penyimpanan. */
+export function prunUsiaBlob(idHidup) {
+  try {
+    const peta = usiaPeta();
+    let berubah = false;
+    for (const k of Object.keys(peta)) {
+      if (!idHidup.has(k)) { delete peta[k]; berubah = true; }
+    }
+    if (berubah) localStorage.setItem(KUNCI_USIA, JSON.stringify(peta));
+  } catch (e) { /* privat */ }
+}
+
+const KUNCI_USIA = 'hara.v1.blobUsia';
+function usiaPeta() {
+  try {
+    const s = localStorage.getItem(KUNCI_USIA);
+    if (!s) return {};
+    const o = JSON.parse(s);
+    return (o && typeof o === 'object') ? o : {};
+  } catch (e) {
+    return {};
+  }
 }
 
 /* Berapa besar yang terpakai, untuk halaman Pengaturan. */

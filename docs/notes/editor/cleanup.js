@@ -1,18 +1,18 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908025103';
-import { renumber } from './blocks.js?v=20260908025103';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260908025103';
-import { state, save } from '../../core/store.js?v=20260908025103';
-import { findNote } from '../model.js?v=20260908025103';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908025103';
-import { sinkronTag } from '../tags.js?v=20260908025103';
-import { tandaiTautan } from '../wikilink.js?v=20260908025103';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908025103';
-import { cur } from '../../core/router.js?v=20260908025103';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908025103';
-import { GROUPS } from '../bar/config.js?v=20260908025103';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260908025103';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908025103';
+import { docEl, sel, curBlock } from './caret.js?v=20260908031211';
+import { renumber } from './blocks.js?v=20260908031211';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260908031211';
+import { state, save } from '../../core/store.js?v=20260908031211';
+import { findNote } from '../model.js?v=20260908031211';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908031211';
+import { sinkronTag } from '../tags.js?v=20260908031211';
+import { tandaiTautan } from '../wikilink.js?v=20260908031211';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908031211';
+import { cur } from '../../core/router.js?v=20260908031211';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908031211';
+import { GROUPS } from '../bar/config.js?v=20260908031211';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260908031211';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908031211';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
