@@ -167,6 +167,9 @@ if (BAG === 'B') {
   ok('B3 bilah mini terbuka (bukan panel besar)',
      barOn() && !!bar().querySelector('[data-mw]') && !!bar().querySelector('[data-ma]') &&
      !!bar().querySelector('[data-mdeg]') && !d.getElementById('pop').classList.contains('on'));
+  ok('B3a ketuk gambar tidak minta keyboard (inputmode dikunci, editor tak fokus)',
+     DOC().getAttribute('inputmode') === 'none' && w.document.activeElement !== DOC(),
+     'inputmode=' + DOC().getAttribute('inputmode'));
 
   /* ketuk badan gambar yang sedang terpilih tidak boleh menutup seleksi —
      gagang kecil gampang meleset (mis-tap) */
@@ -297,6 +300,8 @@ if (BAG === 'B') {
   ok('B19 pindah ke tengah atas → urut p-img-p + kiri-atas',
      ordo2 === 'p-img-p' && anak2[1] === figP && figP.getAttribute('data-ga') === 'l' &&
      !figP.classList.contains('gb-b'), ordo2 + ' ' + figP.getAttribute('data-ga'));
+  ok('B19b gambar mengapit kiri → mode sempit tetap aktif (bilah atas)',
+     figP.classList.contains('sempit'));
 
   /* kedua gambar di catatan: keluar dari pilihan dengan ketuk lain */
   klik(DOC().querySelector('.ed-doc') || d.body);
@@ -360,5 +365,52 @@ if (BAG === 'C') {
   const m4 = blokGambar();
   ok('C8 w80 kanan bulat tersimpan', m4 && m4.meta && m4.meta.w === 80 &&
      m4.meta.align === 'r', JSON.stringify(m4 && m4.meta));
+
+  /* tombol hapus keyboard tidak boleh menghapus gambar */
+  state.notes.push(makeNote({ id: 'g5', title: 'g5', blocks: [
+    makeBlock({ type: 'paragraph', content: 'awal sekali' }),
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g5', alt: 'g5.png' } }),
+    makeBlock({ type: 'paragraph', content: 'lanjut lagi' }),
+  ] }));
+  await simpanBlob('f-g5', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g5'); await sleep(100);
+  const fig5 = DOC().querySelector('.b-img');
+  const p5a = fig5.previousElementSibling;
+  const p5b = fig5.nextElementSibling;
+  const caret = (el, pos) => {
+    const t = el.firstChild;
+    const r = d.createRange();
+    r.setStart(t, pos === 'akhir' ? t.data.length : 0);
+    r.collapse(true);
+    const s = w.getSelection();
+    s.removeAllRanges(); s.addRange(r);
+  };
+  caret(p5a, 'akhir');
+  const evDel = new w.KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true });
+  DOC().dispatchEvent(evDel);
+  ok('C9 Delete di ujung paragraf sebelum gambar diabaikan',
+     evDel.defaultPrevented && DOC().querySelector('.b-img') === fig5);
+  caret(p5b, 'awal');
+  const evBsp = new w.KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true });
+  DOC().dispatchEvent(evBsp);
+  ok('C10 Backspace di awal paragraf setelah gambar diabaikan',
+     evBsp.defaultPrevented && DOC().querySelector('.b-img') === fig5 &&
+     p5b.textContent === 'lanjut lagi');
+
+  /* gambar sebagai blok PERTAMA catatan: karet harus mendarat di paragraf
+     (tidak pernah di dalam gambar) */
+  state.notes.push(makeNote({ id: 'g6', title: 'g6', blocks: [
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g6', alt: 'g6.png' } }),
+    makeBlock({ type: 'paragraph', content: 'teks kedua' }),
+  ] }));
+  await simpanBlob('f-g6', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g6'); await sleep(100);
+  const fig6 = DOC().firstElementChild;
+  const p6 = fig6.nextElementSibling;
+  const anc = w.getSelection().anchorNode;
+  ok('C11 gambar blok pertama: karet mendarat di paragraf, bukan di gambar',
+     fig6.classList.contains('b-img') && !!anc &&
+     (p6.contains(anc) || (anc === p6)) && !fig6.contains(anc),
+     'anchor=' + (anc && (anc.nodeName + ':' + (anc.textContent || '').slice(0, 12))));
   selesai();
 }

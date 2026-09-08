@@ -1,16 +1,16 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260908010721';
-import { setBlock, indent } from './blocks.js?v=20260908010721';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260908010721';
-import { autoFormat } from './markdown.js?v=20260908010721';
-import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260908010721';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260908010721';
-import { onTitle } from '../model.js?v=20260908010721';
-import { tanganiPaste } from './paste.js?v=20260908010721';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260908010721';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260908010721';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260908010721';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260908010721';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260908014742';
+import { setBlock, indent } from './blocks.js?v=20260908014742';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260908014742';
+import { autoFormat } from './markdown.js?v=20260908014742';
+import { refresh, updateCount, syncBtns } from './cleanup.js?v=20260908014742';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260908014742';
+import { onTitle } from '../model.js?v=20260908014742';
+import { tanganiPaste } from './paste.js?v=20260908014742';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260908014742';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260908014742';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260908014742';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260908014742';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -247,6 +247,36 @@ export function bindEditor() {
     /* Enter / Tab / Backspace mengubah struktur -> rekam dulu */
     if(e.key==='Enter'||e.key==='Tab'||e.key==='Backspace') snap();
     const b=curBlock();
+    /* Gambar tidak boleh terhapus oleh tombol hapus keyboard — cukup
+       tombol X di gambar. Ketika karet berada di ujung blok yang menempel
+       gambar (mulai paragraf yang mengikuti / akhir paragraf sebelum
+       gambar), Backspace/Delete diabaikan. */
+    if((e.key==='Backspace'||e.key==='Delete') && b &&
+       !(e.ctrlKey||e.metaKey||e.altKey)){
+      const s9=sel();
+      const r9=(s9&&s9.rangeCount)?s9.getRangeAt(0):null;
+      if(r9 && r9.collapsed && docEl().contains(r9.startContainer)){
+        let tetangga=null;
+        if(e.key==='Backspace'){
+          const pre=document.createRange();
+          pre.selectNodeContents(b);
+          try{ pre.setEnd(r9.startContainer,r9.startOffset); }catch(err){}
+          if(pre.toString().replace(/[\u200b\u00a0]/g,'')==='')
+            tetangga=b.previousElementSibling;
+        }else{
+          const ekor=document.createRange();
+          ekor.selectNodeContents(b);
+          try{ ekor.setStart(r9.startContainer,r9.startOffset); }catch(err){}
+          if(ekor.toString().replace(/[\u200b\u00a0]/g,'')==='')
+            tetangga=b.nextElementSibling;
+        }
+        if(tetangga && tetangga.classList &&
+           tetangga.classList.contains('b-img')){
+          e.preventDefault();
+          return;
+        }
+      }
+    }
     /* Enter di dalam daftar: item kosong = keluar dari daftar */
     if(e.key==='Enter' && !e.shiftKey && b &&
        (b.classList.contains('b-ol')||b.classList.contains('b-li')||b.classList.contains('b-todo'))){

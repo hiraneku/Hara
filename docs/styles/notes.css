@@ -347,6 +347,13 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
    bawah paragraf (kolase) */
 .b-img.gb-b.f-l{margin-top:2.4em}
 .b-img.gb-b.f-r{margin-top:2.4em}
+/* Paragraf yang langsung menyusul gambar mengapit: sisipkan satu jangkar
+   U+200B lewat CSS (tidak ikut tersimpan) supaya baris kosong pertama dan
+   karet ketik mulai di sebelah gambar — bukan menempel di atas gambar. */
+.ed-doc>.b-img.w-apit.f-l + .b-p::before,
+.ed-doc>.b-img.w-apit.f-r + .b-p::before,
+.ed-doc>.b-img.w-kecil.f-l + .b-p::before,
+.ed-doc>.b-img.w-kecil.f-r + .b-p::before{content:'\200b'}
 /* elemen struktur mulai di baris baru — mengakhiri sapuan gambar mengapit */
 .ed-doc>.b-div,.ed-doc>.b-cal,.ed-doc>h1,.ed-doc>h2,.ed-doc>h3,
 .ed-doc>.b-code,.ed-doc>.b-quote,.ed-doc>.b-ol,.ed-doc>.b-li,
@@ -358,30 +365,38 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   transition:opacity .14s var(--ease)}
 .b-img:hover .img-x,.b-img:active .img-x{opacity:1}
 .img-x svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
-/* gagang: ukuran (pojok kanan-bawah) · pindah (kiri-atas) · putar (atas-tengah).
-   Area sentuh sengaja lebih lebar daripada tampilannya (halo ::before) —
-   gagang kecil di gambar kecil tetap gampang digenggam di layar sentuh. */
-.img-grip,.img-move{position:absolute;width:32px;height:32px;border-radius:999px;
+/* gagang: pindah (kiri-atas) · ukuran (pojok kanan-bawah) · putar (atas).
+   Area sentuh sengaja lebih lebar daripada tampilannya (halo ::before,
+   total ≥ 60px) supaya tetap gampang digenggam di layar sentuh.
+   Gambar sempit atau mengapit kiri/kanan memakai tata letak .sempit:
+   pindah & putar menjadi bilah di tepi ATAS gambar (selalu di dalam
+   gambar — tidak pernah menutupi teks sebelah atau tersembunyi di tepi
+   layar), ukuran tetap di pojok kanan-bawah. */
+.img-grip,.img-move{position:absolute;width:36px;height:36px;border-radius:999px;
   background:rgba(0,0,0,.62);display:grid;place-items:center;opacity:0;color:#fff;
   transition:opacity .14s var(--ease);touch-action:none;z-index:5}
-.img-grip{right:3px;bottom:3px;cursor:nwse-resize}
-.img-move{left:3px;top:3px;cursor:move}
-.img-putar{position:absolute;left:50%;top:-19px;width:34px;height:34px;border-radius:999px;
+.img-grip{right:5px;bottom:5px;cursor:nwse-resize}
+.img-move{left:5px;top:5px;cursor:move}
+.img-putar{position:absolute;left:50%;top:-24px;width:40px;height:40px;border-radius:999px;
   background:var(--accent);display:grid;place-items:center;opacity:0;color:#fff;
   transform:translateX(-50%);transition:opacity .14s var(--ease);touch-action:none;
   cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:6}
 .img-grip::before,.img-move::before,.img-putar::before{content:'';position:absolute;
-  inset:-11px;border-radius:999px}
+  inset:-14px;border-radius:999px}
 .b-img.img-pilih .img-grip,.b-img.img-pilih .img-move,
 .b-img.img-pilih .img-putar{opacity:1}
-.img-grip svg,.img-move svg,.img-putar svg{width:14px;height:14px;stroke:#fff;
+.img-grip svg,.img-move svg,.img-putar svg{width:15px;height:15px;stroke:#fff;
   stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
-/* gambar sempit (kecil): gagang membesar, putar diangkat lebih tinggi,
-   silang-hapus disembunyikan agar tidak saling tindih saat terpilih */
-.b-img.sempit .img-grip,.b-img.sempit .img-move{width:38px;height:38px}
-.b-img.sempit .img-grip{right:1px;bottom:1px}
-.b-img.sempit .img-move{left:1px;top:1px}
-.b-img.sempit .img-putar{top:-44px;width:40px;height:40px}
+/* gambar sempit/mengapit: bilah atas — pindah setengah kiri, putar
+   setengah kanan — selebar 50% gambar agar jarinya leluasa */
+.b-img.sempit .img-move,.b-img.sempit .img-putar{top:0;height:46px;
+  border-radius:0;box-shadow:none;transform:none}
+.b-img.sempit .img-move{left:0;width:50%;border-radius:var(--r-md) 0 0 0}
+.b-img.sempit .img-putar{left:50%;width:50%;border-radius:0 var(--r-md) 0 0}
+.b-img.sempit .img-move::before,.b-img.sempit .img-putar::before{inset:0;border-radius:0}
+.b-img.sempit .img-move svg,.b-img.sempit .img-putar svg{width:18px;height:18px}
+.b-img.sempit .img-grip{width:46px;height:46px;right:3px;bottom:3px}
+.b-img.sempit .img-grip::before{inset:-7px}
 .b-img.sempit.img-pilih .img-x{display:none}
 
 /* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */

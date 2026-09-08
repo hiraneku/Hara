@@ -1,6 +1,6 @@
 /* Posisi kursor. Bagian paling rawan — semua bug "aloH" berasal dari sini.
    Aturan: caret HARUS bertumpu pada text node, tidak pernah pada elemen. */
-import { BLOCKCLS } from './blocks.js?v=20260908010721';
+import { BLOCKCLS } from './blocks.js?v=20260908014742';
 
 export const docEl = () => document.querySelector('.ed-doc');
 
@@ -17,11 +17,17 @@ export function bukaKeyboard() {
   if (d) d.removeAttribute('inputmode');
 }
 document.addEventListener('pointerdown', e => {
-  if (e.target.closest && e.target.closest('.ed-doc')) bukaKeyboard();
+  const dalam = e.target.closest && e.target.closest('.ed-doc');
+  /* Ketukan pada gambar / bilah / tombol (bukan mengetik) jangan minta
+     keyboard — itu urusan tata-gambar.js (kunciKeyboard). */
+  const bukanTeks = e.target.closest &&
+    e.target.closest('.b-img,[contenteditable="false"]');
+  if (dalam && !bukanTeks) bukaKeyboard();
 }, true);
 export const sel   = () => window.getSelection();
 
-export const editable = el => el && el.classList && !el.classList.contains('b-div');
+export const editable = el => el && el.classList &&
+  !el.classList.contains('b-div') && !el.classList.contains('b-img');
 
 export function nearestEditable(el){
   const d=docEl(); if(!d) return null;
@@ -102,7 +108,10 @@ function blokKosong(node){
 }
 export function caretEnd(node){
   if(!node) return;
-  if(node.classList&&node.classList.contains('b-div')){
+  /* Gambar & pembatas bukan tempat mengetik — karet selalu pindah ke
+     blok teks terdekat (kalau gambar di awal catatan, lanjut ke paragraf
+     berikutnya; kalau di akhir, kembali ke paragraf sebelumnya). */
+  if(!editable(node)){
     const t=nearestEditable(node); if(t&&t!==node) return caretEnd(t);
     return;
   }

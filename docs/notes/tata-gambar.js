@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl } from './editor/caret.js?v=20260908010721';
-import { refresh } from './editor/cleanup.js?v=20260908010721';
-import { snap } from './editor/history.js?v=20260908010721';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908010721';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908014742';
+import { refresh } from './editor/cleanup.js?v=20260908014742';
+import { snap } from './editor/history.js?v=20260908014742';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908014742';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -158,14 +158,18 @@ function segarkanBar() {
   tempatkanBar();
 }
 
-/* Gambar terpilih yang sangat kecil: gagang dibuat lebih besar & diangkat
-   (lihat .b-img.sempit di notes.css) supaya tetap gampang digenggam. */
+/* Gambar sempit atau mengapit kiri/kanan memakai tata letak gagang
+   .sempit (bilah pindah+putar di tepi atas gambar — lihat notes.css)
+   supaya tetap gampang digenggam walau menempel di tepi layar. */
 function perbaruiKelasSempit() {
   const f = pilih;
   if (!f || !f.isConnected) return;
-  let kecil = false;
-  const r = f.getBoundingClientRect();
-  if (r && r.width > 0) kecil = r.width < 170;
+  const mengapit = f.classList.contains('f-l') || f.classList.contains('f-r');
+  let kecil = mengapit;
+  if (!kecil) {
+    const r = f.getBoundingClientRect();
+    if (r && r.width > 0) kecil = r.width < 280;
+  }
   f.classList.toggle('sempit', kecil);
 }
 
@@ -498,6 +502,12 @@ export function bindTataGambar() {
     if (fig && fig.parentElement === d) {
       if (modeBacaBerlaku()) { deseleksi(); return; }
       if (e.target.closest('.img-x')) return;
+      /* Memilih gambar bukan mengetik: jangan biarkan caret pindah ke
+         gambar, jangan minta keyboard, dan lepas fokus editor kalau
+         sedang fokus (keyboard yang terbuka ikut tertutup). */
+      e.preventDefault();
+      kunciKeyboard();
+      if (document.activeElement === d) d.blur();
       if (pilih !== fig) {
         deseleksi();
         pilih = fig;
