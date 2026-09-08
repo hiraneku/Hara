@@ -8,10 +8,10 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260908142110';
-import { closeAll } from './menus/pop.js?v=20260908142110';
-import { docEl } from './editor/caret.js?v=20260908142110';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908142110';
+import { toast } from '../core/toast.js?v=20260908143623';
+import { closeAll } from './menus/pop.js?v=20260908143623';
+import { docEl } from './editor/caret.js?v=20260908143623';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908143623';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -113,6 +113,11 @@ function lepasSorotan() {
   let sp;
   while ((sp = d.querySelector('span.cari')))
     sp.replaceWith(...Array.from(sp.childNodes));
+  /* satukan kembali simpul teks yang terpecah oleh sorotan sebelumnya.
+     Tanpa ini, ketik H → teks terbelah (H|alo); ketikan berikutnya
+     (Ha, Halo) tak akan pernah cocok karena kata terpotong antar
+     simpul — yang tersorot hanya huruf pertama. */
+  d.normalize();
 }
 
 function perbaruiHasilLbl() {
