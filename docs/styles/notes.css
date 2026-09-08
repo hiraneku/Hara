@@ -673,8 +673,6 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 /* A1 — skala teks bacaan: --tsx (1 = 100%) diatur JS (baca-plus.js),
    dipakai seluruh teks kolom catatan — mode baca & tulis sama. */
-.ed{position:relative}
-.ed-t{padding-right:120px}
 .ed-doc{font-size:calc(16px*var(--tsx,1))}
 .ed-doc .b-p,.ed-doc .b-ol,.ed-doc .b-li,.ed-doc .b-todo,.ed-doc .b-quote
 {font-size:calc(16px*var(--tsx,1))}
@@ -685,8 +683,11 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc .b-h2{font-size:calc(20px*var(--tsx,1))}
 .ed-doc .b-h3{font-size:calc(16.5px*var(--tsx,1))}
 
-/* kendali baca — pojok kanan atas kolom catatan */
-.ed-aksi{position:absolute;top:30px;right:4px;display:flex;align-items:center;gap:1px;z-index:4}
+/* kendali baca — satu baris ramping DI ATAS judul, rata kanan.
+   Dipilih bukan melayang di pojok kolom agar tidak pernah menimpa
+   judul panjang atau teks pertama catatan. */
+.ed-aksi{display:flex;align-items:center;justify-content:flex-end;gap:1px;
+  margin:0 0 6px;min-height:31px}
 .ea-b{width:31px;height:31px;display:grid;place-items:center;border-radius:999px;
   color:var(--muted);font-size:12.5px;font-weight:700;letter-spacing:.02em;
   transition:.12s var(--ease)}
@@ -760,15 +761,10 @@ body.zen #cari-note{top:16px}
 .ak-dot:hover{transform:scale(1.12)}
 [data-theme=dark] .ak-dot{color:#131711}
 
-@media(max-width:560px){
-  .ed-t{padding-right:64px}
-  .ed-aksi{right:2px}
-  .ea-b{width:29px;height:29px}
-  .ea-v{min-width:30px}
-}
-
 @media print{
   .ed-aksi,#cari-note,#zen-x,.pinx,.ak-dot{display:none!important}
+  /* cetak/PDF memakai ukuran huruf kertas, bukan skala bacaan layar */
+  .ed-doc{--tsx:1!important}
 }
 
 /* ════ Palet warna aksen (Pengaturan → Warna aksen, Bagian A6) ════

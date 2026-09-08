@@ -1,47 +1,47 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260908133031';
-import { homeView, notesView } from './views/list.js?v=20260908133031';
-import { editorView } from './views/editor.js?v=20260908133031';
-import { miscViews, renderHasilCari } from './views/misc.js?v=20260908133031';
-import { bindEditor } from './editor/events.js?v=20260908133031';
-import { renderBar }  from './bar/render.js?v=20260908133031';
-import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260908133031';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260908142110';
+import { homeView, notesView } from './views/list.js?v=20260908142110';
+import { editorView } from './views/editor.js?v=20260908142110';
+import { miscViews, renderHasilCari } from './views/misc.js?v=20260908142110';
+import { bindEditor } from './editor/events.js?v=20260908142110';
+import { renderBar }  from './bar/render.js?v=20260908142110';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260908142110';
 import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
-  from './editor/cleanup.js?v=20260908133031';
+  from './editor/cleanup.js?v=20260908142110';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20260908133031';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260908133031';
-import { toast } from '../core/toast.js?v=20260908133031';
-import { esc } from '../core/dom.js?v=20260908133031';
-import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260908133031';
-import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260908133031';
-import { pending, sticky, mati } from './editor/marks.js?v=20260908133031';
-import { docEl, caretEnd } from './editor/caret.js?v=20260908133031';
-import { resetHistory } from './editor/history.js?v=20260908133031';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260908133031';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260908133031';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260908133031';
-import { renderBar as gambarBar } from './bar/render.js?v=20260908133031';
-import { state } from '../core/store.js?v=20260908133031';
-import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260908133031';
+  from '../core/autosave.js?v=20260908142110';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260908142110';
+import { toast } from '../core/toast.js?v=20260908142110';
+import { esc } from '../core/dom.js?v=20260908142110';
+import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260908142110';
+import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260908142110';
+import { pending, sticky, mati } from './editor/marks.js?v=20260908142110';
+import { docEl, caretEnd } from './editor/caret.js?v=20260908142110';
+import { resetHistory } from './editor/history.js?v=20260908142110';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim } from './editor/image.js?v=20260908142110';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260908142110';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260908142110';
+import { renderBar as gambarBar } from './bar/render.js?v=20260908142110';
+import { state } from '../core/store.js?v=20260908142110';
+import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260908142110';
 import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote,
          sematDariList }
-  from './model.js?v=20260908133031';
-import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260908133031';
+  from './model.js?v=20260908142110';
+import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260908142110';
 import { bindBacaPlus, terapkanUkuranLayar, tutupCari, matikanZen }
-  from './baca-plus.js?v=20260908133031';
-import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260908133031';
-import { pasangSeret } from './drag.js?v=20260908133031';
-import { muatPanels, tautkanSebutan } from './panels.js?v=20260908133031';
-import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260908133031';
-import { setTag, stt } from './views/data.js?v=20260908133031';
-import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260908133031';
-import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260908133031';
+  from './baca-plus.js?v=20260908142110';
+import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260908142110';
+import { pasangSeret } from './drag.js?v=20260908142110';
+import { muatPanels, tautkanSebutan } from './panels.js?v=20260908142110';
+import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260908142110';
+import { setTag, stt } from './views/data.js?v=20260908142110';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260908142110';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260908142110';
 import { cadanganJson, eksporSemuaMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
-  from './data-io.js?v=20260908133031';
+  from './data-io.js?v=20260908142110';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -503,13 +503,23 @@ export const notesModule = {
         return;
       }
 
-      /* ── pin: tombol semat kecil di baris daftar (A4) ── */
+      /* ── pin: tombol semat kecil di baris daftar (A4) ──
+         Daftar digambar ulang TANPA melompat ke atas: di layar Cari
+         cukup segarkan hasilnya, di layar lain posisi scroll dijaga. */
       const px = e.target.closest('[data-pinx]');
       if (px) {
         e.preventDefault();
         e.stopImmediatePropagation();
         sematDariList(px.dataset.pinx);
-        go(cur);
+        const w = document.getElementById('wrap');
+        const sblm = w ? w.scrollTop : 0;
+        if (cur === 'search') {
+          const ci = document.getElementById('cari-in');
+          renderHasilCari(ci ? ci.value : '');
+        } else {
+          go(cur);
+          if (w) w.scrollTop = sblm;
+        }
         return;
       }
 

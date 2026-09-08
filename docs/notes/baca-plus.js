@@ -8,10 +8,10 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260908133031';
-import { closeAll } from './menus/pop.js?v=20260908133031';
-import { docEl } from './editor/caret.js?v=20260908133031';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908133031';
+import { toast } from '../core/toast.js?v=20260908142110';
+import { closeAll } from './menus/pop.js?v=20260908142110';
+import { docEl } from './editor/caret.js?v=20260908142110';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908142110';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -197,22 +197,6 @@ export function tutupCari() {
   lepasSorotan();
 }
 
-/* kembalikan fokus ke kolom catatan/judul sesudah aksi cepat */
-function pulihkanFokus() {
-  const sblm = document.activeElement;
-  if (!sblm || !sblm.isConnected) return;
-  const d = docEl();
-  const dalam = sblm === d || sblm.classList.contains('ed-t') ||
-    (d && d.contains(sblm));
-  if (dalam) return;
-  if (sblm.closest && sblm.closest('.ed')) {
-    const t = sblm.classList.contains('ed-t') ? sblm : (d || sblm);
-    try { t.focus({ preventScroll: true }); } catch (e) {
-      try { t.focus(); } catch (e2) { /* tua */ }
-    }
-  }
-}
-
 /* ── ikat kejadian ── */
 export function bindBacaPlus() {
   document.addEventListener('click', e => {
@@ -222,8 +206,8 @@ export function bindBacaPlus() {
     if (!diEd || !d || !d.isConnected) return;
     const b = e.target.closest('[data-et]');
     if (!b) return;
-    if (b.dataset.et === 'kecil') { aturUkuran(-1); pulihkanFokus(); return; }
-    if (b.dataset.et === 'besar') { aturUkuran(1); pulihkanFokus(); return; }
+    if (b.dataset.et === 'kecil') { aturUkuran(-1); return; }
+    if (b.dataset.et === 'besar') { aturUkuran(1); return; }
     if (b.dataset.et === 'zen') { toggleZen(); return; }
     if (b.dataset.et === 'cari') { bukaCari(); return; }
   });
