@@ -155,6 +155,18 @@ if (BAG === 'A') {
   ok('A16 baca balik g-slot dari DOM → meta.gslot',
      blok2 && blok2.meta && blok2.meta.gslot === true,
      JSON.stringify(blok2 && blok2.meta));
+
+  const sisiH = blockToHtml(makeBlock({
+    type: 'paragraph', content: 'mengalir di sisi gambar',
+    meta: { gslot: true, gsisi: true } }));
+  ok('A17 render paragraf sisi → class g-slot sisi ikut',
+     sisiH.includes('g-slot') && sisiH.includes('sisi'), sisiH.slice(0, 100));
+  const wadah3 = d.createElement('div');
+  wadah3.innerHTML = sisiH;
+  const blok3 = elToBlock(wadah3.firstElementChild);
+  ok('A18 baca balik sisi dari DOM → meta.gsisi',
+     blok3 && blok3.meta && blok3.meta.gsisi === true && blok3.meta.gslot === true,
+     JSON.stringify(blok3 && blok3.meta));
   selesai();
 }
 
@@ -293,10 +305,11 @@ if (BAG === 'B') {
     .map(c => /b-p/.test(c) ? 'p' : 'img').join('-');
   ok('B17 pindah ke bawah → urut p-p-img (gambar jadi paling akhir)',
      ordo === 'p-p-img' && anakAkhir[2].classList.contains('b-img'), ordo);
-  ok('B17b gambar di akhir mendapat slot ketik di bawahnya (g-slot, baris penuh)',
+  ok('B17b gambar di akhir mendapat slot ketik (g-slot) yang MENGAPIT sisi',
      DOC().children.length === 4 &&
      DOC().lastElementChild.classList.contains('b-p') &&
      DOC().lastElementChild.classList.contains('g-slot') &&
+     DOC().lastElementChild.classList.contains('sisi') &&
      (DOC().lastElementChild.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
      anakAkhir[2] === DOC().children[2],
      'jumlah=' + DOC().children.length + ' terakhir=' + DOC().lastElementChild.className);
@@ -514,6 +527,10 @@ if (BAG === 'C') {
      (last9.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
      anak9[anak9.length - 2] === img9 && img9.classList.contains('f-r'),
      'jumlah=' + anak9.length + ' last=' + last9.className);
+  ok('C19b gambar penutup mengapit → slot otomatis jadi sisi (mengalir di samping)',
+     last9.classList.contains('sisi') &&
+     last9.style.minHeight !== '',
+     'last=' + last9.className + ' minH=' + last9.style.minHeight);
   saveNow();
   const m9 = blokGambar();
   ok('C20 kolom ketik tersimpan tanpa merusak meta gambar',
@@ -559,6 +576,31 @@ if (BAG === 'C') {
      m11 && m11.meta && m11.meta.w === 60 && m11.meta.align === 'r' &&
      DOC().lastElementChild.classList.contains('g-slot'),
      JSON.stringify(m11 && m11.meta));
+
+  /* slot SISI yang sudah berisi teks: tetap mengalir di sisi gambar
+     setelah simpan & buka ulang (meta.gsisi dipertahankan) */
+  state.notes.push(makeNote({ id: 'g12', title: 'g12', blocks: [
+    makeBlock({ type: 'image', content: '', meta: { blobId: 'f-g12', alt: 'g12.png', w: 60, rot: 0, align: 'r' } }),
+    makeBlock({ type: 'paragraph', content: 'teks mengalir di sisi kiri gambar ini', meta: { gslot: true, gsisi: true } }),
+  ] }));
+  await simpanBlob('f-g12', new w.Blob(['x'], { type: 'image/png' }));
+  await openNote('g12'); await sleep(100);
+  const last12 = DOC().lastElementChild;
+  ok('C25 slot sisi berisi tetap sisi setelah buka ulang',
+     last12.classList.contains('g-slot') && last12.classList.contains('sisi') &&
+     (last12.textContent || '').indexOf('mengalir di sisi kiri') >= 0,
+     last12.outerHTML.slice(0, 130));
+  saveNow();
+  const m12 = blokGambar();
+  ok('C26 meta gambar penutup utuh (tanpa gslot/gsisi nyasar)',
+     m12 && m12.meta && m12.meta.w === 60 && m12.meta.align === 'r' &&
+     !m12.meta.gslot && !m12.meta.gsisi,
+     JSON.stringify(m12 && m12.meta));
+  const n12 = state.notes.find(x => x.id === 'g12');
+  const slot12 = n12.blocks[n12.blocks.length - 1];
+  ok('C27 meta paragraf sisi tersimpan (gslot+gsisi)',
+     slot12 && slot12.meta && slot12.meta.gslot === true &&
+     slot12.meta.gsisi === true, JSON.stringify(slot12 && slot12.meta));
 
   await openNote('g1'); await sleep(80);    /* kembali ke catatan awal */
   selesai();

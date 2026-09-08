@@ -228,7 +228,7 @@ export function blockToHtml(b) {
   }
 
   const cls = (TYPE_TO_CLASS[b.type] || 'b-p') +
-    (meta.gslot ? ' g-slot' : '');
+    (meta.gslot ? ' g-slot' : '') + (meta.gsisi ? ' sisi' : '');
   return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
 }
 
@@ -291,6 +291,9 @@ export function elToBlock(el) {
   /* slot ketik penutup gambar — tanda dibawa lewat meta supaya posisi
      teks (baris penuh di bawah gambar) konsisten setelah simpan/buka */
   if (el.classList && el.classList.contains('g-slot')) meta.gslot = true;
+  /* varian sisi: teks mengalir di sisi gambar mengapit — dipertahankan
+     supaya paragraf berisi tidak melompat posisi setelah dibuka ulang */
+  if (el.classList && el.classList.contains('sisi')) meta.gsisi = true;
 
   let content = '';
 

@@ -379,6 +379,11 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
    ketukan di mana pun di bawah gambar langsung bisa mengetik di sana,
    tidak perlu mulai dari sisi atas gambar. */
 .ed-doc>.b-p.g-slot{clear:both;min-height:2.2em}
+/* Bila gambar penutupnya MENGAPIT (kiri/kanan), slot kosong ikut
+   mengapit: teks mengalir di sisi gambar dulu (kiri untuk gambar kanan,
+   kanan untuk gambar kiri) lalu lanjut ke bawah gambar. Tinggi area
+   sisinya diatur JS (min-height inline) supaya seluruh sisi bisa diketuk. */
+.ed-doc>.b-p.g-slot.sisi{clear:none;min-height:0}
 /* gambar sedang dipilih */
 .b-img.img-pilih{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-md)}
 .img-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:999px;

@@ -1,6 +1,6 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908050813';
-import { refresh } from './cleanup.js?v=20260908050813';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260908052529';
+import { refresh } from './cleanup.js?v=20260908052529';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 
@@ -10,11 +10,14 @@ export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b
    penutup, gambar paling bawah menempel ke garis pembatas dan tidak ada
    tempat melanjutkan teks (teks malah menumpuk di paragraf SEBELUM
    gambar sehingga gambar terus terdorong ke bawah). */
+const flanked = b => !!b && b.classList && b.classList.contains('b-img') &&
+  (b.classList.contains('f-l') || b.classList.contains('f-r'));
+const kosongP = s => !!s && s.classList && s.classList.contains('b-p') &&
+  !s.querySelector('img') && (s.textContent || '').replace(/[\u200b\u00a0]/g, '') === '';
+
 export function pastikanKolomAkhir(d) {
   const el = d || docEl();
   if (!el) return;
-  const kosong = s => (s.textContent || '').replace(/[\u200b\u00a0]/g, '') === '' &&
-    !s.querySelector('img');
   let t = el.lastElementChild;
   /* 1) catatan tidak boleh berakhir dengan gambar — sediakan paragraf
      kosong di bawahnya sebagai slot ketik */
@@ -25,14 +28,33 @@ export function pastikanKolomAkhir(d) {
     t = nb;
   }
   /* 2) paragraf kosong yang MENUTUP catatan tepat setelah gambar = slot
-     ketik di bawah gambar: mulai di baris baru penuh (clear), sehingga
-     ketukan di mana pun di bawah gambar langsung memberi tempat mengetik.
-     (Paragraf yang mengikuti gambar di TENGAH catatan tidak disentuh —
-     teksnya tetap mengalir di sisi gambar seperti biasa.) */
-  if (t && t.classList && t.classList.contains('b-p') && kosong(t)) {
+     ketik bawah gambar. Kalau gambar penutupnya MENGAPIT, slot jadi slot
+     SISI: teks mengalir di sisi gambar dulu lalu ke bawah — area sisinya
+     dilebarkan setinggi gambar supaya ketukan di sisi mana pun masuk. */
+  if (kosongP(t)) {
     const prev = t.previousElementSibling;
-    if (prev && prev.classList && prev.classList.contains('b-img'))
+    if (prev && prev.classList && prev.classList.contains('b-img')) {
       t.classList.add('g-slot');
+      if (flanked(prev)) {
+        t.classList.add('sisi');
+        let h = 0;
+        try {
+          const r = prev.getBoundingClientRect();
+          h = (r && r.height) || 0;
+        } catch (e) { /* abaikan */ }
+        /* tinggi sisi + satu baris penutup: seluruh sisi gambar & area
+           tepat di bawahnya berada dalam kotak slot (bisa diketuk) */
+        t.style.minHeight = h > 0 ? Math.ceil(h + 28) + 'px' : '6em';
+      } else {
+        t.classList.remove('sisi');
+        t.style.minHeight = '';
+      }
+    } else {
+      /* paragraf kosong penutup yang bukan setelah gambar: bersihkan
+         sisa kelas slot (mis. gambar penutupnya sudah dihapus) */
+      t.classList.remove('g-slot', 'sisi');
+      t.style.minHeight = '';
+    }
   }
 }
 
