@@ -99,7 +99,12 @@ export function makeBlock(patch = {}) {
   };
   /* nilai bawaan per jenis, supaya konsumen tidak perlu memeriksa undefined */
   if (type === 'heading' && !blok.meta.level) blok.meta.level = 2;
-  if (type === 'todo' && typeof blok.meta.checked !== 'boolean') blok.meta.checked = false;
+  if (type === 'todo') {
+    if (typeof blok.meta.checked !== 'boolean') blok.meta.checked = false;
+    /* to-do yang baru dicentang (melalui UI) selalu punya waktu centang;
+       data lama tanpa data-done diberi waktu saat dibaca kembali */
+    if (blok.meta.checked && !blok.meta.done) blok.meta.done = Date.now();
+  }
   return blok;
 }
 
@@ -209,10 +214,11 @@ export function blockToHtml(b) {
   if (b.type === 'todo') {
     const on = meta.checked ? ' on' : '';
     const done = meta.checked ? ' done' : '';
+    const dn = meta.checked && meta.done ? ` data-done="${meta.done}"` : '';
     const kotak = `<button class="cbx${on}" contenteditable="false" type="button" ` +
       `role="checkbox" aria-checked="${meta.checked ? 'true' : 'false'}">` +
       `<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
-    return `<div class="b-todo${done}"${bid}${ref}${gaya}>${kotak}${b.content || ''}${pegangan()}</div>`;
+    return `<div class="b-todo${done}"${bid}${dn}${ref}${gaya}>${kotak}${b.content || ''}${pegangan()}</div>`;
   }
 
   if (b.type === 'heading') {
@@ -325,6 +331,12 @@ export function elToBlock(el) {
     if (gb === 'b') meta.zb = 'b';
   } else if (type === 'todo') {
     meta.checked = kelas.includes('done');
+    /* waktu centang (ms) — untuk panel Tugas/Reminder (B9) */
+    const dn = el.getAttribute && el.getAttribute('data-done');
+    if (dn) {
+      const v = Number(dn);
+      if (!isNaN(v) && v > 0) meta.done = v;
+    }
     content = isiTanpa(el, ':scope > .cbx');
   } else if (type === 'heading') {
     meta.level = CLASS_LEVEL[kunci] || 2;

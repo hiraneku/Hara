@@ -1,12 +1,13 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260908143623';
-import { esc, stamp } from '../../core/dom.js?v=20260908143623';
-import { rowFor } from './row.js?v=20260908143623';
-import { plainText } from '../note-model.js?v=20260908143623';
-import { semuaTag } from '../tags.js?v=20260908143623';
-import { AK, akSekarang } from '../../core/theme.js?v=20260908143623';
+import { state } from '../../core/store.js?v=20260908152800';
+import { esc, stamp } from '../../core/dom.js?v=20260908152800';
+import { rowFor } from './row.js?v=20260908152800';
+import { plainText } from '../note-model.js?v=20260908152800';
+import { semuaTag } from '../tags.js?v=20260908152800';
+import { AK, akSekarang } from '../../core/theme.js?v=20260908152800';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260908152800';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -66,7 +67,7 @@ tags:()=>{
       .slice(0, 2).map(n => n.title).filter(Boolean);
     const ket = `${t.jumlah} catatan` + (pemakai.length ? ' · ' + pemakai.join(' · ') : '');
     return `<button class="row" data-tag="${esc(t.nama)}">
-      <svg class="ico" style="color:var(--faint)"><use href="#i-tag"/></svg>
+      <span class="tag-dot" data-tt="${tandaTag(t.nama)}" style="--lc:${WARNA_TAG[tandaTag(t.nama)]}"></span>
       <div class="row-b"><div class="row-t">#${esc(t.nama)}</div>
       <div class="row-s" style="white-space:normal;line-height:1.45">${esc(ket)}</div></div>
       <span class="row-m">${t.jumlah}</span></button>`;

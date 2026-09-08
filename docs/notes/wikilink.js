@@ -6,7 +6,8 @@
    dengan tombol pengubah (Ctrl/⌘/Alt) membuka catatan yang sudah ada —
    klik biasa tetap untuk meletakkan kursor/menyunting teks. */
 
-import { state } from '../core/store.js?v=20260908143623';
+import { state } from '../core/store.js?v=20260908152800';
+import { tandaiLabelTag } from './label-tag.js?v=20260908152800';
 
 /* Judul sasaran sebuah span wikilink, tanpa [[ ]] dan tanpa alias |… */
 export function judulSpan(span) {
@@ -23,7 +24,8 @@ export function cariJudul(judul) {
   return state.notes.find(n => !n.deletedAt && (n.title || '').trim().toLowerCase() === j) || null;
 }
 
-/* Tandai mati/hidup semua wikilink di dalam `root`. */
+/* Tandai mati/hidup semua wikilink di dalam `root`, lalu warnai
+   tag #… (B10) — keduanya urusan tampilan yang disegarkan tiap render. */
 export function tandaiTautan(root) {
   if (!root) return;
   const list = root.querySelectorAll ? root.querySelectorAll('span.wl') : [];
@@ -31,4 +33,5 @@ export function tandaiTautan(root) {
     const judul = judulSpan(span);
     span.classList.toggle('dead', !(judul && cariJudul(judul)));
   }
+  tandaiLabelTag(root);
 }

@@ -1,19 +1,19 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260908143623';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908143623';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260908143623';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260908143623';
-import { state, save } from '../../core/store.js?v=20260908143623';
-import { findNote } from '../model.js?v=20260908143623';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908143623';
-import { sinkronTag } from '../tags.js?v=20260908143623';
-import { tandaiTautan } from '../wikilink.js?v=20260908143623';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908143623';
-import { cur } from '../../core/router.js?v=20260908143623';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908143623';
-import { GROUPS } from '../bar/config.js?v=20260908143623';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260908143623';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908143623';
+import { docEl, sel, curBlock } from './caret.js?v=20260908152800';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260908152800';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260908152800';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260908152800';
+import { state, save } from '../../core/store.js?v=20260908152800';
+import { findNote } from '../model.js?v=20260908152800';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260908152800';
+import { sinkronTag } from '../tags.js?v=20260908152800';
+import { tandaiTautan } from '../wikilink.js?v=20260908152800';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260908152800';
+import { cur } from '../../core/router.js?v=20260908152800';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260908152800';
+import { GROUPS } from '../bar/config.js?v=20260908152800';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260908152800';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260908152800';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -95,6 +95,20 @@ export function cleanup(){
     }
   });
 }
+
+/* To-do selesai wajib membawa waktu centang (data-done) supaya panel
+   Tugas/Reminder bisa membedakan yang baru selesai. Dipanggil tiap
+   refresh; tanpa ini to-do lama yang di-undo lalu dicentang ulang
+   tidak tercatat. */
+function isiDataDone() {
+  const d = docEl();
+  if (!d) return;
+  Array.from(d.querySelectorAll('.b-todo.done')).forEach(el => {
+    if (el.hasAttribute('data-done')) return;
+    el.setAttribute('data-done', String(Date.now()));
+  });
+}
+
 export function updateCount(){
   const el=document.getElementById('count'); if(!el) return;
   const d=docEl();
@@ -197,6 +211,14 @@ export function saveNow(){
   return flush();
 }
 
+/* Simpan catatan yang sedang dibuka lewat jalur autosave biasa, tanpa
+   menyentuh DOM editor — dipakai panel di luar editor (mis. warna tag
+   yang mengubah n.warna, B10). */
+export function saveCatatanBuka() {
+  if (cur !== 'editor') return false;
+  return saveNow();
+}
+
 export function refresh(){
   cleanup();
   /* Beri id pada blok yang baru lahir (Enter, tombol bar, tempel) SEBELUM
@@ -211,6 +233,9 @@ export function refresh(){
   seimbangkanGagangGambar();
   /* wikilink: yang belum ada catatannya tampil putus-putus */
   tandaiTautan(docEl());
+  /* to-do selesai selalu membawa data-done agar layar Tugas/Reminder
+     bisa memakai waktu centang (lewat tenggat yang baru selesai) */
+  isiDataDone();
   renumber();                     /* nomor daftar selalu berurutan */
   if(!isReplaying()) record();   /* rekam hasil akhir tiap perubahan */
   updateCount(); syncBtns(); saveSoon();

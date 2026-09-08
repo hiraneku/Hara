@@ -3,11 +3,13 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260908143623';
-import { esc, tglHari } from '../../core/dom.js?v=20260908143623';
-import { rowFor } from './row.js?v=20260908143623';
-import { stt } from './data.js?v=20260908143623';
-import { tagDariIsi } from '../tags.js?v=20260908143623';
+import { state } from '../../core/store.js?v=20260908152800';
+import { esc, tglHari } from '../../core/dom.js?v=20260908152800';
+import { rowFor } from './row.js?v=20260908152800';
+import { stt } from './data.js?v=20260908152800';
+import { tagDariIsi } from '../tags.js?v=20260908152800';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20260908152800';
+import { judulJurnalHari } from '../harian.js?v=20260908152800';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -62,13 +64,15 @@ const kartu = daftar => `<div class="card">${daftar.map(rowFor).join('')}</div>`
 
 export const homeView = () => {
   const daftar = aktif();
-  /* yang disemat selalu menang di beranda, sisanya urut terbaru */
-  const urut = a => [...a].sort((x, y) => y.updatedAt - x.updatedAt);
+  /* yang disemat selalu menang di beranda, sisanya ikut pilihan urut */
+  const urut = a => urutkanCatatan(a);
   const terbaru = [...urut(daftar.filter(n => n.pinned)),
                    ...urut(daftar.filter(n => !n.pinned))].slice(0, 4);
   return `<div class="page">
   <div class="hello"><div class="d">${tglHari()}</div>
   <div class="s">${daftar.length ? daftar.length + ' catatan tersimpan.' : 'Belum ada apa-apa.'}</div></div>
+  <button type="button" class="btn btn-sec jurnal-btn" data-jurnal-hari title="Catatan harian untuk hari ini">
+    <svg class="ico"><use href="#i-cal"/></svg>Catatan hari ini · ${esc(judulJurnalHari())}</button>
   <div class="sec"><h2>Catatan</h2></div>
   ${daftar.length ? kartu(terbaru)
    : `<div class="empty" style="padding:40px 20px"><h3>Belum ada catatan</h3>
@@ -83,8 +87,8 @@ export const notesView = () => {
   if (tag) daftar = daftar.filter(n => punyaTag(n, tag));
   const diSampah = state.notes.filter(n => n.deletedAt).length;
 
-  const pin = daftar.filter(n => n.pinned);
-  const lain = daftar.filter(n => !n.pinned);
+  const pin = urutkanCatatan(daftar.filter(n => n.pinned));
+  const lain = urutkanCatatan(daftar.filter(n => !n.pinned));
 
   return `<div class="page">
   ${!daftar.length && !tag
@@ -105,6 +109,11 @@ export const notesView = () => {
         <button class="btn btn-sec" data-act2="new">Tulis catatan</button></div>`
     : ''}
   ${(() => { const t = belumSelesai(daftar); return t.length ? kartuTodo(t) : ''; })()}
+  <div class="list-bar">
+    <button type="button" class="urut-chip" data-urut-buka aria-haspopup="menu"
+      title="Urutkan daftar catatan"><svg class="ico"><use href="#i-sort"/></svg>Urut:
+      <b>${esc(namaUrut(urutSekarang()))}</b></button>
+  </div>
   ${pin.length ? overline('Disematkan') + kartu(pin) : ''}
   ${lain.length ? (pin.length ? overline('Lainnya') : '') + kartu(lain) : ''}
   <div class="list-foot">

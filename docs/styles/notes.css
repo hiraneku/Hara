@@ -779,3 +779,83 @@ body.zen #cari-note{top:16px}
 [data-theme=dark][data-ak=ungu]{--accent:#A99CD3;--accent-weak:#2B2437;--m-notes:var(--accent)}
 [data-theme=dark][data-ak=bata]{--accent:#D98D7C;--accent-weak:#382421;--m-notes:var(--accent)}
 [data-theme=dark][data-ak=emas]{--accent:#D0AE6E;--accent-weak:#332B1B;--m-notes:var(--accent)}
+
+/* ════════════ BAGIAN B — organisasi & produktivitas ════════════
+   B9 layar Tugas/Reminder · B8 daftar isi · B7 chip urut · B12 jurnal */
+
+/* chip tenggat kecil di baris (hari ini/besok/lewat) */
+.tdg-chip{flex:none;display:inline-flex;align-items:center;height:20px;padding:0 8px;
+  border-radius:999px;background:var(--sunken);color:var(--muted);
+  font-size:10.5px;font-weight:600}
+
+/* daftar isi: label H1/H2/H3 + teks heading */
+.daf-i{display:flex;align-items:baseline;gap:10px;padding:8px 13px;font-size:13.5px}
+.daf-n{flex:none;width:22px;font-family:var(--mono);font-size:9.5px;color:var(--faint);
+  letter-spacing:.03em}
+.daf-lv1 .daf-n{color:var(--accent);font-weight:700}
+.daf-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.daf-lv2{padding-left:22px}
+.daf-lv3{padding-left:34px}
+
+/* chip urut di daftar catatan (B7) */
+.jurnal-btn{margin-bottom:20px;color:var(--muted)}
+.jurnal-btn:hover{color:var(--text)}
+.jurnal-btn .ico{width:15px;height:15px}
+.list-bar{display:flex;justify-content:flex-end;margin:0 0 10px}
+.urut-chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;
+  border-radius:999px;background:var(--sunken);color:var(--muted);font-size:12px;
+  font-weight:500;transition:.12s var(--ease)}
+.urut-chip:hover{background:var(--border);color:var(--text)}
+.urut-chip .ico{width:13px;height:13px}
+.urut-chip b{color:var(--text);font-weight:600}
+
+/* ════════════ B10 — tag berwarna ════════════
+   Tag memakai PALET LABEL (bukan aksen): urutan tetap di seluruh
+   antarmuka (isi catatan, chip daftar, halaman tag, panel tag) —
+   dihitung dari nama tag sehingga tidak ada dua sumber warna. */
+
+/* basis chip label: bilah kecil di kiri + teks warna senada */
+.label-chip{--lc:#3F6F5B;--lc-weak:color-mix(in srgb,var(--lc) 13%,transparent);
+  background:var(--lc-weak);color:var(--lc)}
+.label-chip::before{content:"";width:5px;height:5px;border-radius:999px;flex:none;
+  background:var(--lc);opacity:.9}
+/* label di isi catatan (span.tg): warna dari data-tt (label.js).
+   Tetap inline sederhana — mengubah display elemen isi bisa mengganggu
+   penempatan kursor di mode tulis. */
+span.tg[data-tt]{color:var(--lc,var(--accent))}
+/* chip tag di daftar: warna label (harga mati — dihitung dari nama) */
+.tg-chip{--lc:#3F6F5B;--lc-weak:color-mix(in srgb,var(--lc) 13%,transparent);
+  background:var(--lc-weak);color:var(--lc)}
+.tg-chip:hover{filter:brightness(.96)}
+/* dot di halaman tag (warna: --lc inline dari label.js menang) */
+.tag-dot{width:10px;height:10px;border-radius:999px;flex:none;background:var(--lc,#3F6F5B)}
+.tag-dot[data-tt]{background:var(--lc,var(--accent))}
+/* pilihan palet di panel tag */
+.tl-pil{display:flex;flex-wrap:wrap;gap:8px;padding:2px 13px 12px}
+.tl-s{width:26px;height:26px;border-radius:999px;border:2px solid transparent;
+  background:var(--sw,var(--accent));position:relative;transition:.12s var(--ease)}
+.tl-s:hover{transform:scale(1.15)}
+.tl-s.on{border-color:var(--text)}
+.tl-s.on::after{content:"";position:absolute;inset:6px;border-radius:999px;
+  background:rgba(255,255,255,.55)}
+[data-theme=dark] .tl-s.on::after{background:rgba(0,0,0,.4)}
+.tl-kosong{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;
+  border-radius:999px;border:1px dashed var(--border-strong);color:var(--faint);
+  font-size:11px;cursor:pointer;background:none}
+.tl-kosong:hover{color:var(--muted);border-color:var(--muted)}
+
+/* ════════════ LABEL TAG: definisi palet ════════════
+   Urutan ini yang dipakai lewat labelTanda() — KONSISTEN di seluruh
+   UI (isi catatan, chip daftar, halaman tag, panel tag). Warna dipilih
+   dari hash nama tag supaya tag sama selalu berwarna sama. */
+[data-tt=slate]{--lc:#4A5868}
+[data-tt=gray]{--lc:#6B6B70}
+[data-tt=merah]{--lc:#B34A3C}
+[data-tt=oranye]{--lc:#B3662E}
+[data-tt=kuning]{--lc:#97731A}
+[data-tt=hijau]{--lc:#3F6F5B}
+[data-tt=teal]{--lc:#2E6E6E}
+[data-tt=biru]{--lc:#2F6E8F}
+[data-tt=ungu]{--lc:#6B5B9E}
+[data-tt=merahmuda]{--lc:#A84E6E}
+[data-tt=coklat]{--lc:#7A5B3A}

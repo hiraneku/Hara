@@ -107,12 +107,14 @@ fresh(); type('x');
 if(mb('slash')) { click(mb('slash')); await sleep(); }
 else cek('tombol slash ada di bar', false, '(tombol / tidak ada)');
 const items=[...d.querySelectorAll('#pop [data-blk]')];
-cek('slash punya 11 blok dasar', items.length>=10, `ada ${items.length}`);
+cek('slash punya 13 blok/aksi dasar', items.length>=13, `ada ${items.length}`);
 const label=items.map(x=>x.textContent.trim()).join('|');
 for(const perlu of ['Teks','Heading 1','Heading 2','Heading 3','Daftar','bernomor','To-do','Kutipan','Kode','Pembatas'])
   cek(`slash punya "${perlu}"`, label.includes(perlu));
 cek('slash: Gambar ada', /Gambar/i.test(label), label.slice(0,80));
-cek('slash: TANPA command advanced (Callout/Tanggal)', !/Callout|Tanggal/.test(label), label);
+cek('slash: Tanggal hari ini & Warna tag ada (B13)',
+  /Tanggal hari ini/.test(label) && /Warna tag/.test(label), label.slice(0,160));
+cek('slash: TANPA Callout (menu khusus, bukan blok dasar)', !/Callout/.test(label), label.slice(0,160));
 /* ketik "/" memicu menu? */
 fresh(); ins('/');
 cek('ketik "/" membuka menu', d.getElementById('pop').classList.contains('on'));

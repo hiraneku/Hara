@@ -1,6 +1,7 @@
 /* Menu "#" — daftar tag sungguhan (agregat dari isi catatan). */
-import { semuaTag } from '../tags.js?v=20260908143623';
-import { esc } from '../../core/dom.js?v=20260908143623';
+import { semuaTag } from '../tags.js?v=20260908152800';
+import { esc } from '../../core/dom.js?v=20260908152800';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260908152800';
 
 export const tagMenu = () => {
   const sem = semuaTag();
@@ -9,7 +10,9 @@ export const tagMenu = () => {
       <p class="prop-pop-hint">Belum ada tag. Pilih dari bar mekanik saat menulis # di catatan — isi dulu catatannya.</p>`;
   return `<div class="pop-h">Tag</div>` +
     sem.slice(0, 12).map(t =>
-      `<button class="pop-i" data-ins="#${esc(t.nama)}"><svg class="ico"><use href="#i-tag"/></svg>${esc(t.nama)}<span class="k">${t.jumlah}</span></button>`
+      `<button class="pop-i" data-ins="#${esc(t.nama)}">
+        <span class="tag-dot" data-tt="${tandaTag(t.nama)}" style="--lc:${WARNA_TAG[tandaTag(t.nama)]}"></span>
+        ${esc(t.nama)}<span class="k">${t.jumlah}</span></button>`
     ).join('') +
     (sem.length > 12 ? `<p class="prop-pop-hint">…dan ${sem.length - 12} tag lain (bisa dicari di halaman Tag).</p>` : '');
 };

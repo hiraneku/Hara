@@ -2,7 +2,7 @@
 
 > Berkas TEMPORER. Dihapus setelah semua butir selesai dikerjakan.
 
-## Bagian A — prioritas cepat (SEDANG DIKERJAKAN)
+## Bagian A — prioritas cepat (SELESAI)
 - [x] A1. Atur ukuran teks saat membaca (A−/A+) — 15–24px, tersimpan, mode baca & tulis
 - [x] A2. Mode fokus/zen (tulis tanpa gangguan) — Esc / bulatan kanan-bawah untuk keluar
 - [x] A3. Cari di dalam catatan (find-in-note, mode baca) — sorot semua + lompat hasil
@@ -11,13 +11,13 @@
 - [x] A6. Pilih warna aksen di Pengaturan — 5 pilihan, terang & gelap
 
 ## Bagian B — organisasi & produktivitas
-- [ ] B7. Urutkan & filter daftar catatan (terakhir diedit / dibuat / A–Z / per-tag)
-- [ ] B8. Daftar isi otomatis dari heading, ketuk untuk lompat
-- [ ] B9. Tenggat pada todo → muncul di layar Tugas/Reminder
-- [ ] B10. Tag berwarna (label)
-- [ ] B11. "Jadikan templat" dari catatan yang sedang dibuka
-- [ ] B12. Catatan harian / jurnal (tombol catatan hari ini)
-- [ ] B13. Aksi cepat "/" tambahan
+- [x] B7. Urutkan & filter daftar catatan (terakhir diedit / dibuat / A–Z / per-tag)
+- [x] B8. Daftar isi otomatis dari heading, ketuk untuk lompat
+- [x] B9. Tenggat pada todo → muncul di layar Tugas/Reminder
+- [x] B10. Tag berwarna (label)
+- [x] B11. "Jadikan templat" dari catatan yang sedang dibuka
+- [x] B12. Catatan harian / jurnal (tombol catatan hari ini)
+- [x] B13. Aksi cepat "/" tambahan
 
 ## Bagian C — gambar & media
 - [ ] C14. Ganti gambar (tanpa mengubah posisi/ukuran/rotasi)

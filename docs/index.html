@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20260908143623">
-<link rel="stylesheet" href="./styles/base.css?v=20260908143623">
-<link rel="stylesheet" href="./styles/shell.css?v=20260908143623">
-<link rel="stylesheet" href="./styles/notes.css?v=20260908143623">
+<link rel="stylesheet" href="./styles/tokens.css?v=20260908152800">
+<link rel="stylesheet" href="./styles/base.css?v=20260908152800">
+<link rel="stylesheet" href="./styles/shell.css?v=20260908152800">
+<link rel="stylesheet" href="./styles/notes.css?v=20260908152800">
 </head>
 <body>
 <svg style="display:none">
@@ -73,6 +73,7 @@
 <symbol id="i-tpl" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 14h6M12 11v6"/></symbol>
 <symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="m8.3 10.8 7.4-3.6M8.3 13.2l7.4 3.6"/></symbol>
 <symbol id="i-zen" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+<symbol id="i-sort" viewBox="0 0 24 24"><path d="M8 4v13"/><path d="m5 10 3 3 3-3"/><path d="M16 20V7"/><path d="m13 14 3-3 3 3"/></symbol>
 </svg>
 
 <div class="app">
@@ -105,6 +106,7 @@
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg>Catatan baru</button>
+  <button class="sheet-i" data-new="jurnal"><svg class="ico" style="color:var(--m-notes)"><use href="#i-cal"/></svg>Catatan hari ini</button>
   <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg>Dari templat…</button>
   <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg>Reminder baru</button>
   <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg>Tugas baru</button>
@@ -127,6 +129,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
 </nav>
 
-<script type="module" src="./app.js?v=20260908143623"></script>
+<script type="module" src="./app.js?v=20260908152800"></script>
 </body>
 </html>

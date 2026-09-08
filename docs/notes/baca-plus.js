@@ -8,10 +8,11 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260908143623';
-import { closeAll } from './menus/pop.js?v=20260908143623';
-import { docEl } from './editor/caret.js?v=20260908143623';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908143623';
+import { toast } from '../core/toast.js?v=20260908152800';
+import { closeAll } from './menus/pop.js?v=20260908152800';
+import { docEl } from './editor/caret.js?v=20260908152800';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908152800';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20260908152800';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -215,6 +216,7 @@ export function bindBacaPlus() {
     if (b.dataset.et === 'besar') { aturUkuran(1); return; }
     if (b.dataset.et === 'zen') { toggleZen(); return; }
     if (b.dataset.et === 'cari') { bukaCari(); return; }
+    if (b.dataset.et === 'dafis') { bukaDaftarIsi(b); return; }
   });
 
   /* ketuk di luar panel cari (dan bukan tombolnya) → tutup */

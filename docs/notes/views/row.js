@@ -2,8 +2,9 @@
    Chip tag di bawah cuplikan: sinkron dengan isi catatan (tags.js).
    Chip memfilter daftar lewat data-tag — ditangani delegasi klik di
    notes/index.js (berjalan lebih dulu dari pembuka catatan data-open). */
-import { esc, stamp } from '../../core/dom.js?v=20260908143623';
-import { excerptOf } from '../note-model.js?v=20260908143623';
+import { esc, stamp } from '../../core/dom.js?v=20260908152800';
+import { excerptOf } from '../note-model.js?v=20260908152800';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260908152800';
 
 export const rowFor=n=>{
   const cuplikan=excerptOf(n);      /* diturunkan dari blocks, tidak disimpan */
@@ -11,8 +12,10 @@ export const rowFor=n=>{
   /* baris di Arsip tidak diberi chip: memfilternya mengarah ke daftar
      utama yang tidak memuat catatan terarsip — membingungkan */
   const chips = (!n.archived && tg.length)
-    ? `<div class="row-tg">${tg.slice(0, 3).map(t =>
-        `<span class="tg-chip" data-tag="${esc(t)}">#${esc(t)}</span>`).join('')}
+    ? `<div class="row-tg">${tg.slice(0, 3).map(t => {
+        const tanda = tandaUntukCatatan(n, t);
+        return chipTag(tanda, t);
+      }).join('')}
         ${tg.length > 3 ? `<span class="tg-more">+${tg.length - 3}</span>` : ''}</div>`
     : '';
   /* tombol semat kecil di ujung baris (span, karena baris sendiri <button>) */

@@ -3,7 +3,7 @@
    Hanya blok dasar; command lanjutan sengaja tidak dimasukkan.
    Bisa difilter dengan mengetik, dipilih lewat sentuh maupun papan ketik. */
 
-import { esc } from '../../core/dom.js?v=20260908143623';
+import { esc } from '../../core/dom.js?v=20260908152800';
 
 /* [ikon, nama, pintasan markdown, aksi, kata kunci pencarian] */
 export const SLASH = [
@@ -18,6 +18,10 @@ export const SLASH = [
   ['i-code',   'Kode',             '```',     'b-code',  'kode code blok program'],
   ['i-minus',  'Pembatas',         '---',     'hr',      'pembatas divider garis pemisah'],
   ['i-img',    'Gambar',           '',        'img',     'gambar image foto sisip'],
+  /* aksi cepat tambahan (B13) — bukan blok, tapi jalan pintas yang
+     dipakai tanpa keluar dari alur ketikan */
+  ['i-cal',    'Tanggal hari ini', '',        'date',    'tanggal hari ini now date waktu'],
+  ['i-tag',    'Warna tag…',       '',        'tagwarna','warna tag label chip #'],
 ];
 
 /* Saring berdasarkan apa yang diketik setelah "/". */
