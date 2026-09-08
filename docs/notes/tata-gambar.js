@@ -21,15 +21,13 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl } from './editor/caret.js?v=20260907162443';
-import { refresh } from './editor/cleanup.js?v=20260907162443';
-import { snap } from './editor/history.js?v=20260907162443';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260907162443';
+import { docEl } from './editor/caret.js?v=20260908010721';
+import { refresh } from './editor/cleanup.js?v=20260908010721';
+import { snap } from './editor/history.js?v=20260908010721';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908010721';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
-let pilihBaru = false; /* figur baru dipilih pada pointerdown ini (jangan
-                          langsung ditutup oleh klik yang menyusul) */
 const baca = () => pilih ? bacaTata(pilih) : null;
 
 const jepit = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -144,7 +142,9 @@ function tempatkanBar() {
   const bh = el.offsetHeight || 34;
   const kiri = Math.max(8, Math.min(r.left + r.width / 2 - bw / 2, window.innerWidth - bw - 8));
   let atas = r.bottom + 6;
-  if (atas + bh > window.innerHeight - 8) atas = Math.max(8, r.top - bh - 6);
+  /* bila tak muat di bawah, pindah ke atas dengan jarak ekstra supaya
+     bilah tidak menutupi gagang putar gambar kecil (diangkat ke atas) */
+  if (atas + bh > window.innerHeight - 8) atas = Math.max(8, r.top - bh - 30);
   el.style.left = kiri + 'px';
   el.style.top = atas + 'px';
 }
@@ -152,9 +152,21 @@ function tempatkanBar() {
 function segarkanBar() {
   const el = bar(), t = baca();
   if (!t) return;
+  perbaruiKelasSempit();
   el.innerHTML = mbarHtml(t);
   el.classList.add('on');
   tempatkanBar();
+}
+
+/* Gambar terpilih yang sangat kecil: gagang dibuat lebih besar & diangkat
+   (lihat .b-img.sempit di notes.css) supaya tetap gampang digenggam. */
+function perbaruiKelasSempit() {
+  const f = pilih;
+  if (!f || !f.isConnected) return;
+  let kecil = false;
+  const r = f.getBoundingClientRect();
+  if (r && r.width > 0) kecil = r.width < 170;
+  f.classList.toggle('sempit', kecil);
 }
 
 function sembunyikanBar() {
@@ -454,7 +466,7 @@ function deseleksi() {
   if (!pilih) return;
   const f = pilih;
   pilih = null;
-  f.classList.remove('img-pilih', 'seret');
+  f.classList.remove('img-pilih', 'seret', 'sempit');
   ['img-grip', 'img-move', 'img-putar'].forEach(c => {
     const h = f.querySelector('.' + c);
     if (h) h.remove();
@@ -470,7 +482,6 @@ export function bindTataGambar() {
   document.addEventListener('pointerdown', e => {
     if (e.button !== undefined && e.button !== 0) return;
     if (pilih && !pilih.isConnected) deseleksi(); /* figur terhapus */
-    pilihBaru = false;
     /* gagang-gagang pada figur yang dipilih */
     const grip = e.target.closest ? e.target.closest('.img-grip') : null;
     if (grip) { if (pilih) mulaiUkuran(e); return; }
@@ -490,7 +501,6 @@ export function bindTataGambar() {
       if (pilih !== fig) {
         deseleksi();
         pilih = fig;
-        pilihBaru = true;
         fig.classList.add('img-pilih');
         pasangGagang(fig);
         segarkanBar();
@@ -503,19 +513,16 @@ export function bindTataGambar() {
     deseleksi();
   });
 
-  /* klik figur yang sama = tutup; aksi bilah mini */
+  /* Aksi bilah mini & silang-hapus. Ketukan pada badan gambar yang sudah
+     dipilih TIDAK menutup seleksi — gagang kecil gampang meleset; menutup
+     cukup dengan ketuk di luar gambar / Escape. */
   document.addEventListener('click', e => {
     const d = docEl();
     const cfig = (d && e.target.closest) ? e.target.closest('.b-img') : null;
-    if (cfig && cfig.parentElement === d && pilih === cfig && !pilihBaru) {
-      if (modeBacaBerlaku()) { deseleksi(); return; }
-      if (e.target.closest('.img-x')) { deseleksi(); return; } /* silang: tutup seleksi, hapus via index.js */
-      if (e.target.closest('.img-grip') ||
-          e.target.closest('.img-move') || e.target.closest('.img-putar')) return;
-      deseleksi();
+    if (cfig && cfig.parentElement === d && pilih === cfig) {
+      if (e.target.closest('.img-x')) deseleksi(); /* silang: tutup dulu, hapus via index.js */
       return;
     }
-    pilihBaru = false;
     if (!pilih || !e.target.closest || !e.target.closest('#mbar')) return;
     const mw = e.target.closest('[data-mw]');
     if (mw) { terapkan({ w: parseInt(mw.dataset.mw, 10) }); return; }

@@ -358,23 +358,31 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   transition:opacity .14s var(--ease)}
 .b-img:hover .img-x,.b-img:active .img-x{opacity:1}
 .img-x svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
-/* gagang: ukuran (pojok kanan-bawah) · pindah (kiri-atas) · putar (atas-tengah) */
-.img-grip,.img-move{position:absolute;width:24px;height:24px;border-radius:999px;
-  background:rgba(0,0,0,.6);display:grid;place-items:center;opacity:0;color:#fff;
-  transition:opacity .14s var(--ease);touch-action:none}
-.img-grip{right:6px;bottom:6px;cursor:nwse-resize}
-.img-move{left:6px;top:6px;cursor:move}
-.img-putar{position:absolute;left:50%;top:-15px;width:24px;height:24px;border-radius:999px;
+/* gagang: ukuran (pojok kanan-bawah) · pindah (kiri-atas) · putar (atas-tengah).
+   Area sentuh sengaja lebih lebar daripada tampilannya (halo ::before) —
+   gagang kecil di gambar kecil tetap gampang digenggam di layar sentuh. */
+.img-grip,.img-move{position:absolute;width:32px;height:32px;border-radius:999px;
+  background:rgba(0,0,0,.62);display:grid;place-items:center;opacity:0;color:#fff;
+  transition:opacity .14s var(--ease);touch-action:none;z-index:5}
+.img-grip{right:3px;bottom:3px;cursor:nwse-resize}
+.img-move{left:3px;top:3px;cursor:move}
+.img-putar{position:absolute;left:50%;top:-19px;width:34px;height:34px;border-radius:999px;
   background:var(--accent);display:grid;place-items:center;opacity:0;color:#fff;
   transform:translateX(-50%);transition:opacity .14s var(--ease);touch-action:none;
-  cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:6}
+.img-grip::before,.img-move::before,.img-putar::before{content:'';position:absolute;
+  inset:-11px;border-radius:999px}
 .b-img.img-pilih .img-grip,.b-img.img-pilih .img-move,
 .b-img.img-pilih .img-putar{opacity:1}
-.img-grip svg,.img-move svg,.img-putar svg{width:13px;height:13px;stroke:#fff;
+.img-grip svg,.img-move svg,.img-putar svg{width:14px;height:14px;stroke:#fff;
   stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.img-hilang{padding:14px;border:1px dashed var(--border-strong);border-radius:var(--r-md);
-  color:var(--faint);font-size:13px;text-align:center}
-@media(hover:none){.img-x,.img-grip,.img-move,.img-putar{opacity:.92}}
+/* gambar sempit (kecil): gagang membesar, putar diangkat lebih tinggi,
+   silang-hapus disembunyikan agar tidak saling tindih saat terpilih */
+.b-img.sempit .img-grip,.b-img.sempit .img-move{width:38px;height:38px}
+.b-img.sempit .img-grip{right:1px;bottom:1px}
+.b-img.sempit .img-move{left:1px;top:1px}
+.b-img.sempit .img-putar{top:-44px;width:40px;height:40px}
+.b-img.sempit.img-pilih .img-x{display:none}
 
 /* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */
 #mbar{position:fixed;z-index:70;display:none;align-items:center;gap:2px;

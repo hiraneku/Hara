@@ -156,19 +156,33 @@ if (BAG === 'B') {
   const lebarKolom = sembunyi(DOC());
   lebarKolom({ left: 40, width: 800, height: 900, top: 0 });
 
+  /* simulasi gambar kecil: lebar figur 120px — gagang perlu mode lega */
+  sembunyi(fig())({ left: 40, top: 0, width: 120, height: 90 });
   klik(fig());
-  ok('B2 ketuk gambar → terpilih + gagang pindah/ukuran/putar',
+  ok('B2 ketuk gambar kecil → terpilih + gagang pindah/ukuran/putar',
      fig().classList.contains('img-pilih') && !!fig().querySelector('.img-grip') &&
      !!fig().querySelector('.img-move') && !!fig().querySelector('.img-putar'));
+  ok('B2b gambar kecil → kelas sempit aktif (gagang membesar)',
+     fig().classList.contains('sempit'));
   ok('B3 bilah mini terbuka (bukan panel besar)',
      barOn() && !!bar().querySelector('[data-mw]') && !!bar().querySelector('[data-ma]') &&
      !!bar().querySelector('[data-mdeg]') && !d.getElementById('pop').classList.contains('on'));
 
+  /* ketuk badan gambar yang sedang terpilih tidak boleh menutup seleksi —
+     gagang kecil gampang meleset (mis-tap) */
+  klik(fig());
+  ok('B3b ketuk badan lagi tidak membatalkan seleksi',
+     fig().classList.contains('img-pilih') && barOn());
+
+  /* gambar selebar kolom (300px) → mode sempit dilepas */
+  sembunyi(fig())({ left: 40, top: 0, width: 300, height: 200 });
   const chip = v => bar().querySelector(`[data-mw="${v}"]`);
   klik(chip(60));
   ok('B4 preset 60% → w-apit tengah (i-c)', fig().getAttribute('data-gw') === '60' &&
      fig().classList.contains('w-apit') && fig().classList.contains('i-c'),
      fig().outerHTML.slice(0, 160));
+  ok('B4b gambar cukup lebar → kelas sempit dilepas',
+     !fig().classList.contains('sempit'));
 
   klik(bar().querySelector('[data-ma="l"]'));
   ok('B5 posisi kiri → w-apit f-l', fig().classList.contains('f-l') &&
