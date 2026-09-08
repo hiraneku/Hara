@@ -12,11 +12,11 @@
    setiap blok mendapat id BARU — memakai templat dua kali tidak akan
    menghasilkan dua blok dengan id sama. */
 
-import { state } from '../core/store.js?v=20260908033335';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260908033335';
-import { go } from '../core/router.js?v=20260908033335';
-import { esc } from '../core/dom.js?v=20260908033335';
-import { toast } from '../core/toast.js?v=20260908033335';
+import { state } from '../core/store.js?v=20260908040442';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260908040442';
+import { go } from '../core/router.js?v=20260908040442';
+import { esc } from '../core/dom.js?v=20260908040442';
+import { toast } from '../core/toast.js?v=20260908040442';
 
 const KUNCI = 'hara.v1.tpl';
 

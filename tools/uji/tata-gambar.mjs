@@ -457,16 +457,23 @@ if (BAG === 'C') {
   /* ganti mode lewat tombol #mode: render baca disegarkan dari model —
      gambar mengapit tetap mengapit, tidak berubah tata letak */
   state.notes.push(catatanBergambar('g8', { w: 60, rot: 0, align: 'l' }));
+  await simpanBlob('f-g8', new w.Blob(['x'], { type: 'image/png' }));
   await openNote('g8'); await sleep(100);
   const mb8 = d.getElementById('mode');
+  const srcSblm = DOC().querySelector('.b-img img').getAttribute('src');
   klik(mb8);                       /* → mode baca */
   await sleep(60);
   const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
   const ed8 = d.querySelector('.ed');
+  const img8 = fig8 ? fig8.querySelector('img') : null;
   ok('C17 mode baca lewat tombol: render segar, gambar tetap f-l',
      !!ed8 && ed8.classList.contains('baca') && !!fig8 &&
      fig8.classList.contains('w-apit') && fig8.classList.contains('f-l'),
      fig8 ? fig8.className : 'fig hilang');
+  ok('C17b src gambar dipertahankan saat ganti mode (tanpa jeda kosong)',
+     !!img8 && img8.getAttribute('src') === srcSblm &&
+     img8.style.display !== 'none',
+     img8 ? (img8.getAttribute('src') || 'tanpa-src') : 'img hilang');
   klik(mb8);                       /* → kembali mode tulis */
   await sleep(60);
   const ed8b = d.querySelector('.ed');

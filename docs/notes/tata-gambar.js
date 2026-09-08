@@ -21,10 +21,10 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908033335';
-import { refresh } from './editor/cleanup.js?v=20260908033335';
-import { snap } from './editor/history.js?v=20260908033335';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260908033335';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260908040442';
+import { refresh } from './editor/cleanup.js?v=20260908040442';
+import { snap } from './editor/history.js?v=20260908040442';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260908040442';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */

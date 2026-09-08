@@ -37,7 +37,7 @@ body.drag-blk{cursor:grabbing;user-select:none}
 .b-h2{font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.3;margin:16px 0 2px}
 .b-h3{font-weight:600;font-size:16.5px;line-height:1.4;margin:14px 0 2px;letter-spacing:-.005em}
 .b-p{font-size:16px;line-height:1.65}
-.ed-doc{outline:none;min-height:50vh}
+.ed-doc{outline:none;min-height:50vh;padding-bottom:1.7em}
 .ed-doc>*{position:relative;padding:3px 0}
 /* heading disunting sebagai elemen h1–h3 sungguhan (semantik):
    fokus tidak boleh memunculkan cincin bawaan browser */
@@ -399,6 +399,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .b-img.img-pilih .img-putar{opacity:1}
 .img-grip svg,.img-move svg,.img-putar svg{width:15px;height:15px;stroke:#fff;
   stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* gagang jangan ikut kena seleksi teks di sebelah gambar (teks mengapit) */
+.img-grip,.img-move,.img-putar{user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none}
+.img-grip:active,.img-move:active,.img-putar:active{cursor:grabbing}
 /* gambar sempit/mengapit: gagang tetap di posisi biasa, sedikit lebih
    besar; silang-hapus disembunyikan agar tidak saling tindih */
 .b-img.sempit .img-move{width:44px;height:44px}
