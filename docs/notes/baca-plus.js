@@ -8,12 +8,12 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260909070912';
-import { closeAll } from './menus/pop.js?v=20260909070912';
-import { docEl } from './editor/caret.js?v=20260909070912';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260909070912';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20260909070912';
-import { t as tr } from '../core/i18n.js?v=20260909070912';
+import { toast } from '../core/toast.js?v=20260909074309';
+import { closeAll } from './menus/pop.js?v=20260909074309';
+import { docEl } from './editor/caret.js?v=20260909074309';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260909074309';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20260909074309';
+import { t as tr } from '../core/i18n.js?v=20260909074309';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -43,7 +43,7 @@ export function aturUkuran(delta) {
   idxUkur = baru;
   try { localStorage.setItem(KUNCI_UKUR, String(idxUkur)); } catch (e) {}
   terapkanUkuranLayar();
-  toast('Ukuran teks ' + pxBaca() + 'px');
+  toast(tr('Ukuran teks {n}px', { n: pxBaca() }));
 }
 
 /* ── mode fokus / zen ── */
@@ -81,7 +81,7 @@ function buatPanel() {
   panel.innerHTML =
     `<svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
      <input id="cari-note-in" type="text" placeholder="${tr('Cari di catatan…')}"
-       autocomplete="off" enterkeyhint="search" aria-label="Cari di dalam catatan">
+       autocomplete="off" enterkeyhint="search" aria-label="${tr('Cari di dalam catatan')}">
      <span class="cn-hasil" id="cari-note-hasil" aria-live="polite"></span>
      <button type="button" class="cn-b" data-cn="prev" title="${tr('Sebelumnya')}" aria-label="${tr('Hasil sebelumnya')}">
        <svg class="ico"><use href="#i-up"/></svg></button>

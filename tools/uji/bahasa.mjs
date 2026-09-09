@@ -244,5 +244,13 @@ oke('S10c di mode Inggris jurnal Jepang tetap dipakai — tidak dobel', state.op
   `openId=${state.openId} jml=${jumlahJurnalJa()}`);
 state.notes.splice(0);
 
+/* ── S11: kamus EN & JA paritas penuh (tidak ada kunci yang tertinggal) ── */
+const { EN } = await st('core/bahasa-en.js');
+const { JA } = await st('core/bahasa-ja.js');
+const kEn = Object.keys(EN), kJa = Object.keys(JA);
+oke('S11a jumlah kunci EN = JA', kEn.length === kJa.length, `EN=${kEn.length} JA=${kJa.length}`);
+oke('S11b semua kunci EN ada di JA', kEn.every(k => k in JA), kEn.filter(k => !(k in JA)).slice(0, 5).join('|'));
+oke('S11c semua kunci JA ada di EN', kJa.every(k => k in EN), kJa.filter(k => !(k in EN)).slice(0, 5).join('|'));
+
 console.log(`total: ${total} · gagal: ${gagal}`);
 if (gagal) process.exit(1);

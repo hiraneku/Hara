@@ -14,10 +14,10 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20260909070912';
+  from '../editor/warna.js?v=20260909074309';
 import { sorotSekarang, sorotPending, sorotLekat }
-  from '../editor/sorotan.js?v=20260909070912';
-import { t as tr } from '../../core/i18n.js?v=20260909070912';
+  from '../editor/sorotan.js?v=20260909074309';
+import { t as tr } from '../../core/i18n.js?v=20260909074309';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */
@@ -66,7 +66,7 @@ export function warnaMenu() {
   const swatch = WARNA_UMUM.map(w => {
     const on = hexKini === w;
     return `<button type="button" class="wsw${on ? ' on' : ''}" data-warna="${w}"
-      title="${w}" aria-label="Warna ${w}"${on ? ' aria-pressed="true"' : ''}
+      title="${w}" aria-label="${tr('Warna')} ${w}"${on ? ' aria-pressed="true"' : ''}
       style="background:${w}"></button>`;
   }).join('');
 
@@ -79,19 +79,19 @@ export function warnaMenu() {
         role="img" aria-label="${tr('Roda warna: ketuk untuk memilih rona dan jenuh warna')}"></canvas>
       <div class="wroda-s">
         <input type="range" id="roda-g" min="0" max="100" value="55"
-          aria-label="Gelap terang" title="Gelap–terang">
+          aria-label="${tr('Gelap terang')}" title="${tr('Gelap terang')}">
       </div>
     </div>
     <div class="wcus">
       <span class="wchip" id="warna-chip" aria-hidden="true"></span>
       <input id="warna-hex" class="pop-in whex" value="${hexAwal}"
-        placeholder="kode: #3b82f6 / rgb(59, 130, 246)" autocomplete="off"
-        spellcheck="false" aria-label="Kode warna">
-      <button type="button" class="btn btn-sec wpakai" data-warna-pakai>Pakai</button>
+        placeholder="${tr('kode: #3b82f6 / rgb(59, 130, 246)')}" autocomplete="off"
+        spellcheck="false" aria-label="${tr('Kode warna')}">
+      <button type="button" class="btn btn-sec wpakai" data-warna-pakai>${tr('Pakai')}</button>
     </div>
     <button type="button" class="pop-i" data-warna-hapus>
-      <svg class="ico"><use href="#i-eraser"/></svg>Bawaan — hapus warna
-      <span class="sub">teks mengikuti warna tema</span></button>`;
+      <svg class="ico"><use href="#i-eraser"/></svg>${tr('Bawaan — hapus warna')}
+      <span class="sub">${tr('teks mengikuti warna tema')}</span></button>`;
 }
 
 /* ── konversi warna untuk roda ── */

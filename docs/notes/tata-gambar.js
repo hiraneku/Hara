@@ -21,11 +21,11 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260909070912';
-import { refresh } from './editor/cleanup.js?v=20260909070912';
-import { snap } from './editor/history.js?v=20260909070912';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260909070912';
-import { t as tr } from '../core/i18n.js?v=20260909070912';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260909074309';
+import { refresh } from './editor/cleanup.js?v=20260909074309';
+import { snap } from './editor/history.js?v=20260909074309';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260909074309';
+import { t as tr } from '../core/i18n.js?v=20260909074309';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -113,13 +113,13 @@ function mbarHtml(t) {
   const pos = ['l', 'c', 'r'].map(k => {
     const on = posAktif === k;
     return `<button type="button" class="mb-chip mb-ico${on ? ' on' : ''}"` +
-      ` data-ma="${k}" aria-label="Posisi ${k === 'l' ? 'kiri' : k === 'r' ? 'kanan' : 'tengah'}"` +
+      ` data-ma="${k}" aria-label="${tr(k === 'l' ? 'Posisi kiri' : k === 'r' ? 'Posisi kanan' : 'Posisi tengah')}"` +
       ` aria-pressed="${on}">${IKON[k]}</button>`;
   }).join('');
   const rotOn = t.rot === 0;
-  const GANTI = '<svg class="bi" aria-hidden="true"><use href="#i-img"/></svg>Ganti';
+  const GANTI = '<svg class="bi" aria-hidden="true"><use href="#i-img"/></svg>' + tr('Ganti');
   return `<button type="button" class="mb-chip${rotOn ? ' on' : ''}" data-mz="0"` +
-    ` title="Luruskan (0°)" aria-label="Luruskan">0°</button>` +
+    ` title="${tr('Luruskan (0°)')}" aria-label="${tr('Luruskan')}">0°</button>` +
     `<button type="button" class="mb-chip bdg${rotOn ? ' on' : ''}" data-mdeg title="${tr('Ketuk untuk mengetik derajat')}">${t.rot}°</button>` +
     `<span class="mb-sep"></span>` +
     [40, 60, 80, 100].map(v => chip(v, t.w === v)).join('') +
@@ -223,7 +223,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20260909070912')
+    import('./editor/image.js?v=20260909074309')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();

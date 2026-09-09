@@ -4,11 +4,11 @@
    Blok yang ditandai mendapat atribut `data-ref`. Penandanya ditampilkan
    CSS lewat ::after, jadi tidak ikut terbaca sebagai teks catatan. */
 
-import { docEl, curBlock, nearestEditable } from './caret.js?v=20260909070912';
-import { refresh } from './cleanup.js?v=20260909070912';
-import { state } from '../../core/store.js?v=20260909070912';
-import { toast } from '../../core/toast.js?v=20260909070912';
-import { t as tr } from '../../core/i18n.js?v=20260909070912';
+import { docEl, curBlock, nearestEditable } from './caret.js?v=20260909074309';
+import { refresh } from './cleanup.js?v=20260909074309';
+import { state } from '../../core/store.js?v=20260909074309';
+import { toast } from '../../core/toast.js?v=20260909074309';
+import { t as tr } from '../../core/i18n.js?v=20260909074309';
 
 const acak = () => Math.random().toString(36).slice(2, 6);
 
@@ -55,8 +55,8 @@ function salin(teks) {
   const n = state.notes.find(x => x.id === state.openId);
   const judul = (n && n.title) || 'Tanpa judul';
   const penuh = `[[${judul}#${teks}]]`;
-  const oke = () => toast('Rujukan disalin: ' + penuh);
-  const gagal = () => toast('Blok ditandai ' + teks);
+  const oke = () => toast(tr('Rujukan disalin') + ': ' + penuh);
+  const gagal = () => toast(tr('Blok ditandai') + ' ' + teks);
 
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {

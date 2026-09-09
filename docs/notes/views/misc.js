@@ -1,15 +1,15 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909070912';
-import { esc, stamp } from '../../core/dom.js?v=20260909070912';
-import { rowFor } from './row.js?v=20260909070912';
-import { plainText } from '../note-model.js?v=20260909070912';
-import { semuaTag } from '../tags.js?v=20260909070912';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909070912';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909070912';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909070912';
-import { terlihat } from '../kunci.js?v=20260909070912';
+import { state } from '../../core/store.js?v=20260909074309';
+import { esc, stamp } from '../../core/dom.js?v=20260909074309';
+import { rowFor } from './row.js?v=20260909074309';
+import { plainText } from '../note-model.js?v=20260909074309';
+import { semuaTag } from '../tags.js?v=20260909074309';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909074309';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909074309';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909074309';
+import { terlihat } from '../kunci.js?v=20260909074309';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -134,7 +134,7 @@ set:()=>{ const akPilih = akSekarang() || '';
   const swAksen = AK.map(a =>
     `<button type="button" class="ak-dot${(a.k || '') === akPilih ? ' on' : ''}"
        data-ak="${a.k || ''}" aria-pressed="${(a.k || '') === akPilih}"
-       title="${esc(a.nama)}" aria-label="${esc(a.nama)}" style="--w:${a.w}"></button>`).join('');
+       title="${tr(a.nama)}" aria-label="${tr(a.nama)}" style="--w:${a.w}"></button>`).join('');
   return `<div class="page">
   <div class="card" style="margin-bottom:24px">
     <button type="button" class="row" data-kembali-set title="${tr('Ke layar sebelumnya')}">
@@ -186,4 +186,4 @@ set:()=>{ const akPilih = akSekarang() || '';
   </div>
   <input type="file" id="impor-in" hidden
     accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
-  <p class="note" style="padding:20px 0 0">${tr('Keluar-masuk kapan saja: Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks.')} ${tr('Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.')}</p> Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks. Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.</p></div>`}};
+  <p class="note" style="padding:20px 0 0">${tr('Keluar-masuk kapan saja: Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks.')} ${tr('Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.')}</p></div>`}};

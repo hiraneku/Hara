@@ -6,7 +6,7 @@
    (tenggat hari ini atau sudah lewat & belum selesai). Dihitung dari
    isi — tidak menyimpan apa pun ke catatan. */
 
-import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260909070912';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260909074309';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 /* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */

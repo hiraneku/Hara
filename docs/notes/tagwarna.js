@@ -4,14 +4,14 @@
    BUKAN di isi catatan, sehingga teks #tag tetap bersih. Tanpa
    pilihan manual, warna datang dari hash nama tag (label.js). */
 
-import { state } from '../core/store.js?v=20260909070912';
-import { esc } from '../core/dom.js?v=20260909070912';
-import { toast } from '../core/toast.js?v=20260909070912';
-import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20260909070912';
-import { openPop, closeAll } from './menus/pop.js?v=20260909070912';
-import { cur, go } from '../core/router.js?v=20260909070912';
-import { saveCatatanBuka } from './editor/cleanup.js?v=20260909070912';
-import { t as tr } from '../core/i18n.js?v=20260909070912';
+import { state } from '../core/store.js?v=20260909074309';
+import { esc } from '../core/dom.js?v=20260909074309';
+import { toast } from '../core/toast.js?v=20260909074309';
+import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20260909074309';
+import { openPop, closeAll } from './menus/pop.js?v=20260909074309';
+import { cur, go } from '../core/router.js?v=20260909074309';
+import { saveCatatanBuka } from './editor/cleanup.js?v=20260909074309';
+import { t as tr } from '../core/i18n.js?v=20260909074309';
 
 const catatanBuka = () => state.notes.find(x => x.id === state.openId);
 
@@ -36,7 +36,7 @@ export function tagCatatan(n) {
 /* Satu tombol swatch warna (dipakai palet langkah 2). */
 const swatch = (k, hex) =>
   `<button type="button" class="tl-s" data-tl-k="${k}" style="--sw:${hex}"
-     aria-label="${tr('Warna')} ${k}" title="${tr('Warna')} ${k}"></button>`;
+     aria-label="${tr('Warna')} ${tr(k)}" title="${tr('Warna')} ${tr(k)}"></button>`;
 
 /* Popup langkah 1: pilih tag yang ingin diwarnai. */
 export function panelTag(anchor) {
@@ -59,8 +59,8 @@ export function panelTag(anchor) {
 /* Popup langkah 2: palet warna untuk satu tag. */
 export function paletTagWarna(n, nama) {
   const tandaKini = tandaUntukCatatan(n, nama);
-  return `<div class="pop-h">Warna tag · #${esc(nama)}</div>
-    <p class="pop-note">#${esc(nama)} kini berwarna ${tandaKini}. Ketuk untuk mengganti.</p>
+  return `<div class="pop-h">${tr('Warna tag')} · #${esc(nama)}</div>
+    <p class="pop-note">${tr('#{tag} kini berwarna {warna}. Ketuk untuk mengganti.', { tag: esc(nama), warna: tr(tandaKini) })}</p>
     <div class="tl-pil">${TANDA_TAG.map(([k, h]) => swatch(k, h)).join('')}
       <button type="button" class="tl-kosong" data-tl-hapus>${tr('Tanpa warna')}</button>
     </div>`;
