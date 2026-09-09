@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20260909084636';
+import { t as tr } from '../core/i18n.js?v=20260909100046';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -131,8 +131,14 @@ export function makeNote(patch = {}) {
     props: Array.isArray(patch.props)
       ? patch.props.map(pr => ({ k: String(pr.k ?? ''), v: String(pr.v ?? '') }))
       : [],
-    /* penanda UI, bukan bagian isi */
-    ...(patch.welcome ? { welcome: true, welcomeV: patch.welcomeV ?? 0 } : {}),
+    /* penanda UI, bukan bagian isi — sambutan global boleh menyimpan
+       bahasa isinya (welcomeLang) supaya sinkron tahu bahasa mana yang
+       sedang tersimpan tanpa membandingkan isi */
+    ...(patch.welcome ? {
+      welcome: true,
+      welcomeV: patch.welcomeV ?? 0,
+      welcomeLang: patch.welcomeLang ?? null,
+    } : {}),
   };
 }
 

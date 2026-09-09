@@ -4,36 +4,49 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909084636';
-import { welcomeBody, WELCOME_V } from '../notes/views/welcome.js?v=20260909084636';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909100046';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20260909100046';
+import { bahasaSekarang } from './i18n.js?v=20260909100046';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
 
-/* Catatan bawaan. Isinya dibangun dari HTML sambutan lalu langsung
-   dinormalkan jadi blocks — jadi bahkan catatan bawaan pun tidak
-   menyimpan HTML sebagai sumber kebenaran. */
-export const DEFAULT_NOTES = () => [
-  makeNote({
-    id: 'w',
-    title: 'Selamat datang di Hara',
-    blocks: htmlToBlocks(welcomeBody),
-    tags: ['hara'],
-    welcome: true,
-    welcomeV: WELCOME_V,
-  }),
-];
+/* Catatan bawaan. Isinya dibangun dari HTML sambutan (bahasa antarmuka
+   aktif — bawaan Indonesia) lalu langsung dinormalkan jadi blocks — jadi
+   bahkan catatan bawaan pun tidak menyimpan HTML sebagai sumber
+   kebenaran. */
+export const DEFAULT_NOTES = () => {
+  const b = bahasaSekarang();
+  return [
+    makeNote({
+      id: 'w',
+      title: judulWelcome(b),
+      blocks: htmlToBlocks(isiWelcome(b)),
+      tags: ['hara'],
+      welcome: true,
+      welcomeV: WELCOME_V,
+      welcomeLang: b,
+    }),
+  ];
+};
 
 /* Catatan sambutan bersifat GLOBAL & terkunci: pengguna tidak bisa
    menyunting isinya, jadi aplikasi bebas menyinkronkan isi itu ke versi
-   terbaru (welcomeV) setiap kali aplikasi diperbarui. Kalau pengguna
-   menghapusnya (sampah → permanen), ia tidak dibuat ulang. */
-function sinkronWelcome() {
+   terbaru (welcomeV) DAN ke bahasa antarmuka yang aktif (welcomeLang)
+   setiap kali aplikasi dimuat atau bahasa diganti. HANYA catatan
+   sambutan yang disinkronkan seperti ini — catatan pengguna lain tidak
+   pernah diterjemahkan. Kalau pengguna menghapusnya (sampah →
+   permanen), ia tidak dibuat ulang. */
+export function sinkronWelcome() {
   const w = state.notes.find(x => x.welcome && !x.deletedAt);
-  if (w && w.welcomeV !== WELCOME_V) {
-    w.title = 'Selamat datang di Hara';
-    w.blocks = htmlToBlocks(welcomeBody);
+  if (!w) return false;
+  const b = bahasaSekarang();
+  if (w.welcomeV !== WELCOME_V || w.welcomeLang !== b) {
+    w.title = judulWelcome(b);
+    w.blocks = htmlToBlocks(isiWelcome(b));
     w.welcomeV = WELCOME_V;
+    w.welcomeLang = b;
+    save();
     return true;
   }
   return false;

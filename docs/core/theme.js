@@ -3,7 +3,7 @@
    - Setelah pengguna mengganti lewat tombol, pilihan disimpan dan
      mengikuti sistem dimatikan sampai ia menghapus pilihannya. */
 
-import { t as tr } from './i18n.js?v=20260909084636';
+import { t as tr } from './i18n.js?v=20260909100046';
 
 const KEY = 'hara.tema.v1';
 const KEY_AK = 'hara.ak.v1';
