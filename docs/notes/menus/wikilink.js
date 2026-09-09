@@ -1,13 +1,14 @@
 /* Menu "[[" — tautkan ke catatan lain. */
-import { state } from '../../core/store.js?v=20260909041737';
-import { esc } from '../../core/dom.js?v=20260909041737';
+import { state } from '../../core/store.js?v=20260909054021';
+import { esc } from '../../core/dom.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 export function wlMenu() {
-  let h = `<div class="pop-h">Tautkan ke catatan</div>`;
+  let h = `<div class="pop-h">${tr('Tautkan ke catatan')}</div>`;
   state.notes.forEach(n => {
-    const t = n.title || 'Tanpa judul';
+    const t = n.title || tr('Tanpa judul');
     h += `<button class="pop-i" data-wl="${esc(t)}"><svg class="ico"><use href="#i-note"/></svg>${esc(t)}</button>`;
   });
-  h += `<button class="pop-i pop-new" data-wl="Catatan Baru"><svg class="ico"><use href="#i-plus"/></svg>Buat catatan baru…</button>`;
+  h += `<button class="pop-i pop-new" data-wl="Catatan Baru"><svg class="ico"><use href="#i-plus"/></svg>${tr('Buat catatan baru…')}</button>`;
   return h;
 }

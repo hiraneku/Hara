@@ -4,14 +4,15 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260909041737';
-import { refresh } from './cleanup.js?v=20260909041737';
-import { pastikanKolomAkhir } from './blocks.js?v=20260909041737';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260909054021';
+import { refresh } from './cleanup.js?v=20260909054021';
+import { pastikanKolomAkhir } from './blocks.js?v=20260909054021';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260909041737';
-import { state } from '../../core/store.js?v=20260909041737';
-import { cur } from '../../core/router.js?v=20260909041737';
-import { toast } from '../../core/toast.js?v=20260909041737';
+  from '../../core/blobs.js?v=20260909054021';
+import { state } from '../../core/store.js?v=20260909054021';
+import { cur } from '../../core/router.js?v=20260909054021';
+import { toast } from '../../core/toast.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;
@@ -73,13 +74,13 @@ export async function sisipGambar(file) {
   try {
     await simpanBlob(id, kecil);
   } catch (e) {
-    toast('Gagal menyimpan gambar');
+    toast(tr('Gagal menyimpan gambar'));
     return;
   }
   if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
 
   await sematkanBlokGambar(id, file.name || 'gambar');
-  toast('Gambar disisipkan');
+  toast(tr('Gambar disisipkan'));
 }
 
 /* Sematkan satu blob gambar sebagai blok baru di posisi kursor.
@@ -213,7 +214,7 @@ export async function hapusGambar(id) {
   if (!blobDipakai(id)) {
     try { await hapusBlob(id); } catch (e) {}
   }
-  toast('Gambar dihapus');
+  toast(tr('Gambar dihapus'));
 }
 
 /* Bersihkan blob yang tidak lagi dirujuk catatan mana pun.
@@ -296,7 +297,7 @@ export async function gantiGambar(fig, file) {
     d.isConnected && fig.isConnected;
   if (!masihSama()) return;
   try { await simpanBlob(id, kecil); }
-  catch (e) { toast('Gagal menyimpan gambar'); return; }
+  catch (e) { toast(tr('Gagal menyimpan gambar')); return; }
   if (!masihSama()) { try { await hapusBlob(id); } catch (e) {} return; }
 
   img.setAttribute('data-blob', id);
@@ -328,5 +329,5 @@ export async function gantiGambar(fig, file) {
   if (idLama && idLama !== id && !blobDipakai(idLama)) {
     try { await hapusBlob(idLama); } catch (e) {}
   }
-  toast('Gambar diganti');
+  toast(tr('Gambar diganti'));
 }

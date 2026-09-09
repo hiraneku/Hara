@@ -16,10 +16,11 @@
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20260909041737';
-import { excerptOf } from '../note-model.js?v=20260909041737';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909041737';
-import { terlihat } from '../kunci.js?v=20260909041737';
+import { esc, stamp } from '../../core/dom.js?v=20260909054021';
+import { excerptOf } from '../note-model.js?v=20260909054021';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909054021';
+import { terlihat } from '../kunci.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {
@@ -48,17 +49,17 @@ function barisIsi(n, boleh) {
   /* tombol semat kecil di ujung baris (span, karena baris sendiri <button>) */
   const pinx = (boleh && !n.archived && !n.deletedAt)
     ? `<span class="pinx${n.pinned ? ' on' : ''}" role="button" tabindex="0"
-        data-pinx="${n.id}" aria-label="${n.pinned ? 'Lepas sematan' : 'Sematkan'}">
+        data-pinx="${n.id}" aria-label="${n.pinned ? tr('Lepas sematan') : tr('Sematkan')}">
         <svg class="ico"><use href="#i-pin"/></svg></span>`
     : '';
   if (!boleh) {
     return `<span class="row-ki" aria-hidden="true"><svg class="ico"><use href="#i-lock"/></svg></span>
-  <div class="row-b"><div class="row-t" style="color:var(--faint)">Catatan terkunci</div>
-    <div class="row-s">Kunci PIN — buka untuk membaca</div></div>
+  <div class="row-b"><div class="row-t" style="color:var(--faint)">${tr('Catatan terkunci')}</div>
+    <div class="row-s">${tr('Kunci PIN — buka untuk membaca')}</div></div>
   <span class="row-m">${stamp(n.updatedAt)}</span>`;
   }
   return `${thumbOf(n)}
-  <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${esc(n.title) || 'Tanpa judul'}</div>
+  <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${esc(n.title) || tr('Tanpa judul')}</div>
   ${cuplikan ? `<div class="row-s">${esc(cuplikan)}</div>` : ''}${chips}</div>
   <span class="row-m">${stamp(n.updatedAt)}</span>${pinx}`;
 }
@@ -74,17 +75,17 @@ export const rowFor = (n, geser) => {
 
   const aksi1 = n.archived
     ? `<button type="button" class="sa sa-ars" data-sw-ars="${n.id}" tabindex="-1"
-         aria-label="Kembalikan dari arsip" title="Kembalikan dari arsip">
-         <svg class="ico"><use href="#i-back"/></svg>Kembalikan</button>`
+         aria-label="${tr('Kembalikan dari arsip')}" title="${tr('Kembalikan dari arsip')}">
+         <svg class="ico"><use href="#i-back"/></svg>${tr('Kembalikan')}</button>`
     : `<button type="button" class="sa sa-ars" data-sw-ars="${n.id}" tabindex="-1"
-         aria-label="Arsipkan" title="Arsipkan">
-         <svg class="ico"><use href="#i-arch"/></svg>Arsip</button>`;
+         aria-label="${tr('Arsipkan')}" title="${tr('Arsipkan')}">
+         <svg class="ico"><use href="#i-arch"/></svg>${tr('Arsip')}</button>`;
   return `<div class="srow" data-srow="${n.id}">
   <div class="srow-a" aria-hidden="true">
     ${aksi1}
     <button type="button" class="sa sa-del" data-sw-del="${n.id}" tabindex="-1"
-      aria-label="Hapus — masuk sampah" title="Hapus — masuk sampah dulu">
-      <svg class="ico"><use href="#i-trash"/></svg>Hapus</button>
+      aria-label="${tr('Hapus — masuk sampah')}" title="${tr('Hapus — masuk sampah dulu')}">
+      <svg class="ico"><use href="#i-trash"/></svg>${tr('Hapus')}</button>
   </div>
   <div class="srow-b">${polos}</div>
 </div>`;

@@ -1,9 +1,10 @@
 /* Tautan ke alamat web. Berbeda dari [[wikilink]] yang menuju catatan lain. */
 
-import { docEl, sel, ensureCaret } from '../editor/caret.js?v=20260909041737';
-import { refresh } from '../editor/cleanup.js?v=20260909041737';
-import { esc } from '../../core/dom.js?v=20260909041737';
-import { pop } from './pop.js?v=20260909041737';
+import { docEl, sel, ensureCaret } from '../editor/caret.js?v=20260909054021';
+import { refresh } from '../editor/cleanup.js?v=20260909054021';
+import { esc } from '../../core/dom.js?v=20260909054021';
+import { pop } from './pop.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 /* Rapikan alamat: "hara.app" -> "https://hara.app" */
 function rapikan(url) {
@@ -36,13 +37,13 @@ export function linkMenu() {
   const teks = ada ? ada.textContent : (r && !r.collapsed ? r.toString() : '');
   const url  = ada ? (ada.getAttribute('href') || '') : '';
 
-  return `<div class="pop-h">${ada ? 'Ubah tautan' : 'Tautan web'}</div>
+  return `<div class="pop-h">${ada ? tr('Ubah tautan') : tr('Tautan web')}</div>
     <div class="pop-form">
-      <input class="pop-in" id="lk-t" placeholder="Teks yang tampil" value="${esc(teks)}">
+      <input class="pop-in" id="lk-t" placeholder="${tr('Teks yang tampil')}" value="${esc(teks)}">
       <input class="pop-in" id="lk-u" placeholder="https://…" value="${esc(url)}" inputmode="url">
       <div class="pop-row">
-        <button class="btn btn-pri" data-lk="ok">${ada ? 'Simpan' : 'Sisipkan'}</button>
-        ${ada ? '<button class="btn btn-sec" data-lk="del">Hapus tautan</button>' : ''}
+        <button class="btn btn-pri" data-lk="ok">${ada ? tr('Simpan') : tr('Sisipkan')}</button>
+        ${ada ? '<button class="btn btn-sec" data-lk="del">' + tr('Hapus tautan') + '</button>' : ''}
       </div>
     </div>`;
 }

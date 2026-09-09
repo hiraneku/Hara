@@ -2,9 +2,10 @@
    tanpa dukungan, salin teks markdown ke papan klip. Tidak mengubah
    data catatan apa pun. */
 
-import { state } from '../core/store.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { markdownDariCatatan } from './data-io.js?v=20260909041737';
+import { state } from '../core/store.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { markdownDariCatatan } from './data-io.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 export async function bagikanCatatan(id) {
   const n = id
@@ -12,7 +13,7 @@ export async function bagikanCatatan(id) {
     : state.notes.find(x => x.id === state.openId);
   if (!n) return;
   const teks = markdownDariCatatan(n);
-  const judul = (n.title && String(n.title).trim()) || 'Tanpa judul';
+  const judul = (n.title && String(n.title).trim()) || tr('Tanpa judul');
 
   if (typeof navigator !== 'undefined' && navigator.share instanceof Function) {
     try {
@@ -25,8 +26,8 @@ export async function bagikanCatatan(id) {
   }
   const ok = await salinTeks(teks);
   toast(ok
-    ? 'Catatan disalin — tempel di mana saja'
-    : 'Perangkat ini tidak mendukung berbagi');
+    ? tr('Catatan disalin — tempel di mana saja')
+    : tr('Perangkat ini tidak mendukung berbagi'));
 }
 
 async function salinTeks(teks) {

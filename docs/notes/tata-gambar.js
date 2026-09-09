@@ -21,10 +21,11 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260909041737';
-import { refresh } from './editor/cleanup.js?v=20260909041737';
-import { snap } from './editor/history.js?v=20260909041737';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260909041737';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260909054021';
+import { refresh } from './editor/cleanup.js?v=20260909054021';
+import { snap } from './editor/history.js?v=20260909054021';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -119,12 +120,12 @@ function mbarHtml(t) {
   const GANTI = '<svg class="bi" aria-hidden="true"><use href="#i-img"/></svg>Ganti';
   return `<button type="button" class="mb-chip${rotOn ? ' on' : ''}" data-mz="0"` +
     ` title="Luruskan (0°)" aria-label="Luruskan">0°</button>` +
-    `<button type="button" class="mb-chip bdg${rotOn ? ' on' : ''}" data-mdeg title="Ketuk untuk mengetik derajat">${t.rot}°</button>` +
+    `<button type="button" class="mb-chip bdg${rotOn ? ' on' : ''}" data-mdeg title="${tr('Ketuk untuk mengetik derajat')}">${t.rot}°</button>` +
     `<span class="mb-sep"></span>` +
     [40, 60, 80, 100].map(v => chip(v, t.w === v)).join('') +
     `<span class="mb-sep"></span>` + pos +
     `<button type="button" class="mb-chip mb-ganti" data-mganti` +
-    ` title="Ganti gambar (posisi & ukuran tetap)" aria-label="Ganti gambar">${GANTI}</button>`;
+    ` title="${tr('Ganti gambar (posisi & ukuran tetap)')}" aria-label="${tr('Ganti gambar')}">${GANTI}</button>`;
 }
 
 function bar() {
@@ -201,9 +202,9 @@ function pasangGagang(fig) {
     b.innerHTML = svg;
     fig.appendChild(b);
   };
-  buat('img-grip', S_X, 'Ubah ukuran gambar — seret pojok');
-  buat('img-move', S_MOVE, 'Pindahkan gambar — seret gagang');
-  buat('img-putar', S_ROT, 'Putar gambar — seret gagang');
+  buat('img-grip', S_X, tr('Ubah ukuran gambar — seret pojok'));
+  buat('img-move', S_MOVE, tr('Pindahkan gambar — seret gagang'));
+  buat('img-putar', S_ROT, tr('Putar gambar — seret gagang'));
 }
 
 /* ── terapkan nilai jadi (satu langkah undo) ── */
@@ -222,7 +223,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20260909041737')
+    import('./editor/image.js?v=20260909054021')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();
@@ -380,19 +381,19 @@ function sasaranPindah(d, y, x) {
   else if (pct > 0.65) align = 'r';
   /* paragraf tujuan (yang akan mengapit) = anak[i] */
   let zb = 't';
-  const tr = anak[Math.min(i, anak.length - 1)];
-  if (tr && kl !== 'baris' && align) {
-    const rr = tr.getBoundingClientRect();
+  const par = anak[Math.min(i, anak.length - 1)];
+  if (par && kl !== 'baris' && align) {
+    const rr = par.getBoundingClientRect();
     zb = (y < rr.top + (rr.height || 0) / 2) ? 't' : 'b';
   }
   return { i, align, zb };
 }
 
 const NAMA_ZONA = {
-  hero: 'Baris penuh',
+  hero: tr('Baris penuh'),
   baris: { l: 'Kiri', c: 'Tengah', r: 'Kanan' },
-  apit: { l: 'Kiri · teks mengapit', c: 'Tengah', r: 'Kanan · teks mengapit' },
-  kecil: { l: 'Tempel kiri', c: 'Tengah', r: 'Tempel kanan' },
+  apit: { l: tr('Kiri · teks mengapit'), c: tr('Tengah'), r: tr('Kanan · teks mengapit') },
+  kecil: { l: tr('Tempel kiri'), c: tr('Tengah'), r: tr('Tempel kanan') },
 };
 
 function gerak(e) {
@@ -438,7 +439,7 @@ function gerak(e) {
     if (kl === 'hero') label = NAMA_ZONA.hero;
     else if (sas.align) label = NAMA_ZONA[kl] && NAMA_ZONA[kl][sas.align];
     else label = 'Tengah';
-    if (kl !== 'hero' && sas.align && sas.zb === 'b') label += ' · bawah';
+    if (kl !== 'hero' && sas.align && sas.zb === 'b') label += ' · ' + tr('bawah');
     pil.textContent = label || 'Tengah';
   }
 }
@@ -489,9 +490,9 @@ function lepas() {
     if (kl !== 'hero') align = pct < 0.35 ? 'l' : pct > 0.65 ? 'r' : 'c';
     /* bias atas/bawah mengikuti posisi jari di paragraf tujuan */
     let zb = t.zb;
-    const tr = anak[Math.min(i, anak.length - 1)];
-    if (tr && kl !== 'hero' && kl !== 'baris' && (align === 'l' || align === 'r')) {
-      const rr = tr.getBoundingClientRect();
+    const par = anak[Math.min(i, anak.length - 1)];
+    if (par && kl !== 'hero' && kl !== 'baris' && (align === 'l' || align === 'r')) {
+      const rr = par.getBoundingClientRect();
       zb = (g.y1 < rr.top + (rr.height || 0) / 2) ? 't' : 'b';
     }
     /* Gambar ditaruh di paling bawah: jangan sampai menimpa kolom ketik.

@@ -1,19 +1,20 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260909041737';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260909041737';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260909041737';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260909041737';
-import { state, save } from '../../core/store.js?v=20260909041737';
-import { findNote } from '../model.js?v=20260909041737';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260909041737';
-import { sinkronTag } from '../tags.js?v=20260909041737';
-import { tandaiTautan } from '../wikilink.js?v=20260909041737';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260909041737';
-import { cur } from '../../core/router.js?v=20260909041737';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260909041737';
-import { GROUPS } from '../bar/config.js?v=20260909041737';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260909041737';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260909041737';
+import { docEl, sel, curBlock } from './caret.js?v=20260909054021';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260909054021';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260909054021';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260909054021';
+import { state, save } from '../../core/store.js?v=20260909054021';
+import { findNote } from '../model.js?v=20260909054021';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260909054021';
+import { sinkronTag } from '../tags.js?v=20260909054021';
+import { tandaiTautan } from '../wikilink.js?v=20260909054021';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260909054021';
+import { cur } from '../../core/router.js?v=20260909054021';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260909054021';
+import { GROUPS } from '../bar/config.js?v=20260909054021';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260909054021';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260909054021';
+import { t as tr, isInggris } from '../../core/i18n.js?v=20260909054021';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -114,11 +115,11 @@ export function updateCount(){
   const d=docEl();
   if(!d){ el.style.display='none'; return; }
   el.style.display='flex';
-  const t=((d.innerText!==undefined?d.innerText:d.textContent)||'')
+  const isi=((d.innerText!==undefined?d.innerText:d.textContent)||'')
             .replace(/[\u200b\u00a0]/g,' ').trim();
-  const chars=t.length;
-  const words=t?t.split(/\s+/).filter(Boolean).length:0;
-  el.innerHTML=`<b>${chars.toLocaleString('id')}</b> huruf<span class="dot">·</span><b>${words.toLocaleString('id')}</b> kata`;
+  const chars=isi.length;
+  const words=isi?isi.split(/\s+/).filter(Boolean).length:0;
+  el.innerHTML=`<b>${chars.toLocaleString(isInggris() ? 'en-US' : 'id')}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(isInggris() ? 'en-US' : 'id')}</b> ${tr('kata')}`;
   /* Cuplikan TIDAK disimpan di sini — ia diturunkan dari blocks lewat
      excerptOf() saat daftar catatan digambar. Menyimpannya di dua tempat
      adalah persis sumber-ganda yang ingin dihindari. */

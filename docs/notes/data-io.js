@@ -18,11 +18,12 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20260909041737';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909041737';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909041737';
-import { sinkronTag } from './tags.js?v=20260909041737';
-import { terlihat } from './kunci.js?v=20260909041737';
+import { state, save, SCHEMA } from '../core/store.js?v=20260909054021';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909054021';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909054021';
+import { sinkronTag } from './tags.js?v=20260909054021';
+import { terlihat } from './kunci.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -115,7 +116,7 @@ export async function siapImporJson(teks) {
   let data = null;
   try { data = JSON.parse(teks); } catch (e) { data = null; }
   if (!data || data.format !== 'hara-cadangan' || !Array.isArray(data.catatan))
-    throw new Error('Bukan berkas cadangan Hara (format tidak dikenal).');
+    throw new Error(tr('Bukan berkas cadangan Hara (format tidak dikenal).'));
   const catatan = normalizeNotes(data.catatan);
   return {
     jenis: 'json',
@@ -348,7 +349,7 @@ export function bacaZip(bytes) {
   for (let i = u.length - 22; i >= Math.max(0, u.length - 65557); i--) {
     if (u[i] === 0x50 && u[i + 1] === 0x4B && u[i + 2] === 5 && u[i + 3] === 6) { eocd = i; break; }
   }
-  if (eocd < 0) throw new Error('Bukan berkas zip.');
+  if (eocd < 0) throw new Error(tr('Bukan berkas zip.'));
   const pusat = baca32(eocd + 16);
   const jumlah = baca16(eocd + 10);
   const hasil = []; let dilewati = 0;
@@ -551,12 +552,12 @@ export async function siapImpor(nama, isi, mentah) {
       else if (eNama.endsWith('.json') && !catatan.length && entri.length === 1)
         return siapImporJson(e.teks);
     }
-    if (!catatan.length && !dilewati) throw new Error('Zip tidak berisi berkas .md.');
+    if (!catatan.length && !dilewati) throw new Error(tr('Zip tidak berisi berkas .md.'));
     return { jenis: 'md', catatan, dilewati, jumlahBlob: 0 };
   }
   if (nm.endsWith('.md') || nm.endsWith('.markdown') || nm.endsWith('.txt'))
     return { jenis: 'md', catatan: [catatanDariMarkdown(nama, String(isi))], dilewati: 0, jumlahBlob: 0 };
-  throw new Error('Jenis berkas tidak dikenal — pakai .json, .md, atau .zip.');
+  throw new Error(tr('Jenis berkas tidak dikenal — pakai .json, .md, atau .zip.'));
 }
 
 /* Terapkan impor (json: gabung/timpa; md: selalu tambah baru). */

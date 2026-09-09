@@ -5,12 +5,13 @@
    SAMA disisipkan ke editor (tidak disalin — berbagi berkas). Gambar
    ditampilkan sebagai thumbnail kecil (dibuat sekali per sesi). */
 
-import { state } from '../core/store.js?v=20260909041737';
-import { esc } from '../core/dom.js?v=20260909041737';
-import { openPop, closeAll } from './menus/pop.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { ambilBlob } from '../core/blobs.js?v=20260909041737';
-import { terlihat } from './kunci.js?v=20260909041737';
+import { state } from '../core/store.js?v=20260909054021';
+import { esc } from '../core/dom.js?v=20260909054021';
+import { openPop, closeAll } from './menus/pop.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { ambilBlob } from '../core/blobs.js?v=20260909054021';
+import { terlihat } from './kunci.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const MAKS_TAMPIL = 120;   /* popup kecil — cukup yang terbaru */
 
@@ -74,7 +75,7 @@ const kisiHtml = daftar =>
      di posisi kursor. Yang baru muncul paling depan.</p>
    <div class="gal-kisi">${daftar.map(x =>
      `<button type="button" class="gal-i" data-gal="${esc(x.id)}"
-        title="Sisipkan gambar ini">
+        title="${tr('Sisipkan gambar ini')}">
         <span class="gal-t dim" aria-hidden="true"></span>
         <span class="gal-a">${esc(x.asal)}</span>
       </button>`).join('')}</div>`;
@@ -83,7 +84,7 @@ const kisiHtml = daftar =>
 export async function bukaGaleri(anchor) {
   const daftar = gambarDariCatatan();
   if (!daftar.length) {
-    toast('Belum ada gambar di catatan mana pun');
+    toast(tr('Belum ada gambar di catatan mana pun'));
     return;
   }
   const dipakai = daftar.slice(0, MAKS_TAMPIL).map(x => {
@@ -129,12 +130,12 @@ export function bindGaleri() {
     const id = g.getAttribute('data-gal');
     if (!id) return;
     closeAll();
-    import('./editor/image.js?v=20260909041737')
+    import('./editor/image.js?v=20260909054021')
       .then(async m => {
         const asal = catatanPemakai(id);
         const x = gambarDariCatatan().find(y => y.id === id);
         await m.sematkanBlokGambar(id, (x && x.alt) || asal || 'gambar');
-        toast('Gambar disisipkan dari galeri');
+        toast(tr('Gambar disisipkan dari galeri'));
       })
       .catch(() => {});
   });

@@ -8,11 +8,12 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20260909041737';
-import { closeAll } from './menus/pop.js?v=20260909041737';
-import { docEl } from './editor/caret.js?v=20260909041737';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260909041737';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20260909041737';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { closeAll } from './menus/pop.js?v=20260909054021';
+import { docEl } from './editor/caret.js?v=20260909054021';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260909054021';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -63,7 +64,7 @@ export function toggleZen() {
   if (!zenAktif()) closeAll();   /* popup tak boleh menggantung di layar fokus */
   const on = !zenAktif();
   setZen(on);
-  toast(on ? 'Mode fokus — Esc atau bulatan untuk keluar' : 'Mode fokus dimatikan');
+  toast(on ? tr('Mode fokus — Esc atau bulatan untuk keluar') : tr('Mode fokus dimatikan'));
 }
 
 /* ── cari di dalam catatan (mode baca) ── */
@@ -79,14 +80,14 @@ function buatPanel() {
   panel.id = 'cari-note';
   panel.innerHTML =
     `<svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
-     <input id="cari-note-in" type="text" placeholder="Cari di catatan…"
+     <input id="cari-note-in" type="text" placeholder="${tr('Cari di catatan…')}"
        autocomplete="off" enterkeyhint="search" aria-label="Cari di dalam catatan">
      <span class="cn-hasil" id="cari-note-hasil" aria-live="polite"></span>
-     <button type="button" class="cn-b" data-cn="prev" title="Sebelumnya" aria-label="Hasil sebelumnya">
+     <button type="button" class="cn-b" data-cn="prev" title="${tr('Sebelumnya')}" aria-label="${tr('Hasil sebelumnya')}">
        <svg class="ico"><use href="#i-up"/></svg></button>
-     <button type="button" class="cn-b" data-cn="next" title="Berikutnya" aria-label="Hasil berikutnya">
+     <button type="button" class="cn-b" data-cn="next" title="${tr('Berikutnya')}" aria-label="${tr('Hasil berikutnya')}">
        <svg class="ico"><use href="#i-down"/></svg></button>
-     <button type="button" class="cn-b" data-cn="tutup" title="Tutup (Esc)" aria-label="Tutup pencarian">
+     <button type="button" class="cn-b" data-cn="tutup" title="${tr('Tutup (Esc)')}" aria-label="${tr('Tutup pencarian')}">
        <svg class="ico"><use href="#i-x"/></svg></button>`;
   document.body.appendChild(panel);
   const inp = panel.querySelector('#cari-note-in');
@@ -182,7 +183,7 @@ function cariDalamCatatan(q) {
 
 export function bukaCari() {
   if (!modeBacaBerlaku()) {
-    toast('Pakai mode baca untuk mencari di dalam catatan');
+    toast(tr('Pakai mode baca untuk mencari di dalam catatan'));
     return;
   }
   const el = buatPanel();

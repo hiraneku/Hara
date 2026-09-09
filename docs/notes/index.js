@@ -1,55 +1,56 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260909041737';
-import { homeView, notesView } from './views/list.js?v=20260909041737';
-import { editorView } from './views/editor.js?v=20260909041737';
-import { miscViews, renderHasilCari } from './views/misc.js?v=20260909041737';
-import { tugasView, reminderView } from './views/tugas.js?v=20260909041737';
-import { bindEditor } from './editor/events.js?v=20260909041737';
-import { renderBar }  from './bar/render.js?v=20260909041737';
-import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260909041737';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260909054021';
+import { homeView, notesView } from './views/list.js?v=20260909054021';
+import { editorView } from './views/editor.js?v=20260909054021';
+import { miscViews, renderHasilCari } from './views/misc.js?v=20260909054021';
+import { tugasView, reminderView } from './views/tugas.js?v=20260909054021';
+import { bindEditor } from './editor/events.js?v=20260909054021';
+import { renderBar }  from './bar/render.js?v=20260909054021';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260909054021';
 import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
-  from './editor/cleanup.js?v=20260909041737';
+  from './editor/cleanup.js?v=20260909054021';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20260909041737';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { esc } from '../core/dom.js?v=20260909041737';
-import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260909041737';
-import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260909041737';
-import { pending, sticky, mati } from './editor/marks.js?v=20260909041737';
-import { docEl, caretEnd } from './editor/caret.js?v=20260909041737';
-import { resetHistory } from './editor/history.js?v=20260909041737';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20260909041737';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260909041737';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260909041737';
-import { renderBar as gambarBar } from './bar/render.js?v=20260909041737';
-import { state } from '../core/store.js?v=20260909041737';
-import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260909041737';
+  from '../core/autosave.js?v=20260909054021';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { esc } from '../core/dom.js?v=20260909054021';
+import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260909054021';
+import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260909054021';
+import { pending, sticky, mati } from './editor/marks.js?v=20260909054021';
+import { docEl, caretEnd } from './editor/caret.js?v=20260909054021';
+import { resetHistory } from './editor/history.js?v=20260909054021';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20260909054021';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260909054021';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260909054021';
+import { renderBar as gambarBar } from './bar/render.js?v=20260909054021';
+import { state } from '../core/store.js?v=20260909054021';
+import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260909054021';
 import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote,
          sematDariList, hapusNoteDariList, arsipNoteId }
-  from './model.js?v=20260909041737';
-import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260909041737';
+  from './model.js?v=20260909054021';
+import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260909054021';
 import { bindBacaPlus, terapkanUkuranLayar, tutupCari, matikanZen }
-  from './baca-plus.js?v=20260909041737';
-import { bindDaftarIsi } from './daftar-isi.js?v=20260909041737';
-import { setUrut, menuUrut, namaUrut } from './urut.js?v=20260909041737';
-import { bukaJurnalHari } from './harian.js?v=20260909041737';
-import { layarKunciView, bindKunci } from './kunci.js?v=20260909041737';
-import { bindSwipe } from './swipe.js?v=20260909041737';
-import { bindTagWarna } from './tagwarna.js?v=20260909041737';
-import { bindGaleri } from './galeri.js?v=20260909041737';
-import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260909041737';
-import { pasangSeret } from './drag.js?v=20260909041737';
-import { muatPanels, tautkanSebutan } from './panels.js?v=20260909041737';
-import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260909041737';
-import { setTag, stt } from './views/data.js?v=20260909041737';
-import { aturProp, hapusProp, namaProp, barisProps, KET_PROP } from './meta-ui.js?v=20260909041737';
-import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260909041737';
+  from './baca-plus.js?v=20260909054021';
+import { bindDaftarIsi } from './daftar-isi.js?v=20260909054021';
+import { setUrut, menuUrut, namaUrut } from './urut.js?v=20260909054021';
+import { bukaJurnalHari } from './harian.js?v=20260909054021';
+import { layarKunciView, bindKunci } from './kunci.js?v=20260909054021';
+import { bindSwipe } from './swipe.js?v=20260909054021';
+import { bindTagWarna } from './tagwarna.js?v=20260909054021';
+import { bindGaleri } from './galeri.js?v=20260909054021';
+import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260909054021';
+import { pasangSeret } from './drag.js?v=20260909054021';
+import { muatPanels, tautkanSebutan } from './panels.js?v=20260909054021';
+import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260909054021';
+import { setTag, stt } from './views/data.js?v=20260909054021';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20260909054021';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260909054021';
+import { t as tr, setBahasa, terjemahStatis } from '../core/i18n.js?v=20260909054021';
 import { cadanganJson, eksporSemuaMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
-  from './data-io.js?v=20260909041737';
+  from './data-io.js?v=20260909054021';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -58,7 +59,7 @@ function isiPengaturan() {
     box.innerHTML = BISA_SEMBUNYI.map(x => {
       const k = x.g || x.m;
       const on = !tersembunyi(k);
-      return `<div class="row"><div class="row-b"><div class="row-t">${x.nama}</div></div>
+      return `<div class="row"><div class="row-b"><div class="row-t">${tr(x.nama)}</div></div>
         <button class="sw${on ? ' on' : ''}" data-bar="${k}" role="switch"
           aria-checked="${on}"><span></span></button></div>`;
     }).join('');
@@ -73,7 +74,7 @@ function isiPengaturan() {
   if (ruang) {
     const n = state.notes.length;
     pakaiRuang().then(({ pakai }) => {
-      ruang.textContent = `${n} catatan · ${pakai ? ukuranTerbaca(pakai) + ' terpakai' : 'ukuran tak diketahui'}`;
+      ruang.textContent = `${tr('{n} catatan', { n })} · ${pakai ? ukuranTerbaca(pakai) + ' ' + tr('terpakai') : tr('ukuran tak diketahui')}`;
     });
   }
 }
@@ -85,10 +86,10 @@ function tampilkanStatus(s) {
   if (!el) return;
   const teks = {
     [STATUS.IDLE]:   '',
-    [STATUS.DIRTY]:  'Belum tersimpan',
-    [STATUS.SAVING]: 'Menyimpan…',
-    [STATUS.SAVED]:  'Tersimpan',
-    [STATUS.ERROR]:  'Gagal menyimpan <button class="st-retry" data-retry>Coba lagi</button>',
+    [STATUS.DIRTY]:  tr('Belum tersimpan'),
+    [STATUS.SAVING]: tr('Menyimpan…'),
+    [STATUS.SAVED]:  tr('Tersimpan'),
+    [STATUS.ERROR]:  tr('Gagal menyimpan') + ' <button class="st-retry" data-retry>' + tr('Coba lagi') + '</button>',
   }[s] || '';
   el.innerHTML = teks;
   el.className = 'save-st' + (s === STATUS.ERROR ? ' err' : s === STATUS.SAVED ? ' ok' : '');
@@ -127,9 +128,9 @@ function tawarkanRecovery() {
   bar.className = 'rec-bar';
   bar.id = 'rec-bar';
   bar.innerHTML =
-    `<span class="rec-t">Ada perubahan yang belum tersimpan.</span>
-     <button class="btn btn-pri" data-rec="restore">Pulihkan</button>
-     <button class="btn btn-sec" data-rec="discard">Buang</button>`;
+    `<span class="rec-t">${tr('Ada perubahan yang belum tersimpan.')}</span>
+     <button class="btn btn-pri" data-rec="restore">${tr('Pulihkan')}</button>
+     <button class="btn btn-sec" data-rec="discard">${tr('Buang')}</button>`;
   ed.insertBefore(bar, ed.firstChild);
 }
 
@@ -162,7 +163,7 @@ function pulihkanDraf() {
   syncBtns();
   const d2 = docEl();
   if (d2 && d2.firstElementChild) caretEnd(d2.firstElementChild);
-  toast('Perubahan dipulihkan');
+  toast(tr('Perubahan dipulihkan'));
 }
 
 /* Render ulang isi editor dari DOM saat ini — tanpa menyentuh data.
@@ -231,15 +232,15 @@ function menuTambahProp() {
   const opsi = Object.keys(KET_PROP).filter(k => !ada.has(k));
   const rows = opsi.map(k => {
     const ket = KET_PROP[k];
-    const sub = (ket.contoh || []).slice(0, 2).join(' · ');
+    const sub = (ket.contoh || []).slice(0, 2).map(c => contohProp(c)).join(' · ');
     return `<button type="button" class="pop-i" data-prop-opt="${k}">
-      <svg class="ico"><use href="#i-plus"/></svg>${namaProp(k)}${sub ? `<span class="sub">${sub}</span>` : ''}</button>`;
+      <svg class="ico"><use href="#i-plus"/></svg>${tr(namaProp(k))}${sub ? `<span class="sub">${sub}</span>` : ''}</button>`;
   }).join('');
-  return `<div class="pop-h">Tambah properti</div>
-    ${rows || '<p class="prop-pop-hint">Semua properti bawaan sudah terpasang — pakai kunci lain di bawah.</p>'}
+  return `<div class="pop-h">${tr('Tambah properti')}</div>
+    ${rows || `<p class="prop-pop-hint">${tr('Semua properti bawaan sudah terpasang — pakai kunci lain di bawah.')}</p>`}
     <div style="display:flex;gap:6px;padding:4px 10px 10px">
-      <input id="prop-baru" class="pop-in" placeholder="kunci lain… (mis. klien)" aria-label="Nama properti baru">
-      <button type="button" class="btn btn-pri" data-prop-ok style="height:34px;flex:none">Tambah</button>
+      <input id="prop-baru" class="pop-in" placeholder="${tr('kunci lain… (mis. klien)')}" aria-label="${tr('Nama properti baru')}">
+      <button type="button" class="btn btn-pri" data-prop-ok style="height:34px;flex:none">${tr('Tambah')}</button>
     </div>`;
 }
 
@@ -305,22 +306,22 @@ async function prosesBerkasImpor(berkas) {
     imporTertunda = ringkas;
     const jml = ringkas.catatan.length;
     const detil = ringkas.jenis === 'json'
-      ? `${ringkas.catatan.length} catatan` +
-        (ringkas.jumlahBlob ? ` + ${ringkas.jumlahBlob} gambar` : '')
-      : `${ringkas.catatan.length} catatan baru`;
+      ? `${tr('{n} catatan', { n: ringkas.catatan.length }) }` +
+        (ringkas.jumlahBlob ? ` + ${ringkas.jumlahBlob} ${tr('gambar')}` : '')
+      : `${tr('{n} catatan baru', { n: ringkas.catatan.length })}`;
     const tombol = ringkas.jenis === 'json'
-      ? `<button class="btn btn-sec" style="flex:1" data-impor-batal>Batal</button>
-         <button class="btn btn-sec" style="flex:1" data-impor-terapkan="gabung">Gabung</button>
-         <button class="btn btn-pri" style="flex:1" data-impor-terapkan="timpa">Timpa semua</button>`
-      : `<button class="btn btn-sec" style="flex:1" data-impor-batal>Batal</button>
+      ? `<button class="btn btn-sec" style="flex:1" data-impor-batal>${tr('Batal')}</button>
+         <button class="btn btn-sec" style="flex:1" data-impor-terapkan="gabung">${tr('Gabung')}</button>
+         <button class="btn btn-pri" style="flex:1" data-impor-terapkan="timpa">${tr('Timpa semua')}</button>`
+      : `<button class="btn btn-sec" style="flex:1" data-impor-batal>${tr('Batal')}</button>
          <button class="btn btn-pri" style="flex:1" data-impor-terapkan="gabung">Impor ${jml}</button>`;
     const barisTombol = document.querySelector('[data-impor]');
-    openPop(`<div class="pop-h">Impor: ${esc(nama)}</div>
-      <p class="pop-note">${detil}.${ringkas.jenis === 'json' ? ' Gabung = sisip & perbarui; Timpa semua = kembalikan persis cadangan.' : ' Tiap catatan baru ditambahkan — tidak ada yang ditimpa.'}</p>
+    openPop(`<div class="pop-h">${tr('Impor')}: ${esc(nama)}</div>
+      <p class="pop-note">${detil}.${ringkas.jenis === 'json' ? tr(' Gabung = sisip & perbarui; Timpa semua = kembalikan persis cadangan.') : tr(' Tiap catatan baru ditambahkan — tidak ada yang ditimpa.')}</p>
       <div style="display:flex;gap:8px;padding:2px 10px 10px">${tombol}</div>`,
       barisTombol || undefined);
   } catch (e) {
-    toast(e && e.message ? e.message : 'Impor gagal');
+    toast(e && e.message ? e.message : tr('Impor gagal'));
   }
 }
 
@@ -331,11 +332,11 @@ async function terapkanImporTertunda(mode) {
   try {
     const h = await terapkanImpor(r, mode);
     toast(mode === 'timpa' && r.jenis === 'json'
-      ? `Cadangan dipulihkan: ${h.catatan} catatan, ${h.dipulihkan} gambar`
-      : `${r.jenis === 'json' ? 'Impor JSON' : 'Impor markdown'} selesai: ${h.baru || h.catatan} catatan${h.dipulihkan ? ', ' + h.dipulihkan + ' gambar' : ''}`);
+      ? `${tr('Cadangan dipulihkan')}: ${tr('{n} catatan', { n: h.catatan })}, ${h.dipulihkan} ${tr('gambar')}`
+      : `${r.jenis === 'json' ? tr('Impor JSON') : tr('Impor markdown')} ${tr('selesai')}: ${h.baru || h.catatan} ${tr('catatan')}${h.dipulihkan ? ', ' + h.dipulihkan + ' ' + tr('gambar') : ''}`);
     go(cur || 'notes');
   } catch (e) {
-    toast('Impor gagal: ' + (e && e.message ? e.message : e));
+    toast(tr('Impor gagal') + ': ' + (e && e.message ? e.message : e));
   }
 }
 
@@ -344,12 +345,12 @@ let timerYakin = null;
 function hapusDuaKetuk(b) {
   if (b.classList.contains('yakin')) { hapusPermanen(b.dataset.putus); return; }
   b.classList.add('yakin');
-  b.textContent = 'Yakin?';
+  b.textContent = tr('Yakin?');
   clearTimeout(timerYakin);
   timerYakin = setTimeout(() => {
     document.querySelectorAll('[data-putus].yakin').forEach(x => {
       x.classList.remove('yakin');
-      x.textContent = 'Hapus';
+      x.textContent = tr('Hapus');
     });
   }, 3500);
 }
@@ -403,6 +404,19 @@ export const notesModule = {
 
     /* kontrol halaman Pengaturan: bar mekanik, getar, tema, aksen */
     document.addEventListener('click', e => {
+      /* ── bahasa (Bahasa di Pengaturan) ──
+         Simpan pilihan, teruskan terjemahan ke elemen statis (nav,
+         tombol header), gambar ulang bar mekanik & layar yang sedang
+         dibuka. Layar yang dirender ulang bukan editor — mengganti
+         bahasa hanya bisa dilakukan dari Pengaturan. */
+      const lb = e.target.closest('[data-bahasa]');
+      if (lb) {
+        setBahasa(lb.dataset.bahasa === 'en' ? 'en' : 'id');
+        terjemahStatis(document);
+        gambarBar();
+        if (cur !== 'editor') go(cur);
+        return;
+      }
       const sb = e.target.closest('[data-bar]');
       if (sb) {
         toggleTampil(sb.dataset.bar);
@@ -499,7 +513,7 @@ export const notesModule = {
         const inp = document.getElementById('prop-baru');
         const v = (inp ? inp.value : '').trim().toLowerCase();
         if (!/^[a-z0-9][a-z0-9_-]{0,24}$/.test(v)) {
-          toast('Kunci properti: huruf/angka kecil tanpa spasi');
+          toast(tr('Kunci properti: huruf/angka kecil tanpa spasi'));
           if (inp) inp.focus();
           return;
         }
@@ -533,7 +547,7 @@ export const notesModule = {
         closeAll();
         setUrut(us.dataset.urutSet);
         go(cur);              /* gambar ulang daftar dengan urutan baru */
-        toast('Diurutkan: ' + namaUrut());
+        toast(tr('Diurutkan') + ': ' + tr(namaUrut()));
         return;
       }
 
@@ -595,7 +609,7 @@ export const notesModule = {
         const judul = n ? String(n.title || '').trim() : '';
         if (sid && bid && judul && tautkanSebutan(sid, bid, judul)) {
           muatPanels();
-          toast('Mention diubah jadi tautan');
+          toast(tr('Mention diubah jadi tautan'));
         }
         return;
       }
@@ -643,17 +657,17 @@ function segarkanSetelahSapuan() {
         if (eks.dataset.ekspor === 'json') {
           cadanganJson().then(({ nama, teks }) => {
             unduh(nama, teks, 'application/json');
-            toast(`Cadangan diunduh: ${nama}`);
-          }).catch(() => toast('Ekspor JSON gagal'));
+            toast(`${tr('Cadangan diunduh')}: ${nama}`);
+          }).catch(() => toast(tr('Ekspor JSON gagal')));
         } else {
           const { nama, entri } = eksporSemuaMarkdown();
-          if (!entri.length) { toast('Tidak ada catatan untuk diekspor'); return; }
+          if (!entri.length) { toast(tr('Tidak ada catatan untuk diekspor')); return; }
           if (entri.length === 1) {
             unduh(entri[0].nama, entri[0].teks, 'text/markdown');
-            toast(`Ekspor: ${entri[0].nama}`);
+            toast(`${tr('Ekspor')}: ${entri[0].nama}`);
           } else {
             unduh(nama, buatZip(entri), 'application/zip');
-            toast(`${entri.length} catatan → ${nama}`);
+            toast(`${tr('{n} catatan', { n: entri.length })} → ${nama}`);
           }
         }
         return;
@@ -776,7 +790,7 @@ function segarkanSetelahSapuan() {
       const r = e.target.closest('[data-rec]');
       if (!r) return;
       if (r.dataset.rec === 'restore') pulihkanDraf();
-      else { hapusDraf(); tutupBilahRecovery(); toast('Perubahan dibuang'); }
+      else { hapusDraf(); tutupBilahRecovery(); toast(tr('Perubahan dibuang')); }
     });
 
   }

@@ -18,9 +18,10 @@
    dimuat dinamis supaya tidak ada lingkaran impor (row/tags → kunci →
    menus/pop → bar/render → menus/tag → tags). */
 
-import { state } from '../core/store.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { go, cur } from '../core/router.js?v=20260909041737';
+import { state } from '../core/store.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { go, cur } from '../core/router.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const KEY_REG = 'hara.v1.kunci';
 const KEY_FP = 'hara.v1.kunci.fp';      /* credential sidik jari per catatan */
@@ -225,92 +226,89 @@ export const layarKunciView = () => {
   return `<div class="lk-page">
     <div class="lk-kartu">
       <div class="lk-ikon"><svg class="ico"><use href="#i-lock"/></svg></div>
-      <h2>Catatan terkunci</h2>
-      <p class="lk-sub">Masukkan PIN untuk membuka catatan ini.</p>
+      <h2>${tr('Catatan terkunci')}</h2>
+      <p class="lk-sub">${tr('Masukkan PIN untuk membuka catatan ini.')}</p>
       <div class="lk-pin" data-lk-pin>
         <span class="lk-dot"></span><span class="lk-dot"></span>
         <span class="lk-dot"></span><span class="lk-dot"></span>
         <input class="lk-in" inputmode="numeric" pattern="[0-9]*" maxlength="4"
-          autocomplete="off" aria-label="PIN catatan" autocapitalize="off"
+          autocomplete="off" aria-label="${tr('PIN catatan')}" autocapitalize="off"
           spellcheck="false" data-lk-in>
       </div>
-      <p class="lk-salah" data-lk-salah hidden>PIN salah — coba lagi.</p>
+      <p class="lk-salah" data-lk-salah hidden>${tr('PIN salah — coba lagi.')}</p>
       <div class="lk-tombol">
-        <button type="button" class="btn btn-pri lk-buka" data-lk-buka>Buka</button>
+        <button type="button" class="btn btn-pri lk-buka" data-lk-buka>${tr('Buka')}</button>
         ${adaFp ? `<button type="button" class="btn btn-sec lk-fp" data-lk-fp>
-          <svg class="ico"><use href="#i-finger"/></svg>Sidik jari</button>` : ''}
+          <svg class="ico"><use href="#i-finger"/></svg>${tr('Sidik jari')}</button>` : ''}
       </div>
       ${adaFp
-        ? `<button type="button" class="lk-lupa" data-lk-lupa>Lupa PIN? Buka dengan sidik jari perangkat</button>`
-        : `<p class="lk-lupa-note">Lupa PIN? Tanpa sidik jari perangkat tidak ada jalan
-             pintas — catatan ini tetap bisa dihapus dari daftar bila perlu.</p>`}
-      <p class="lk-info">Hanya catatan ini yang dikunci — catatan lain tetap terbuka.</p>
+        ? `<button type="button" class="lk-lupa" data-lk-lupa>${tr('Lupa PIN? Buka dengan sidik jari perangkat')}</button>`
+        : `<p class="lk-lupa-note">${tr('Lupa PIN? Tanpa sidik jari perangkat tidak ada jalan pintas — catatan ini tetap bisa dihapus dari daftar bila perlu.')}</p>`}
+      <p class="lk-info">${tr('Hanya catatan ini yang dikunci — catatan lain tetap terbuka.')}</p>
     </div>
   </div>`;
 };
 
 /* Panel popup: pasang PIN baru (dari menu ··· catatan). */
 export async function panelPasangPin(anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909041737');
+  const { openPop } = await import('./menus/pop.js?v=20260909054021');
   const n = state.notes.find(x => x.id === state.openId);
   if (!n) return;
   const dukung = sidikDidukung();
   const jangkar = anchor || document.getElementById('dots') ||
     document.querySelector('.ed-doc') || document.body;
-  openPop(`<div class="pop-h">Kunci catatan</div>
-    <p class="pop-note">Catatan ini akan disembunyikan dan hanya bisa dibuka
-      dengan PIN 1–4 digit.</p>
-    <label class="pin-lbl" for="pp1">PIN baru (1–4 digit)</label>
+  openPop(`<div class="pop-h">${tr('Kunci catatan')}</div>
+    <p class="pop-note">${tr('Catatan ini akan disembunyikan dan hanya bisa dibuka dengan PIN 1–4 digit.')}</p>
+    <label class="pin-lbl" for="pp1">${tr('PIN baru (1–4 digit)')}</label>
     <input id="pp1" class="pin-in" type="password" inputmode="numeric" pattern="[0-9]*"
       maxlength="4" autocomplete="new-password" placeholder="••••">
-    <label class="pin-lbl" for="pp2">Ulangi PIN</label>
+    <label class="pin-lbl" for="pp2">${tr('Ulangi PIN')}</label>
     <input id="pp2" class="pin-in" type="password" inputmode="numeric" pattern="[0-9]*"
       maxlength="4" autocomplete="new-password" placeholder="••••">
     ${dukung ? `<label class="pin-cb"><input type="checkbox" data-fp-on checked>
-      <span>Izinkan sidik jari perangkat bila lupa PIN</span></label>` : ''}
+      <span>${tr('Izinkan sidik jari perangkat bila lupa PIN')}</span></label>` : ''}
     <div class="pin-err" data-pin-err></div>
     <button type="button" class="btn btn-pri" style="width:100%;justify-content:center"
-      data-pin-simpan>Kunci catatan</button>`, jangkar);
+      data-pin-simpan>${tr('Kunci catatan')}</button>`, jangkar);
   const a = document.getElementById('pp1');
   if (a) { a.focus(); a.select(); }
 }
 
 /* Panel popup: kelola kunci (saat catatan terbuka di sesi ini). */
 export async function panelKelolaKunci(anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909041737');
+  const { openPop } = await import('./menus/pop.js?v=20260909054021');
   const n = state.notes.find(x => x.id === state.openId);
   if (!n) return;
   const adaFp = credTerdaftar(n.id);
   const jangkar = anchor || document.getElementById('dots') || document.body;
-  openPop(`<div class="pop-h">Kunci catatan</div>
-    <p class="pop-note">Catatan ini terkunci PIN. Setelah aplikasi dimuat
-      ulang, PIN diminta lagi.</p>
+  openPop(`<div class="pop-h">${tr('Kunci catatan')}</div>
+    <p class="pop-note">${tr('Catatan ini terkunci PIN. Setelah aplikasi dimuat ulang, PIN diminta lagi.')}</p>
     <button type="button" class="pop-i" data-kk-ganti>
-      <svg class="ico"><use href="#i-lock"/></svg>Ganti PIN</button>
+      <svg class="ico"><use href="#i-lock"/></svg>${tr('Ganti PIN')}</button>
     <button type="button" class="pop-i" data-kk-lepas>
-      <svg class="ico"><use href="#i-unlock"/></svg>Buka kunci catatan</button>
-    <p class="pop-note">${adaFp ? 'Sidik jari perangkat terdaftar untuk pemulihan.' :
-      'Sidik jari perangkat belum terdaftar — simpan PIN baik-baik.'}</p>`,
+      <svg class="ico"><use href="#i-unlock"/></svg>${tr('Buka kunci catatan')}</button>
+    <p class="pop-note">${adaFp ? tr('Sidik jari perangkat terdaftar untuk pemulihan.') :
+      tr('Sidik jari perangkat belum terdaftar — simpan PIN baik-baik.')}</p>`,
     jangkar);
 }
 
 /* Panel verifikasi (PIN / sidik jari) sebelum ganti/lepas kunci. */
 async function panelVerifikasi(id, mode, anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909041737');
+  const { openPop } = await import('./menus/pop.js?v=20260909054021');
   const adaFp = credTerdaftar(id);
-  const judul = mode === 'ganti' ? 'Ganti PIN' : 'Buka kunci catatan';
+  const judul = mode === 'ganti' ? tr('Ganti PIN') : tr('Buka kunci catatan');
   const jangkar = anchor || document.getElementById('dots') ||
     document.querySelector('.ed-doc') || document.body;
   openPop(`<div class="pop-h">${judul}</div>
-    <p class="pop-note">Verifikasi dulu dengan PIN atau sidik jari perangkat.</p>
-    <label class="pin-lbl" for="pv">PIN saat ini</label>
+    <p class="pop-note">${tr('Verifikasi dulu dengan PIN atau sidik jari perangkat.')}</p>
+    <label class="pin-lbl" for="pv">${tr('PIN saat ini')}</label>
     <input id="pv" class="pin-in" type="password" inputmode="numeric" pattern="[0-9]*"
       maxlength="4" autocomplete="current-password" placeholder="••••">
     ${adaFp ? `<button type="button" class="btn btn-sec" style="width:100%;justify-content:center;margin-bottom:8px" data-pv-fp>
-      <svg class="ico"><use href="#i-finger"/></svg>Sidik jari</button>` : ''}
+      <svg class="ico"><use href="#i-finger"/></svg>${tr('Sidik jari')}</button>` : ''}
     <div class="pin-err" data-pin-err></div>
     <button type="button" class="btn btn-pri" style="width:100%;justify-content:center"
-      data-pv-ok>Verifikasi</button>`, jangkar);
+      data-pv-ok>${tr('Verifikasi')}</button>`, jangkar);
   const a = document.getElementById('pv');
   if (a) { a.focus(); a.select(); }
   verifKontek = { id, mode };
@@ -318,18 +316,18 @@ async function panelVerifikasi(id, mode, anchor) {
 
 /* Panel: tetapkan PIN baru setelah verifikasi berhasil (ganti / lupa). */
 async function panelPinBaru(id, judul, keterangan, jangkar) {
-  const { openPop } = await import('./menus/pop.js?v=20260909041737');
+  const { openPop } = await import('./menus/pop.js?v=20260909054021');
   openPop(`<div class="pop-h">${judul}</div>
     ${keterangan ? `<p class="pop-note">${keterangan}</p>` : ''}
-    <label class="pin-lbl" for="pg1">PIN baru (1–4 digit)</label>
+    <label class="pin-lbl" for="pg1">${tr('PIN baru (1–4 digit)')}</label>
     <input id="pg1" class="pin-in" type="password" inputmode="numeric" pattern="[0-9]*"
       maxlength="4" autocomplete="new-password" placeholder="••••">
-    <label class="pin-lbl" for="pg2">Ulangi PIN</label>
+    <label class="pin-lbl" for="pg2">${tr('Ulangi PIN')}</label>
     <input id="pg2" class="pin-in" type="password" inputmode="numeric" pattern="[0-9]*"
       maxlength="4" autocomplete="new-password" placeholder="••••">
     <div class="pin-err" data-pin-err></div>
     <button type="button" class="btn btn-pri" style="width:100%;justify-content:center"
-      data-pg-simpan>Simpan PIN baru</button>`, jangkar);
+      data-pg-simpan>${tr('Simpan PIN baru')}</button>`, jangkar);
   gantiKontek = id;
   const a = document.getElementById('pg1');
   if (a) { a.focus(); a.select(); }
@@ -440,31 +438,31 @@ async function cobaBukaPin() {
   }
   bukaSesi(id);
   go('editor');
-  toast('Catatan dibuka');
+  toast(tr('Catatan dibuka'));
 }
 
 async function cobaBukaFp() {
   const id = state.openId;
   const ok = await cobaSidik(id);
-  if (!ok) { toast('Sidik jari tidak cocok / dibatalkan'); return; }
+  if (!ok) { toast(tr('Sidik jari tidak cocok / dibatalkan')); return; }
   bukaSesi(id);
   go('editor');
-  toast('Catatan dibuka');
+  toast(tr('Catatan dibuka'));
 }
 
 /* alur lupa PIN: verifikasi sidik jari → langsung minta PIN baru */
 async function alurLupaPin(jangkar) {
   const id = state.openId;
-  toast('Verifikasi sidik jari perangkat…');
+  toast(tr('Verifikasi sidik jari perangkat…'));
   const ok = await cobaSidik(id);
-  if (!ok) { toast('Verifikasi gagal / dibatalkan'); return; }
+  if (!ok) { toast(tr('Verifikasi gagal / dibatalkan')); return; }
   panelPinBaru(id, 'PIN baru',
-    'Identitas perangkat sudah terverifikasi. Tetapkan PIN baru untuk catatan ini.',
+    tr('Identitas perangkat sudah terverifikasi. Tetapkan PIN baru untuk catatan ini.'),
     jangkar || document.querySelector('.lk-buka') || document.body);
 }
 
 async function pasangDariPanel() {
-  const { closeAll } = await import('./menus/pop.js?v=20260909041737');
+  const { closeAll } = await import('./menus/pop.js?v=20260909054021');
   const p = document.getElementById('pop');
   const a1 = p && p.querySelector('#pp1');
   const a2 = p && p.querySelector('#pp2');
@@ -472,38 +470,38 @@ async function pasangDariPanel() {
   const pin1 = a1.value, pin2 = a2.value;
   const err = p.querySelector('[data-pin-err]');
   const gagal = m => { if (err) err.textContent = m; getarKunci(); };
-  if (!/^\d{1,4}$/.test(pin1)) return gagal('PIN harus 1–4 digit angka.');
-  if (pin1 !== pin2) return gagal('PIN tidak sama — ketik ulang.');
+  if (!/^\d{1,4}$/.test(pin1)) return gagal(tr('PIN harus 1–4 digit angka.'));
+  if (pin1 !== pin2) return gagal(tr('PIN tidak sama — ketik ulang.'));
   const n = catatanBuka();
   if (!n) return;
   const dukungFp = p.querySelector('[data-fp-on]');
   const mauFp = !dukungFp || dukungFp.checked;
   await pasangKunci(n.id, pin1);
   if (mauFp && sidikDidukung() && !credTerdaftar(n.id)) {
-    toast('Sentuh sidik jari perangkat untuk pemulihan…');
+    toast(tr('Sentuh sidik jari perangkat untuk pemulihan…'));
     const okFp = await daftarSidik(n.id);
     if (!okFp && !credTerdaftar(n.id))
-      toast('Sidik jari tidak terdaftar — simpan PIN baik-baik');
+      toast(tr('Sidik jari tidak terdaftar — simpan PIN baik-baik'));
   }
   closeAll();
   bukaSesi(n.id);
-  toast('Catatan dikunci');
+  toast(tr('Catatan dikunci'));
 }
 
 /* verifikasi (panel kelola) dengan PIN */
 async function verifPinPanel(k) {
-  const { closeAll } = await import('./menus/pop.js?v=20260909041737');
+  const { closeAll } = await import('./menus/pop.js?v=20260909054021');
   const p = document.getElementById('pop');
   const inp = p && p.querySelector('#pv');
   const err = p && p.querySelector('[data-pin-err]');
   if (!inp) return;
   const ok = await cocokPin(k.id, inp.value);
-  if (!ok) { if (err) err.textContent = 'PIN salah.'; getarKunci(); return; }
+  if (!ok) { if (err) err.textContent = tr('PIN salah.'); getarKunci(); return; }
   verifKontek = null;
   closeAll();
   if (k.mode === 'lepas') {
     lepasKunci(k.id);
-    toast('Kunci catatan dilepas');
+    toast(tr('Kunci catatan dilepas'));
   } else {
     panelPinBaru(k.id, 'Ganti PIN', '', document.getElementById('dots') || document.body);
   }
@@ -511,15 +509,15 @@ async function verifPinPanel(k) {
 
 /* verifikasi (panel kelola) dengan sidik jari */
 async function verifSidik(k) {
-  const { closeAll } = await import('./menus/pop.js?v=20260909041737');
-  toast('Verifikasi sidik jari perangkat…');
+  const { closeAll } = await import('./menus/pop.js?v=20260909054021');
+  toast(tr('Verifikasi sidik jari perangkat…'));
   const ok = await cobaSidik(k.id);
-  if (!ok) { toast('Sidik jari tidak cocok / dibatalkan'); return; }
+  if (!ok) { toast(tr('Sidik jari tidak cocok / dibatalkan')); return; }
   verifKontek = null;
   closeAll();
   if (k.mode === 'lepas') {
     lepasKunci(k.id);
-    toast('Kunci catatan dilepas');
+    toast(tr('Kunci catatan dilepas'));
   } else {
     panelPinBaru(k.id, 'Ganti PIN', '', document.getElementById('dots') || document.body);
   }
@@ -527,7 +525,7 @@ async function verifSidik(k) {
 
 /* simpan PIN baru dari popup (ganti PIN / lupa PIN) */
 async function simpanPinBaru() {
-  const { closeAll } = await import('./menus/pop.js?v=20260909041737');
+  const { closeAll } = await import('./menus/pop.js?v=20260909054021');
   const p = document.getElementById('pop');
   const a1 = p && p.querySelector('#pg1');
   const a2 = p && p.querySelector('#pg2');
@@ -535,15 +533,15 @@ async function simpanPinBaru() {
   const pin1 = a1.value, pin2 = a2.value;
   const err = p.querySelector('[data-pin-err]');
   const gagal = m => { if (err) err.textContent = m; getarKunci(); };
-  if (!/^\d{1,4}$/.test(pin1)) return gagal('PIN harus 1–4 digit angka.');
-  if (pin1 !== pin2) return gagal('PIN tidak sama — ketik ulang.');
+  if (!/^\d{1,4}$/.test(pin1)) return gagal(tr('PIN harus 1–4 digit angka.'));
+  if (pin1 !== pin2) return gagal(tr('PIN tidak sama — ketik ulang.'));
   const id = gantiKontek;
   gantiKontek = null;
   if (!id) return;
   await pasangKunci(id, pin1);
   closeAll();
-  toast('PIN diperbarui');
-  if (cur === 'kunci') { bukaSesi(id); go('editor'); toast('Catatan dibuka'); }
+  toast(tr('PIN diperbarui'));
+  if (cur === 'kunci') { bukaSesi(id); go('editor'); toast(tr('Catatan dibuka')); }
 }
 
 function getarKunci() {

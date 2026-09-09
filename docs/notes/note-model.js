@@ -28,6 +28,8 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
+import { t as tr } from '../core/i18n.js?v=20260909054021';
+
 export const BLOCK_TYPES = [
   'paragraph',
   'heading',
@@ -207,7 +209,7 @@ export function blockToHtml(b) {
     }
     return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
-      `<button class="img-x" data-imgx="${blob}" title="Hapus gambar" aria-label="Hapus gambar">` +
+      `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
   }
 
@@ -246,7 +248,7 @@ export function blockToHtml(b) {
    kemudian (Enter, tempel, undo/redo, pemulihan draf) mendapatkannya
    lewat `pastikanGandel()` yang dipanggil setiap refresh(). */
 const GANDEL = '<button class="blk-h" data-blkh type="button" contenteditable="false" ' +
-  'title="Seret untuk memindahkan blok" aria-label="Pindahkan blok">' +
+  'title="' + tr('Seret untuk memindahkan blok') + '" aria-label="' + tr('Pindahkan blok') + '">' +
   '<svg class="ico"><use href="#i-grip"/></svg></button>';
 const GANDEL_REG = /<button\s[^>]*\bblk-h\b[^>]*>[\s\S]*?<\/button>/g;
 function pegangan() { return GANDEL; }
@@ -272,8 +274,8 @@ export function pastikanGandel(root) {
     g.type = 'button';
     g.setAttribute('data-blkh', '');
     g.contentEditable = 'false';
-    g.title = 'Seret untuk memindahkan blok';
-    g.setAttribute('aria-label', 'Pindahkan blok');
+    g.title = tr('Seret untuk memindahkan blok');
+    g.setAttribute('aria-label', tr('Pindahkan blok'));
     g.innerHTML = '<svg class="ico"><use href="#i-grip"/></svg>';
     el.appendChild(g);
   });

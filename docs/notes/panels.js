@@ -12,10 +12,11 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20260909041737';
-import { cur } from '../core/router.js?v=20260909041737';
-import { touch } from './note-model.js?v=20260909041737';
-import { terlihat } from './kunci.js?v=20260909041737';
+import { state, save } from '../core/store.js?v=20260909054021';
+import { cur } from '../core/router.js?v=20260909054021';
+import { touch } from './note-model.js?v=20260909054021';
+import { terlihat } from './kunci.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -61,26 +62,26 @@ export function panelTautan(n) {
   const lihat = j => { if (!kumpul.some(x => x.judul === j.judul)) kumpul.push(j); };
   (n.blocks || []).forEach(b => wlDariBlok(b).forEach(lihat));
   const isi = kumpul.length === 0
-    ? '<p class="dm-kosong">Belum ada wikilink di catatan ini. Ketik <b>[[</b> lalu pilih judul, atau tulis <b>[[Judul]]</b> sendiri.</p>'
+    ? '<p class="dm-kosong">' + tr('Belum ada wikilink di catatan ini. Ketik [[ lalu pilih judul, atau tulis [[Judul]] sendiri.') + '</p>'
     : kumpul.map(d => {
         const ada = cariJudul(d.judul);
         return `<div class="bl" role="button" tabindex="0" ${ada
           ? `data-dm-buka="${ada.id}"`
           : `data-dm-buat="${esc(d.judul)}"`}>
-          <div class="bl-t">${esc(d.alias || d.judul)}${ada ? '' : '<span class="cnt">belum ada</span>'}</div>
-          <div class="bl-c">${ada ? 'Buka catatan' : 'Buat catatannya — satu ketukan'}</div>
+          <div class="bl-t">${esc(d.alias || d.judul)}${ada ? '' : '<span class="cnt">' + tr('belum ada') + '</span>'}</div>
+          <div class="bl-c">${ada ? tr('Buka catatan') : tr('Buat catatannya — satu ketukan')}</div>
         </div>`;
       }).join('');
   return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-link"/></svg>Tautan keluar<span class="n">${kumpul.length}</span></div>${isi}</section>`;
+    <svg class="ico"><use href="#i-link"/></svg >${tr('Tautan keluar')}<span class="n">${kumpul.length}</span></div>${isi}</section>`;
 }
 
 /* ── 2. Backlink ── */
 export function panelBalik(n) {
   const judul = teksJudul(n);
   if (!judul) return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-link2"/></svg>Backlink<span class="n">0</span></div>
-    <p class="dm-kosong">Beri judul pada catatan ini — backlink dicocokkan lewat judul.</p></section>`;
+    <svg class="ico"><use href="#i-link2"/></svg >${tr('Backlink')}<span class="n">0</span></div>
+    <p class="dm-kosong">${tr('Beri judul pada catatan ini — backlink dicocokkan lewat judul.')}</p></section>`;
 
   const baris = [];               /* satu baris per catatan sumber */
   const peta = new Map();
@@ -97,13 +98,13 @@ export function panelBalik(n) {
     if (jumlah) { peta.set(x.id, x); baris.push({ id: x.id, jumlah, cuplikan }); }
   });
   const isi = baris.length === 0
-    ? '<p class="dm-kosong">Belum ada catatan lain yang menaut ke sini. Tulis <b>[[…]]</b> di catatan lain dengan judul ini, dan tautannya muncul di sini.</p>'
+    ? '<p class="dm-kosong">' + tr('Belum ada catatan lain yang menaut ke sini. Tulis [[…]] di catatan lain dengan judul ini, dan tautannya muncul di sini.') + '</p>'
     : baris.map(r => `<div class="bl" role="button" tabindex="0" data-dm-buka="${r.id}">
-        <div class="bl-t">${esc(peta.get(r.id).title || '(tanpa judul)')}<span class="cnt">${r.jumlah > 1 ? r.jumlah + ' tautan' : ''}</span></div>
+        <div class="bl-t">${esc(peta.get(r.id).title || tr('(tanpa judul)'))}<span class="cnt">${r.jumlah > 1 ? r.jumlah + ' ' + tr('tautan') : ''}</span></div>
         ${r.cuplikan ? `<div class="bl-c">${esc(r.cuplikan)}</div>` : ''}
       </div>`).join('');
   return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-link2"/></svg>Backlink<span class="n">${baris.length}</span></div>${isi}</section>`;
+    <svg class="ico"><use href="#i-link2"/></svg >${tr('Backlink')}<span class="n">${baris.length}</span></div>${isi}</section>`;
 }
 
 /* ── 3. Unlinked mention ──
@@ -182,8 +183,8 @@ export function tautkanSebutan(noteSumberId, bid, judul) {
 export function panelRujukan(n) {
   const judul = teksJudul(n);
   if (!judul) return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-bulb"/></svg>Unlinked mention<span class="n">0</span></div>
-    <p class="dm-kosong">Beri judul pada catatan ini — penyebutan judul di catatan lain dideteksi lewat teks polos.</p></section>`;
+    <svg class="ico"><use href="#i-bulb"/></svg >${tr('Unlinked mention')}<span class="n">0</span></div>
+    <p class="dm-kosong">${tr('Beri judul pada catatan ini — penyebutan judul di catatan lain dideteksi lewat teks polos.')}</p></section>`;
 
   const baris = [];               /* {dari, bid, cuplikan, bisaTaut} */
   lainnya(n).forEach(x => {
@@ -199,17 +200,17 @@ export function panelRujukan(n) {
     });
   });
   const isi = baris.length === 0
-    ? '<p class="dm-kosong">Tidak ada penyebutan tak terformat: judul ini tidak muncul sebagai teks polos di catatan lain.</p>'
+    ? '<p class="dm-kosong">' + tr('Tidak ada penyebutan tak terformat: judul ini tidak muncul sebagai teks polos di catatan lain.') + '</p>'
     : baris.slice(0, 30).map(r => `
       <div class="bl-row bl" role="button" tabindex="0" data-dm-buka="${r.id}" data-dm-bid="${r.bid}">
         <div class="bl-b">
-          <div class="bl-t">${esc((state.notes.find(x => x.id === r.id) || {}).title || '(tanpa judul)')}</div>
+          <div class="bl-t">${esc((state.notes.find(x => x.id === r.id) || {}).title || tr('(tanpa judul)'))}</div>
           <div class="bl-c">${r.cuplikan}</div>
         </div>
-        <button type="button" class="btn btn-sec bl-taut" data-sebut-taut="${r.id}:${r.bid}">Tautkan</button>
+        <button type="button" class="btn btn-sec bl-taut" data-sebut-taut="${r.id}:${r.bid}">${tr('Tautkan')}</button>
       </div>`).join('');
   return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-bulb"/></svg>Unlinked mention<span class="n">${baris.length}</span></div>${isi}</section>`;
+    <svg class="ico"><use href="#i-bulb"/></svg >${tr('Unlinked mention')}<span class="n">${baris.length}</span></div>${isi}</section>`;
 }
 
 /* ── 4. Local graph ── */
@@ -239,8 +240,8 @@ export function panelGraf(n) {
   const total = nodeSemua.length + (mati.length ? 1 : 0) + 1;
   if (total === 1) {
     return `<section class="panel"><div class="panel-h">
-      <svg class="ico"><use href="#i-graph"/></svg>Local graph<span class="n">1</span></div>
-      <p class="dm-kosong">Belum ada tetangga. Tulis <b>[[Judul Catatan Lain]]</b> — begitu tautannya ada, catatan itu muncul di sini bersama backlinknya.</p></section>`;
+      <svg class="ico"><use href="#i-graph"/></svg>${tr('Local graph')}<span class="n">1</span></div>
+      <p class="dm-kosong">${tr('Belum ada tetangga. Tulis [[Judul Catatan Lain]] — begitu tautannya ada, catatan itu muncul di sini bersama backlinknya.')}</p></section>`;
   }
 
   /* posisi deterministik: lingkaran dengan urutan stabil */
@@ -253,7 +254,7 @@ export function panelGraf(n) {
     };
   };
   titik.push({ id: n.id, me: true, x: 50, y: 50 });
-  const nama = x => String(x.title || '(tanpa judul)').slice(0, 20);
+  const nama = x => String(x.title || tr('(tanpa judul)')).slice(0, 20);
   nodeSemua.forEach((x, i) => { titik.push({ id: x.id, judul: nama(x), ...pos(i, nodeSemua.length) }); });
   let matiPos = null;
   if (mati.length && nodeSemua.length < 12) {
@@ -296,12 +297,12 @@ export function panelGraf(n) {
       ? ` data-dm-buat="${esc(t.judul)}"`
       : t.me ? '' : ` data-dm-buka="${t.id}"`;
     const cls = (t.me ? 'me' : t.mati ? 'dead' : '');
-    return `<div class="gnode ${cls}" style="left:${t.x}%;top:${t.y}%" role="button" tabindex="0"${ket} aria-label="${esc(t.mati ? 'Buat ' + t.judul : t.me ? 'Catatan ini' : 'Buka ' + t.judul)}">
-      <span class="gdot"></span><span>${esc(t.me ? teksJudul(n) || '(tanpa judul)' : t.judul)}</span></div>`;
+    return `<div class="gnode ${cls}" style="left:${t.x}%;top:${t.y}%" role="button" tabindex="0"${ket} aria-label="${esc(t.mati ? tr('Buat') + ' ' + t.judul : t.me ? tr('Catatan ini') : tr('Buka') + ' ' + t.judul)}">
+      <span class="gdot"></span><span>${esc(t.me ? teksJudul(n) || tr('(tanpa judul)') : t.judul)}</span></div>`;
   }).join('');
 
   return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-graph"/></svg>Local graph<span class="n">${total}</span></div>
+    <svg class="ico"><use href="#i-graph"/></svg>${tr('Local graph')}<span class="n">${total}</span></div>
     <div class="graph">
       <svg style="position:absolute;inset:0;width:100%;height:100%" stroke="var(--border-strong)" stroke-width="1" aria-hidden="true">${garis}</svg>
       ${titikHtml}

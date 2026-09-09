@@ -6,6 +6,8 @@
    (tenggat hari ini atau sudah lewat & belum selesai). Dihitung dari
    isi — tidak menyimpan apa pun ke catatan. */
 
+import { isInggris } from '../core/i18n.js?v=20260909054021';
+
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 
 export function waktuTenggat(teks) {
@@ -79,19 +81,40 @@ export const tenggatHariIni = daftar => {
 
 export const bilaTenggat = ms => {
   try {
-    return new Date(ms).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    return new Date(ms).toLocaleDateString(isInggris() ? 'en-US' : 'id-ID',
+      { day: 'numeric', month: 'short' });
   } catch (e) {
     const t = new Date(ms);
     return `${t.getDate()}/${t.getMonth() + 1}`;
   }
 };
 
+/* Label "lewat 3 hari" / "hari ini" / "3 hari lagi" di chip layar
+   Tugas & Reminder — mengikuti bahasa. Sintaks asli di isi catatan
+   (hari/besok/nama hari Indonesia) tidak diubah: itu data pengguna. */
 export const sisaWaktu = ms => {
   const awal = AWAL_HARI();
   const tgl = new Date(ms); tgl.setHours(0, 0, 0, 0);
   const hari = Math.round((tgl.getTime() - awal) / SEHARI);
+  if (isInggris()) {
+    if (hari < 0) return Math.abs(hari) + ' day' + (Math.abs(hari) === 1 ? '' : 's') + ' ago';
+    if (hari === 0) return 'today';
+    if (hari === 1) return 'tomorrow';
+    return 'in ' + hari + ' days';
+  }
   if (hari < 0) return 'lewat ' + Math.abs(hari) + ' hari';
   if (hari === 0) return 'hari ini';
   if (hari === 1) return 'besok';
   return hari + ' hari lagi';
+};
+
+/* Teks hasil parse tenggat (data memakai kata Indonesia) — label chip
+   yang tampil di layar ikut bahasa aktif. */
+export const labelTenggat = teks => {
+  if (!isInggris()) return teks;
+  if (teks === 'hari ini') return 'today';
+  if (teks === 'besok') return 'tomorrow';
+  const m = /^hari (\S+)$/.exec(teks || '');
+  if (m) return 'this ' + m[1];
+  return teks;
 };

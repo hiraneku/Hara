@@ -1,4 +1,6 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
+import { t as tr } from './i18n.js?v=20260909054021';
+
 const views  = {};
 const titles = {};
 export let cur = 'home';
@@ -25,7 +27,10 @@ export function go(v) {
   const w = document.getElementById('wrap');
   w.innerHTML = views[v]();
   w.scrollTop = 0;
-  document.getElementById('title').textContent = titles[v] || '';
+  /* Judul layar disimpan sebagai kunci bahasa Indonesia (id) dan
+     diterjemahkan saat digambar — mengganti bahasa lalu render ulang
+     (go ke layar yang sama) langsung menyegarkan judulnya. */
+  document.getElementById('title').textContent = titles[v] ? tr(titles[v]) : '';
 
   const isEd = v === 'editor';
   /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,

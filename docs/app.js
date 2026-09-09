@@ -1,17 +1,18 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260909041737';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260909041737';
-import { toast } from './core/toast.js?v=20260909041737';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909041737';
-import { notesModule } from './notes/index.js?v=20260909041737';
+import { load, state } from './core/store.js?v=20260909054021';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260909054021';
+import { toast } from './core/toast.js?v=20260909054021';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909054021';
+import { notesModule } from './notes/index.js?v=20260909054021';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260909041737';
-import { bagikanCatatan } from './notes/share.js?v=20260909041737';
-import { bukaJurnalHari } from './notes/harian.js?v=20260909041737';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260909041737';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909041737';
-import { simpanTemplatNote } from './notes/templat.js?v=20260909041737';
-import { panelKunciCatatan } from './notes/kunci.js?v=20260909041737';
+  from './notes/model.js?v=20260909054021';
+import { bagikanCatatan } from './notes/share.js?v=20260909054021';
+import { bukaJurnalHari } from './notes/harian.js?v=20260909054021';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260909054021';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909054021';
+import { simpanTemplatNote } from './notes/templat.js?v=20260909054021';
+import { panelKunciCatatan } from './notes/kunci.js?v=20260909054021';
+import { t as tr } from './core/i18n.js?v=20260909054021';
 
 const MODULES = [notesModule];
 
@@ -22,7 +23,7 @@ terapkanTema();
 /* Data lama yang tidak terbaca: beri tahu, bukan sembunyikan. */
 if (state.dataRusak) {
   setTimeout(() =>
-    toast('Data tersimpan tidak terbaca — dicadangkan, aplikasi dimulai kosong'),
+    toast(tr('Data tersimpan tidak terbaca — dicadangkan, aplikasi dimulai kosong')),
     500);
 }
 
@@ -77,7 +78,7 @@ document.addEventListener('click', e => {
       return;
     }
     else if (a === 'bagi') { bagikanCatatan(); return; }
-    else if (a === 'remind') toast('Modul Reminder menyusul');
+    else if (a === 'remind') toast(tr('Modul Reminder menyusul'));
     else if (a === 'hapus') delNote();
     else if (a === 'kunci') {
       /* panel kunci: pasang PIN (catatan belum terkunci) atau kelola

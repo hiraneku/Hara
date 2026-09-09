@@ -4,10 +4,11 @@
    Blok yang ditandai mendapat atribut `data-ref`. Penandanya ditampilkan
    CSS lewat ::after, jadi tidak ikut terbaca sebagai teks catatan. */
 
-import { docEl, curBlock, nearestEditable } from './caret.js?v=20260909041737';
-import { refresh } from './cleanup.js?v=20260909041737';
-import { state } from '../../core/store.js?v=20260909041737';
-import { toast } from '../../core/toast.js?v=20260909041737';
+import { docEl, curBlock, nearestEditable } from './caret.js?v=20260909054021';
+import { refresh } from './cleanup.js?v=20260909054021';
+import { state } from '../../core/store.js?v=20260909054021';
+import { toast } from '../../core/toast.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 const acak = () => Math.random().toString(36).slice(2, 6);
 
@@ -36,7 +37,7 @@ export function toggleRef() {
   if (b.hasAttribute('data-ref')) {
     b.removeAttribute('data-ref');
     refresh();
-    toast('Tanda blok dilepas');
+    toast(tr('Tanda blok dilepas'));
     return;
   }
   const id = idBebas();

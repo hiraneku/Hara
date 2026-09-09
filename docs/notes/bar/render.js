@@ -1,19 +1,20 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20260909041737';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260909041737';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260909041737';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260909041737';
-import { slashMenu } from '../menus/slash.js?v=20260909041737';
-import { wlMenu }    from '../menus/wikilink.js?v=20260909041737';
-import { tagMenu }   from '../menus/tag.js?v=20260909041737';
-import { linkMenu }  from '../menus/link.js?v=20260909041737';
-import { fontMenu } from '../menus/font.js?v=20260909041737';
-import { warnaMenu } from '../menus/warna.js?v=20260909041737';
-import { calloutMenu } from '../menus/callout.js?v=20260909041737';
-import { snap } from '../editor/history.js?v=20260909041737';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260909041737';
-import { tersembunyi, getar } from './prefs.js?v=20260909041737';
-import { HELP, HELP_GRUP } from './help.js?v=20260909041737';
+import { BAR, GROUPS } from './config.js?v=20260909054021';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20260909054021';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20260909054021';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20260909054021';
+import { slashMenu } from '../menus/slash.js?v=20260909054021';
+import { wlMenu }    from '../menus/wikilink.js?v=20260909054021';
+import { tagMenu }   from '../menus/tag.js?v=20260909054021';
+import { linkMenu }  from '../menus/link.js?v=20260909054021';
+import { fontMenu } from '../menus/font.js?v=20260909054021';
+import { warnaMenu } from '../menus/warna.js?v=20260909054021';
+import { calloutMenu } from '../menus/callout.js?v=20260909054021';
+import { snap } from '../editor/history.js?v=20260909054021';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20260909054021';
+import { tersembunyi, getar } from './prefs.js?v=20260909054021';
+import { HELP, HELP_GRUP } from './help.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -38,9 +39,9 @@ export function renderBar() {
   box.innerHTML = BAR.map(b => {
     if (b.sep) return '<div class="mb-sep"></div>';
     if (tersembunyi(b.g || b.m)) return '';
-    if (b.g) return `<button class="mb mb-g" data-g="${b.g}" title="${b.title || ''}">
+    if (b.g) return `<button class="mb mb-g" data-g="${b.g}" title="${tr(b.title || '')}">
         <span class="gl">${b.label}</span>${CHEV}</button>`;
-    return `<button class="mb${b.accent ? ' acc' : ''}" data-m="${b.m}" title="${b.title || ''}">${b.label}</button>`;
+    return `<button class="mb${b.accent ? ' acc' : ''}" data-m="${b.m}" title="${tr(b.title || '')}">${b.label}</button>`;
   }).join('');
   rapikanSep(box);
   bindBar();
@@ -68,17 +69,17 @@ function groupMenu(g) {
   const b = curBlock();
   const BLK = { p:'b-p', h:'b-h1', h2:'b-h2', h3:'b-h3', quote:'b-quote',
                 code:'b-code', cal:'b-cal', li:'b-li', ol:'b-ol', todo:'b-todo' };
-  return `<div class="pop-h">${grp.title}</div>` +
-    (HELP_GRUP[g] ? `<p class="pop-note">${HELP_GRUP[g]}</p>` : '') +
+  return `<div class="pop-h">${tr(grp.title)}</div>` +
+    (HELP_GRUP[g] ? `<p class="pop-note">${tr(HELP_GRUP[g])}</p>` : '') +
     grp.items.map(it => {
       const cls = BLK[it.m];
       const on  = cls && b && b.classList.contains(cls);
       return `<div class="pop-baris">
         <button class="pop-i${on ? ' on' : ''}" data-m="${it.m}">
-          <svg class="ico"><use href="#${it.ikon}"/></svg>${it.nama}
+          <svg class="ico"><use href="#${it.ikon}"/></svg>${tr(it.nama)}
           ${it.kunci ? `<span class="k">${it.kunci}</span>` : ''}
         </button>
-        ${HELP[it.m] ? `<button class="pop-info" data-info="${it.m}" title="Apa ini?" aria-label="Penjelasan ${it.nama}">
+        ${HELP[it.m] ? `<button class="pop-info" data-info="${it.m}" title="${tr('Apa ini?')}" aria-label="${tr('Penjelasan')}: ${tr(it.nama)}">
           <svg class="bi"><use href="#i-help"/></svg></button>` : ''}
       </div>`;
     }).join('');
@@ -101,12 +102,12 @@ function segarkanMenuFont() {
 export function helpPanel(m) {
   const h = HELP[m];
   if (!h) return '';
-  return `<div class="pop-h"><button class="pop-back" data-helpback><svg class="bi"><use href="#i-back"/></svg></button>${h.nama}</div>
+  return `<div class="pop-h"><button class="pop-back" data-helpback><svg class="bi"><use href="#i-back"/></svg></button>${tr(h.nama)}</div>
     <div class="help">
-      <p class="help-apa">${h.apa}</p>
-      <div class="help-b"><span class="help-l">Cara pakai</span><p>${h.cara}</p></div>
-      ${h.tahu ? `<div class="help-b"><span class="help-l">Perlu tahu</span><p>${h.tahu}</p></div>` : ''}
-      <button class="btn btn-pri help-go" data-m="${m}">Gunakan sekarang</button>
+      <p class="help-apa">${tr(h.apa)}</p>
+      <div class="help-b"><span class="help-l">${tr('Cara pakai')}</span><p>${tr(h.cara)}</p></div>
+      ${h.tahu ? `<div class="help-b"><span class="help-l">${tr('Perlu tahu')}</span><p>${tr(h.tahu)}</p></div>` : ''}
+      <button class="btn btn-pri help-go" data-m="${m}">${tr('Gunakan sekarang')}</button>
     </div>`;
 }
 
@@ -118,10 +119,10 @@ function jalankan(m, btn) {
   if (m === 'slash') return openPop(slashMenu(), btn);
   if (m === 'wl')    return openPop(wlMenu(),    btn);
   if (m === 'tag')   return openPop(tagMenu(),   btn);
-  if (m === 'tagwarna') { import('../tagwarna.js?v=20260909041737').then(({panelTag}) => panelTag(btn)); return; }
+  if (m === 'tagwarna') { import('../tagwarna.js?v=20260909054021').then(({panelTag}) => panelTag(btn)); return; }
   if (m === 'gal') {
     const mb = document.querySelector('.mb-g.open');
-    import('../galeri.js?v=20260909041737').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
+    import('../galeri.js?v=20260909054021').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
     return;
   }
   if (m === 'link')  return openPop(linkMenu(),  btn);

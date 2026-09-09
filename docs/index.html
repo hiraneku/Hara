@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20260909041737">
-<link rel="stylesheet" href="./styles/base.css?v=20260909041737">
-<link rel="stylesheet" href="./styles/shell.css?v=20260909041737">
-<link rel="stylesheet" href="./styles/notes.css?v=20260909041737">
+<link rel="stylesheet" href="./styles/tokens.css?v=20260909054021">
+<link rel="stylesheet" href="./styles/base.css?v=20260909054021">
+<link rel="stylesheet" href="./styles/shell.css?v=20260909054021">
+<link rel="stylesheet" href="./styles/notes.css?v=20260909054021">
 </head>
 <body>
 <svg style="display:none">
@@ -82,24 +82,24 @@
 <div class="app">
 <aside class="side">
   <div class="brand"><span class="brand-dot"></span>Hara</div>
-  <button class="nav-i on" data-go="home"><svg class="ico"><use href="#i-home"/></svg>Beranda</button>
-  <button class="nav-i" data-go="notes"><svg class="ico"><use href="#i-note"/></svg>Catatan<span class="ct">1</span></button>
-  <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg>Reminder</button>
-  <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg>Tugas</button>
+  <button class="nav-i on" data-go="home"><svg class="ico"><use href="#i-home"/></svg><span data-i18n="Beranda">Beranda</span></button>
+  <button class="nav-i" data-go="notes"><svg class="ico"><use href="#i-note"/></svg><span data-i18n="Catatan">Catatan</span><span class="ct">1</span></button>
+  <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg><span data-i18n="Reminder">Reminder</span></button>
+  <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg><span data-i18n="Tugas">Tugas</span></button>
   <div class="nav-sep"></div>
-  <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
-  <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg>Tag</button>
-  <button class="nav-i" data-go="arsip"><svg class="ico"><use href="#i-arch"/></svg>Arsip</button>
-  <div class="side-foot"><button class="nav-i" data-go="set"><svg class="ico"><use href="#i-cog"/></svg>Pengaturan</button></div>
+  <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
+  <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg><span data-i18n="Tag">Tag</span></button>
+  <button class="nav-i" data-go="arsip"><svg class="ico"><use href="#i-arch"/></svg><span data-i18n="Arsip">Arsip</span></button>
+  <div class="side-foot"><button class="nav-i" data-go="set"><svg class="ico"><use href="#i-cog"/></svg><span data-i18n="Pengaturan">Pengaturan</span></button></div>
 </aside>
 <div class="main">
   <header class="head">
     <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
-    <h1 id="title">Beranda</h1><div class="sp"></div>
+    <h1 id="title" data-i18n="Beranda">Beranda</h1><div class="sp"></div>
     <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
-    <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
-    <button class="iconbtn" id="del" style="display:none" title="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
-    <button class="iconbtn" id="setbtn" data-go="set" title="Pengaturan" aria-label="Pengaturan"><svg class="ico"><use href="#i-cog"/></svg></button>
+    <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)" data-i18n-tip="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
+    <button class="iconbtn" id="del" style="display:none" title="Hapus catatan" data-i18n-tip="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
+    <button class="iconbtn" id="setbtn" data-go="set" title="Pengaturan" aria-label="Pengaturan" data-i18n-tip="Pengaturan" data-i18n-ar="Pengaturan"><svg class="ico"><use href="#i-cog"/></svg></button>
     <button class="iconbtn" id="dots"><svg class="ico"><use href="#i-more"/></svg></button>
   </header>
   <div class="wrap" id="wrap"></div>
@@ -109,30 +109,30 @@
 <button class="fab" id="fab"><svg class="ico"><use href="#i-plus"/></svg></button>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
-  <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg>Catatan baru</button>
-  <button class="sheet-i" data-new="jurnal"><svg class="ico" style="color:var(--m-notes)"><use href="#i-cal"/></svg>Catatan hari ini</button>
-  <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg>Dari templat…</button>
-  <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg>Reminder baru</button>
-  <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg>Tugas baru</button>
+  <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg><span data-i18n="Catatan baru">Catatan baru</span></button>
+  <button class="sheet-i" data-new="jurnal"><svg class="ico" style="color:var(--m-notes)"><use href="#i-cal"/></svg><span data-i18n="Catatan hari ini">Catatan hari ini</span></button>
+  <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg><span data-i18n="Dari templat…">Dari templat…</span></button>
+  <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg><span data-i18n="Reminder baru">Reminder baru</span></button>
+  <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg><span data-i18n="Tugas baru">Tugas baru</span></button>
 </div>
 
 <!-- BAR MEKANIK -->
 <div class="mech" id="mech">
-  <div class="mech-top"><span class="mech-lbl">Ketuk untuk mengaktifkan · ketuk catatan untuk mengetik</span><span class="save-st" id="save-st" role="status" aria-live="polite"></span><span class="counter" id="count"></span></div>
+  <div class="mech-top"><span class="mech-lbl" data-i18n="Ketuk untuk mengaktifkan · ketuk catatan untuk mengetik">Ketuk untuk mengaktifkan · ketuk catatan untuk mengetik</span><span class="save-st" id="save-st" role="status" aria-live="polite"></span><span class="counter" id="count"></span></div>
   <div class="mech-in"></div>
 </div>
 
 <div class="pop" id="pop"></div>
-<button type="button" class="iconbtn" id="zen-x" aria-label="Keluar mode fokus" title="Keluar mode fokus (Esc)"><svg class="ico"><use href="#i-x"/></svg></button>
+<button type="button" class="iconbtn" id="zen-x" aria-label="Keluar mode fokus" title="Keluar mode fokus (Esc)" data-i18n-ar="Keluar mode fokus" data-i18n-tip="Keluar mode fokus (Esc)"><svg class="ico"><use href="#i-x"/></svg></button>
 <div class="toast" id="toast"></div>
 
 <nav class="bnav" id="bnav">
-  <button class="on" data-go="home"><svg class="ico"><use href="#i-home"/></svg>Beranda</button>
-  <button data-go="notes"><svg class="ico"><use href="#i-note"/></svg>Catatan</button>
-  <button data-go="rem"><svg class="ico"><use href="#i-bell"/></svg>Ingat</button>
-  <button data-go="search"><svg class="ico"><use href="#i-search"/></svg>Cari</button>
+  <button class="on" data-go="home"><svg class="ico"><use href="#i-home"/></svg><span data-i18n="Beranda">Beranda</span></button>
+  <button data-go="notes"><svg class="ico"><use href="#i-note"/></svg><span data-i18n="Catatan">Catatan</span></button>
+  <button data-go="rem"><svg class="ico"><use href="#i-bell"/></svg><span data-i18n="Ingat">Ingat</span></button>
+  <button data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
 </nav>
 
-<script type="module" src="./app.js?v=20260909041737"></script>
+<script type="module" src="./app.js?v=20260909054021"></script>
 </body>
 </html>

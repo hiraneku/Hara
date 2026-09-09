@@ -2,7 +2,21 @@
    Keduanya didefinisikan di sini karena dipakai dua layar: editor dan
    "Properties" (lihat views/props.js). */
 
-import { html } from './html-util.js?v=20260909041737';
+import { html } from './html-util.js?v=20260909054021';
+import { t as tr, isInggris } from '../core/i18n.js?v=20260909054021';
+
+/* Contoh nilai properti (saran visual) — diterjemahkan terpisah dari
+   kamus global karena maknanya tunggal (mis. jenis "Catatan" = Note,
+   sedangkan judul layar "Catatan" = Notes). Nilai yang diketik atau
+   disalin pengguna tidak pernah diubah. */
+const CONTOH_EN = {
+  'Draf': 'Draft', 'Sedang dikerjakan': 'In progress', 'Selesai': 'Done',
+  'Diarsipkan': 'Archived', 'Catatan': 'Note', 'Tugas': 'Task',
+  'Gagasan': 'Idea', 'Riset': 'Research', 'Keputusan': 'Decision',
+  'Tinggi': 'High', 'Sedang': 'Medium', 'Rendah': 'Low',
+};
+export const contohProp = c => (isInggris() && CONTOH_EN[c]) ? CONTOH_EN[c] : c;
+
 
 export const KET_PROP = {
   /* ini juga urutan tampil default (di editor & layar properties) */
@@ -53,11 +67,11 @@ export function barisProps(n, prefix = 'pr') {
     .concat([...pasangan.keys()].filter(k => !propDikenal(k)));
   if (!urut.length) return '';
   const silang = k => `<button type="button" class="prop-x" data-prop-del="${html(k)}"
-      title="Hapus properti" aria-label="Hapus properti ${html(k)}">
+      title="${tr('Hapus properti')}" aria-label="${tr('Hapus properti')} ${html(k)}">
       <svg class="ico"><use href="#i-x"/></svg></button>`;
   return urut.map(k => {
     const ket = KET_PROP[k] || {};
-    const contoh = (ket.contoh || []).map(c => html(c)).join(' · ');
+    const contoh = (ket.contoh || []).map(c => html(contohProp(c))).join(' · ');
     const saran = contoh ? `<div class="prop-saran">${contoh}</div>` : '';
     if (!propDikenal(k)) {
       return `
@@ -65,14 +79,14 @@ export function barisProps(n, prefix = 'pr') {
           <label class="prop-label">${html(k)}</label>
           <div class="prop-kanan">
             <input type="text" class="prop-input" data-prop-k="${html(k)}"
-                   value="${html(pasangan.get(k) || '')}" placeholder="(kunci tak dikenal — nilai bebas)">${saran}
+                   value="${html(pasangan.get(k) || '')}" placeholder="${tr('(kunci tak dikenal — nilai bebas)')}">${saran}
           </div>${silang(k)}
         </div>`;
     }
     const tipe = (k === 'tanggal' || k === 'tenggat') ? 'date' : 'text';
     return `
       <div class="prop-row" data-kunci="${html(k)}">
-        <label class="prop-label" for="${prefix}-${html(k)}">${ket.nama}</label>
+        <label class="prop-label" for="${prefix}-${html(k)}">${tr(ket.nama)}</label>
         <div class="prop-kanan">
           <input type="${tipe}" class="prop-input" id="${prefix}-${html(k)}"
                  data-prop-k="${html(k)}" value="${html(pasangan.get(k) || '')}" placeholder="—">${saran}

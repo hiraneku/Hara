@@ -5,7 +5,8 @@
    dan kelompok Lainnya. Filter per-tag sudah berjalan lewat chip tag
    (stt.tag) dan tidak disentuh di sini. */
 
-import { esc } from '../core/dom.js?v=20260909041737';
+import { esc } from '../core/dom.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const KUNCI = 'hara.v1.urut';
 
@@ -24,7 +25,7 @@ export const urutSekarang = () => {
 };
 
 export const namaUrut = k =>
-  (OPSI_URUT.find(o => o.k === k) || OPSI_URUT[0]).nama;
+  tr((OPSI_URUT.find(o => o.k === k) || OPSI_URUT[0]).nama);
 
 export function setUrut(k) {
   if (!OPSI_URUT.some(o => o.k === k)) return;
@@ -49,9 +50,9 @@ export function urutkanCatatan(daftar) {
 /* Menu pilihan urut — dipakai chip "Urut:" di daftar catatan. */
 export function menuUrut() {
   const kini = urutSekarang();
-  return `<div class="pop-h">Urutkan daftar</div>` +
+  return `<div class="pop-h">${tr('Urutkan daftar')}</div>` +
     OPSI_URUT.map(o =>
       `<button type="button" class="pop-i${o.k === kini ? ' on' : ''}" data-urut-set="${o.k}">
-        <svg class="ico"><use href="#i-sort"/></svg>${esc(o.nama)}
-        <span class="sub">${esc(o.ket)}</span></button>`).join('');
+        <svg class="ico"><use href="#i-sort"/></svg>${esc(tr(o.nama))}
+        <span class="sub">${esc(tr(o.ket))}</span></button>`).join('');
 }

@@ -3,6 +3,8 @@
    - Setelah pengguna mengganti lewat tombol, pilihan disimpan dan
      mengikuti sistem dimatikan sampai ia menghapus pilihannya. */
 
+import { t as tr } from './i18n.js?v=20260909054021';
+
 const KEY = 'hara.tema.v1';
 const KEY_AK = 'hara.ak.v1';
 
@@ -52,10 +54,10 @@ function sistemGelap() {
 
 export const modeSekarang = () => modeTersimpan() || (sistemGelap() ? 'dark' : 'light');
 
-/* Label untuk halaman Pengaturan. */
+/* Label untuk halaman Pengaturan (bahasa antarmuka aktif). */
 export const labelMode = () => {
   const s = modeTersimpan();
-  return s ? (s === 'dark' ? 'Gelap' : 'Terang') : 'Mengikuti sistem';
+  return s ? (s === 'dark' ? tr('Gelap') : tr('Terang')) : tr('Mengikuti sistem');
 };
 
 /* Terapkan tema ke dokumen + sesuaikan ikon di header. */

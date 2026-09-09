@@ -14,9 +14,10 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20260909041737';
+  from '../editor/warna.js?v=20260909054021';
 import { sorotSekarang, sorotPending, sorotLekat }
-  from '../editor/sorotan.js?v=20260909041737';
+  from '../editor/sorotan.js?v=20260909054021';
+import { t as tr } from '../../core/i18n.js?v=20260909054021';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */
@@ -38,24 +39,24 @@ let draf = { teks: '', sorotan: '' };   /* kode yang sedang digarap per sasaran 
 
 /* Warna yang TAMPAK untuk satu sasaran: niat (pending) didahulukan, lalu
    yang lekat, lalu isi DOM di posisi kursor. '' kalau tidak ada. */
-function tampilSasaran(t) {
-  const p = t === 'sorotan' ? sorotPending() : warnaPending();
-  const l = t === 'sorotan' ? sorotLekat() : warnaLekat();
-  const s = t === 'sorotan' ? sorotSekarang() : warnaSekarang();
+function tampilSasaran(sas) {
+  const p = sas === 'sorotan' ? sorotPending() : warnaPending();
+  const l = sas === 'sorotan' ? sorotLekat() : warnaLekat();
+  const s = sas === 'sorotan' ? sorotSekarang() : warnaSekarang();
   const k = p !== null ? (p || l || '') : s;
   return /^#[0-9a-f]{6}$/i.test(k) ? k.toLowerCase() : '';
 }
 
 const NAMA_SASARAN = { teks: 'Teks', sorotan: 'Sorotan' };
 
-function chipSasaran(t, paksa) {
-  const c = paksa && paksa.sas === t && /^#[0-9a-f]{6}$/i.test(paksa.hex)
-    ? paksa.hex.toLowerCase() : tampilSasaran(t);
-  return `<span class="wsas-c${c ? '' : ' kosong'}" data-c="${t}"${c ? ` style="background:${c}"` : ''}></span>`;
+function chipSasaran(sas, paksa) {
+  const c = paksa && paksa.sas === sas && /^#[0-9a-f]{6}$/i.test(paksa.hex)
+    ? paksa.hex.toLowerCase() : tampilSasaran(sas);
+  return `<span class="wsas-c${c ? '' : ' kosong'}" data-c="${sas}"${c ? ` style="background:${c}"` : ''}></span>`;
 }
-function tombolSasaran(t, paksa) {
-  return `<button type="button" class="wsas-b${sasaran === t ? ' on' : ''}" data-sas="${t}"
-    aria-pressed="${sasaran === t}">${chipSasaran(t, paksa)}${NAMA_SASARAN[t]}</button>`;
+function tombolSasaran(sas, paksa) {
+  return `<button type="button" class="wsas-b${sasaran === sas ? ' on' : ''}" data-sas="${sas}"
+    aria-pressed="${sasaran === sas}">${chipSasaran(sas, paksa)}${tr(NAMA_SASARAN[sas])}</button>`;
 }
 
 export function warnaMenu() {
@@ -69,13 +70,13 @@ export function warnaMenu() {
       style="background:${w}"></button>`;
   }).join('');
 
-  return `<div class="pop-h">Warna teks &amp; sorotan</div>
-    <p class="pop-note">Pilih sasaran dulu: <b>Teks</b> mewarnai huruf, <b>Sorotan</b> mewarnai latarnya. Keduanya bisa aktif bersamaan.</p>
-    <div class="wsas" role="group" aria-label="Yang diberi warna">${tombolSasaran('teks')}${tombolSasaran('sorotan')}</div>
+  return `<div class="pop-h">${tr('Warna teks & sorotan')}</div>
+    <p class="pop-note">${tr('Pilih sasaran dulu: Teks mewarnai huruf, Sorotan mewarnai latarnya. Keduanya bisa aktif bersamaan.')}</p>
+    <div class="wsas" role="group" aria-label="${tr('Yang diberi warna')}">${tombolSasaran('teks')}${tombolSasaran('sorotan')}</div>
     <div class="wpal">${swatch}</div>
     <div class="wroda">
       <canvas id="roda-w" class="wroda-l" width="192" height="192"
-        role="img" aria-label="Roda warna: ketuk untuk memilih rona dan jenuh warna"></canvas>
+        role="img" aria-label="${tr('Roda warna: ketuk untuk memilih rona dan jenuh warna')}"></canvas>
       <div class="wroda-s">
         <input type="range" id="roda-g" min="0" max="100" value="55"
           aria-label="Gelap terang" title="Gelap–terang">

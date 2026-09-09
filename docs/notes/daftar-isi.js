@@ -4,10 +4,11 @@
    menjadi blok). Satu ketukan melompat ke heading itu; blok tujuan
    berkedip memakai animasi .blk-lompat yang sudah ada. */
 
-import { esc } from '../core/dom.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { docEl } from './editor/caret.js?v=20260909041737';
-import { openPop, closeAll } from './menus/pop.js?v=20260909041737';
+import { esc } from '../core/dom.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { docEl } from './editor/caret.js?v=20260909054021';
+import { openPop, closeAll } from './menus/pop.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 /* Snapshot elemen heading saat menu dibuka — isi catatan yang berubah
    setelahnya tidak membuat menu salah arah. */
@@ -31,10 +32,10 @@ export function ambilHeading() {
 export function bukaDaftarIsi(anchor) {
   daftarSaat = ambilHeading();
   if (!daftarSaat.length) {
-    toast('Catatan ini belum punya heading — pakai # di depan baris');
+    toast(tr('Catatan ini belum punya heading — pakai # di depan baris'));
     return;
   }
-  openPop(`<div class="pop-h">Daftar isi</div>` +
+  openPop(`<div class="pop-h">${tr('Daftar isi')}</div>` +
     daftarSaat.map((h, i) =>
       `<button type="button" class="pop-i daf-i daf-lv${h.level}" data-daf-i="${i}">
         <span class="daf-n">${h.level === 1 ? 'H1' : h.level === 2 ? 'H2' : 'H3'}</span>

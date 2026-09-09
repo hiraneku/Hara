@@ -7,15 +7,16 @@
    menghapus permanen atau lewat 30 hari (disapu otomatis saat aplikasi
    dibuka). Pola ini sesuai DESIGN.md §3.9 & NOTES.md ("tempat sampah
    30 hari") — tanpa dialog konfirmasi untuk aksi yang bisa diurungkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260909041737';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
-import { go } from '../core/router.js?v=20260909041737';
-import { saveSoon } from './editor/cleanup.js?v=20260909041737';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260909041737';
-import { hapusDrafMilik } from '../core/recovery.js?v=20260909041737';
-import { bersihkanBlobYatim } from './editor/image.js?v=20260909041737';
-import { terkunciAktif, lepasKunci } from './kunci.js?v=20260909041737';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260909054021';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { go } from '../core/router.js?v=20260909054021';
+import { saveSoon } from './editor/cleanup.js?v=20260909054021';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260909054021';
+import { hapusDrafMilik } from '../core/recovery.js?v=20260909054021';
+import { bersihkanBlobYatim } from './editor/image.js?v=20260909054021';
+import { terkunciAktif, lepasKunci } from './kunci.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
@@ -34,7 +35,7 @@ export function newNote() {
   state.openId = n.id;
   save();
   go('editor');
-  toast('Catatan baru dibuat');
+  toast(tr('Catatan baru dibuat'));
 }
 
 /* Buat catatan baru dengan judul tertentu (dipakai tautan [[mati]]). */
@@ -46,7 +47,7 @@ export function buatNoteBerjudul(judul) {
   state.openId = n.id;
   save();
   go('editor');
-  toast('Catatan dibuat');
+  toast(tr('Catatan dibuat'));
   return n;
 }
 
@@ -71,7 +72,7 @@ function softHapus(n, asal) {
   clearTimeout(timerUndo);
   hapusTerakhir = { n, asal };
   timerUndo = setTimeout(() => { hapusTerakhir = null; }, JEDA_UNDO);
-  toast('Catatan dipindah ke sampah', { label: 'Urungkan', cb: batalkanHapus }, JEDA_UNDO);
+  toast(tr('Catatan dipindah ke sampah'), { label: tr('Urungkan'), cb: batalkanHapus }, JEDA_UNDO);
 }
 
 export function delNote() {
@@ -99,7 +100,7 @@ function batalkanHapus() {
   n.deletedAt = null;
   save();
   state.openId = n.id;
-  toast('Catatan dikembalikan');
+  toast(tr('Catatan dikembalikan'));
   go(h.asal === 'editor' ? 'editor' : 'notes');
 }
 
@@ -109,7 +110,7 @@ export function pulihkanSampah(id) {
   if (!n) return;
   n.deletedAt = null;
   save();
-  toast('Catatan dikembalikan');
+  toast(tr('Catatan dikembalikan'));
   go('notes');
 }
 
@@ -123,7 +124,7 @@ export function hapusPermanen(id) {
   save();
   pastikanAdaCatatan();
   bersihkanBlobYatim();
-  toast('Catatan dihapus permanen');
+  toast(tr('Catatan dihapus permanen'));
   go('trash');
 }
 
@@ -182,7 +183,7 @@ export function pinNote() {
   if (!n) return;
   n.pinned = !n.pinned;
   save();
-  toast(n.pinned ? 'Disematkan' : 'Sematan dilepas');
+  toast(n.pinned ? tr('Disematkan') : tr('Sematan dilepas'));
 }
 
 /* Semat/lepas dari tombol pin di baris daftar (Bagian A4). */
@@ -191,7 +192,7 @@ export function sematDariList(id) {
   if (!n) return;
   n.pinned = !n.pinned;
   save();
-  toast(n.pinned ? 'Disematkan' : 'Sematan dilepas');
+  toast(n.pinned ? tr('Disematkan') : tr('Sematan dilepas'));
 }
 
 /* Arsip / kembalikan dari arsip untuk catatan yang sedang dibuka.
@@ -210,7 +211,7 @@ export function arsipNoteId(id) {
   if (!n) return null;
   n.archived = !n.archived;
   save();
-  toast(n.archived ? 'Diarsipkan' : 'Dikembalikan dari arsip');
+  toast(n.archived ? tr('Diarsipkan') : tr('Dikembalikan dari arsip'));
   return n.archived;
 }
 
@@ -239,5 +240,5 @@ export function duplikatNote() {
   state.openId = salin.id;
   save();
   go('editor');
-  toast('Catatan digandakan');
+  toast(tr('Catatan digandakan'));
 }

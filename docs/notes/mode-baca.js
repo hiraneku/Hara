@@ -10,9 +10,10 @@
    hanya bisa diubah oleh aplikasi itu sendiri (sinkron lewat welcomeV
    di core/store.js). Penghapusan oleh pengguna tetap dibolehkan. */
 
-import { state } from '../core/store.js?v=20260909041737';
-import { cur } from '../core/router.js?v=20260909041737';
-import { docEl } from './editor/caret.js?v=20260909041737';
+import { state } from '../core/store.js?v=20260909054021';
+import { cur } from '../core/router.js?v=20260909054021';
+import { docEl } from './editor/caret.js?v=20260909054021';
+import { t as tr } from '../core/i18n.js?v=20260909054021';
 
 const KUNCI = 'hara.v1.baca';
 let _baca = false;
@@ -64,8 +65,8 @@ export function sinkronModeBaca() {
     const use = btn.querySelector('use');
     if (use) use.setAttribute('href', baca ? '#i-pen' : '#i-book');
     const label = terkunci
-      ? 'Catatan sambutan — dibaca saja'
-      : (baca ? 'Ubah catatan (mode tulis)' : 'Baca (mode baca)');
+      ? tr('Catatan sambutan — dibaca saja')
+      : (baca ? tr('Ubah catatan (mode tulis)') : tr('Baca (mode baca)'));
     btn.title = label;
     btn.setAttribute('aria-label', label);
   }

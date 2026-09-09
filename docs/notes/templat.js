@@ -10,33 +10,56 @@
 
    Saat templat dipakai, isinya dikonversi lewat htmlToBlocks sehingga
    setiap blok mendapat id BARU — memakai templat dua kali tidak akan
-   menghasilkan dua blok dengan id sama. */
+   menghasilkan dua blok dengan id sama.
 
-import { state } from '../core/store.js?v=20260909041737';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260909041737';
-import { go } from '../core/router.js?v=20260909041737';
-import { esc } from '../core/dom.js?v=20260909041737';
-import { toast } from '../core/toast.js?v=20260909041737';
+   Bahasa (D20): label menu templat, keterangan, dan struktur bawaan
+   yang DIBUAT baru mengikuti bahasa aktif — templat yang dipakai
+   menciptakan catatan baru, jadi isinya lahir dalam bahasa itu
+   (sama seperti tombol "Catatan hari ini"). Templat tersimpan
+   pengguna adalah data: nama & isinya tidak diterjemahkan. */
+
+import { state } from '../core/store.js?v=20260909054021';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260909054021';
+import { go } from '../core/router.js?v=20260909054021';
+import { esc } from '../core/dom.js?v=20260909054021';
+import { toast } from '../core/toast.js?v=20260909054021';
+import { t as tr, isInggris } from '../core/i18n.js?v=20260909054021';
+import { judulJurnalHari } from './harian.js?v=20260909054021';
 
 const KUNCI = 'hara.v1.tpl';
 
+/* Tanggal panjang untuk judul catatan yang dibuat dari templat
+   ("Rapat · 9 September 2026" / "Meeting · September 9, 2026"). */
 function tanggalPanjang() {
   try {
     const t = new Date();
-    return t.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    return t.toLocaleDateString(isInggris() ? 'en-US' : 'id-ID',
+      { day: 'numeric', month: 'long', year: 'numeric' });
   } catch (e) {
-    return new Date().toLocaleDateString();
+    const t = new Date();
+    if (isInggris()) return `${t.getMonth() + 1}/${t.getDate()}/${t.getFullYear()}`;
+    return `${t.getDate()}/${t.getMonth() + 1}/${t.getFullYear()}`;
   }
 }
 
-/* ── templat bawaan ── */
+/* Isi bawaan mengikuti bahasa aktif saat DITERAPKAN (fungsi dipanggil
+   di terapkanTemplat). Nama & keterangan dipakai sebagai kunci menu
+   (tr() saat dirender) dan sebagai judul bawaan bila judul() kosong. */
 const BAWAAN = [
   {
     id: 'jurnal',
     nama: 'Jurnal harian',
     ket: 'Judul diisi tanggal otomatis',
-    judul: () => `Jurnal · ${tanggalPanjang()}`,
-    html: `
+    judul: () => judulJurnalHari(),
+    html: () => isInggris() ? `
+<div class="b-h2">Grateful for</div>
+<div class="b-p"></div>
+<div class="b-h2">What happened today</div>
+<div class="b-p"></div>
+<div class="b-h2">What I learned</div>
+<div class="b-p"></div>
+<div class="b-h2">Tomorrow</div>
+<div class="b-todo"></div>` : `
 <div class="b-h2">Yang kusyukuri</div>
 <div class="b-p"></div>
 <div class="b-h2">Yang terjadi hari ini</div>
@@ -50,8 +73,18 @@ const BAWAAN = [
     id: 'rapat',
     nama: 'Catatan rapat',
     ket: 'Tujuan, hadir, catatan, tindak lanjut',
-    judul: () => `Rapat · ${tanggalPanjang()}`,
-    html: `
+    judul: () => `${isInggris() ? 'Meeting' : 'Rapat'} · ${tanggalPanjang()}`,
+    html: () => isInggris() ? `
+<div class="b-h2">Purpose</div>
+<div class="b-p"></div>
+<div class="b-h2">Present</div>
+<div class="b-li">— name —</div>
+<div class="b-li">— name —</div>
+<div class="b-h2">Notes</div>
+<div class="b-p"></div>
+<div class="b-h2">Action items</div>
+<div class="b-todo">— who: what, when —</div>
+<div class="b-todo"></div>` : `
 <div class="b-h2">Tujuan</div>
 <div class="b-p"></div>
 <div class="b-h2">Hadir</div>
@@ -67,8 +100,14 @@ const BAWAAN = [
     id: 'belajar',
     nama: 'Daftar belajar',
     ket: 'Materi + latihan yang dicentang',
-    judul: () => 'Belajar',
-    html: `
+    judul: () => (isInggris() ? 'Learning' : 'Belajar'),
+    html: () => isInggris() ? `
+<div class="b-h2">Material</div>
+<div class="b-p"></div>
+<div class="b-h2">Practice</div>
+<div class="b-todo">Review the material</div>
+<div class="b-todo">Note key terms</div>
+<div class="b-todo">Do practice problems</div>` : `
 <div class="b-h2">Materi</div>
 <div class="b-p"></div>
 <div class="b-h2">Latihan</div>
@@ -93,7 +132,7 @@ function tulisTersimpan(a) {
     localStorage.setItem(KUNCI, JSON.stringify(a));
     return true;
   } catch (e) {
-    toast('Templat tidak tersimpan — penyimpanan penuh');
+    toast(tr('Templat tidak tersimpan — penyimpanan penuh'));
     return false;
   }
 }
@@ -108,56 +147,58 @@ export function daftarTemplat() {
   ];
 }
 
-/* Isi menu pemilih templat. */
+/* Isi menu pemilih templat. Nama & keterangan templat bawaan adalah
+   kunci antarmuka (diterjemahkan); templat pengguna data apa adanya. */
 export function menuTemplat() {
   const semua = daftarTemplat();
   const bawaan = semua.filter(t => t.bawaan);
   const user = semua.filter(t => !t.bawaan);
-  return `<div class="pop-h">Dari templat</div>
-  <p class="pop-note">Pilih templat — catatan baru dibuat, lalu sunting isinya.</p>
+  return `<div class="pop-h">${tr('Dari templat…')}</div>
+  <p class="pop-note">${tr('Pilih templat — catatan baru dibuat, lalu sunting isinya.')}</p>
   ${bawaan.map(t => `<button type="button" class="pop-i" data-tpl-id="${esc(t.id)}">
-    <svg class="ico"><use href="#i-tpl"/></svg>${esc(t.nama)}
-    <span class="sub">${esc(t.ket)}</span></button>`).join('')}
-  ${user.length ? `<div class="pop-sek">Tersimpan</div>` +
+    <svg class="ico"><use href="#i-tpl"/></svg>${esc(tr(t.nama))}
+    <span class="sub">${esc(tr(t.ket))}</span></button>`).join('')}
+  ${user.length ? `<div class="pop-sek">${tr('Tersimpan')}</div>` +
     user.map(t => `<div class="pop-baris">
       <button type="button" class="pop-i" data-tpl-id="${esc(t.id)}">
         <svg class="ico"><use href="#i-copy"/></svg>${esc(t.nama)}</button>
-      <button type="button" class="pop-info" data-tpl-del="${esc(t.nama)}" title="Hapus templat"
-        aria-label="Hapus templat ${esc(t.nama)}"><svg class="bi"><use href="#i-trash"/></svg></button>
+      <button type="button" class="pop-info" data-tpl-del="${esc(t.nama)}" title="${tr('Hapus templat')}"
+        aria-label="${tr('Hapus templat')} ${esc(t.nama)}"><svg class="bi"><use href="#i-trash"/></svg></button>
     </div>`).join('') : ''}
-  ${!user.length ? `<div class="pop-sek">Tersimpan</div>
-    <p class="pop-note">Catatan apa pun bisa dijadikan templat dari menu "···" di editor.</p>` : ''}`;
+  ${!user.length ? `<div class="pop-sek">${tr('Tersimpan')}</div>
+    <p class="pop-note">${tr('Catatan apa pun bisa dijadikan templat dari menu "···" di editor.')}</p>` : ''}`;
 }
 
 /* Buat catatan baru dari templat. */
 export function terapkanTemplat(id) {
-  const t = daftarTemplat().find(x => x.id === id);
-  if (!t) return;
-  const judul = (typeof t.judul === 'function' ? t.judul() : t.judul) || t.nama;
-  const n = makeNote({ title: judul, blocks: htmlToBlocks(t.html) });
+  const tpl = daftarTemplat().find(x => x.id === id);
+  if (!tpl) return;
+  const judul = (typeof tpl.judul === 'function' ? tpl.judul() : tpl.judul) || tpl.nama;
+  const html = typeof tpl.html === 'function' ? tpl.html() : tpl.html;
+  const n = makeNote({ title: judul, blocks: htmlToBlocks(html) });
   state.seq++;
   state.notes.unshift(n);
   state.openId = n.id;
   try { localStorage.removeItem('hara.v1.draf-' + n.id); } catch (e) { /* privat */ }
   go('editor');
-  toast(`Dibuat dari templat "${t.nama}"`);
+  toast(`${tr('Dibuat dari templat')} "${tpl.bawaan ? tr(tpl.nama) : tpl.nama}"`);
 }
 
 /* Simpan catatan yang sedang dibuka sebagai templat pengguna.
    id blok dibuang — templat dipakai ulang nanti dengan id segar. */
 export function simpanTemplatNote(n) {
   if (!n) return false;
-  const nama = (n.title || '').trim() || 'Tanpa judul';
+  const nama = (n.title || '').trim() || tr('Tanpa judul');
   let html = blocksToDom(n.blocks)
     .replace(/\s+data-bid="[^"]*"/g, '')
     .replace(/\s+data-blkh="[^"]*"/g, '')
     .trim();
   const semua = bacaTersimpan();
-  const ada = semua.some(t => t.nama === nama);
+  const ada = semua.some(x => x.nama === nama);
   const simpanNama = ada ? `${nama} (${tanggalPanjang()})` : nama;
   semua.unshift({ nama: simpanNama, html, dibuat: Date.now() });
   if (!tulisTersimpan(semua)) return false;
-  toast(`Tersimpan sebagai templat "${simpanNama}"`);
+  toast(`${tr('Tersimpan sebagai templat')} "${simpanNama}"`);
   return true;
 }
 
@@ -165,6 +206,6 @@ export function hapusTemplat(nama) {
   const sisa = bacaTersimpan().filter(t => t.nama !== nama);
   if (sisa.length === bacaTersimpan().length) return false;
   tulisTersimpan(sisa);
-  toast('Templat dihapus');
+  toast(tr('Templat dihapus'));
   return true;
 }
