@@ -1,16 +1,16 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909112206';
-import { setBlock, indent } from './blocks.js?v=20260909112206';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909112206';
-import { autoFormat, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20260909112206';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909112206';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909112206';
-import { onTitle } from '../model.js?v=20260909112206';
-import { tanganiPaste } from './paste.js?v=20260909112206';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260909112206';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260909112206';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260909112206';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260909112206';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909122014';
+import { setBlock, indent } from './blocks.js?v=20260909122014';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909122014';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20260909122014';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909122014';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909122014';
+import { onTitle } from '../model.js?v=20260909122014';
+import { tanganiPaste } from './paste.js?v=20260909122014';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260909122014';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260909122014';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260909122014';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260909122014';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -231,7 +231,12 @@ export function bindEditor() {
          (mis. teks tadi dihapus habis sehingga <b> ikut dibuang). Bungkus
          ulang karakter itu supaya format benar-benar berlaku, bukan cuma
          tombolnya yang menyala. */
-      autoFormat(); refresh();
+      autoFormat();
+      /* Ketikan satu gumpalan (komposisi/autocorrect): spasi masuk
+         sekaligus dengan kata lanjutan — tag #… di dalamnya tetap
+         terbungkus */
+      try { autoTagDalam(curBlock()); } catch (err) { /* jangan ganggu ketikan */ }
+      refresh();
     }
     else if(e.target.classList && e.target.classList.contains('ed-t')){ onTitle(e.target); updateCount(); }
   });

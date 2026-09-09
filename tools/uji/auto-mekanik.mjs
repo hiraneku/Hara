@@ -23,9 +23,10 @@ const V=fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 await import(`${AKAR}/docs/app.js?v=${V}`);
 const {go}=await import(`${AKAR}/docs/core/router.js?v=${V}`);
 const {state}=await import(`${AKAR}/docs/core/store.js?v=${V}`);
-const {saveNow}=await import(`${AKAR}/docs/notes/editor/cleanup.js?v=${V}`);
+const {saveNow, refresh}=await import(`${AKAR}/docs/notes/editor/cleanup.js?v=${V}`);
 const {semuaTag}=await import(`${AKAR}/docs/notes/tags.js?v=${V}`);
 const {sapuTagRusak, normalizeNote, makeNote}=await import(`${AKAR}/docs/notes/note-model.js?v=${V}`);
+const {tandaUntukCatatan}=await import(`${AKAR}/docs/notes/label.js?v=${V}`);
 const d=w.document,SEL=w.getSelection();
 const click=el=>el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
 const DOC=()=>d.querySelector('.ed-doc');
@@ -315,6 +316,115 @@ nMan.blocks[0].content='tanpa tag';
 sinkronTag(nMan);
 cek('T51 hapus span isi: tag isi hilang, tag manual tetap',
   nMan.tags.length===1 && nMan.tags[0]==='proyek-x', JSON.stringify(nMan.tags));
+
+/* ══ warna STABIL saat tag dihapus huruf per huruf ══ */
+fresh(); type('Halo #halo ');
+const spH=DOC().querySelector('span.tg');
+const ttAwal=spH.getAttribute('data-tt');
+/* karet di ujung-dalam tag, lalu hapus huruf satu per satu (Backspace
+   default: karakter sebelum karet dihapus, input dipicu, refresh
+   berjalan) */
+let karet=spH.firstChild;
+let off=karet.length;
+const hapusSatu=()=>{
+  const ev=new w.KeyboardEvent('keydown',{key:'Backspace',bubbles:true,cancelable:true});
+  DOC().dispatchEvent(ev);
+  /* tiruan default browser */
+  const r=d.createRange(); r.setStart(karet,off-1); r.setEnd(karet,off);
+  r.deleteContents(); off-=1;
+  const nr=d.createRange(); nr.setStart(karet,off); nr.collapse(true);
+  SEL.removeAllRanges(); SEL.addRange(nr);
+  DOC().dispatchEvent(new w.Event('input',{bubbles:true}));
+  d.dispatchEvent(new w.Event('selectionchange'));
+};
+hapusSatu();
+const sp1=DOC().querySelector('span.tg');
+cek('T52 hapus 1 huruf: warna (data-tt) TIDAK berubah', sp1 && sp1.textContent==='#hal' &&
+   sp1.getAttribute('data-tt')===ttAwal, sp1?`${sp1.textContent} ${sp1.getAttribute('data-tt')} vs ${ttAwal}`:'hilang');
+hapusSatu(); hapusSatu();
+const sp2=DOC().querySelector('span.tg');
+cek('T53 hapus sampai #h: warna tetap sama (tanpa kedip)', sp2 && sp2.textContent==='#h' &&
+   sp2.getAttribute('data-tt')===ttAwal, sp2?`${sp2.textContent}/${sp2.getAttribute('data-tt')}`:'hilang');
+/* hapus sampai hanya "#": karet masih di dalam (sedang menyunting) —
+   tag bertahan & warna tetap beku; begitu nama baru diketik lalu karet
+   keluar, warnanya dihitung ulang dari nama baru */
+hapusSatu();
+const sp3=DOC().querySelector('span.tg');
+cek('T54 "#" sisa saat masih disunting: bertahan, warna tetap beku (tanpa kedip)',
+  !!sp3 && sp3.textContent==='#' && sp3.getAttribute('data-tt')===ttAwal,
+  sp3?`${sp3.textContent}/${sp3.getAttribute('data-tt')}`:'hilang');
+type('x');                                     /* karet di ujung dalam → guard
+                                                  menulis di luar tag */
+type(' ');                                     /* spasi penutup → tag baru #x */
+await sleep(10);
+const sp4=DOC().querySelector('span.tg');
+const catX=state.notes.find(x=>x.id===state.openId);
+cek('T54b nama tag baru #x jadi tag dengan warna dihitung dari nama barunya',
+  !!sp4 && sp4.textContent==='#x' &&
+  sp4.getAttribute('data-tt')===tandaUntukCatatan(catX,'x') &&
+  sp4.getAttribute('data-tt')!==ttAwal,
+  sp4?`${sp4.textContent}/${sp4.getAttribute('data-tt')} vs ${tandaUntukCatatan(catX,'x')} (awal ${ttAwal})`:'hilang');
+
+/* ══ teks menyusup KE DALAM span (di belakang nama) langsung dipulihkan ══
+   Karet DI LUAR span; isi span jadi "#halo X" → korup. Harus langsung
+   dipecah saat refresh: tag #halo tetap tampil, " X" keluar jadi teks. */
+fresh(); type('Halo #halo ');
+const spK=DOC().querySelector('span.tg');
+const tnK=spK.firstChild;
+tnK.insertData(tnK.length, ' X');             /* korupsi: spasi menyusup masuk span */
+refresh(); await sleep(10);
+const spK2=DOC().querySelector('span.tg');
+cek('T55 isi span tak sah (spasi menyusup) langsung dipecah: tag #halo tetap tampil',
+  !!spK2 && spK2.textContent==='#halo' &&
+  DOC().firstElementChild.textContent==='Halo #halo X ',
+  DOC().firstElementChild.innerHTML);
+cek('T56 hasil pecah: sisa " X" jadi teks biasa di luar span',
+  spK2.nextSibling && spK2.nextSibling.textContent===' X', DOC().firstElementChild.innerHTML);
+/* kalau huruf menyusup di DEPAN # → bungkus dibuka, tidak ada tag korup */
+fresh(); type('Halo #halo ');
+const spF=DOC().querySelector('span.tg');
+const tnF=spF.firstChild;
+tnF.insertData(0, 'Z');                       /* isi jadi Z#halo: tak bisa dipecah */
+refresh(); await sleep(10);
+cek('T57 huruf menyusup depan #: bungkus dibuka jadi teks biasa',
+  !DOC().querySelector('span.tg') &&
+  DOC().firstElementChild.textContent==='Halo Z#halo ',
+  DOC().firstElementChild.innerHTML);
+
+/* ══ komposisi satu gumpalan: "#halo kembali" masuk sekaligus ══ */
+fresh();
+const tnG=DOC().firstElementChild.firstChild;
+const rG=d.createRange(); rG.setStart(tnG,0); rG.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rG);
+tnG.insertData(0,'#halo kembali');             /* masuk tanpa beforeinput */
+const nrG=d.createRange(); nrG.setStart(tnG,tnG.length); nrG.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(nrG);
+DOC().dispatchEvent(new w.Event('input',{bubbles:true}));
+await sleep(10);
+const spG=DOC().querySelector('span.tg');
+cek('T58 ketikan gumpalan: #halo tetap terbungkus walau spasi+lanjutan sekaligus',
+  !!spG && spG.textContent==='#halo' &&
+  DOC().firstElementChild.textContent==='#halo kembali', DOC().firstElementChild.innerHTML);
+const isiG=DOC().querySelectorAll('span.tg');
+cek('T59 gumpalan: tepat satu span, sisanya teks biasa',
+  isiG.length===1 && spG.nextSibling && spG.nextSibling.textContent===' kembali', DOC().firstElementChild.innerHTML);
+saveNow(); await sleep(10);
+cek('T60 gumpalan: tag terdeteksi & masuk cache',
+  state.notes.find(x=>x.id===state.openId).tags.includes('halo'),
+  JSON.stringify(state.notes.find(x=>x.id===state.openId).tags));
+
+/* ══ spasi diketik saat karet di ujung-dalam tag tidak membuat span ganda ══ */
+fresh(); type('Halo #halo ');
+const spE2=DOC().querySelector('span.tg');
+const tnE2=spE2.firstChild;
+const rE2=d.createRange(); rE2.setStart(tnE2, tnE2.length); rE2.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rE2);
+type(' ');                                     /* guard: keluar dulu, spasi di luar */
+await sleep(10);
+const spanNested=DOC().querySelectorAll('span.tg span.tg');
+cek('T61 spasi dari dalam tag: tidak ada span bersarang/dobel',
+  spanNested.length===0 && DOC().querySelectorAll('span.tg').length===1 &&
+  DOC().firstElementChild.textContent==='Halo #halo  ', DOC().firstElementChild.innerHTML);
 
 console.log(`\ntotal: ${no} · gagal: ${gagal}`);
 if(gagal){ console.log('❌ ADA GAGAL'); process.exit(1); }

@@ -4,10 +4,10 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909112206';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20260909112206';
-import { sinkronTag } from '../notes/tags.js?v=20260909112206';
-import { bahasaSekarang } from './i18n.js?v=20260909112206';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909122014';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20260909122014';
+import { sinkronTag } from '../notes/tags.js?v=20260909122014';
+import { bahasaSekarang } from './i18n.js?v=20260909122014';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;

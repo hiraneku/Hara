@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909112206';
-import { setBlock, setCallout } from './blocks.js?v=20260909112206';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260909112206';
-import { updateCount } from './cleanup.js?v=20260909112206';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909122014';
+import { setBlock, setCallout } from './blocks.js?v=20260909122014';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260909122014';
+import { updateCount } from './cleanup.js?v=20260909122014';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -46,6 +46,13 @@ export const tagPenutupLayak=ch=>!!ch && ch.length===1 && TUTUP_CHAR.has(ch);
    berubah-ubah tiap huruf. Aturan di sini: ketikan di ujung-dalam tag
    selalu dikeluarkan lebih dulu ke teks biasa. Menyunting isi tag dari
    TENGAH (offset < panjang) tetap dibolehkan. */
+/* Isi sah sebuah span tag yang UTUH (bisa dipertahankan): \"#\" + minimal
+   satu karakter nama, tanpa spasi/karakter lain. Dipakai guard ujung tag
+   — kalau isi tinggal \"#\" (nama habis dihapus) atau tak sah, tidak ada
+   tag yang perlu dilindungi: ketikan berikutnya harus bisa masuk dan
+   membentuk tag baru. */
+const T_TAG_UTUH = /^#[\p{L}\p{N}_\/.-]+$/u;
+
 export function tagUjungCaret(){
   const s=sel();
   if(!(s&&s.rangeCount)) return null;
@@ -57,7 +64,11 @@ export function tagUjungCaret(){
   const pa=n.parentElement;
   if(!pa) return null;
   const el=pa.closest?pa.closest('span.tg'):null;
-  return (el&&el.isConnected)?el:null;
+  if(!(el&&el.isConnected)) return null;
+  /* tag yang sudah \"habis\" (isi tinggal \"#\" atau korup) bukan tag lagi —
+     biarkan ketikan masuk, tidak usah dikeluarkan */
+  if(!T_TAG_UTUH.test((el.textContent||'').trim())) return null;
+  return el;
 }
 
 /* Pindahkan caret keluar dari ujung tag: ke UJUNG node teks sesudahnya
@@ -336,9 +347,65 @@ export function cobaTagAkhir(b, bolehDelim) {
   const akhirAbs = caretAbs0 - potong;
   const awalAbs = akhirAbs - tag.length;
   if (awalAbs < 0) return false;
+  /* Kalau teks tag sudah TERBUNGKUS span.tg (mis. caret sempat ditarik
+     masuk tag lalu dikeluarkan, dan delimiter menyusul) jangan dibungkus
+     lagi — membungkus ulang membuat span bersarang. Cirinya: batas akhir
+     tag jatuh tepat di awal node teks yang diapit span.tg di kirinya. */
+  if (bolehDelim) {
+    const pU = ptFromAbs(b, akhirAbs);
+    if (pU && pU.node && pU.node.nodeType === 3 && pU.off === 0) {
+      const sblm = pU.node.previousSibling;
+      if (sblm && sblm.nodeType === 1 && sblm.classList &&
+          sblm.classList.contains('tg') && (sblm.textContent || '') === tag)
+        return false;
+    }
+  }
   const el = gantiTag(b, awalAbs, akhirAbs, tag, caretAbs0);
   if (!el) return false;
   return true;
+}
+
+/* ── Pemindai tag untuk ketikan satu gumpalan ──
+   Keyboard dengan prediksi/autocorrect (atau komposisi) kadang
+   memasukkan SPASI sekaligus dengan kata sesudahnya dalam satu gumpalan
+   — mis. "#halo kembali" masuk sekaligus. Konversi berbasis "karakter
+   penutup barusan" (tutupTagSebelum/autoFormat) tidak sempat menangkap
+   spasi di tengah gumpalan itu. Fungsi ini memindai SELURUH teks sebelum
+   karet: setiap "#nama" yang belum terbungkus dan diikuti delimiter
+   dijadikan tag — termasuk yang berada di tengah kalimat. Idempoten:
+   yang sudah terbungkus span dilewati. */
+export function autoTagDalam(b) {
+  if (!b || !b.classList || b.classList.contains('b-code')) return;
+  const s = sel();
+  if (!(s && s.rangeCount)) return;
+  const r = s.getRangeAt(0);
+  if (!r.collapsed) return;
+  const node = r.startContainer;
+  if (!node || node.nodeType !== 3) return;
+  if (r.startOffset !== node.length) return;   /* karet di ujung ketikan */
+  const pa = node.parentElement;
+  if (pa && pa.closest && pa.closest('span.tg, span.wl, code, pre, a')) return;
+  const caretAbs0 = absOff(b, node, r.startOffset);
+  const before0 = b.textContent.slice(0, caretAbs0);
+  /* #nama yang diikuti delimiter; nama harus didahului awal/spasi/"(" */
+  const re = /(^|[\s(])(#[\p{L}\p{N}_\/.-]+)([ \t\u00a0\u3000,;:!?)\]}\u3001\u3002\uFF0C\uFF1A\uFF1B\uFF01\uFF1F])/gu;
+  /* kumpulkan dulu (dari paling kanan), baru ubah DOM */
+  const kandidat = [];
+  let m;
+  while ((m = re.exec(before0))) kandidat.push(m);
+  for (let i = kandidat.length - 1; i >= 0; i--) {
+    const mt = kandidat[i];
+    const awalAbs = mt.index + mt[1].length;
+    const tag = mt[2];
+    const akhirAbs = awalAbs + tag.length;
+    if (awalAbs < 0 || akhirAbs > caretAbs0) continue;
+    /* sudah terbungkus? lewati */
+    const p1 = ptFromAbs(b, awalAbs);
+    if (!p1 || !p1.node || p1.node.nodeType !== 3) continue;
+    const p1p = p1.node.parentElement;
+    if (p1p && p1p.closest && p1p.closest('span.tg, span.wl, code, pre, a')) continue;
+    gantiTag(b, awalAbs, akhirAbs, tag, caretAbs0);
+  }
 }
 
 /* ── Konversi DI DEPAN karakter penutup (jalur utama) ──
