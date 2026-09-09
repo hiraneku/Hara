@@ -400,10 +400,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
    (mengambang di atas-tengah gambar).
    Area sentuh sengaja lebih lebar daripada tampilannya (halo ::before,
    total ±52px) supaya tetap gampang digenggam di layar sentuh.
-   Gambar sempit / mengapit memakai gagang sedikit lebih besar.
-   Khusus gambar menempel kiri DAN dekat tepi layar (kelas .f-tepi,
-   ditoggle JS), gagang pindah digeser ke dalam supaya tidak masuk zona
-   usapan-balik sistem — di layar lebar gagang tidak bergeser. */
+   Posisi gagang SELALU di pojok gambar — tidak pernah bergeser mengikuti
+   posisi gambar (kiri/tengah/kanan), supaya tidak terlihat melompat. */
 .img-grip,.img-move{position:absolute;width:30px;height:30px;border-radius:999px;
   background:rgba(0,0,0,.62);display:grid;place-items:center;opacity:0;color:#fff;
   transition:opacity .14s var(--ease);touch-action:none;z-index:5}
@@ -433,10 +431,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .b-img.sempit .img-grip::before{inset:-9px}
 .b-img.sempit .img-move svg,.b-img.sempit .img-putar svg,
 .b-img.sempit .img-grip svg{width:14px;height:14px}
-/* hanya saat gambar menempel kiri DAN dekat tepi layar: gagang pindah
-   digeser ke dalam (bukan 26px seperti dulu, cukup 22px) supaya tidak
-   masuk zona usapan-balik sistem — di layar lebar tetap di pojok */
-.b-img.sempit.f-l.f-tepi .img-move{left:22px;top:6px}
+/* gagang tidak bergeser saat gambar menempel kiri — tetap di pojok */
 .b-img.sempit.img-pilih .img-x{width:24px;height:24px;top:6px;right:6px}
 
 /* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */

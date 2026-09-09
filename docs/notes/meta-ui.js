@@ -2,7 +2,7 @@
    Keduanya didefinisikan di sini karena dipakai dua layar: editor dan
    "Properties" (lihat views/props.js). */
 
-import { html } from './html-util.js?v=20260908235230';
+import { html } from './html-util.js?v=20260909000100';
 
 export const KET_PROP = {
   /* ini juga urutan tampil default (di editor & layar properties) */

@@ -1,10 +1,10 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20260908235230';
-import { findNote } from '../model.js?v=20260908235230';
-import { esc } from '../../core/dom.js?v=20260908235230';
-import { blocksToDom } from '../note-model.js?v=20260908235230';
-import { barisProps } from '../meta-ui.js?v=20260908235230';
+import { state } from '../../core/store.js?v=20260909000100';
+import { findNote } from '../model.js?v=20260909000100';
+import { esc } from '../../core/dom.js?v=20260909000100';
+import { blocksToDom } from '../note-model.js?v=20260909000100';
+import { barisProps } from '../meta-ui.js?v=20260909000100';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
