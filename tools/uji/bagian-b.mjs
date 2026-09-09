@@ -191,6 +191,16 @@ klik(setBtn); await sleep(40);
 oke('H1b gear membuka halaman Pengaturan',
   (d.getElementById('title').textContent||'').includes('Pengaturan') && !!d.getElementById('bar-prefs'),
   d.getElementById('title').textContent);
+/* tombol Kembali di Pengaturan */
+oke('H1c panah kembali tampil di header Pengaturan',
+  d.getElementById('back').style.display==='grid');
+const kbRow=d.querySelector('[data-kembali-set]');
+oke('H1d ada baris Kembali di halaman Pengaturan', !!kbRow && /Kembali/.test(kbRow.textContent),
+  kbRow?kbRow.textContent:'tidak ada');
+klik(kbRow); await sleep(40);
+oke('H1e Kembali pulang ke layar asal (home)',
+  (d.getElementById('title').textContent||'').includes('Beranda'),
+  d.getElementById('title').textContent);
 
 console.log(gagal?`ADA ${gagal} GAGAL`:'SEMUA B-SMOKE OK');
 process.exit(gagal?1:0);

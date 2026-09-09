@@ -1,13 +1,13 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909000100';
-import { esc, stamp } from '../../core/dom.js?v=20260909000100';
-import { rowFor } from './row.js?v=20260909000100';
-import { plainText } from '../note-model.js?v=20260909000100';
-import { semuaTag } from '../tags.js?v=20260909000100';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909000100';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909000100';
+import { state } from '../../core/store.js?v=20260909032733';
+import { esc, stamp } from '../../core/dom.js?v=20260909032733';
+import { rowFor } from './row.js?v=20260909032733';
+import { plainText } from '../note-model.js?v=20260909032733';
+import { semuaTag } from '../tags.js?v=20260909032733';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909032733';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909032733';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -119,6 +119,13 @@ set:()=>{ const akPilih = akSekarang() || '';
        data-ak="${a.k || ''}" aria-pressed="${(a.k || '') === akPilih}"
        title="${esc(a.nama)}" aria-label="${esc(a.nama)}" style="--w:${a.w}"></button>`).join('');
   return `<div class="page">
+  <div class="card" style="margin-bottom:24px">
+    <button type="button" class="row" data-kembali-set title="Ke layar sebelumnya">
+      <svg class="ico" style="color:var(--accent);width:17px;height:17px"><use href="#i-back"/></svg>
+      <div class="row-b"><div class="row-t">Kembali</div>
+        <div class="row-s">Ke layar sebelumnya</div></div>
+    </button>
+  </div>
   <div class="sec"><h2>Tampilan</h2></div>
   <div class="card" style="margin-bottom:24px">
     <div class="row"><div class="row-b"><div class="row-t">Tema</div><div class="row-s">Sekarang <span id="tema-st">…</span></div></div>

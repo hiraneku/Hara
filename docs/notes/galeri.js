@@ -5,11 +5,11 @@
    SAMA disisipkan ke editor (tidak disalin — berbagi berkas). Gambar
    ditampilkan sebagai thumbnail kecil (dibuat sekali per sesi). */
 
-import { state } from '../core/store.js?v=20260909000100';
-import { esc } from '../core/dom.js?v=20260909000100';
-import { openPop, closeAll } from './menus/pop.js?v=20260909000100';
-import { toast } from '../core/toast.js?v=20260909000100';
-import { ambilBlob } from '../core/blobs.js?v=20260909000100';
+import { state } from '../core/store.js?v=20260909032733';
+import { esc } from '../core/dom.js?v=20260909032733';
+import { openPop, closeAll } from './menus/pop.js?v=20260909032733';
+import { toast } from '../core/toast.js?v=20260909032733';
+import { ambilBlob } from '../core/blobs.js?v=20260909032733';
 
 const MAKS_TAMPIL = 120;   /* popup kecil — cukup yang terbaru */
 
@@ -128,7 +128,7 @@ export function bindGaleri() {
     const id = g.getAttribute('data-gal');
     if (!id) return;
     closeAll();
-    import('./editor/image.js?v=20260909000100')
+    import('./editor/image.js?v=20260909032733')
       .then(async m => {
         const asal = catatanPemakai(id);
         const x = gambarDariCatatan().find(y => y.id === id);

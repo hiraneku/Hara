@@ -1,16 +1,16 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260909000100';
-import { go, onAfterRender } from './core/router.js?v=20260909000100';
-import { toast } from './core/toast.js?v=20260909000100';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909000100';
-import { notesModule } from './notes/index.js?v=20260909000100';
+import { load, state } from './core/store.js?v=20260909032733';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260909032733';
+import { toast } from './core/toast.js?v=20260909032733';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909032733';
+import { notesModule } from './notes/index.js?v=20260909032733';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260909000100';
-import { bagikanCatatan } from './notes/share.js?v=20260909000100';
-import { bukaJurnalHari } from './notes/harian.js?v=20260909000100';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260909000100';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909000100';
-import { simpanTemplatNote } from './notes/templat.js?v=20260909000100';
+  from './notes/model.js?v=20260909032733';
+import { bagikanCatatan } from './notes/share.js?v=20260909032733';
+import { bukaJurnalHari } from './notes/harian.js?v=20260909032733';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260909032733';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909032733';
+import { simpanTemplatNote } from './notes/templat.js?v=20260909032733';
 
 const MODULES = [notesModule];
 
@@ -39,6 +39,10 @@ onAfterRender(perbaruiJumlah);
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]');
   if (g) return go(g.dataset.go);
+
+  /* tombol \"Kembali\" di halaman Pengaturan — pulang ke layar asal */
+  const kb = e.target.closest('[data-kembali-set]');
+  if (kb) return kembali();
 
   const o = e.target.closest('[data-open]');
   if (o) return openNote(o.dataset.open);
@@ -89,7 +93,12 @@ document.addEventListener('click', e => {
   if (a) return toast(a.dataset.act);
 });
 
-document.getElementById('back').onclick = () => go('notes');
+document.getElementById('back').onclick = () => {
+  /* editor: kembali ke daftar catatan (perilaku lama). Halaman lain yang
+     memakai panah (Pengaturan) pulang ke layar sebelumnya. */
+  if (cur === 'set') return kembali();
+  go('notes');
+};
 document.getElementById('scrim').onclick = closeAll;
 document.getElementById('fab').onclick = () => {
   document.getElementById('sheet').classList.toggle('on');
