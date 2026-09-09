@@ -2,7 +2,7 @@
 import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909084636';
 import { setBlock, indent } from './blocks.js?v=20260909084636';
 import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909084636';
-import { autoFormat } from './markdown.js?v=20260909084636';
+import { autoFormat, cobaTagAkhir, cobaPembatasAkhir } from './markdown.js?v=20260909084636';
 import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909084636';
 import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909084636';
 import { onTitle } from '../model.js?v=20260909084636';
@@ -276,6 +276,19 @@ export function bindEditor() {
           e.preventDefault();
           return;
         }
+      }
+    }
+    /* ── Enter menutup baris mekanik yang belum sempat ditutup spasi:
+       "#halo" di ujung teks → tag otomatis (biarkan browser memecah
+       blok sesudahnya); baris yang isinya cuma "---" → pembatas. ── */
+    if(e.key==='Enter' && !e.shiftKey && !e.isComposing && b &&
+       !b.classList.contains('b-code') && !b.classList.contains('b-img') &&
+       !b.classList.contains('b-div')){
+      if(cobaTagAkhir(b,false)){ /* tag terbungkus; Enter lanjut normal */ }
+      else if(cobaPembatasAkhir(b)){
+        e.preventDefault();
+        refresh();
+        return;
       }
     }
     /* Enter di dalam daftar: item kosong = keluar dari daftar */
