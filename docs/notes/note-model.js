@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20260909102312';
+import { t as tr } from '../core/i18n.js?v=20260909105048';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -122,6 +122,9 @@ export function makeNote(patch = {}) {
     title: typeof patch.title === 'string' ? patch.title : '',
     blocks,
     tags: Array.isArray(patch.tags) ? patch.tags.slice() : [],
+    /* tag manual (tanpa span di isi) — opsional, hanya disimpan bila ada */
+    ...(Array.isArray(patch.tagsManual) && patch.tagsManual.length
+      ? { tagsManual: patch.tagsManual.slice() } : {}),
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,
@@ -385,9 +388,24 @@ function isiTanpa(el, selector) {
   return salinan.innerHTML || '';
 }
 
+/* Hapus span tag kosong; lepas bungkus span tag yang isinya tidak
+   dimulai '#'. Dipakai saat menyimpan & saat memuat data lama, supaya
+   sisa-sisa bug lama (huruf pertama berwarna di paragraf baru, tag
+   "hantu" dari span kosong) tidak menetap di penyimpanan.
+   Tag sah selalu berbentuk <span class="tg">#nama</span>. */
+export function sapuTagRusak(html) {
+  let s = String(html || '');
+  /* span kosong (atau hanya spasi) → hapus seluruh elemen */
+  s = s.replace(/<span[^>]*class="[^"]*\btg\b[^"]*"[^>]*>\s*<\/span>/g, '');
+  /* span berisi teks polos yang TIDAK diawali # → buka bungkusnya
+     (teksnya tetap utuh, hanya warnanya yang hilang) */
+  s = s.replace(/<span([^>]*class="[^"]*\btg\b[^"]*"[^>]*)>((?!#)[^<]*)<\/span>/g, '$2');
+  return s;
+}
+
 /* Buang jejak yang murni urusan tampilan, bukan isi. */
 function bersihkanIsi(html) {
-  return String(html || '')
+  return sapuTagRusak(String(html || '')
     /* pegangan seret tidak pernah ikut tersimpan */
     .replace(GANDEL_REG, '')
     /* objectURL gambar tidak berlaku di sesi berikutnya */
@@ -395,7 +413,7 @@ function bersihkanIsi(html) {
     /* <br> pengganjal blok kosong */
     .replace(/^<br\s*\/?>$/i, '')
     /* nomor daftar dihitung ulang saat render */
-    .replace(/\sdata-n="[^"]*"/g, '');
+    .replace(/\sdata-n="[^"]*"/g, ''));
 }
 
 /* ── Penjamin id blok di DOM ──
@@ -468,7 +486,12 @@ export function normalizeNote(raw) {
   if (Array.isArray(raw.blocks)) {
     return makeNote({
       ...raw,
-      blocks: raw.blocks.map(makeBlock),
+      blocks: raw.blocks.map(b => {
+        if (!b || b.type === 'code' || b.type === 'divider') return makeBlock(b);
+        /* sapu sisa span tag rusak dari data lama (bug Enter membelah
+           tag / span kosong) — isi teksnya tidak berubah */
+        return makeBlock({ ...b, content: sapuTagRusak(b.content) });
+      }),
     });
   }
 
@@ -479,6 +502,7 @@ export function normalizeNote(raw) {
     title: raw.title ?? raw.t ?? '',
     blocks: htmlToBlocks(raw.html),
     tags: raw.tags,
+    tagsManual: raw.tagsManual,
     folderId: raw.folderId,
     createdAt: raw.createdAt || waktu,
     updatedAt: raw.updatedAt || waktu,

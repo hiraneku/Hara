@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909102312';
-import { setBlock, setCallout } from './blocks.js?v=20260909102312';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260909102312';
-import { updateCount } from './cleanup.js?v=20260909102312';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909105048';
+import { setBlock, setCallout } from './blocks.js?v=20260909105048';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260909105048';
+import { updateCount } from './cleanup.js?v=20260909105048';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -74,6 +74,51 @@ export function keluarDariUjungTag(el){
   const r=document.createRange();
   r.setStart(t,t.length); r.collapse(true);
   s.removeAllRanges(); s.addRange(r);
+  return true;
+}
+
+/* Apakah caret (teks, menyempit) berada DI DALAM sebuah span tag —
+   posisi mana pun. Dipakai untuk mencegah Enter membelah tag. */
+export function tagCaretDalam(){
+  const s=sel();
+  if(!(s&&s.rangeCount)) return null;
+  const r=s.getRangeAt(0);
+  if(!r.collapsed) return null;
+  const n=r.startContainer;
+  if(!n||n.nodeType!==3) return null;
+  const pa=n.parentElement;
+  if(!pa||!pa.closest) return null;
+  const el=pa.closest('span.tg');
+  return (el&&el.isConnected)?el:null;
+}
+
+/* Enter ditekan saat caret berada DI DALAM tag: alih-alih membelah span
+   tag (yang meninggalkan sisa huruf berwarna di paragraf berikutnya dan
+   tag "hantu"), pindahkan seluruh node SETELAH tag ke blok baru —
+   tag tetap utuh di blok lama. Blok baru berupa paragraf (atau tipe
+   yang sama untuk daftar/heading). Caret ditaruh di awal blok baru. */
+export function pecahSetelahTag(b, span){
+  if(!b||!span||!b.contains(span)) return false;
+  /* hanya tipe yang aman dipecah otomatis: paragraf & heading.
+     Daftar/quote/callout memakai perilaku Enter-nya sendiri. */
+  if(!b.classList.contains('b-p')&&!/^b-h[123]$/.test(b.className||'')) return false;
+  const nb=document.createElement(/^b-h[123]$/.test(b.className||'')?b.tagName:'div');
+  nb.className=b.className;
+  let node=span.nextSibling;
+  while(node){
+    const next=node.nextSibling;
+    nb.appendChild(node);
+    node=next;
+  }
+  b.after(nb);
+  const tn=document.createTextNode('');
+  nb.insertBefore(tn,nb.firstChild);
+  const s=sel();
+  if(s){
+    const r=document.createRange();
+    r.setStart(tn,0); r.collapse(true);
+    s.removeAllRanges(); s.addRange(r);
+  }
   return true;
 }
 

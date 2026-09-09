@@ -4,9 +4,10 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909102312';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20260909102312';
-import { bahasaSekarang } from './i18n.js?v=20260909102312';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20260909105048';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20260909105048';
+import { sinkronTag } from '../notes/tags.js?v=20260909105048';
+import { bahasaSekarang } from './i18n.js?v=20260909105048';
 
 const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
@@ -17,17 +18,17 @@ const SCHEMA = 2;
    kebenaran. */
 export const DEFAULT_NOTES = () => {
   const b = bahasaSekarang();
-  return [
-    makeNote({
-      id: 'w',
-      title: judulWelcome(b),
-      blocks: htmlToBlocks(isiWelcome(b)),
-      tags: ['hara'],
-      welcome: true,
-      welcomeV: WELCOME_V,
-      welcomeLang: b,
-    }),
-  ];
+  const n = makeNote({
+    id: 'w',
+    title: judulWelcome(b),
+    blocks: htmlToBlocks(isiWelcome(b)),
+    tags: [],
+    welcome: true,
+    welcomeV: WELCOME_V,
+    welcomeLang: b,
+  });
+  sinkronTag(n);   /* cache tag mengikuti isi sambutan */
+  return [n];
 };
 
 /* Catatan sambutan bersifat GLOBAL & terkunci: pengguna tidak bisa
@@ -46,6 +47,8 @@ export function sinkronWelcome() {
     w.blocks = htmlToBlocks(isiWelcome(b));
     w.welcomeV = WELCOME_V;
     w.welcomeLang = b;
+    /* cache tag mengikuti isi baru (mis. #hara / #proyek-hara per bahasa) */
+    sinkronTag(w);
     save();
     return true;
   }
@@ -114,8 +117,13 @@ export function load() {
       ? data.openId : state.notes[0].id;
 
     /* data lama baru saja dinaikkan versinya -> tulis ulang sekali,
-       supaya pemuatan berikutnya tidak perlu migrasi lagi */
-    if ((data.schema || 1) < SCHEMA || sinkronWelcome()) save();
+       supaya pemuatan berikutnya tidak perlu migrasi lagi. Sinkronkan
+       juga sambutan (versi/bahasa) dan hitung ulang cache tag SEMUA
+       catatan dari isinya — sekali ini membersihkan "tag hantu" yang
+       tersisa dari versi lama (tag yang span-nya sudah dihapus). */
+    let berubah = sinkronWelcome();
+    for (const n of state.notes) if (sinkronTag(n)) berubah = true;
+    if ((data.schema || 1) < SCHEMA || berubah) save();
   } catch (e) {
     /* jaring pengaman terakhir: mulai dari bawaan, jangan sampai
        aplikasi mati hanya karena satu data bermasalah */

@@ -24,6 +24,8 @@ await import(`${AKAR}/docs/app.js?v=${V}`);
 const {go}=await import(`${AKAR}/docs/core/router.js?v=${V}`);
 const {state}=await import(`${AKAR}/docs/core/store.js?v=${V}`);
 const {saveNow}=await import(`${AKAR}/docs/notes/editor/cleanup.js?v=${V}`);
+const {semuaTag}=await import(`${AKAR}/docs/notes/tags.js?v=${V}`);
+const {sapuTagRusak, normalizeNote, makeNote}=await import(`${AKAR}/docs/notes/note-model.js?v=${V}`);
 const d=w.document,SEL=w.getSelection();
 const click=el=>el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
 const DOC=()=>d.querySelector('.ed-doc');
@@ -208,6 +210,111 @@ SEL.removeAllRanges(); SEL.addRange(rC);
 type('X');
 cek('T35 sunting tengah tag tetap bisa (sisip di tengah nama)',
   DOC().querySelector('span.tg').textContent==='#hXalo', DOC().querySelector('span.tg').textContent);
+
+/* ══ tag hantu: dihapus dari isi → hilang dari cache & agregat ══ */
+fresh(); type('Catatan #halo dan #dunia ');
+saveNow(); await sleep(10);
+cek('T36 dua tag masuk cache setelah simpan',
+  state.notes.find(x=>x.id===state.openId).tags.includes('halo') &&
+  state.notes.find(x=>x.id===state.openId).tags.includes('dunia'),
+  JSON.stringify(state.notes.find(x=>x.id===state.openId).tags));
+/* hapus seluruh isi catatan (tag dihapus dari isi) */
+DOC().firstElementChild.innerHTML='';
+const kos=d.createTextNode(''); DOC().firstElementChild.appendChild(kos);
+const rK=d.createRange(); rK.setStart(kos,0); rK.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rK);
+d.dispatchEvent(new w.Event('selectionchange'));
+saveNow(); await sleep(10);
+const nHapus=state.notes.find(x=>x.id===state.openId);
+cek('T37 tag yang dihapus dari isi hilang dari cache (tidak hantu)',
+  !nHapus.tags.includes('halo') && !nHapus.tags.includes('dunia'),
+  JSON.stringify(nHapus.tags));
+cek('T38 agregat tag tidak lagi memuat tag yang dihapus',
+  !semuaTag().some(t=>t.nama==='halo'||t.nama==='dunia'),
+  JSON.stringify(semuaTag()));
+
+/* hapus SATU dari dua tag: sisanya tetap */
+fresh(); type('#satu dan #dua ');
+saveNow(); await sleep(10);
+const spSatu=DOC().querySelector('span.tg');   /* span #satu */
+const nDuaSblm=state.notes.find(x=>x.id===state.openId).tags.slice();
+spSatu.remove();                                /* hapus #satu dari isi */
+saveNow(); await sleep(10);
+const nSatu=state.notes.find(x=>x.id===state.openId);
+cek('T39 hapus satu tag: hanya tag yang tersisa di isi yang di-cache',
+  nSatu.tags.length===1 && nSatu.tags[0]==='dua',
+  `sblm ${JSON.stringify(nDuaSblm)} → sdh ${JSON.stringify(nSatu.tags)}`);
+
+/* ══ Enter tidak boleh membelah tag ══ */
+/* (a) caret di ujung-dalam tag lalu Enter → pecah SETELAH tag */
+fresh(); type('Halo #halo ');
+const spE=DOC().querySelector('span.tg');
+const tnE=spE.firstChild;
+const rE=d.createRange(); rE.setStart(tnE, tnE.length); rE.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rE);
+enter(); await sleep(10);
+const blkAtas=DOC().children[0];
+const blkBawah=DOC().children[1];
+const tgAtas=blkAtas.querySelector('span.tg');
+cek('T40 Enter saat caret di ujung-dalam tag: tag utuh di baris atas',
+  !!tgAtas && tgAtas.textContent==='#halo' && blkAtas.textContent==='Halo #halo', blkAtas.innerHTML);
+cek('T41 Enter saat caret di dalam tag: baris bawah TANPA sisa span berwarna',
+  !!blkBawah && !blkBawah.querySelector('span.tg') &&
+  !/^[^#]/.test(blkBawah.querySelector('span.tg')?'x':''), blkBawah.innerHTML);
+/* ketikan lanjutan di baris bawah normal */
+const tnBwh=blkBawah.firstChild;
+const rBwh=d.createRange(); rBwh.setStart(tnBwh,0); rBwh.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rBwh);
+type('teks baru');
+cek('T42 ketikan di baris bawah setelah Enter polos (bukan bagian tag)',
+  !DOC().children[1].querySelector('span.tg') &&
+  (DOC().children[1].textContent||'').trim()==='teks baru', DOC().children[1].innerHTML);
+
+/* (b) caret di TENGAH tag lalu Enter: teks setelah tag pindah ke bawah,
+      tag tetap utuh di atas */
+fresh(); type('Halo #halo dan dunia ');
+const spM=DOC().querySelector('span.tg');
+const tnM=spM.firstChild;
+const rM=d.createRange(); rM.setStart(tnM, 3); rM.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rM);
+enter(); await sleep(10);
+const bA2=DOC().children[0];
+const bB2=DOC().children[1];
+cek('T43 Enter di tengah tag: tag tetap utuh (#halo, bukan #hal / sisa)',
+  !!bA2.querySelector('span.tg') &&
+  bA2.querySelector('span.tg').textContent==='#halo', bA2.innerHTML);
+cek('T44 sisa teks setelah tag pindah ke baris bawah tanpa warna tag',
+  !!bB2 && !bB2.querySelector('span.tg') &&
+  bB2.textContent.indexOf('dan dunia')>=0, bB2.innerHTML);
+
+/* ══ sapuan data lama: remnant span tag rusak dibersihkan saat muat ══ */
+const rmt1=sapuTagRusak('A<span class="tg">o</span> halo');
+cek('T45 remnant tag terbelah (isi tanpa #) dilepas bungkusnya (polos)',
+  rmt1==='Ao halo', rmt1);
+const rmt2=sapuTagRusak('x<span class="tg"></span> y');
+cek('T46 span tag kosong dihapus', rmt2==='x y', rmt2);
+const rmt3=sapuTagRusak('B<span class="tg">#halo</span> c');
+cek('T47 span tag sah TIDAK disentuh', rmt3==='B<span class="tg">#halo</span> c', rmt3);
+const nLegacy=normalizeNote({id:'l1',title:'lama',blocks:[
+  {id:'b1',type:'paragraph',content:'A<span class="tg">o</span> dan <span class="tg"></span>B'},
+  {id:'b2',type:'code',content:'<span class="tg">o</span>'},
+],tags:['halo']});
+cek('T48 normalisasi data lama membersihkan remnant & span kosong',
+  nLegacy.blocks[0].content==='Ao dan B', nLegacy.blocks[0].content);
+cek('T49 blok kode tidak disentuh sapuan',
+  nLegacy.blocks[1].content==='<span class="tg">o</span>', nLegacy.blocks[1].content);
+
+/* ══ tag manual (impor frontmatter) tetap, tag isi yang dihapus hilang ══ */
+const nMan=makeNote({id:'m1',title:'manual',tags:['kerjaku'],tagsManual:['proyek-x'],
+  blocks:[{id:'c1',type:'paragraph',content:'<span class="tg">#kerjaku</span>'}]});
+const {sinkronTag}=await import(`${AKAR}/docs/notes/tags.js?v=${V}`);
+sinkronTag(nMan);
+cek('T50 tag isi + tag manual digabung di cache', nMan.tags.length===2 &&
+     nMan.tags.includes('kerjaku') && nMan.tags.includes('proyek-x'), JSON.stringify(nMan.tags));
+nMan.blocks[0].content='tanpa tag';
+sinkronTag(nMan);
+cek('T51 hapus span isi: tag isi hilang, tag manual tetap',
+  nMan.tags.length===1 && nMan.tags[0]==='proyek-x', JSON.stringify(nMan.tags));
 
 console.log(`\ntotal: ${no} · gagal: ${gagal}`);
 if(gagal){ console.log('❌ ADA GAGAL'); process.exit(1); }

@@ -1,13 +1,20 @@
 /* Tag lintas modul catatan.
 
-   Sumber kebenaran tag adalah isi catatan: elemen <span class="tg">#nama</span>
-   yang disisipkan lewat menu tag / bar tag. Field `tags` pada catatan adalah
-   cerminan (cache) yang dihitung ulang saat disimpan — sehingga tidak ada
-   dua sumber yang bisa berselisih. Cache inilah yang dipakai daftar,
-   halaman tag, dan filter. */
+   DUA sumber tag yang sah pada sebuah catatan:
+   1. ISI: elemen <span class="tg">#nama</span> yang ada di blok catatan —
+      sumber utama. Tag di sini muncul otomatis saat Anda mengetik #nama
+      lalu spasi/Enter, atau lewat menu tag / bar mekanik.
+   2. MANUAL: array `tagsManual` (opsional) — tag yang sengaja disimpan
+      tanpa span di isi, misalnya tag frontmatter saat mengimpor Markdown.
 
-import { state } from '../core/store.js?v=20260909102312';
-import { terlihat } from './kunci.js?v=20260909102312';
+   Field `tags` hanyalah cache gabungan kedua sumber itu, dihitung ulang
+   setiap kali catatan disimpan. Konsekuensi penting: tag yang SATU-SATUNYA
+   ada di isi akan HILANG dari cache begitu span-nya dihapus dari isi —
+   tidak ada tag "hantu" yang menetap. Tag manual hanya bisa hilang bila
+   field `tagsManual`-nya diubah (tidak ada UI-nya; ia milik impor). */
+
+import { state } from '../core/store.js?v=20260909105048';
+import { terlihat } from './kunci.js?v=20260909105048';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang
@@ -35,19 +42,29 @@ export function tagDariIsi(n) {
   return hasil;
 }
 
-/* Gabungkan tag tersimpan dengan tag turunan dari isi, tanpa duplikat. */
-export function gabungTag(tersimpan, turunan) {
+/* Gabungkan tanpa duplikat. */
+function unik(daftar) {
   const hasil = [];
   const lihat = s => { if (!hasil.includes(s)) hasil.push(s); };
-  (tersimpan || []).forEach(lihat);
-  (turunan || []).forEach(lihat);
+  (daftar || []).forEach(lihat);
   return hasil;
 }
 
-/* Perbarui cache tag catatan dari isinya. Dipanggil saat menyimpan. */
+/* Tag manual catatan: field opsional `tagsManual`, dibaca apa adanya. */
+export const tagManualCatatan = n =>
+  Array.isArray(n && n.tagsManual) ? n.tagsManual.slice() : [];
+
+/* Perbarui cache tag catatan dari isi + tag manualnya. Dipanggil saat
+   menyimpan / memuat. Mengembalikan true bila cache berubah (dipakai
+   pemanggil untuk memutuskan perlu menulis ulang penyimpanan). */
 export function sinkronTag(n) {
-  if (!n) return;
-  n.tags = gabungTag(n.tags, tagDariIsi(n));
+  if (!n) return false;
+  const baru = unik([...tagDariIsi(n), ...tagManualCatatan(n)]);
+  const lama = Array.isArray(n.tags) ? n.tags : [];
+  if (baru.length === lama.length && baru.every((t, i) => t === lama[i]))
+    return false;
+  n.tags = baru;
+  return true;
 }
 
 /* Catatan yang ikut dihitung tag/filter: belum dihapus, belum diarsip,

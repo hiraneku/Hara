@@ -18,12 +18,12 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20260909102312';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909102312';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909102312';
-import { sinkronTag } from './tags.js?v=20260909102312';
-import { terlihat } from './kunci.js?v=20260909102312';
-import { t as tr } from '../core/i18n.js?v=20260909102312';
+import { state, save, SCHEMA } from '../core/store.js?v=20260909105048';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909105048';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909105048';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20260909105048';
+import { terlihat } from './kunci.js?v=20260909105048';
+import { t as tr } from '../core/i18n.js?v=20260909105048';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -525,7 +525,8 @@ export function catatanDariMarkdown(nama, teks) {
   const n = makeNote({
     title: judul,
     blocks: blocks.length ? blocks : [makeBlock({ type: 'paragraph' })],
-    tags: Array.isArray(meta.tag) ? meta.tag.map(String) : [],
+    /* cache tag diisi sinkronTag() di bawah — di sini dikosongkan dulu */
+    tags: [],
     createdAt: dariISO(meta.dibuat ?? meta.created) || now,
     updatedAt: dariISO(meta.diubah ?? meta.updated) || now,
     archived: meta.diarsipkan === true,
@@ -535,7 +536,15 @@ export function catatanDariMarkdown(nama, teks) {
         'tag', 'diarsipkan', 'disematkan'].includes(k))
       .map(([k, v]) => ({ k, v: Array.isArray(v) ? v.join(', ') : String(v) })),
   });
-  sinkronTag(n);   /* tag dari frontmatter + #tag di isi */
+  /* Tag frontmatter yang TIDAK muncul sebagai #tag di isi menjadi tag
+     MANUAL (dipertahankan di cache, tidak hilang diam-diam). Yang sudah
+     ada di isi cukup diwakili span-nya — begitu span dihapus, tag itu
+     ikut hilang dari cache. */
+  const tagFront = Array.isArray(meta.tag) ? meta.tag.map(String) : [];
+  const diIsi = tagDariIsi(n);
+  const manual = tagFront.filter(t => !diIsi.includes(t));
+  if (manual.length) n.tagsManual = manual;
+  sinkronTag(n);   /* cache = tag dari isi + tag manual frontmatter */
   return n;
 }
 

@@ -94,9 +94,14 @@ oke('B8b daftar isi berisi 2 heading', daf.length===2 && daf[0].textContent.incl
 klik(daf[1]); await sleep(20);
 oke('B8c pilihan menutup popup', !d.getElementById('pop').classList.contains('on'));
 
-/* ── B10 warna tag ── */
+/* ── B10 warna tag ──
+   Sejak model "tag = isi", cache n.tags dihitung ulang dari span saat
+   catatan disimpan (sinkronTag). Setelah span ditambahkan ke isi di
+   sini, cache disetel lewat jalur yang sama seperti penyimpanan. */
 const n4=state.notes.find(x=>x.id==='b4');
 n4.blocks.push(makeBlock({type:'paragraph',content:'<span class="tg">#kerja</span> lalu <span class="tg">#pribadi</span>'}));
+const modTag=await st('notes/tags.js');
+modTag.sinkronTag(n4);
 router.go('notes'); await sleep(20);
 const baris4=()=>Array.from(d.querySelectorAll('.row[data-open="b4"] .tg-chip')).map(c=>c.textContent);
 oke('B10a chip baris menampilkan tag', baris4().length>=2, JSON.stringify(baris4()));
@@ -178,6 +183,11 @@ if(sw){ klik(sw); await sleep(40); }
 oke('B13f warna tersimpan ke catatan', !!(state.notes.find(x=>x.id==='b4').warna||{})['kerja'],
   JSON.stringify((state.notes.find(x=>x.id==='b4').warna||{})));
 oke('B13g popup tertutup setelah pilih', !d.getElementById('pop').classList.contains('on'));
+/* Model "tag = isi": ketikan tadi mengosongkan span #kerja dari isi
+   (fresh), jadi tag ikut hilang dari cache. Taruh tag kembali di isi
+   (jalur sinkron yang sama seperti penyimpanan) sebelum cek chip. */
+n4.blocks.push(makeBlock({type:'paragraph',content:'<span class="tg">#kerja</span>'}));
+modTag.sinkronTag(n4);
 router.go('notes'); await sleep(30);
 const chipWarna=Array.from(d.querySelectorAll('.row[data-open="b4"] .tg-chip')).find(c=>c.getAttribute('data-tag')==='kerja');
 oke('B13h chip daftar memakai warna manual', !!chipWarna && chipWarna.getAttribute('data-tt')==='slate',

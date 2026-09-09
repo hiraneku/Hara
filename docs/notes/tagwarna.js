@@ -4,14 +4,14 @@
    BUKAN di isi catatan, sehingga teks #tag tetap bersih. Tanpa
    pilihan manual, warna datang dari hash nama tag (label.js). */
 
-import { state } from '../core/store.js?v=20260909102312';
-import { esc } from '../core/dom.js?v=20260909102312';
-import { toast } from '../core/toast.js?v=20260909102312';
-import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20260909102312';
-import { openPop, closeAll } from './menus/pop.js?v=20260909102312';
-import { cur, go } from '../core/router.js?v=20260909102312';
-import { saveCatatanBuka } from './editor/cleanup.js?v=20260909102312';
-import { t as tr } from '../core/i18n.js?v=20260909102312';
+import { state } from '../core/store.js?v=20260909105048';
+import { esc } from '../core/dom.js?v=20260909105048';
+import { toast } from '../core/toast.js?v=20260909105048';
+import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20260909105048';
+import { openPop, closeAll } from './menus/pop.js?v=20260909105048';
+import { cur, go } from '../core/router.js?v=20260909105048';
+import { saveCatatanBuka } from './editor/cleanup.js?v=20260909105048';
+import { t as tr } from '../core/i18n.js?v=20260909105048';
 
 const catatanBuka = () => state.notes.find(x => x.id === state.openId);
 
