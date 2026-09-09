@@ -1,56 +1,56 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260909074309';
-import { homeView, notesView } from './views/list.js?v=20260909074309';
-import { editorView } from './views/editor.js?v=20260909074309';
-import { miscViews, renderHasilCari } from './views/misc.js?v=20260909074309';
-import { tugasView, reminderView } from './views/tugas.js?v=20260909074309';
-import { bindEditor } from './editor/events.js?v=20260909074309';
-import { renderBar }  from './bar/render.js?v=20260909074309';
-import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260909074309';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20260909082613';
+import { homeView, notesView } from './views/list.js?v=20260909082613';
+import { editorView } from './views/editor.js?v=20260909082613';
+import { miscViews, renderHasilCari } from './views/misc.js?v=20260909082613';
+import { tugasView, reminderView } from './views/tugas.js?v=20260909082613';
+import { bindEditor } from './editor/events.js?v=20260909082613';
+import { renderBar }  from './bar/render.js?v=20260909082613';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20260909082613';
 import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
-  from './editor/cleanup.js?v=20260909074309';
+  from './editor/cleanup.js?v=20260909082613';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20260909074309';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260909074309';
-import { toast } from '../core/toast.js?v=20260909074309';
-import { esc } from '../core/dom.js?v=20260909074309';
-import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260909074309';
-import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260909074309';
-import { pending, sticky, mati } from './editor/marks.js?v=20260909074309';
-import { docEl, caretEnd } from './editor/caret.js?v=20260909074309';
-import { resetHistory } from './editor/history.js?v=20260909074309';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20260909074309';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260909074309';
-import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260909074309';
-import { renderBar as gambarBar } from './bar/render.js?v=20260909074309';
-import { state } from '../core/store.js?v=20260909074309';
-import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260909074309';
+  from '../core/autosave.js?v=20260909082613';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20260909082613';
+import { toast } from '../core/toast.js?v=20260909082613';
+import { esc } from '../core/dom.js?v=20260909082613';
+import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20260909082613';
+import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20260909082613';
+import { pending, sticky, mati } from './editor/marks.js?v=20260909082613';
+import { docEl, caretEnd } from './editor/caret.js?v=20260909082613';
+import { resetHistory } from './editor/history.js?v=20260909082613';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20260909082613';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20260909082613';
+import { BISA_SEMBUNYI, prefs, tersembunyi, toggleTampil, setGetar } from './bar/prefs.js?v=20260909082613';
+import { renderBar as gambarBar } from './bar/render.js?v=20260909082613';
+import { state } from '../core/store.js?v=20260909082613';
+import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20260909082613';
 import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote,
          sematDariList, hapusNoteDariList, arsipNoteId }
-  from './model.js?v=20260909074309';
-import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260909074309';
+  from './model.js?v=20260909082613';
+import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20260909082613';
 import { bindBacaPlus, terapkanUkuranLayar, tutupCari, matikanZen }
-  from './baca-plus.js?v=20260909074309';
-import { bindDaftarIsi } from './daftar-isi.js?v=20260909074309';
-import { setUrut, menuUrut, namaUrut } from './urut.js?v=20260909074309';
-import { bukaJurnalHari } from './harian.js?v=20260909074309';
-import { layarKunciView, bindKunci } from './kunci.js?v=20260909074309';
-import { bindSwipe } from './swipe.js?v=20260909074309';
-import { bindTagWarna } from './tagwarna.js?v=20260909074309';
-import { bindGaleri } from './galeri.js?v=20260909074309';
-import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260909074309';
-import { pasangSeret } from './drag.js?v=20260909074309';
-import { muatPanels, tautkanSebutan } from './panels.js?v=20260909074309';
-import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260909074309';
-import { setTag, stt } from './views/data.js?v=20260909074309';
-import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20260909074309';
-import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260909074309';
-import { t as tr, setBahasa, terjemahStatis } from '../core/i18n.js?v=20260909074309';
+  from './baca-plus.js?v=20260909082613';
+import { bindDaftarIsi } from './daftar-isi.js?v=20260909082613';
+import { setUrut, menuUrut, namaUrut } from './urut.js?v=20260909082613';
+import { bukaJurnalHari } from './harian.js?v=20260909082613';
+import { layarKunciView, bindKunci } from './kunci.js?v=20260909082613';
+import { bindSwipe } from './swipe.js?v=20260909082613';
+import { bindTagWarna } from './tagwarna.js?v=20260909082613';
+import { bindGaleri } from './galeri.js?v=20260909082613';
+import { menuTemplat, terapkanTemplat, hapusTemplat } from './templat.js?v=20260909082613';
+import { pasangSeret } from './drag.js?v=20260909082613';
+import { muatPanels, tautkanSebutan } from './panels.js?v=20260909082613';
+import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20260909082613';
+import { setTag, stt } from './views/data.js?v=20260909082613';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20260909082613';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20260909082613';
+import { t as tr, setBahasa, terjemahStatis } from '../core/i18n.js?v=20260909082613';
 import { cadanganJson, eksporSemuaMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
-  from './data-io.js?v=20260909074309';
+  from './data-io.js?v=20260909082613';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -724,11 +724,22 @@ function segarkanSetelahSapuan() {
     });
 
     /* siapkan editor tiap kali layar selesai digambar */
+    let idPetunjukBuka = null;   /* catatan yang sudah menerima petunjuk singkat */
     onAfterRender(() => {
       /* D19: layar kunci tidak menyentuh editor sama sekali — isi
          catatan terkunci tidak boleh dirender / diproses di belakang
          pintu PIN. */
       if (cur === 'kunci') return;
+      /* petunjuk mengetik tidak menetap di bar: tampil sekali sebagai
+         notif 5 detik setiap kali MASUK catatan (mode tulis) */
+      if (cur === 'editor' && state.openId !== idPetunjukBuka) {
+        idPetunjukBuka = state.openId;
+        const mech = document.getElementById('mech');
+        if (mech && mech.classList.contains('on'))
+          toast(tr('Ketuk untuk mengaktifkan · ketuk catatan untuk mengetik'), null, 5000);
+      } else if (cur !== 'editor') {
+        idPetunjukBuka = null;
+      }
       closeAll();
       bersihkanPilihanGambar();   /* seleksi gambar tak boleh menempel antar layar */
       pending.clear();
