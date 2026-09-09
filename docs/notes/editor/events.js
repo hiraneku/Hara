@@ -1,16 +1,16 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909100046';
-import { setBlock, indent } from './blocks.js?v=20260909100046';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909100046';
-import { autoFormat, cobaTagAkhir, cobaPembatasAkhir } from './markdown.js?v=20260909100046';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909100046';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909100046';
-import { onTitle } from '../model.js?v=20260909100046';
-import { tanganiPaste } from './paste.js?v=20260909100046';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260909100046';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260909100046';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260909100046';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260909100046';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909102312';
+import { setBlock, indent } from './blocks.js?v=20260909102312';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909102312';
+import { autoFormat, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag } from './markdown.js?v=20260909102312';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909102312';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909102312';
+import { onTitle } from '../model.js?v=20260909102312';
+import { tanganiPaste } from './paste.js?v=20260909102312';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260909102312';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260909102312';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260909102312';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260909102312';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -95,6 +95,19 @@ export function bindEditor() {
     const b=curBlock();
     if(!b) return;
     if((b.textContent||'').replace(/[\u200b\u00a0]/g,'')!==''){
+      /* ── tag otomatis di ujung ketikan ──
+         Karakter penutup (spasi/tanda baca) mengubah #nama jadi tag
+         SEKARANG, sebelum browser sempat menaruh karakter. Konversi
+         setelah karakter masuk membuat browser bisa "menarik kembali"
+         kursor ke dalam span tag — ketikan lanjutan lalu menyambung di
+         dalam tag (ikut berwarna tag, warnanya berubah tiap huruf).
+         Lewati saat ada format yang sedang menunggu — biarkan jalur
+         lama yang menanganinya. */
+      if (!pending.size && !sticky.size && tutupTagSebelum(b, e.data)) {
+        e.preventDefault();
+        refresh();
+        return;
+      }
       /* blok sudah berisi teks: kalau ada font menunggu, bungkus di sini */
       /* Mode bawaan MELEKAT: tiap karakter diperiksa, bukan cuma yang
          pertama. Browser kerap menarik caret kembali ke dalam span font
@@ -104,6 +117,12 @@ export function bindEditor() {
          karakter sebelumnya. Mark yang sedang sticky JANGAN dikeluarkan —
          ia baru saja dinyalakan lagi oleh pengguna. */
       const markKeluar = markPerluKeluar().filter(m => !sticky.has(m));
+      /* Pengaman ujung tag: browser menarik caret kembali ke dalam span
+         tag yang baru dibuat. Kalau caret menyelinap ke ujung-dalam tag,
+         keluarkan dulu — kalau tidak, ketikan lanjutan ikut jadi tag
+         (warnanya berubah-ubah tiap huruf). Mengetik di TENGAH tag
+         (menyunting) tetap dibolehkan. */
+      const tagUjung = tagUjungCaret();
       /* Font, sorotan & warna perlu dibungkus untuk karakter ini: ada
          yang menunggu, mode "Bawaan" di dalam span, caret di span yang
          tidak cocok dengan yang lekat, ATAU format lekat yang caret-nya
@@ -114,7 +133,7 @@ export function bindEditor() {
       const sorotBungkus = sorotPerluBungkus();
       const warnaBungkus = warnaPerluBungkus();
 
-      if (markKeluar.length || fontBungkus || sorotBungkus || warnaBungkus) {
+      if (markKeluar.length || tagUjung || fontBungkus || sorotBungkus || warnaBungkus) {
         e.preventDefault();
         /* Bungkus dulu — untuk "Bawaan" fungsi mengembalikan null, itu
            wajar: ia hanya memecah keluar dari span, karakternya tetap
@@ -126,6 +145,7 @@ export function bindEditor() {
         if (sorotBungkus) bungkusSorotanPending();
         if (warnaBungkus) bungkusWarnaPending();
         markKeluar.forEach(m => keluarDariMark(m));
+        if (tagUjung) keluarDariUjungTag(tagUjung);
         const s2 = sel();
         if (s2 && s2.rangeCount) {
           const r2 = s2.getRangeAt(0);
@@ -279,13 +299,28 @@ export function bindEditor() {
       }
     }
     /* ── Enter menutup baris mekanik yang belum sempat ditutup spasi:
-       "#halo" di ujung teks → tag otomatis (biarkan browser memecah
-       blok sesudahnya); baris yang isinya cuma "---" → pembatas. ── */
+       "#halo" di ujung baris → jadi tag lalu baris dipecah sendiri
+       (hasil pasti di semua browser); baris isinya cuma "---" →
+       pembatas. ── */
     if(e.key==='Enter' && !e.shiftKey && !e.isComposing && b &&
        !b.classList.contains('b-code') && !b.classList.contains('b-img') &&
        !b.classList.contains('b-div')){
-      if(cobaTagAkhir(b,false)){ /* tag terbungkus; Enter lanjut normal */ }
-      else if(cobaPembatasAkhir(b)){
+      if(cobaTagUjungEnter(b)){
+        e.preventDefault();
+        const nb=document.createElement('div');
+        nb.className='b-p';
+        b.after(nb);
+        const tn=document.createTextNode('');
+        nb.appendChild(tn);
+        const sX=sel();
+        if(sX){
+          const nr=document.createRange(); nr.setStart(tn,0); nr.collapse(true);
+          sX.removeAllRanges(); sX.addRange(nr);
+        }
+        refresh();
+        return;
+      }
+      if(cobaPembatasAkhir(b)){
         e.preventDefault();
         refresh();
         return;

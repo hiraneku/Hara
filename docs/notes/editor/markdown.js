@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909100046';
-import { setBlock, setCallout } from './blocks.js?v=20260909100046';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260909100046';
-import { updateCount } from './cleanup.js?v=20260909100046';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909102312';
+import { setBlock, setCallout } from './blocks.js?v=20260909102312';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260909102312';
+import { updateCount } from './cleanup.js?v=20260909102312';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -30,6 +30,52 @@ const DELIM_TAG=/[ \t\u00a0\u3000,;:!?)\]}\u3001\u3002\uFF0C\uFF1A\uFF1B\uFF01\u
 const KATA_TAG=/(^|[\s(])(#[\p{L}\p{N}_\/-]+)$/u;
 /* "---" (garis penuh) lalu spasi/Enter → pembatas. */
 const PEMBATAS_GARIS=/^-{3,}$/;
+
+/* Karakter yang menutup #nama jadi tag, SATU ketukan. TAB tidak
+   termasuk — Tab punya peran indent di editor. */
+const TUTUP_CHAR=new Set([' ','\u00a0',',',';',':','!','?',')',']','}',
+  '\u3001','\u3002','\uFF0C','\uFF1A','\uFF1B','\uFF01','\uFF1F']);
+export const tagPenutupLayak=ch=>!!ch && ch.length===1 && TUTUP_CHAR.has(ch);
+
+/* ── pengaman caret di ujung tag ──
+   Browser kerap menarik caret kembali ke dalam elemen yang baru saja
+   dibentuk di dekat ketikan. Ketika caret berada di UJUNG isi sebuah
+   span tag (node teks di dalam span, offset == panjangnya), karakter
+   baru yang diketik akan menyambung DI DALAM tag: teks lanjutan ikut
+   menjadi tag, dan karena warna tag dihitung dari namanya, warnanya
+   berubah-ubah tiap huruf. Aturan di sini: ketikan di ujung-dalam tag
+   selalu dikeluarkan lebih dulu ke teks biasa. Menyunting isi tag dari
+   TENGAH (offset < panjang) tetap dibolehkan. */
+export function tagUjungCaret(){
+  const s=sel();
+  if(!(s&&s.rangeCount)) return null;
+  const r=s.getRangeAt(0);
+  if(!r.collapsed) return null;
+  const n=r.startContainer;
+  if(!n||n.nodeType!==3) return null;
+  if(r.startOffset!==n.length) return null;
+  const pa=n.parentElement;
+  if(!pa) return null;
+  const el=pa.closest?pa.closest('span.tg'):null;
+  return (el&&el.isConnected)?el:null;
+}
+
+/* Pindahkan caret keluar dari ujung tag: ke UJUNG node teks sesudahnya
+   (posisi alami lanjutan ketikan — mis. sesudah spasi penutup). Kalau
+   tidak ada node teks sesudahnya, sediakan node kosong di belakang
+   span. */
+export function keluarDariUjungTag(el){
+  if(!el||!el.parentNode) return false;
+  let t=el.nextSibling;
+  while(t&&t.nodeType!==3) t=t.nextSibling;
+  if(!t){ t=document.createTextNode(''); el.after(t); }
+  const s=sel();
+  if(!s) return false;
+  const r=document.createRange();
+  r.setStart(t,t.length); r.collapse(true);
+  s.removeAllRanges(); s.addRange(r);
+  return true;
+}
 
 export function absOff(b,c,o){
   let n=0,done=false;
@@ -182,27 +228,28 @@ export function replaceAbs(b,end,len,tag,cls,text){
 /* Ganti rentang [awalAbs, akhirAbs) dengan span tag. Total panjang teks
    blok tidak berubah (span menyumbang teks yang sama), jadi caret bisa
    dipasang ulang dengan offset absolut yang sama seperti sebelum
-   penggantian. */
+   penggantian. Mengembalikan elemen span (atau null kalau gagal). */
 function gantiTag(b, awalAbs, akhirAbs, teks, caretAbs) {
   const p1 = ptFromAbs(b, awalAbs), p2 = ptFromAbs(b, akhirAbs);
-  if (!p1 || !p2) return false;
+  if (!p1 || !p2) return null;
   const el = document.createElement('span');
   el.className = 'tg';
   el.textContent = teks;
   const r = document.createRange();
-  try { r.setStart(p1.node, p1.off); r.setEnd(p2.node, p2.off); } catch (e) { return false; }
+  try { r.setStart(p1.node, p1.off); r.setEnd(p2.node, p2.off); } catch (e) { return null; }
   r.deleteContents(); r.insertNode(el);
   const s = sel();
-  if (!s) return true;
-  const pk = ptFromAbs(b, caretAbs);
-  if (pk) {
-    const nr = document.createRange();
-    nr.setStart(pk.node, Math.min(pk.off, pk.node.length));
-    nr.collapse(true);
-    s.removeAllRanges(); s.addRange(nr);
+  if (s) {
+    const pk = ptFromAbs(b, caretAbs);
+    if (pk) {
+      const nr = document.createRange();
+      nr.setStart(pk.node, Math.min(pk.off, pk.node.length));
+      nr.collapse(true);
+      s.removeAllRanges(); s.addRange(nr);
+    }
   }
   updateCount();
-  return true;
+  return el;
 }
 
 /* Apakah teks sebelum kursor berakhir dengan kata tag? Kalau ya dan
@@ -244,7 +291,81 @@ export function cobaTagAkhir(b, bolehDelim) {
   const akhirAbs = caretAbs0 - potong;
   const awalAbs = akhirAbs - tag.length;
   if (awalAbs < 0) return false;
-  return gantiTag(b, awalAbs, akhirAbs, tag, caretAbs0);
+  const el = gantiTag(b, awalAbs, akhirAbs, tag, caretAbs0);
+  if (!el) return false;
+  return true;
+}
+
+/* ── Konversi DI DEPAN karakter penutup (jalur utama) ──
+   Dipanggil dari beforeinput SEBELUM karakter penutup (spasi/dll.)
+   masuk. Konversi di sini membuat caret tidak pernah bergantung pada
+   browser setelah karakter terlanjur masuk — sumber utama masalah
+   "ketikan lanjutan ikut jadi tag". Bila berhasil, delimiter disisipkan
+   oleh kita di belakang span dan caret mendarat sesudahnya, di teks
+   biasa. */
+export function tutupTagSebelum(b, delim) {
+  if (!b || !b.classList || b.classList.contains('b-code')) return false;
+  if (!tagPenutupLayak(delim)) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const r = s.getRangeAt(0);
+  if (!r.collapsed) return false;
+  const node = r.startContainer;
+  if (!node || node.nodeType !== 3) return false;
+  const pa = node.parentElement;
+  if (pa && pa.closest && pa.closest('span.tg, span.wl, code, pre, a')) return false;
+  /* hanya saat kursor di UJUNG node teks (ketikan normal); posisi lain
+     (mis. setelah panah ke tengah) memakai jalur lama di autoFormat */
+  if (r.startOffset !== node.length) return false;
+  const caretAbs0 = absOff(b, node, r.startOffset);
+  const before0 = b.textContent.slice(0, caretAbs0);
+  const m = KATA_TAG.exec(before0);
+  if (!m) return false;
+  const tag = m[2];
+  const awalAbs = caretAbs0 - tag.length;
+  if (awalAbs < 0) return false;
+  const el = gantiTag(b, awalAbs, caretAbs0, tag, caretAbs0);
+  if (!el) return false;
+  /* delimiter ditulis sesudah span; caret di belakangnya, di teks biasa */
+  const dn = document.createTextNode(delim);
+  el.after(dn);
+  const s2 = sel();
+  if (s2) {
+    const nr = document.createRange();
+    nr.setStart(dn, dn.length); nr.collapse(true);
+    s2.removeAllRanges(); s2.addRange(nr);
+  }
+  return true;
+}
+
+/* ── Enter menutup tag di ujung baris (jalur tanpa spasi) ──
+   Hanya saat kursor di UJUNG baris dan isi di ujung berbentuk #nama.
+   Blok struktural (daftar, kutipan, callout, kode, gambar, pembatas)
+   dikecualikan — Enter di sana mengikuti perilakunya masing-masing. */
+export function cobaTagUjungEnter(b) {
+  if (!b || !b.classList || b.classList.contains('b-code') ||
+      b.classList.contains('b-img') || b.classList.contains('b-div') ||
+      b.classList.contains('b-li') || b.classList.contains('b-ol') ||
+      b.classList.contains('b-todo') || b.classList.contains('b-quote') ||
+      b.classList.contains('b-cal')) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const r = s.getRangeAt(0);
+  if (!r.collapsed) return false;
+  const node = r.startContainer;
+  if (!node || node.nodeType !== 3) return false;
+  const pa = node.parentElement;
+  if (pa && pa.closest && pa.closest('span.tg, span.wl, code, pre, a')) return false;
+  const caretAbs0 = absOff(b, node, r.startOffset);
+  const full = b.textContent;
+  if (caretAbs0 !== full.length) return false;   /* hanya ujung baris */
+  const m = KATA_TAG.exec(full);
+  if (!m) return false;
+  const tag = m[2];
+  const awalAbs = full.length - tag.length;
+  const el = gantiTag(b, awalAbs, full.length, tag, full.length);
+  if (!el) return false;
+  return true;
 }
 
 /* ── "---" → pembatas ── */

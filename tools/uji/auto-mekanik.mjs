@@ -163,6 +163,52 @@ cek('T27 pembatas tersimpan sebagai type=divider', isiSimpan().some(b=>b.type===
 fresh(); type('- item');
 cek('T28 "- item" tetap daftar (bukan pembatas)', isi().classList.contains('b-li'), isi().className);
 
+/* ── regresi laporan pengguna: lanjutan ketikan TIDAK ikut jadi tag ── */
+fresh(); type('Halo #halo dunia');
+const spA=DOC().querySelector('span.tg');
+cek('T29 ketikan lanjutan tidak masuk ke dalam tag', !!spA && spA.textContent==='#halo' &&
+     isiTeks()==='Halo #halo dunia', isiHtml());
+cek('T30 lanjutan ketikan adalah teks biasa di luar span',
+  DOC().querySelector('span.tg').nextSibling && DOC().querySelector('span.tg').nextSibling.nodeType===3 &&
+  DOC().querySelector('span.tg').nextSibling.textContent===' dunia', isiHtml());
+
+/* dua tag berurutan di kalimat yang sama */
+fresh(); type('Tag #satu dan #dua ya');
+const spans2=DOC().querySelectorAll('span.tg');
+cek('T31 dua tag otomatis dalam satu kalimat', spans2.length===2 &&
+     spans2[0].textContent==='#satu' && spans2[1].textContent==='#dua', isiHtml());
+cek('T32 teks utuh dengan dua tag', isiTeks()==='Tag #satu dan #dua ya', JSON.stringify(isiTeks()));
+
+/* simulasi "caret ditarik masuk ke ujung tag" oleh browser: caret
+   dipaksa ke ujung-dalam span (tanpa selectionchange), lalu mengetik —
+   huruf harus keluar ke teks biasa, span tidak ikut bertambah */
+fresh(); type('Halo #halo ');
+const spB=DOC().querySelector('span.tg');
+const tnB=spB.firstChild;
+const rB=d.createRange(); rB.setStart(tnB, tnB.length); rB.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rB);
+type('xyz');
+cek('T33 caret di ujung-dalam tag: ketikan dikeluarkan ke teks biasa',
+  DOC().querySelector('span.tg').textContent==='#halo' && isiTeks()==='Halo #halo xyz', isiHtml());
+
+/* warna tag tidak berubah-ubah: nama tag tetap, data-tt-nya stabil */
+fresh(); type('Halo #halo ');
+const t1=DOC().querySelector('span.tg').getAttribute('data-tt');
+type('q'); type('w');
+const t2=DOC().querySelector('span.tg').getAttribute('data-tt');
+cek('T34 warna tag stabil saat lanjutan diketik (nama tak berubah)', t1===t2 && !!t1,
+  `${t1} -> ${t2}`);
+
+/* mengetik di TENGAH tag (menyunting) tetap dibolehkan */
+fresh(); type('Halo #halo ');
+const spC=DOC().querySelector('span.tg');
+const tnC=spC.firstChild;
+const rC=d.createRange(); rC.setStart(tnC, 2); rC.collapse(true);
+SEL.removeAllRanges(); SEL.addRange(rC);
+type('X');
+cek('T35 sunting tengah tag tetap bisa (sisip di tengah nama)',
+  DOC().querySelector('span.tg').textContent==='#hXalo', DOC().querySelector('span.tg').textContent);
+
 console.log(`\ntotal: ${no} · gagal: ${gagal}`);
 if(gagal){ console.log('❌ ADA GAGAL'); process.exit(1); }
 console.log('SEMUA LOLOS');
