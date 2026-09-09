@@ -361,6 +361,10 @@ export const JA = {
   "Belum ada tag": "タグはまだありません",
   "Tag adalah #kata di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.": "タグとはノート内の #キーワード のことです。作ると、ここや一覧行のチップに表示されます。",
   "Semua tag": "すべてのタグ",
+
+  "Cari tag…": "タグを検索…",
+  "Cari tag": "タグを検索",
+  "Tidak ada tag yang cocok dengan “{q}”.": "「{q}」に一致するタグはありません",
   "Klik tag untuk memfilter daftar catatan. Tag muncul otomatis dari #tag di isi — tidak perlu dikelola manual.": "タグをタップするとノート一覧を絞り込めます。タグは本文の #タグ から自動で現れるので、手動管理は不要です。",
   "{n} catatan": "{n}件のノート",
   "Arsip kosong": "アーカイブは空です",

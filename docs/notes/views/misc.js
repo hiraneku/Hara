@@ -1,15 +1,46 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909105048';
-import { esc, stamp } from '../../core/dom.js?v=20260909105048';
-import { rowFor } from './row.js?v=20260909105048';
-import { plainText } from '../note-model.js?v=20260909105048';
-import { semuaTag } from '../tags.js?v=20260909105048';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909105048';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909105048';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909105048';
-import { terlihat } from '../kunci.js?v=20260909105048';
+import { state } from '../../core/store.js?v=20260909112206';
+import { esc, stamp } from '../../core/dom.js?v=20260909112206';
+import { rowFor } from './row.js?v=20260909112206';
+import { plainText } from '../note-model.js?v=20260909112206';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20260909112206';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909112206';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909112206';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909112206';
+import { terlihat } from '../kunci.js?v=20260909112206';
+
+/* ── Halaman Tag: daftar yang bisa disaring ── */
+
+/* Saring yang sedang diketik di kolom "Cari tag…" — dipertahankan agar
+   render ulang halaman tidak menghapus ketikan. */
+let saringTag = '';
+export const setSaringTag = q => { saringTag = q || ''; };
+
+/* Daftar tag (sebagai baris) yang cocok dengan saringan. Dipakai render
+   awal halaman dan saat pengguna mengetik di kolom cari. */
+export function daftarTagHtml(q) {
+  const sem = semuaTag();
+  const qq = (q || '').trim().toLowerCase();
+  const isi = qq ? sem.filter(t => t.nama.toLowerCase().includes(qq)) : sem;
+  if (!isi.length)
+    return `<p class="dm-kosong" style="padding:10px 2px">${
+      qq ? tr('Tidak ada tag yang cocok dengan “{q}”.', { q: esc(q) })
+         : tr('Belum ada tag')}</p>`;
+  const baris = isi.map(t => {
+    const pemakai = state.notes
+      .filter(n => !n.deletedAt && terlihat(n) && tagUntukTampil(n).includes(t.nama))
+      .slice(0, 2).map(n => n.title).filter(Boolean);
+    const ket = `${tr('{n} catatan', { n: t.jumlah }) }` + (pemakai.length ? ' · ' + pemakai.join(' · ') : '');
+    return `<button class="row" data-tag="${esc(t.nama)}">
+      <span class="tag-dot" data-tt="${tandaTag(t.nama)}" style="--lc:${WARNA_TAG[tandaTag(t.nama)]}"></span>
+      <div class="row-b"><div class="row-t">#${esc(t.nama)}</div>
+      <div class="row-s" style="white-space:normal;line-height:1.45">${esc(ket)}</div></div>
+      <span class="row-m">${t.jumlah}</span></button>`;
+  }).join('');
+  return `<div class="card">${baris}</div>`;
+}
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -28,8 +59,10 @@ export function renderHasilCari(q) {
   let daftar = state.notes.filter(n => !n.deletedAt && terlihat(n));
   daftar = daftar.filter(n => {
     if (tagSaja)
-      return kata.every(k => (n.tags || []).some(t => t.toLowerCase().includes(k)));
-    const teks = `${n.title || ''} ${(n.tags || []).join(' ')} ${plainText(n)}`.toLowerCase();
+      /* tag dari cache, atau langsung dari isi bila cache kosong — tag
+         selalu bisa dicari selama masih ada di catatan */
+      return kata.every(k => tagUntukTampil(n).some(t => t.toLowerCase().includes(k)));
+    const teks = `${n.title || ''} ${tagUntukTampil(n).join(' ')} ${plainText(n)}`.toLowerCase();
     return kata.every(k => teks.includes(k));
   });
   daftar.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -70,20 +103,16 @@ tags:()=>{
     return `<div class="page"><div class="empty"><h3>${tr('Belum ada tag')}</h3>
       <p>${tr('Tag adalah #kata di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.')}
       </p></div></div>`;
-  const baris = sem.map(t => {
-    const pemakai = state.notes.filter(n => !n.deletedAt && terlihat(n) && (n.tags || []).includes(t.nama))
-      .slice(0, 2).map(n => n.title).filter(Boolean);
-    const ket = `${tr('{n} catatan', { n: t.jumlah }) }` + (pemakai.length ? ' · ' + pemakai.join(' · ') : '');
-    return `<button class="row" data-tag="${esc(t.nama)}">
-      <span class="tag-dot" data-tt="${tandaTag(t.nama)}" style="--lc:${WARNA_TAG[tandaTag(t.nama)]}"></span>
-      <div class="row-b"><div class="row-t">#${esc(t.nama)}</div>
-      <div class="row-s" style="white-space:normal;line-height:1.45">${esc(ket)}</div></div>
-      <span class="row-m">${t.jumlah}</span></button>`;
-  }).join('');
   return `<div class="page">
     <div class="overline" style="margin:0 0 8px">${tr('Semua tag')}</div>
-    <div class="card">${baris}</div>
-    <p class="note" style="padding:20px 2px 0">${tr('Klik tag untuk memfilter daftar catatan. Tag muncul otomatis dari #tag di isi — tidak perlu dikelola manual.')}</p></div>`;
+    <div style="display:flex;align-items:center;gap:10px;background:var(--sunken);border-radius:var(--r-md);
+      padding:0 13px;height:40px;margin-bottom:12px">
+      <svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
+      <input id="cari-tag" placeholder="${tr('Cari tag…')}" autocomplete="off"
+        aria-label="${tr('Cari tag')}" value="${esc(saringTag)}"
+        style="flex:1;border:none;background:none;outline:none;font-size:14px"></div>
+    <div id="tags-daftar">${daftarTagHtml(saringTag)}</div>
+    <p class="note" style="padding:16px 2px 0">${tr('Klik tag untuk memfilter daftar catatan. Tag muncul otomatis dari #tag di isi — tidak perlu dikelola manual.')}</p></div>`;
 },
 
 arsip:()=>{

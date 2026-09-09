@@ -13,8 +13,8 @@
    tidak ada tag "hantu" yang menetap. Tag manual hanya bisa hilang bila
    field `tagsManual`-nya diubah (tidak ada UI-nya; ia milik impor). */
 
-import { state } from '../core/store.js?v=20260909105048';
-import { terlihat } from './kunci.js?v=20260909105048';
+import { state } from '../core/store.js?v=20260909112206';
+import { terlihat } from './kunci.js?v=20260909112206';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang
@@ -54,6 +54,19 @@ function unik(daftar) {
 export const tagManualCatatan = n =>
   Array.isArray(n && n.tagsManual) ? n.tagsManual.slice() : [];
 
+/* Tag untuk keperluan TAMPILAN (chip baris, filter, halaman Tag, panel,
+   pencarian "#…"): cache bila sudah terisi — kalau cache kosong (catatan
+   yang tag-nya baru ditulis dan belum sempat disimpan, data lama, atau
+   cache basi), hitung langsung dari isi. Dengan ini tag di isi TIDAK
+   PERNAH "tidak tampil" atau "tidak bisa dicari" seperti halnya tag di
+   catatan sambutan. Sumber kebenaran tetap isi; cache cuma percepatan. */
+export function tagUntukTampil(n) {
+  if (!n) return [];
+  const c = Array.isArray(n.tags) ? n.tags : [];
+  if (c.length) return c;
+  return tagDariIsi(n);
+}
+
 /* Perbarui cache tag catatan dari isi + tag manualnya. Dipanggil saat
    menyimpan / memuat. Mengembalikan true bila cache berubah (dipakai
    pemanggil untuk memutuskan perlu menulis ulang penyimpanan). */
@@ -72,11 +85,14 @@ export function sinkronTag(n) {
    belum dibuka tidak ikut agregasi publik. */
 const aktif = () => state.notes.filter(n => !n.deletedAt && !n.archived && terlihat(n));
 
-/* Agregat semua tag: [{ nama, jumlah }], diurutkan jumlah menurun. */
+/* Agregat semua tag: [{ nama, jumlah }], diurutkan jumlah menurun.
+   Jumlah dihitung dari tag yang TAMPIL per catatan (cache, atau isi
+   bila cache kosong) — tag di isi tidak pernah absen dari halaman Tag
+   hanya karena cache belum disinkronkan. */
 export function semuaTag() {
   const hitung = new Map();
   aktif().forEach(n => {
-    (n.tags || []).forEach(t => hitung.set(t, (hitung.get(t) || 0) + 1));
+    tagUntukTampil(n).forEach(t => hitung.set(t, (hitung.get(t) || 0) + 1));
   });
   return [...hitung.entries()]
     .map(([nama, jumlah]) => ({ nama, jumlah }))

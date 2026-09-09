@@ -16,11 +16,12 @@
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20260909105048';
-import { excerptOf } from '../note-model.js?v=20260909105048';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909105048';
-import { terlihat } from '../kunci.js?v=20260909105048';
-import { t as tr } from '../../core/i18n.js?v=20260909105048';
+import { esc, stamp } from '../../core/dom.js?v=20260909112206';
+import { excerptOf } from '../note-model.js?v=20260909112206';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909112206';
+import { tagUntukTampil } from '../tags.js?v=20260909112206';
+import { terlihat } from '../kunci.js?v=20260909112206';
+import { t as tr } from '../../core/i18n.js?v=20260909112206';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {
@@ -36,7 +37,9 @@ const thumbOf = n => {
    menaruh tombol di dalam tombol. */
 function barisIsi(n, boleh) {
   const cuplikan = boleh ? excerptOf(n) : '';
-  const tg = boleh && Array.isArray(n.tags) ? n.tags : [];
+  /* cache tag, atau isi bila cache kosong — chip tetap tampil seperti
+     tag di catatan sambutan */
+  const tg = boleh ? tagUntukTampil(n) : [];
   /* baris di Arsip tidak diberi chip: memfilternya mengarah ke daftar
      utama yang tidak memuat catatan terarsip — membingungkan */
   const chips = (!n.archived && tg.length)

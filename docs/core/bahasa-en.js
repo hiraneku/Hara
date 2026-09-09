@@ -362,6 +362,10 @@ export const EN = {
   "Belum ada tag": "No tags yet",
   "Tag adalah #kata di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.": "A tag is #word inside a note. As soon as one exists it shows up here and in the tag chips of list rows.",
   "Semua tag": "All tags",
+
+  "Cari tag…": "Search tags…",
+  "Cari tag": "Search tags",
+  "Tidak ada tag yang cocok dengan “{q}”.": "No tags match “{q}”.",
   "Klik tag untuk memfilter daftar catatan. Tag muncul otomatis dari #tag di isi — tidak perlu dikelola manual.": "Tap a tag to filter the note list. Tags appear automatically from #tag in content — no manual upkeep.",
   "{n} catatan": { one: "{n} note", other: "{n} notes" },
   "Arsip kosong": "Archive is empty",
