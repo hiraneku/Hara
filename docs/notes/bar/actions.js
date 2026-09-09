@@ -1,10 +1,10 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260909054938';
-import { toggleMark } from '../editor/marks.js?v=20260909054938';
-import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20260909054938';
-import { refresh } from '../editor/cleanup.js?v=20260909054938';
-import { pilihGambar } from '../editor/image.js?v=20260909054938';
-import { toggleRef } from '../editor/blockref.js?v=20260909054938';
+import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20260909063332';
+import { toggleMark } from '../editor/marks.js?v=20260909063332';
+import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20260909063332';
+import { refresh } from '../editor/cleanup.js?v=20260909063332';
+import { pilihGambar } from '../editor/image.js?v=20260909063332';
+import { toggleRef } from '../editor/blockref.js?v=20260909063332';
 
 /* Panel warna tag (B10) dibuka lewat bar — lihat render.js. */
 export const BUKA_TAGWARNA = 'tagwarna';

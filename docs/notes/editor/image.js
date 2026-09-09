@@ -4,15 +4,15 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260909054938';
-import { refresh } from './cleanup.js?v=20260909054938';
-import { pastikanKolomAkhir } from './blocks.js?v=20260909054938';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260909063332';
+import { refresh } from './cleanup.js?v=20260909063332';
+import { pastikanKolomAkhir } from './blocks.js?v=20260909063332';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260909054938';
-import { state } from '../../core/store.js?v=20260909054938';
-import { cur } from '../../core/router.js?v=20260909054938';
-import { toast } from '../../core/toast.js?v=20260909054938';
-import { t as tr } from '../../core/i18n.js?v=20260909054938';
+  from '../../core/blobs.js?v=20260909063332';
+import { state } from '../../core/store.js?v=20260909063332';
+import { cur } from '../../core/router.js?v=20260909063332';
+import { toast } from '../../core/toast.js?v=20260909063332';
+import { t as tr } from '../../core/i18n.js?v=20260909063332';
 
 const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
 const MUTU      = 0.82;

@@ -195,6 +195,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .toast-a{background:none;border:none;padding:0;margin-left:10px;color:inherit;
   font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .toast-a:hover{opacity:.85}
+/* Saat bar mekanik editor dipakai (duduk di dasar layar), pesan singkat
+   diangkat ke atasnya — kalau tidak, pesan menutupi separuh atas tombol
+   bar (area ketukan "agak ke atas" jadi mati). */
+.mech.on ~ .toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 .bnav{display:none}
 .note{max-width:880px;margin:0 auto;padding:26px 32px 40px;font-size:13px;color:var(--faint);line-height:1.65}
 /* ── panel data di bawah editor ── */
@@ -261,6 +265,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   .bnav.hide{display:none}
   .fab{bottom:calc(70px + env(safe-area-inset-bottom));right:16px;width:48px;height:48px}
   .fab.hide{display:none}
+  /* Pesan singkat naik ke atas bar bawah & FAB — sebelumnya di
+     bottom:24px ia menimpa separuh atas bar (z-nya lebih tinggi),
+     membuat ketukan pada bagian atas tombol bar tidak kena. */
+  .toast{bottom:calc(128px + env(safe-area-inset-bottom))}
   .sheet{left:16px;right:16px;width:auto;bottom:calc(128px + env(safe-area-inset-bottom))}
   .pop{left:12px!important;right:12px;width:auto!important}
 }

@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20260909054938';
+import { t as tr } from '../core/i18n.js?v=20260909063332';
 
 export const BLOCK_TYPES = [
   'paragraph',

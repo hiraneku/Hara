@@ -6,7 +6,7 @@
    (tenggat hari ini atau sudah lewat & belum selesai). Dihitung dari
    isi — tidak menyimpan apa pun ke catatan. */
 
-import { isInggris } from '../core/i18n.js?v=20260909054938';
+import { isInggris } from '../core/i18n.js?v=20260909063332';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 
