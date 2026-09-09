@@ -1,5 +1,5 @@
 /* Helper DOM dipakai semua modul. */
-import { t as tr, NAMA_HARI, NAMA_BULAN, isInggris } from './i18n.js?v=20260909063332';
+import { t as tr, NAMA_HARI, NAMA_BULAN, bahasaSekarang } from './i18n.js?v=20260909070912';
 
 export const $  = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -20,14 +20,21 @@ export function stamp(ts) {
 }
 
 /* Tanggal lengkap antarmuka mengikuti bahasa: Indonesia "Rabu, 9
-   September", Inggris "Wednesday, September 9". Dipakai sapaan Beranda
-   — tanpa tahun, sesuai arah desain. */
+   September", Inggris "Wednesday, September 9", Jepang "9月9日(水)"
+   (hari pendek). Dipakai sapaan Beranda — tanpa tahun, sesuai arah
+   desain. */
 export function tglHari(ts) {
   const tt = new Date(ts || Date.now());
+  const tgl = tt.getDate();
+  const b = bahasaSekarang();
+  if (b === 'ja') {
+    /* (水) — satu huruf pertama nama hari Jepang (日曜日 → 日, …) */
+    const hari = NAMA_HARI()[tt.getDay()].slice(0, 1);
+    return `${tt.getMonth() + 1}月${tgl}日(${hari})`;
+  }
   const hari = NAMA_HARI()[tt.getDay()];
   const bulan = NAMA_BULAN()[tt.getMonth()];
-  const tgl = tt.getDate();
-  return isInggris()
+  return b === 'en'
     ? `${hari}, ${bulan} ${tgl}`
     : `${hari}, ${tgl} ${bulan}`;
 }

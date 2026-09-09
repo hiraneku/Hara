@@ -18,26 +18,30 @@
    (sama seperti tombol "Catatan hari ini"). Templat tersimpan
    pengguna adalah data: nama & isinya tidak diterjemahkan. */
 
-import { state } from '../core/store.js?v=20260909063332';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260909063332';
-import { go } from '../core/router.js?v=20260909063332';
-import { esc } from '../core/dom.js?v=20260909063332';
-import { toast } from '../core/toast.js?v=20260909063332';
-import { t as tr, isInggris } from '../core/i18n.js?v=20260909063332';
-import { judulJurnalHari } from './harian.js?v=20260909063332';
+import { state } from '../core/store.js?v=20260909070912';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20260909070912';
+import { go } from '../core/router.js?v=20260909070912';
+import { esc } from '../core/dom.js?v=20260909070912';
+import { toast } from '../core/toast.js?v=20260909070912';
+import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260909070912';
+import { judulJurnalHari } from './harian.js?v=20260909070912';
 
 const KUNCI = 'hara.v1.tpl';
 
 /* Tanggal panjang untuk judul catatan yang dibuat dari templat
-   ("Rapat · 9 September 2026" / "Meeting · September 9, 2026"). */
+   ("Rapat · 9 September 2026" / "Meeting · September 9, 2026" /
+   "会議 · 2026年9月9日"). */
 function tanggalPanjang() {
   try {
     const t = new Date();
-    return t.toLocaleDateString(isInggris() ? 'en-US' : 'id-ID',
+    return t.toLocaleDateString(LOKALE(),
       { day: 'numeric', month: 'long', year: 'numeric' });
   } catch (e) {
     const t = new Date();
-    if (isInggris()) return `${t.getMonth() + 1}/${t.getDate()}/${t.getFullYear()}`;
+    if (bahasaSekarang() === 'ja')
+      return `${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日`;
+    if (bahasaSekarang() === 'en')
+      return `${t.getMonth() + 1}/${t.getDate()}/${t.getFullYear()}`;
     return `${t.getDate()}/${t.getMonth() + 1}/${t.getFullYear()}`;
   }
 }
@@ -51,15 +55,28 @@ const BAWAAN = [
     nama: 'Jurnal harian',
     ket: 'Judul diisi tanggal otomatis',
     judul: () => judulJurnalHari(),
-    html: () => isInggris() ? `
-<div class="b-h2">Grateful for</div>
-<div class="b-p"></div>
-<div class="b-h2">What happened today</div>
-<div class="b-p"></div>
-<div class="b-h2">What I learned</div>
-<div class="b-p"></div>
-<div class="b-h2">Tomorrow</div>
-<div class="b-todo"></div>` : `
+    html: () => HTML_JURNAL[bahasaSekarang()] || HTML_JURNAL.id,
+  },
+  {
+    id: 'rapat',
+    nama: 'Catatan rapat',
+    ket: 'Tujuan, hadir, catatan, tindak lanjut',
+    judul: () => `${PREFIX_RAPAT[bahasaSekarang()]} · ${tanggalPanjang()}`,
+    html: () => HTML_RAPAT[bahasaSekarang()] || HTML_RAPAT.id,
+  },
+  {
+    id: 'belajar',
+    nama: 'Daftar belajar',
+    ket: 'Materi + latihan yang dicentang',
+    judul: () => PREFIX_BELAJAR[bahasaSekarang()],
+    html: () => HTML_BELAJAR[bahasaSekarang()] || HTML_BELAJAR.id,
+  },
+];
+
+/* Isi bawaan dibuat saat templat DITERAPKAN — lahir dalam bahasa yang
+   sedang aktif (sama seperti tombol "Catatan hari ini"). */
+const HTML_JURNAL = {
+  id: `
 <div class="b-h2">Yang kusyukuri</div>
 <div class="b-p"></div>
 <div class="b-h2">Yang terjadi hari ini</div>
@@ -68,23 +85,28 @@ const BAWAAN = [
 <div class="b-p"></div>
 <div class="b-h2">Besok</div>
 <div class="b-todo"></div>`,
-  },
-  {
-    id: 'rapat',
-    nama: 'Catatan rapat',
-    ket: 'Tujuan, hadir, catatan, tindak lanjut',
-    judul: () => `${isInggris() ? 'Meeting' : 'Rapat'} · ${tanggalPanjang()}`,
-    html: () => isInggris() ? `
-<div class="b-h2">Purpose</div>
+  en: `
+<div class="b-h2">Grateful for</div>
 <div class="b-p"></div>
-<div class="b-h2">Present</div>
-<div class="b-li">— name —</div>
-<div class="b-li">— name —</div>
-<div class="b-h2">Notes</div>
+<div class="b-h2">What happened today</div>
 <div class="b-p"></div>
-<div class="b-h2">Action items</div>
-<div class="b-todo">— who: what, when —</div>
-<div class="b-todo"></div>` : `
+<div class="b-h2">What I learned</div>
+<div class="b-p"></div>
+<div class="b-h2">Tomorrow</div>
+<div class="b-todo"></div>`,
+  ja: `
+<div class="b-h2">今日の感謝</div>
+<div class="b-p"></div>
+<div class="b-h2">今日あったこと</div>
+<div class="b-p"></div>
+<div class="b-h2">今日学んだこと</div>
+<div class="b-p"></div>
+<div class="b-h2">明日</div>
+<div class="b-todo"></div>`,
+};
+const PREFIX_RAPAT = { id: 'Rapat', en: 'Meeting', ja: '会議' };
+const HTML_RAPAT = {
+  id: `
 <div class="b-h2">Tujuan</div>
 <div class="b-p"></div>
 <div class="b-h2">Hadir</div>
@@ -95,27 +117,53 @@ const BAWAAN = [
 <div class="b-h2">Tindak lanjut</div>
 <div class="b-todo">— siapa: apa, kapan —</div>
 <div class="b-todo"></div>`,
-  },
-  {
-    id: 'belajar',
-    nama: 'Daftar belajar',
-    ket: 'Materi + latihan yang dicentang',
-    judul: () => (isInggris() ? 'Learning' : 'Belajar'),
-    html: () => isInggris() ? `
-<div class="b-h2">Material</div>
+  en: `
+<div class="b-h2">Purpose</div>
 <div class="b-p"></div>
-<div class="b-h2">Practice</div>
-<div class="b-todo">Review the material</div>
-<div class="b-todo">Note key terms</div>
-<div class="b-todo">Do practice problems</div>` : `
+<div class="b-h2">Present</div>
+<div class="b-li">— name —</div>
+<div class="b-li">— name —</div>
+<div class="b-h2">Notes</div>
+<div class="b-p"></div>
+<div class="b-h2">Action items</div>
+<div class="b-todo">— who: what, when —</div>
+<div class="b-todo"></div>`,
+  ja: `
+<div class="b-h2">目的</div>
+<div class="b-p"></div>
+<div class="b-h2">参加者</div>
+<div class="b-li">— 名前 —</div>
+<div class="b-li">— 名前 —</div>
+<div class="b-h2">メモ</div>
+<div class="b-p"></div>
+<div class="b-h2">アクション項目</div>
+<div class="b-todo">— だれが: なにを、いつまでに —</div>
+<div class="b-todo"></div>`,
+};
+const PREFIX_BELAJAR = { id: 'Belajar', en: 'Learning', ja: '勉強' };
+const HTML_BELAJAR = {
+  id: `
 <div class="b-h2">Materi</div>
 <div class="b-p"></div>
 <div class="b-h2">Latihan</div>
 <div class="b-todo">Baca ulang materi</div>
 <div class="b-todo">Catat istilah penting</div>
 <div class="b-todo">Kerjakan soal latihan</div>`,
-  },
-];
+  en: `
+<div class="b-h2">Material</div>
+<div class="b-p"></div>
+<div class="b-h2">Practice</div>
+<div class="b-todo">Review the material</div>
+<div class="b-todo">Note key terms</div>
+<div class="b-todo">Do practice problems</div>`,
+  ja: `
+<div class="b-h2">教材</div>
+<div class="b-p"></div>
+<div class="b-h2">練習</div>
+<div class="b-todo">教材を見直す</div>
+<div class="b-todo">重要な用語をメモする</div>
+<div class="b-todo">練習問題を解く</div>`,
+};
 
 /* ── templat tersimpan pengguna ── */
 function bacaTersimpan() {

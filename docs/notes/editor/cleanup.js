@@ -1,20 +1,20 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20260909063332';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260909063332';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260909063332';
-import { MARKSEL, markActive, pending } from './marks.js?v=20260909063332';
-import { state, save } from '../../core/store.js?v=20260909063332';
-import { findNote } from '../model.js?v=20260909063332';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260909063332';
-import { sinkronTag } from '../tags.js?v=20260909063332';
-import { tandaiTautan } from '../wikilink.js?v=20260909063332';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260909063332';
-import { cur } from '../../core/router.js?v=20260909063332';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260909063332';
-import { GROUPS } from '../bar/config.js?v=20260909063332';
-import { warnaSekarang, warnaPending } from './warna.js?v=20260909063332';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20260909063332';
-import { t as tr, isInggris } from '../../core/i18n.js?v=20260909063332';
+import { docEl, sel, curBlock } from './caret.js?v=20260909070912';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20260909070912';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20260909070912';
+import { MARKSEL, markActive, pending } from './marks.js?v=20260909070912';
+import { state, save } from '../../core/store.js?v=20260909070912';
+import { findNote } from '../model.js?v=20260909070912';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20260909070912';
+import { sinkronTag } from '../tags.js?v=20260909070912';
+import { tandaiTautan } from '../wikilink.js?v=20260909070912';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20260909070912';
+import { cur } from '../../core/router.js?v=20260909070912';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20260909070912';
+import { GROUPS } from '../bar/config.js?v=20260909070912';
+import { warnaSekarang, warnaPending } from './warna.js?v=20260909070912';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20260909070912';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20260909070912';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -119,7 +119,7 @@ export function updateCount(){
             .replace(/[\u200b\u00a0]/g,' ').trim();
   const chars=isi.length;
   const words=isi?isi.split(/\s+/).filter(Boolean).length:0;
-  el.innerHTML=`<b>${chars.toLocaleString(isInggris() ? 'en-US' : 'id')}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(isInggris() ? 'en-US' : 'id')}</b> ${tr('kata')}`;
+  el.innerHTML=`<b>${chars.toLocaleString(LOKALE())}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(LOKALE())}</b> ${tr('kata')}`;
   /* Cuplikan TIDAK disimpan di sini — ia diturunkan dari blocks lewat
      excerptOf() saat daftar catatan digambar. Menyimpannya di dua tempat
      adalah persis sumber-ganda yang ingin dihindari. */

@@ -2,8 +2,8 @@
    Keduanya didefinisikan di sini karena dipakai dua layar: editor dan
    "Properties" (lihat views/props.js). */
 
-import { html } from './html-util.js?v=20260909063332';
-import { t as tr, isInggris } from '../core/i18n.js?v=20260909063332';
+import { html } from './html-util.js?v=20260909070912';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20260909070912';
 
 /* Contoh nilai properti (saran visual) — diterjemahkan terpisah dari
    kamus global karena maknanya tunggal (mis. jenis "Catatan" = Note,
@@ -15,7 +15,17 @@ const CONTOH_EN = {
   'Gagasan': 'Idea', 'Riset': 'Research', 'Keputusan': 'Decision',
   'Tinggi': 'High', 'Sedang': 'Medium', 'Rendah': 'Low',
 };
-export const contohProp = c => (isInggris() && CONTOH_EN[c]) ? CONTOH_EN[c] : c;
+const CONTOH_JA = {
+  'Draf': '下書き', 'Sedang dikerjakan': '進行中', 'Selesai': '完了',
+  'Diarsipkan': 'アーカイブ済み', 'Catatan': 'ノート', 'Tugas': 'タスク',
+  'Gagasan': 'アイデア', 'Riset': '調査', 'Keputusan': '決定',
+  'Tinggi': '高', 'Sedang': '中', 'Rendah': '低',
+};
+const CONTOH = { en: CONTOH_EN, ja: CONTOH_JA };
+export const contohProp = c => {
+  const m = CONTOH[bahasaSekarang()];
+  return (m && m[c]) ? m[c] : c;
+};
 
 
 export const KET_PROP = {

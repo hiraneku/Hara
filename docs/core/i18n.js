@@ -3,7 +3,8 @@
    Prinsip:
    - Kunci terjemahan = TEKS INDONESIA aslinya. Mode Indonesia cukup
      mengembalikan kunci — paritas dengan teks lama dijamin otomatis;
-     mode Inggris mencari padanannya di kamus (core/bahasa-en.js).
+     mode Inggris & Jepang mencari padanannya di kamus
+     (core/bahasa-en.js, core/bahasa-ja.js).
    - t('…') dipakai untuk teks antarmuka. Teks DATA (isi catatan, judul,
      tag, properti, frontmatter ekspor/impor Markdown) TIDAK pernah
      diterjemahkan — bahasa hanya mengubah kerangka aplikasi.
@@ -11,33 +12,48 @@
      (mode Indonesia sama persis; Inggris bisa membedakan jamak).
    - Pilihan tersimpan di localStorage, berlaku seketika tanpa muat
      ulang. Statis index.html memakai atribut data-i18n + terjemahStatis.
-   - Modul ini TIDAK mengimpor apa pun — aman dipakai modul inti mana
-     pun tanpa risiko lingkaran impor. */
+   - Modul ini TIDAK mengimpor modul inti lain — aman dipakai modul
+     mana pun tanpa risiko lingkaran impor. */
 
-import { EN } from './bahasa-en.js?v=20260909063332';
+import { EN } from './bahasa-en.js?v=20260909070912';
+import { JA } from './bahasa-ja.js?v=20260909070912';
 
-const KUNCI = 'hara.v1.bahasa';     /* 'id' | 'en' — bawaan 'id' */
-const SIMPAN = 'id';
+const KUNCI = 'hara.v1.bahasa';     /* 'id' | 'en' | 'ja' — bawaan 'id' */
+const KODE = ['id', 'en', 'ja'];
+const KAMUS = { en: EN, ja: JA };
+
+/* Daftar bahasa untuk dropdown Pengaturan — nama memakai bahasa itu
+   sendiri (endonim), tidak diterjemahkan. */
+export const DAFTAR_BAHASA = [
+  { kode: 'id', nama: 'Indonesia' },
+  { kode: 'en', nama: 'English' },
+  { kode: 'ja', nama: '日本語' },
+];
 
 export function bahasaSekarang() {
   try {
     const v = localStorage.getItem(KUNCI);
-    return v === 'en' ? 'en' : 'id';
+    return KODE.includes(v) ? v : 'id';
   } catch (e) { /* privat */ }
-  return SIMPAN;
+  return 'id';
 }
 
 export function setBahasa(b) {
-  if (b !== 'id' && b !== 'en') return;
+  if (!KODE.includes(b)) return;
   try {
-    if (b === SIMPAN) localStorage.removeItem(KUNCI);
+    if (b === 'id') localStorage.removeItem(KUNCI);
     else localStorage.setItem(KUNCI, b);
   } catch (e) { /* privat */ }
   const l = document.documentElement;
-  if (l) l.lang = b === 'en' ? 'en' : 'id';
+  if (l) l.lang = b;
 }
 
 export const isInggris = () => bahasaSekarang() === 'en';
+
+/* Lokale Intl untuk bahasa aktif — dipakai toLocaleString /
+   toLocaleDateString (angka, tanggal panjang, dsb.). */
+export const LOKALE = () =>
+  ({ id: 'id-ID', en: 'en-US', ja: 'ja-JP' })[bahasaSekarang()];
 
 /* Ganti {x} dengan nilai parameternya. */
 function ganti(v, p) {
@@ -58,21 +74,30 @@ function bentuk(v, p) {
 
 /* Teks antarmuka bahasa aktif. */
 export function t(kunci, p) {
-  const v = isInggris() && EN[kunci] !== undefined
-    ? bentuk(EN[kunci], p)
+  const b = bahasaSekarang();
+  const kamus = b !== 'id' ? KAMUS[b] : null;
+  const v = kamus && kamus[kunci] !== undefined
+    ? bentuk(kamus[kunci], p)
     : kunci;
   return ganti(v, p);
 }
 
 /* Nama hari/bulan mengikuti bahasa aktif (untuk tanggal antarmuka). */
-export const NAMA_HARI = () => isInggris()
-  ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  : ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-export const NAMA_BULAN = () => isInggris()
-  ? ['January', 'February', 'March', 'April', 'May', 'June', 'July',
-     'August', 'September', 'October', 'November', 'December']
-  : ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
-     'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const HARI = {
+  id: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  ja: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+};
+const BULAN = {
+  id: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
+    'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'],
+  ja: ['1月', '2月', '3月', '4月', '5月', '6月',
+    '7月', '8月', '9月', '10月', '11月', '12月'],
+};
+export const NAMA_HARI = () => HARI[bahasaSekarang()];
+export const NAMA_BULAN = () => BULAN[bahasaSekarang()];
 
 /* Terjemahkan teks statis index.html ([data-i18n] / [data-i18n-tip] /
    [data-i18n-ph] / [data-i18n-ar]). Dipanggil saat aplikasi dimuat dan

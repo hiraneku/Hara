@@ -7,7 +7,7 @@
    • cap waktu & sapaan tanggal mengikuti bahasa aktif;
    • jurnal hari ini tidak pernah dobel saat bahasa berganti
      (jurnal lama berjudul Indonesia tetap ditemukan di mode Inggris
-     dan sebaliknya);
+     dan sebaliknya, Jepang ikut dua arah);
    • isi catatan tidak pernah berubah — hanya kerangka yang berganti.
 
    Jalan: node tools/uji/bahasa.mjs (dari dalam folder snapshot uji). */
@@ -52,9 +52,13 @@ const BULAN_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July'
 const kini = new Date();
 const judulJurnalId = () => `Jurnal · ${kini.getDate()} ${BULAN[kini.getMonth()]} ${kini.getFullYear()}`;
 const judulJurnalEn = () => `Journal · ${BULAN_EN[kini.getMonth()]} ${kini.getDate()}, ${kini.getFullYear()}`;
+const judulJurnalJa = () => `ジャーナル · ${kini.getFullYear()}年${kini.getMonth() + 1}月${kini.getDate()}日`;
 const tanggalkini = (en) => en
   ? `${HARI_EN[kini.getDay()]}, ${BULAN_EN[kini.getMonth()]} ${kini.getDate()}`
   : `${HARI[kini.getDay()]}, ${kini.getDate()} ${BULAN[kini.getMonth()]}`;
+const HARI_PENDEK_JA = ['日', '月', '火', '水', '木', '金', '土'];
+const tanggalkiniJa = () =>
+  `${kini.getMonth() + 1}月${kini.getDate()}日(${HARI_PENDEK_JA[kini.getDay()]})`;
 const bahasaTersimpan = () => { try { return w.localStorage.getItem('hara.v1.bahasa'); } catch (e) { return null; } };
 
 /* Mulai bersih: bahasa bawaan Indonesia, tanpa catatan. */
@@ -80,9 +84,11 @@ const nilaiBahasa = () => { const s = d.querySelector('[data-bahasa]'); return s
 router.go('set'); await sleep(30);
 oke('S1a halaman Pengaturan terbuka', d.getElementById('title') && d.getElementById('title').textContent === 'Pengaturan');
 const selBahasa = () => d.querySelector('[data-bahasa]');
-oke('S1b dropdown bahasa ada dengan dua opsi', !!selBahasa()
-  && selBahasa().options.length === 2
-  && selBahasa().options[0].value === 'id' && selBahasa().options[1].value === 'en');
+oke('S1b dropdown bahasa memuat id/en/ja', !!selBahasa()
+  && selBahasa().options.length === 3
+  && selBahasa().options[0].value === 'id'
+  && selBahasa().options[1].value === 'en'
+  && selBahasa().options[2].value === 'ja');
 oke('S1c bawaan = Indonesia (nilai dropdown id)', nilaiBahasa() === 'id', nilaiBahasa());
 oke('S1d label bagian Bahasa berbahasa Indonesia', d.body.textContent.includes('Bahasa aplikasi')
   && d.body.textContent.includes('Tampilan') && d.body.textContent.includes('Unduh cadangan'));
@@ -179,6 +185,63 @@ router.go('home'); await sleep(25);
 klik(tombolJurnal()); await sleep(40);
 oke('S8b di mode Indonesia jurnal Inggris tetap dipakai — tidak dobel', state.openId === 'j2' && jumlahJurnal() === 1,
   `openId=${state.openId} jml=${jumlahJurnal()}`);
+state.notes.splice(0);
+
+/* ── S9: Jepang — pilihan, render, tanggal, jurnal lama Indonesia ── */
+const jumlahJurnalJa = () => state.notes.filter(x => !x.deletedAt
+  && /^(Jurnal|Journal|ジャーナル) ·/.test(x.title || '')).length;
+state.notes.push(makeNote({ id: 'j1', title: judulJurnalId(), createdAt: kini.getTime() - 60000,
+  updatedAt: kini.getTime() - 60000, blocks: [makeBlock({ type: 'paragraph', content: 'entri jurnal lama' })] }));
+state.notes.push(makeNote({ id: 'b1', title: 'Catatan uji', createdAt: kini.getTime() - 5000,
+  updatedAt: Date.now() - 2000, blocks: [makeBlock({ type: 'paragraph', content: ISI_ASLI })] }));
+router.go('set'); await sleep(25);
+pilih('ja'); await sleep(40);
+oke('S9a pilihan Jepang tersimpan & dropdown menunjuk ja', bahasaTersimpan() === 'ja' && nilaiBahasa() === 'ja',
+  String(bahasaTersimpan()) + '/' + nilaiBahasa());
+oke('S9b halaman Pengaturan berbahasa Jepang', d.getElementById('title').textContent === '設定'
+  && d.body.textContent.includes('アプリの言語') && !d.body.textContent.includes('Bahasa aplikasi'),
+  (d.getElementById('title') || {}).textContent);
+oke('S9c html lang ikut ja', d.documentElement.lang === 'ja', d.documentElement.lang);
+oke('S9d nav statis ikut (Beranda→ホーム)', [...d.querySelectorAll('.nav-i,.bnav button')]
+  .some(b => b.textContent.trim() === 'ホーム') && d.body.textContent.includes('ダウンロード'));
+router.go('home'); await sleep(30);
+oke('S9e sapaan Beranda memakai tanggal Jepang (9月9日(水))', d.body.textContent.includes(tanggalkiniJa()),
+  d.body.textContent.slice(0, 160).replace(/\s+/g, ' '));
+oke('S9f tombol jurnal Jepang di Beranda', [...d.querySelectorAll('.jurnal-btn')]
+  .some(b => b.textContent.includes('今日のジャーナル') && b.textContent.includes('ジャーナル')));
+router.go('notes'); await sleep(30);
+oke('S9g cap waktu jadi たった今', [...d.querySelectorAll('.row[data-open="b1"] *')]
+  .some(e => e.textContent === 'たった今'), '');
+oke('S9h judul & isi catatan (data) tetap asli di mode Jepang',
+  rowB1() && rowB1().textContent.includes('Catatan uji'));
+router.go('home'); await sleep(25);
+klik(tombolJurnal()); await sleep(40);
+oke('S9i di mode Jepang jurnal Indonesia tetap dipakai — tidak dobel',
+  state.openId === 'j1' && jumlahJurnalJa() === 1,
+  `openId=${state.openId} jml=${jumlahJurnalJa()}`);
+
+/* ── S10: jurnal dibuat di mode Jepang, dipakai di id & en ── */
+state.notes.splice(0);
+state.notes.push(makeNote({ id: 'b1', title: 'Catatan uji', createdAt: kini.getTime(), updatedAt: kini.getTime(),
+  blocks: [makeBlock({ type: 'paragraph', content: ISI_ASLI })] }));
+const jJa = judulJurnalJa();
+state.notes.push(makeNote({ id: 'j3', title: jJa, createdAt: kini.getTime(), updatedAt: kini.getTime(),
+  blocks: [makeBlock({ type: 'paragraph', content: 'entri jurnal ja' })] }));
+router.go('home'); await sleep(25);
+klik(tombolJurnal()); await sleep(40);
+oke('S10a jurnal Jepang terbuka saat bahasa Jepang', state.openId === 'j3', String(state.openId));
+router.go('set'); await sleep(25);
+pilih('id'); await sleep(35);
+router.go('home'); await sleep(25);
+klik(tombolJurnal()); await sleep(40);
+oke('S10b di mode Indonesia jurnal Jepang tetap dipakai — tidak dobel', state.openId === 'j3' && jumlahJurnalJa() === 1,
+  `openId=${state.openId} jml=${jumlahJurnalJa()}`);
+router.go('set'); await sleep(25);
+pilih('en'); await sleep(35);
+router.go('home'); await sleep(25);
+klik(tombolJurnal()); await sleep(40);
+oke('S10c di mode Inggris jurnal Jepang tetap dipakai — tidak dobel', state.openId === 'j3' && jumlahJurnalJa() === 1,
+  `openId=${state.openId} jml=${jumlahJurnalJa()}`);
 state.notes.splice(0);
 
 console.log(`total: ${total} · gagal: ${gagal}`);

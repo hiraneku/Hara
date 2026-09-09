@@ -1,6 +1,7 @@
 /* Jenis blok: paragraf, heading, kutipan, kode, daftar, to-do, callout. */
-import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260909063332';
-import { refresh } from './cleanup.js?v=20260909063332';
+import { docEl, sel, curBlock, caretEnd, ensureCaret, nearestEditable } from './caret.js?v=20260909070912';
+import { refresh } from './cleanup.js?v=20260909070912';
+import { LOKALE } from '../../core/i18n.js?v=20260909070912';
 
 export const BLOCKCLS = ['b-p','b-h1','b-h2','b-h3','b-quote','b-code','b-li','b-ol','b-todo','b-cal'];
 
@@ -205,13 +206,17 @@ export function setCallout(jenis){
   refresh();
 }
 
-/* ── Sisipkan tanggal hari ini di posisi kursor ── */
-const HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-const BULAN=['Januari','Februari','Maret','April','Mei','Juni','Juli',
-             'Agustus','September','Oktober','November','Desember'];
-export function tanggalHariIni(){
-  const t=new Date();
-  return `${HARI[t.getDay()]}, ${t.getDate()} ${BULAN[t.getMonth()]} ${t.getFullYear()}`;
+/* ── Sisipkan tanggal hari ini di posisi kursor ──
+   Format mengikuti bahasa aktif (id: "Minggu, 6 September 2026";
+   en: "Sunday, September 6, 2026"; ja: "2026年9月6日日曜日"). */
+export function tanggalHariIni() {
+  const t = new Date();
+  try {
+    return t.toLocaleDateString(LOKALE(),
+      { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  } catch (e) {
+    return `${t.getDate()}/${t.getMonth() + 1}/${t.getFullYear()}`;
+  }
 }
 export function insertTanggal(teks){
   const r=ensureCaret(); if(!r) return;

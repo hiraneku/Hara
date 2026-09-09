@@ -6,9 +6,11 @@
    (tenggat hari ini atau sudah lewat & belum selesai). Dihitung dari
    isi — tidak menyimpan apa pun ke catatan. */
 
-import { isInggris } from '../core/i18n.js?v=20260909063332';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260909070912';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+/* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */
+const HARI_JA = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
 
 export function waktuTenggat(teks) {
   if (!teks) return null;
@@ -81,7 +83,7 @@ export const tenggatHariIni = daftar => {
 
 export const bilaTenggat = ms => {
   try {
-    return new Date(ms).toLocaleDateString(isInggris() ? 'en-US' : 'id-ID',
+    return new Date(ms).toLocaleDateString(LOKALE(),
       { day: 'numeric', month: 'short' });
   } catch (e) {
     const t = new Date(ms);
@@ -96,11 +98,18 @@ export const sisaWaktu = ms => {
   const awal = AWAL_HARI();
   const tgl = new Date(ms); tgl.setHours(0, 0, 0, 0);
   const hari = Math.round((tgl.getTime() - awal) / SEHARI);
-  if (isInggris()) {
+  const b = bahasaSekarang();
+  if (b === 'en') {
     if (hari < 0) return Math.abs(hari) + ' day' + (Math.abs(hari) === 1 ? '' : 's') + ' ago';
     if (hari === 0) return 'today';
     if (hari === 1) return 'tomorrow';
     return 'in ' + hari + ' days';
+  }
+  if (b === 'ja') {
+    if (hari < 0) return Math.abs(hari) + '日前';
+    if (hari === 0) return '今日';
+    if (hari === 1) return '明日';
+    return hari + '日後';
   }
   if (hari < 0) return 'lewat ' + Math.abs(hari) + ' hari';
   if (hari === 0) return 'hari ini';
@@ -111,7 +120,18 @@ export const sisaWaktu = ms => {
 /* Teks hasil parse tenggat (data memakai kata Indonesia) — label chip
    yang tampil di layar ikut bahasa aktif. */
 export const labelTenggat = teks => {
-  if (!isInggris()) return teks;
+  const b = bahasaSekarang();
+  if (b === 'id') return teks;
+  if (b === 'ja') {
+    if (teks === 'hari ini') return '今日';
+    if (teks === 'besok') return '明日';
+    const m = /^hari (\S+)$/.exec(teks || '');
+    if (m) {
+      const idx = NAMA_HARI.indexOf(m[1].toLowerCase());
+      if (idx >= 0) return HARI_JA[idx];
+    }
+    return teks;
+  }
   if (teks === 'hari ini') return 'today';
   if (teks === 'besok') return 'tomorrow';
   const m = /^hari (\S+)$/.exec(teks || '');

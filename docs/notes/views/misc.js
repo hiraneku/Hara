@@ -1,15 +1,15 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909063332';
-import { esc, stamp } from '../../core/dom.js?v=20260909063332';
-import { rowFor } from './row.js?v=20260909063332';
-import { plainText } from '../note-model.js?v=20260909063332';
-import { semuaTag } from '../tags.js?v=20260909063332';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909063332';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20260909063332';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909063332';
-import { terlihat } from '../kunci.js?v=20260909063332';
+import { state } from '../../core/store.js?v=20260909070912';
+import { esc, stamp } from '../../core/dom.js?v=20260909070912';
+import { rowFor } from './row.js?v=20260909070912';
+import { plainText } from '../note-model.js?v=20260909070912';
+import { semuaTag } from '../tags.js?v=20260909070912';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909070912';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909070912';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909070912';
+import { terlihat } from '../kunci.js?v=20260909070912';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -161,8 +161,8 @@ set:()=>{ const akPilih = akSekarang() || '';
         <div class="row-t">${tr('Bahasa aplikasi')}</div>
         <div class="row-s">${tr('Seluruh antarmuka ikut berganti — isi catatan tidak pernah diterjemahkan')}</div></div>
       <div class="lang-pilih"><select data-bahasa aria-label="${tr('Bahasa aplikasi')}">
-          <option value="id"${bahasaSekarang() === 'en' ? '' : ' selected'}>Indonesia</option>
-          <option value="en"${bahasaSekarang() === 'en' ? ' selected' : ''}>English</option>
+          ${DAFTAR_BAHASA.map(b =>
+            `<option value="${b.kode}"${bahasaSekarang() === b.kode ? ' selected' : ''}>${b.nama}</option>`).join('')}
         </select></div></div>
   </div>
   <div class="sec"><h2>${tr('Isi bar mekanik')}</h2></div>
