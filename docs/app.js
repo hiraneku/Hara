@@ -1,18 +1,18 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260909054021';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260909054021';
-import { toast } from './core/toast.js?v=20260909054021';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909054021';
-import { notesModule } from './notes/index.js?v=20260909054021';
+import { load, state } from './core/store.js?v=20260909054938';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260909054938';
+import { toast } from './core/toast.js?v=20260909054938';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260909054938';
+import { notesModule } from './notes/index.js?v=20260909054938';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260909054021';
-import { bagikanCatatan } from './notes/share.js?v=20260909054021';
-import { bukaJurnalHari } from './notes/harian.js?v=20260909054021';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260909054021';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909054021';
-import { simpanTemplatNote } from './notes/templat.js?v=20260909054021';
-import { panelKunciCatatan } from './notes/kunci.js?v=20260909054021';
-import { t as tr } from './core/i18n.js?v=20260909054021';
+  from './notes/model.js?v=20260909054938';
+import { bagikanCatatan } from './notes/share.js?v=20260909054938';
+import { bukaJurnalHari } from './notes/harian.js?v=20260909054938';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260909054938';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260909054938';
+import { simpanTemplatNote } from './notes/templat.js?v=20260909054938';
+import { panelKunciCatatan } from './notes/kunci.js?v=20260909054938';
+import { t as tr } from './core/i18n.js?v=20260909054938';
 
 const MODULES = [notesModule];
 

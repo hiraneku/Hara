@@ -67,22 +67,30 @@ state.notes.push(makeNote({
   blocks: [makeBlock({ type: 'paragraph', content: ISI_ASLI })],
 }));
 
+/* Bantuan memilih bahasa lewat dropdown [data-bahasa] (peristiwa change). */
+const pilih = v => {
+  const sel = d.querySelector('[data-bahasa]');
+  if (!sel) return;
+  sel.value = v;
+  sel.dispatchEvent(new w.Event('change', { bubbles: true, cancelable: true }));
+};
+const nilaiBahasa = () => { const s = d.querySelector('[data-bahasa]'); return s ? s.value : ''; };
+
 /* ── S1: bawaan Indonesia ── */
 router.go('set'); await sleep(30);
 oke('S1a halaman Pengaturan terbuka', d.getElementById('title') && d.getElementById('title').textContent === 'Pengaturan');
-const btnId = () => d.querySelector('[data-bahasa="id"]');
-const btnEn = () => d.querySelector('[data-bahasa="en"]');
-oke('S1b dua tombol bahasa ada', !!btnId() && !!btnEn());
-oke('S1c bawaan = Indonesia (tombol id aktif)', btnId() && btnId().getAttribute('aria-pressed') === 'true'
-  && btnEn() && btnEn().getAttribute('aria-pressed') === 'false');
+const selBahasa = () => d.querySelector('[data-bahasa]');
+oke('S1b dropdown bahasa ada dengan dua opsi', !!selBahasa()
+  && selBahasa().options.length === 2
+  && selBahasa().options[0].value === 'id' && selBahasa().options[1].value === 'en');
+oke('S1c bawaan = Indonesia (nilai dropdown id)', nilaiBahasa() === 'id', nilaiBahasa());
 oke('S1d label bagian Bahasa berbahasa Indonesia', d.body.textContent.includes('Bahasa aplikasi')
   && d.body.textContent.includes('Tampilan') && d.body.textContent.includes('Unduh cadangan'));
 
 /* ── S2: pindah Inggris → tersimpan & render ulang seketika ── */
-klik(btnEn()); await sleep(40);
+pilih('en'); await sleep(40);
 oke('S2a pilihan tersimpan di localStorage', bahasaTersimpan() === 'en', String(bahasaTersimpan()));
-oke('S2b tombol en jadi aktif', btnEn() && btnEn().getAttribute('aria-pressed') === 'true'
-  && btnId() && btnId().getAttribute('aria-pressed') === 'false');
+oke('S2b dropdown menunjuk en', nilaiBahasa() === 'en', nilaiBahasa());
 oke('S2c halaman Pengaturan ikut berganti bahasa', d.getElementById('title').textContent === 'Settings'
   && d.body.textContent.includes('App language') && !d.body.textContent.includes('Bahasa aplikasi'),
   (d.getElementById('title') || {}).textContent);
@@ -91,7 +99,7 @@ oke('S2d nav statis ikut (terjemahStatis)', [...d.querySelectorAll('.nav-i,.bnav
   && d.body.textContent.includes('Download backup'));
 
 /* ── S3: kembali Indonesia ── */
-klik(btnId()); await sleep(40);
+pilih('id'); await sleep(40);
 oke('S3a balik ke id — pilihan disimpan sebagai id (dihapus)', bahasaTersimpan() !== 'en'
   && d.getElementById('title').textContent === 'Pengaturan'
   && d.body.textContent.includes('Bahasa aplikasi'));
@@ -109,7 +117,7 @@ const rowB1 = () => d.querySelector('.row[data-open="b1"]');
 oke('S4d judul catatan (data) tetap asli', rowB1() && rowB1().textContent.includes('Catatan uji'));
 
 router.go('set'); await sleep(25);
-klik(d.querySelector('[data-bahasa="en"]')); await sleep(35);
+pilih('en'); await sleep(35);
 router.go('home'); await sleep(30);
 oke('S5a sapaan Beranda memakai tanggal Inggris', d.body.textContent.includes(tanggalkini(true)),
   d.body.textContent.slice(0, 160).replace(/\s+/g, ' '));
@@ -134,7 +142,7 @@ oke('S6c status editor memakai bahasa Inggris (contoh bar mekanik)',
   && [...d.querySelectorAll('.mech-in button')].some(b => b.title === 'Bold'));
 const simpanIsi = state.notes.find(x => x.id === 'b1').blocks.map(b => b.content).join('\u0001');
 router.go('set'); await sleep(25);
-klik(d.querySelector('[data-bahasa="id"]')); await sleep(35);
+pilih('id'); await sleep(35);
 oke('S6d isi tersimpan identik setelah bolak-balik bahasa',
   state.notes.find(x => x.id === 'b1').blocks.map(b => b.content).join('\u0001') === simpanIsi);
 
@@ -149,7 +157,7 @@ router.go('home'); await sleep(25);
 klik(tombolJurnal()); await sleep(40);
 oke('S7a jurnal Indonesia terbuka (id)', state.openId === 'j1', String(state.openId));
 router.go('set'); await sleep(25);
-klik(d.querySelector('[data-bahasa="en"]')); await sleep(35);
+pilih('en'); await sleep(35);
 router.go('home'); await sleep(25);
 klik(tombolJurnal()); await sleep(40);
 oke('S7b di mode Inggris jurnal lama tetap dipakai — tidak dobel', state.openId === 'j1' && jumlahJurnal() === 1,
@@ -166,7 +174,7 @@ router.go('home'); await sleep(25);
 klik(tombolJurnal()); await sleep(40);
 oke('S8a jurnal Inggris terbuka saat bahasa Inggris', state.openId === 'j2', String(state.openId));
 router.go('set'); await sleep(25);
-klik(d.querySelector('[data-bahasa="id"]')); await sleep(35);
+pilih('id'); await sleep(35);
 router.go('home'); await sleep(25);
 klik(tombolJurnal()); await sleep(40);
 oke('S8b di mode Indonesia jurnal Inggris tetap dipakai — tidak dobel', state.openId === 'j2' && jumlahJurnal() === 1,

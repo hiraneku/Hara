@@ -16,11 +16,11 @@
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20260909054021';
-import { excerptOf } from '../note-model.js?v=20260909054021';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909054021';
-import { terlihat } from '../kunci.js?v=20260909054021';
-import { t as tr } from '../../core/i18n.js?v=20260909054021';
+import { esc, stamp } from '../../core/dom.js?v=20260909054938';
+import { excerptOf } from '../note-model.js?v=20260909054938';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260909054938';
+import { terlihat } from '../kunci.js?v=20260909054938';
+import { t as tr } from '../../core/i18n.js?v=20260909054938';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {

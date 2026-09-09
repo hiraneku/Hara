@@ -766,6 +766,21 @@ body.zen #cari-note{top:16px}
 .ak-dot:hover{transform:scale(1.12)}
 [data-theme=dark] .ak-dot{color:#131711}
 
+/* Bahasa — dropdown pilihan bahasa di Pengaturan. Select asli ditimpa
+   tampilannya supaya seragam lintas-browser; panah digambar sendiri. */
+.lang-pilih{position:relative;flex:none;display:inline-flex;align-items:center}
+.lang-pilih select{appearance:none;-webkit-appearance:none;
+  height:36px;min-width:138px;padding:0 32px 0 12px;border-radius:var(--r-md);
+  border:1px solid var(--border);background:var(--sunken);color:var(--text);
+  font:inherit;font-size:14px;font-weight:500;cursor:pointer;outline:none;
+  transition:.12s var(--ease)}
+.lang-pilih select:hover{background:var(--border)}
+.lang-pilih select:focus-visible{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-weak)}
+.lang-pilih::after{content:"";position:absolute;right:13px;width:7px;height:7px;
+  border-right:1.7px solid var(--muted);border-bottom:1.7px solid var(--muted);
+  transform:rotate(45deg) translateY(-1px);pointer-events:none}
+[data-theme=dark] .lang-pilih select{color-scheme:dark}
+
 @media print{
   .ed-aksi,#cari-note,#zen-x,.pinx,.ak-dot{display:none!important}
   /* cetak/PDF memakai ukuran huruf kertas, bukan skala bacaan layar */

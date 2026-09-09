@@ -1,15 +1,15 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909054021';
-import { esc, stamp } from '../../core/dom.js?v=20260909054021';
-import { rowFor } from './row.js?v=20260909054021';
-import { plainText } from '../note-model.js?v=20260909054021';
-import { semuaTag } from '../tags.js?v=20260909054021';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909054021';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20260909054021';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909054021';
-import { terlihat } from '../kunci.js?v=20260909054021';
+import { state } from '../../core/store.js?v=20260909054938';
+import { esc, stamp } from '../../core/dom.js?v=20260909054938';
+import { rowFor } from './row.js?v=20260909054938';
+import { plainText } from '../note-model.js?v=20260909054938';
+import { semuaTag } from '../tags.js?v=20260909054938';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909054938';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20260909054938';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909054938';
+import { terlihat } from '../kunci.js?v=20260909054938';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -160,12 +160,10 @@ set:()=>{ const akPilih = akSekarang() || '';
     <div class="row"><div class="row-b">
         <div class="row-t">${tr('Bahasa aplikasi')}</div>
         <div class="row-s">${tr('Seluruh antarmuka ikut berganti — isi catatan tidak pernah diterjemahkan')}</div></div>
-      <div class="lang-pick" role="group" aria-label="${tr('Bahasa aplikasi')}">
-        <button type="button" class="lang-btn${bahasaSekarang() === 'id' ? ' on' : ''}"
-          data-bahasa="id" aria-pressed="${bahasaSekarang() === 'id'}">Indonesia</button>
-        <button type="button" class="lang-btn${bahasaSekarang() === 'en' ? ' on' : ''}"
-          data-bahasa="en" aria-pressed="${bahasaSekarang() === 'en'}">English</button>
-      </div></div>
+      <div class="lang-pilih"><select data-bahasa aria-label="${tr('Bahasa aplikasi')}">
+          <option value="id"${bahasaSekarang() === 'en' ? '' : ' selected'}>Indonesia</option>
+          <option value="en"${bahasaSekarang() === 'en' ? ' selected' : ''}>English</option>
+        </select></div></div>
   </div>
   <div class="sec"><h2>${tr('Isi bar mekanik')}</h2></div>
   <div class="card" style="margin-bottom:24px" id="bar-prefs"></div>
