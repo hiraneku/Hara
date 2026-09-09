@@ -4,9 +4,9 @@
    data-tt (kunci palet) + variabel --lc. Tanpa ini tag di isi hanya
    hijau aksen. */
 
-import { state } from '../core/store.js?v=20260909032733';
-import { tandaUntukCatatan } from './label.js?v=20260909032733';
-import { chipTag } from './label.js?v=20260909032733';
+import { state } from '../core/store.js?v=20260909041737';
+import { tandaUntukCatatan } from './label.js?v=20260909041737';
+import { chipTag } from './label.js?v=20260909041737';
 
 /* Nama tag dari satu span.tg — teksnya "#nama" atau "#nama" plus spasi. */
 export function namaDariSpan(span) {

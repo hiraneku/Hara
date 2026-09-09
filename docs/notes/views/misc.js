@@ -1,13 +1,14 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909032733';
-import { esc, stamp } from '../../core/dom.js?v=20260909032733';
-import { rowFor } from './row.js?v=20260909032733';
-import { plainText } from '../note-model.js?v=20260909032733';
-import { semuaTag } from '../tags.js?v=20260909032733';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909032733';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909032733';
+import { state } from '../../core/store.js?v=20260909041737';
+import { esc, stamp } from '../../core/dom.js?v=20260909041737';
+import { rowFor } from './row.js?v=20260909041737';
+import { plainText } from '../note-model.js?v=20260909041737';
+import { semuaTag } from '../tags.js?v=20260909041737';
+import { AK, akSekarang } from '../../core/theme.js?v=20260909041737';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260909041737';
+import { terlihat } from '../kunci.js?v=20260909041737';
 
 /* ── Cari: membaca data nyata (judul + isi + tag) ── */
 export function renderHasilCari(q) {
@@ -20,7 +21,10 @@ export function renderHasilCari(q) {
   }
   const tagSaja = /^#/.test(q);
   const kata = (tagSaja ? q.slice(1) : q).toLowerCase().split(/\s+/).filter(Boolean);
-  let daftar = state.notes.filter(n => !n.deletedAt);
+  /* D19: catatan terkunci yang belum dibuka tidak ikut hasil cari sama
+     sekali — kalau tidak, barisnya bisa membocorkan bahwa catatan
+     tertentu mengandung kata kunci itu. */
+  let daftar = state.notes.filter(n => !n.deletedAt && terlihat(n));
   daftar = daftar.filter(n => {
     if (tagSaja)
       return kata.every(k => (n.tags || []).some(t => t.toLowerCase().includes(k)));
@@ -63,7 +67,7 @@ tags:()=>{
     return `<div class="page"><div class="empty"><h3>Belum ada tag</h3>
       <p>Tag adalah <span class="tg">#kata</span> di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.</p></div></div>`;
   const baris = sem.map(t => {
-    const pemakai = state.notes.filter(n => !n.deletedAt && (n.tags || []).includes(t.nama))
+    const pemakai = state.notes.filter(n => !n.deletedAt && terlihat(n) && (n.tags || []).includes(t.nama))
       .slice(0, 2).map(n => n.title).filter(Boolean);
     const ket = `${t.jumlah} catatan` + (pemakai.length ? ' · ' + pemakai.join(' · ') : '');
     return `<button class="row" data-tag="${esc(t.nama)}">
@@ -82,8 +86,8 @@ arsip:()=>{
   const a = state.notes.filter(n => n.archived && !n.deletedAt);
   return `<div class="page">
     ${a.length
-      ? `<div class="card">${a.map(rowFor).join('')}</div>
-         <p class="note">Buka catatan lalu pilih "Kembalikan dari arsip" (menu ···) untuk memindahkannya kembali ke daftar utama.</p>`
+      ? `<div class="card">${a.map(n => rowFor(n, 'arsip')).join('')}</div>
+         <p class="note">Geser baris ke kiri untuk mengembalikan atau menghapus. Buka catatan lalu pilih "Kembalikan dari arsip" (menu ···) juga bisa.</p>`
       : `<div class="empty"><h3>Arsip kosong</h3>
          <p>Catatan yang diarsipkan hilang dari daftar utama tapi tetap tersimpan di sini dan bisa dikembalikan.</p></div>`}
   </div>`;
@@ -97,15 +101,24 @@ trash:()=>{
   if (!s.length)
     return `<div class="page"><div class="empty"><h3>Sampah kosong</h3>
       <p>Catatan yang dihapus menunggu di sini selama 30 hari sebelum dibuang otomatis — siapa tahu masih dibutuhkan.</p></div></div>`;
-  const baris = s.map(n => `
+  const baris = s.map(n => {
+    /* D19: catatan terkunci tetap tampil buta di sampah (bisa dipulihkan
+       atau dihapus) — judul aslinya tidak boleh bocor ke layar ini. */
+    const boleh = terlihat(n);
+    const judul = boleh ? (esc(n.title) || 'Tanpa judul') : 'Catatan terkunci';
+    const ringkas = boleh
+      ? `Dihapus ${stamp(n.deletedAt)}`
+      : `Terkunci PIN · dihapus ${stamp(n.deletedAt)}`;
+    return `
     <div class="row" style="min-height:0;padding:11px 16px">
-      <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${esc(n.title) || 'Tanpa judul'}</div>
-        <div class="row-s">Dihapus ${stamp(n.deletedAt)}</div></div>
+      <div class="row-b"><div class="row-t"${boleh && !n.title ? ' style="color:var(--faint)"' : ''}>${judul}</div>
+        <div class="row-s">${ringkas}</div></div>
       <button type="button" class="btn btn-sec" style="height:32px;font-size:12.5px;flex:none"
         data-pulih="${n.id}">Pulihkan</button>
       <button type="button" class="btn btn-sec btn-danger" style="height:32px;font-size:12.5px;flex:none"
-        data-putus="${n.id}" data-putus-judul="${esc(n.title || 'Tanpa judul')}">Hapus</button>
-    </div>`).join('');
+        data-putus="${n.id}" data-putus-judul="${boleh ? esc(n.title || 'Tanpa judul') : 'Catatan terkunci'}">Hapus</button>
+    </div>`;
+  }).join('');
   return `<div class="page">
     <div class="overline" style="margin:0 0 8px">Tempat sampah · ${s.length}</div>
     <div class="card">${baris}</div>
@@ -146,9 +159,11 @@ set:()=>{ const akPilih = akSekarang() || '';
     <div class="row"><div class="row-b"><div class="row-t">Impor</div>
       <div class="row-s">Cadangan JSON Hara (termasuk gambar) · berkas .md · .zip markdown</div></div>
       <button type="button" class="btn btn-sec" data-impor>Pilih berkas…</button></div>
-    <div class="row"><div class="row-b"><div class="row-t">Ekspor cadangan JSON</div>
-      <div class="row-s">Semua catatan (sampah & arsip ikut) + gambar — bisa dipulihkan utuh kapan pun</div></div>
-      <button type="button" class="btn btn-sec" data-ekspor="json">JSON</button></div>
+    <div class="row" style="gap:10px"><div class="row-b"><div class="row-t">Unduh cadangan</div>
+      <div class="row-s">Semua catatan (sampah & arsip ikut) + gambar, satu berkas JSON — pulihkan utuh kapan pun</div></div>
+      <button type="button" class="btn btn-pri" data-ekspor="json"
+        style="height:38px;flex:none;gap:7px;padding:0 15px">
+        <svg class="ico" style="width:15px;height:15px"><use href="#i-dl"/></svg>Unduh</button></div>
     <div class="row"><div class="row-b"><div class="row-t">Ekspor Markdown</div>
       <div class="row-s">Satu berkas .md per catatan (frontmatter + wikilink utuh) dalam .zip — siap dibaca Obsidian</div></div>
       <button type="button" class="btn btn-sec" data-ekspor="md">Markdown</button></div>
@@ -157,4 +172,4 @@ set:()=>{ const akPilih = akSekarang() || '';
   </div>
   <input type="file" id="impor-in" hidden
     accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
-  <p class="note" style="padding:20px 0 0">Keluar-masuk kapan saja: cadangan JSON untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan JSON; ekspor Markdown hanya membawa teks.</p></div>`}};
+  <p class="note" style="padding:20px 0 0">Keluar-masuk kapan saja: Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks. Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.</p></div>`}};

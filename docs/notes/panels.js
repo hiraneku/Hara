@@ -12,14 +12,17 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20260909032733';
-import { cur } from '../core/router.js?v=20260909032733';
-import { touch } from './note-model.js?v=20260909032733';
+import { state, save } from '../core/store.js?v=20260909041737';
+import { cur } from '../core/router.js?v=20260909041737';
+import { touch } from './note-model.js?v=20260909041737';
+import { terlihat } from './kunci.js?v=20260909041737';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-const lainnya = n => state.notes.filter(x => x.id !== n.id && !x.deletedAt);
+/* D19: backlink/mention/graph tidak boleh membaca isi catatan lain
+   yang terkunci & belum dibuka di sesi ini. */
+const lainnya = n => state.notes.filter(x => x.id !== n.id && !x.deletedAt && terlihat(x));
 const teksJudul = n => String(n && n.title || '').trim();
 
 /* Parse isi blok jadi DOM ringan. */

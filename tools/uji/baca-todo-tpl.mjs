@@ -136,7 +136,7 @@ ok('C1 panel Belum selesai muncul',html.includes('Belum selesai')&&html.includes
 /* ruang lingkup: hanya segmen panel (baris catatan di bawahnya juga memuat
    teks todo — pratinjau lama yang bukan bagian panel) */
 const pAwal=html.indexOf('Belum selesai');
-const pUjung=html.indexOf('<div class="card"><button class="row" data-open="',pAwal);
+const pUjung=html.indexOf('<div class="card"><div class="srow"',pAwal);
 const panel=pAwal>=0?html.slice(pAwal,pUjung>pAwal?pUjung:html.length):'';
 ok('C2 hanya todo belum selesai yang tampil',panel.includes('beli susu')&&panel.includes('baca bab 3')&&!panel.includes('cuci baju')&&!panel.includes('semua beres'));
 ok('C3 teks html dibersihkan (tag dibuang)',!panel.includes('&lt;b&gt;susu&lt;/b&gt;'));

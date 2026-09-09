@@ -28,16 +28,19 @@ export function go(v) {
   document.getElementById('title').textContent = titles[v] || '';
 
   const isEd = v === 'editor';
+  /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,
+     dengan panah kembali — jalannya cuma dua: buka PIN atau kembali */
+  const pakaiEd = isEd || v === 'kunci';
   /* panah kembali ikut tampil di halaman yang tidak ada di nav bawah
      (Pengaturan) supaya selalu ada jalan keluar */
-  const pakaiBack = isEd || v === 'set';
+  const pakaiBack = pakaiEd || v === 'set';
   document.getElementById('back').style.display = pakaiBack ? 'grid' : 'none';
   /* hapus langsung dipindah ke menu \"···\" — mencegah salah ketuk */
   document.getElementById('del').style.display  = 'none';
   document.getElementById('dots').style.display = isEd ? 'grid' : 'none';
   document.getElementById('mech').classList.toggle('on', isEd);
-  document.getElementById('bnav').classList.toggle('hide', isEd);
-  document.getElementById('fab').classList.toggle('hide', isEd);
+  document.getElementById('bnav').classList.toggle('hide', pakaiEd);
+  document.getElementById('fab').classList.toggle('hide', pakaiEd);
   document.querySelectorAll('.nav-i,.bnav button')
     .forEach(b => b.classList.toggle('on', b.dataset.go === v));
 

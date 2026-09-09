@@ -3,13 +3,14 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260909032733';
-import { esc, tglHari } from '../../core/dom.js?v=20260909032733';
-import { rowFor } from './row.js?v=20260909032733';
-import { stt } from './data.js?v=20260909032733';
-import { tagDariIsi } from '../tags.js?v=20260909032733';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20260909032733';
-import { judulJurnalHari } from '../harian.js?v=20260909032733';
+import { state } from '../../core/store.js?v=20260909041737';
+import { esc, tglHari } from '../../core/dom.js?v=20260909041737';
+import { rowFor } from './row.js?v=20260909041737';
+import { stt } from './data.js?v=20260909041737';
+import { tagDariIsi } from '../tags.js?v=20260909041737';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20260909041737';
+import { judulJurnalHari } from '../harian.js?v=20260909041737';
+import { terlihat } from '../kunci.js?v=20260909041737';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -23,7 +24,8 @@ function teksPolos(html) {
 const TODO_MAKS = 150;   /* batas tampil — sisanya tetap ada di catatannya */
 
 export const belumSelesai = daftar =>
-  daftar.map(n => ({
+  daftar.filter(n => terlihat(n))
+  .map(n => ({
     n,
     items: (n.blocks || [])
       .filter(b => b.type === 'todo' && !(b.meta && b.meta.checked))
@@ -51,16 +53,23 @@ const kartuTodo = daftar =>
 /* Catatan yang muncul di daftar utama: belum diarsip & belum dihapus. */
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
 
-/* cache tag + tag turunan dari isi — filter tidak pernah ketinggalan */
+/* cache tag + tag turunan dari isi — filter tidak pernah ketinggalan.
+   Untuk catatan terkunci yang belum dibuka di sesi ini, isi tidak
+   dibaca: cukup cache `tags`-nya (catatan dikunci setelah tag ditulis,
+   jadi cache-nya sudah akurat; isi tetap tak tersentuh). */
 function punyaTag(n, tag) {
   const t = tag.toLowerCase();
   if ((n.tags || []).some(x => x.toLowerCase() === t)) return true;
+  if (!terlihat(n)) return false;
   return tagDariIsi(n).some(x => x.toLowerCase() === t);
 }
 
 const overline = teks => `<div class="overline" style="margin:0 0 8px">${teks}</div>`;
 
-const kartu = daftar => `<div class="card">${daftar.map(rowFor).join('')}</div>`;
+/* `geser`: baris di daftar penuh (catatan / arsip) mendapat aksi sapuan
+   D21; beranda & hasil cari memakai baris polos. */
+const kartu = (daftar, geser) =>
+  `<div class="card">${daftar.map(n => rowFor(n, geser)).join('')}</div>`;
 
 export const homeView = () => {
   const daftar = aktif();
@@ -114,8 +123,8 @@ export const notesView = () => {
       title="Urutkan daftar catatan"><svg class="ico"><use href="#i-sort"/></svg>Urut:
       <b>${esc(namaUrut(urutSekarang()))}</b></button>
   </div>
-  ${pin.length ? overline('Disematkan') + kartu(pin) : ''}
-  ${lain.length ? (pin.length ? overline('Lainnya') : '') + kartu(lain) : ''}
+  ${pin.length ? overline('Disematkan') + kartu(pin, 'utama') : ''}
+  ${lain.length ? (pin.length ? overline('Lainnya') : '') + kartu(lain, 'utama') : ''}
   <div class="list-foot">
     <span class="chip">semua ${daftar.length}</span>
     <span class="sep"></span>

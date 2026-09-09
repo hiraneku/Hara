@@ -6,7 +6,8 @@
    dua sumber yang bisa berselisih. Cache inilah yang dipakai daftar,
    halaman tag, dan filter. */
 
-import { state } from '../core/store.js?v=20260909032733';
+import { state } from '../core/store.js?v=20260909041737';
+import { terlihat } from './kunci.js?v=20260909041737';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang
@@ -49,8 +50,10 @@ export function sinkronTag(n) {
   n.tags = gabungTag(n.tags, tagDariIsi(n));
 }
 
-/* Catatan yang ikut dihitung tag/filter: belum dihapus & belum diarsip. */
-const aktif = () => state.notes.filter(n => !n.deletedAt && !n.archived);
+/* Catatan yang ikut dihitung tag/filter: belum dihapus, belum diarsip,
+   dan (D19) kuncinya tidak sedang aktif — tag catatan terkunci yang
+   belum dibuka tidak ikut agregasi publik. */
+const aktif = () => state.notes.filter(n => !n.deletedAt && !n.archived && terlihat(n));
 
 /* Agregat semua tag: [{ nama, jumlah }], diurutkan jumlah menurun. */
 export function semuaTag() {

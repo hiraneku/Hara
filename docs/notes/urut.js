@@ -5,7 +5,7 @@
    dan kelompok Lainnya. Filter per-tag sudah berjalan lewat chip tag
    (stt.tag) dan tidak disentuh di sini. */
 
-import { esc } from '../core/dom.js?v=20260909032733';
+import { esc } from '../core/dom.js?v=20260909041737';
 
 const KUNCI = 'hara.v1.urut';
 

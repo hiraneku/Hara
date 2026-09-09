@@ -5,11 +5,12 @@
    SAMA disisipkan ke editor (tidak disalin — berbagi berkas). Gambar
    ditampilkan sebagai thumbnail kecil (dibuat sekali per sesi). */
 
-import { state } from '../core/store.js?v=20260909032733';
-import { esc } from '../core/dom.js?v=20260909032733';
-import { openPop, closeAll } from './menus/pop.js?v=20260909032733';
-import { toast } from '../core/toast.js?v=20260909032733';
-import { ambilBlob } from '../core/blobs.js?v=20260909032733';
+import { state } from '../core/store.js?v=20260909041737';
+import { esc } from '../core/dom.js?v=20260909041737';
+import { openPop, closeAll } from './menus/pop.js?v=20260909041737';
+import { toast } from '../core/toast.js?v=20260909041737';
+import { ambilBlob } from '../core/blobs.js?v=20260909041737';
+import { terlihat } from './kunci.js?v=20260909041737';
 
 const MAKS_TAMPIL = 120;   /* popup kecil — cukup yang terbaru */
 
@@ -21,7 +22,7 @@ function gambarDariCatatan() {
     if (id && !hasil.some(x => x.id === id)) hasil.push({ id, alt });
   };
   const daftar = state.notes
-    .filter(n => !n.deletedAt)
+    .filter(n => !n.deletedAt && terlihat(n))
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   for (const n of daftar) {
     (n.blocks || []).forEach(b => {
@@ -37,7 +38,7 @@ function gambarDariCatatan() {
 
 /* Judul catatan pertama yang memakai blob ini (untuk keterangan kecil). */
 function catatanPemakai(id) {
-  const n = state.notes.find(x => !x.deletedAt &&
+  const n = state.notes.find(x => !x.deletedAt && terlihat(x) &&
     (x.blocks || []).some(b => b.type === 'image' && b.meta &&
       b.meta.blobId === id));
   return n && n.title ? String(n.title).trim() : '';
@@ -128,7 +129,7 @@ export function bindGaleri() {
     const id = g.getAttribute('data-gal');
     if (!id) return;
     closeAll();
-    import('./editor/image.js?v=20260909032733')
+    import('./editor/image.js?v=20260909041737')
       .then(async m => {
         const asal = catatanPemakai(id);
         const x = gambarDariCatatan().find(y => y.id === id);

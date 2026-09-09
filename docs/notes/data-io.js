@@ -18,10 +18,11 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20260909032733';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909032733';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909032733';
-import { sinkronTag } from './tags.js?v=20260909032733';
+import { state, save, SCHEMA } from '../core/store.js?v=20260909041737';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20260909041737';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20260909041737';
+import { sinkronTag } from './tags.js?v=20260909041737';
+import { terlihat } from './kunci.js?v=20260909041737';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -263,7 +264,10 @@ export function markdownDariCatatan(n) {
 export function eksporSemuaMarkdown() {
   const dipakai = new Set();
   const entri = [];
-  state.notes.filter(n => !n.deletedAt).forEach(n => {
+  /* D19: catatan terkunci yang belum dibuka tidak ikut ekspor Markdown —
+     isi terkunci tidak boleh bocor lewat berkas .md. (Cadangan JSON
+     tetap memuat semua + PIN tidak pernah ikut dicadangkan.) */
+  state.notes.filter(n => !n.deletedAt && terlihat(n)).forEach(n => {
     const dasar = namaBerkasAman(n.title);
     let nama = dasar + '.md', i = 2;
     while (dipakai.has(nama)) nama = `${dasar}-${i++}.md`;

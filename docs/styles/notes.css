@@ -895,3 +895,75 @@ span.tg[data-tt]{color:var(--lc,var(--accent))}
 .gal-a{position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:9.5px;
   color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.62));text-align:left;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+
+/* ════════════ BAGIAN D19 — kunci catatan (PIN per catatan) ════════════ */
+
+/* baris buta catatan terkunci di daftar utama / arsip */
+.row.row-kunci{color:var(--text)}
+.row-ki{width:46px;height:46px;border-radius:10px;flex:none;align-self:center;
+  display:grid;place-items:center;background:var(--accent-weak);color:var(--accent)}
+.row-ki .ico{width:19px;height:19px}
+@media(max-width:768px){.row-ki{width:42px;height:42px}}
+
+/* layar kunci: pintu PIN sebelum isi catatan boleh dibuka */
+.lk-page{min-height:calc(100dvh - 150px);display:grid;place-items:center;padding:26px 18px}
+.lk-kartu{width:100%;max-width:360px;text-align:center;animation:lk-naik .22s var(--ease)}
+@keyframes lk-naik{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.lk-ikon{width:62px;height:62px;margin:4px auto 14px;border-radius:20px;display:grid;
+  place-items:center;background:var(--accent-weak);color:var(--accent)}
+.lk-ikon .ico{width:28px;height:28px}
+.lk-kartu h2{margin:0 0 6px;font-size:20px;letter-spacing:-.01em}
+.lk-sub{margin:0 0 22px;font-size:14px;color:var(--muted);line-height:1.5}
+.lk-pin{position:relative;display:flex;gap:12px;justify-content:center;margin-bottom:14px}
+.lk-dot{width:13px;height:13px;border-radius:999px;border:1.6px solid var(--border-strong);
+  background:var(--surface);transition:.12s var(--ease)}
+.lk-dot.on{background:var(--accent);border-color:var(--accent);transform:scale(1.08)}
+.lk-in{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:none;
+  outline:none;background:none;font-size:16px;color:transparent;caret-color:transparent;
+  -webkit-text-security:none;text-security:none}
+.lk-pin:focus-within .lk-dot{border-color:var(--accent)}
+.lk-salah{color:var(--danger);font-size:13px;margin:0 0 12px}
+.lk-tombol{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
+.lk-tombol .btn{min-width:112px;justify-content:center}
+.lk-fp{gap:7px}
+.lk-fp .ico{width:15px;height:15px}
+.lk-lupa{background:none;border:none;color:var(--link);font-size:13px;cursor:pointer;
+  padding:4px 8px;text-decoration:underline;text-underline-offset:3px}
+.lk-lupa:hover{color:var(--accent)}
+.lk-lupa-note{font-size:12.5px;color:var(--muted);line-height:1.55;margin:2px auto 0;
+  max-width:290px}
+.lk-info{margin:18px auto 0;font-size:12px;color:var(--faint);line-height:1.5;max-width:300px}
+
+/* panel PIN di popup (pasang / ganti / verifikasi) */
+.pin-lbl{display:block;font-size:11.5px;font-weight:600;color:var(--muted);
+  letter-spacing:.02em;padding:4px 13px 5px}
+.pin-in{display:block;width:calc(100% - 26px);margin:0 13px 9px;height:40px;padding:0 12px;
+  font-size:17px;letter-spacing:.35em;text-align:center;border:1.4px solid var(--border-strong);
+  border-radius:var(--r-md);background:var(--surface);color:var(--text);outline:none;
+  font-family:var(--mono)}
+.pin-in:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+.pin-cb{display:flex;align-items:flex-start;gap:9px;padding:2px 13px 9px;font-size:12.5px;
+  color:var(--muted);line-height:1.45}
+.pin-cb input{width:16px;height:16px;flex:none;margin-top:1px;accent-color:var(--accent)}
+.pin-err{min-height:0;color:var(--danger);font-size:12.5px;padding:0 13px 8px;text-align:left}
+
+/* ════════════ BAGIAN D21 — sapuan baris daftar ════════════ */
+
+/* pembungkus sapuan: aksi di belakang, baris di lapisan depan */
+.srow{position:relative;background:var(--surface)}
+.srow-a{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:0}
+.sa{width:82px;height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;font-size:11px;font-weight:600;letter-spacing:.01em;
+  color:#fff;border:none;cursor:pointer;padding:0}
+.sa .ico{width:18px;height:18px}
+.sa-ars{background:#B5723A}
+.sa-ars:active{background:#9d6130}
+.sa-del{background:var(--danger)}
+.sa-del:active{background:color-mix(in srgb,var(--danger) 82%,#000)}
+.srow-b{position:relative;z-index:1;background:var(--surface);
+  touch-action:pan-y;transition:transform .18s var(--ease);will-change:transform}
+.srow.open .srow-b{transform:translateX(-164px)}
+.srow.open .srow-b .row{border-bottom-color:transparent}
+.srow-b .row{background:var(--surface)}
+.srow .row:last-child{border-bottom:1px solid var(--border)}
+.srow:last-child .row{border-bottom:none}

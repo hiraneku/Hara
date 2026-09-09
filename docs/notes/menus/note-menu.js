@@ -2,8 +2,9 @@
    Isi mengikuti keadaan catatan (label Sematkan/Lepas, Arsipkan/
    Kembalikan). Aksi dijalankan lewat delegasi klik global di app.js
    dengan atribut data-note-act. */
-import { state } from '../../core/store.js?v=20260909032733';
-import { esc } from '../../core/dom.js?v=20260909032733';
+import { state } from '../../core/store.js?v=20260909041737';
+import { esc } from '../../core/dom.js?v=20260909041737';
+import { punyaKunci } from '../kunci.js?v=20260909041737';
 
 export function menuCatatan() {
   const n = state.notes.find(x => x.id === state.openId);
@@ -18,6 +19,8 @@ export function menuCatatan() {
     <svg class="ico"><use href="#i-arch"/></svg>${n.archived ? 'Kembalikan dari arsip' : 'Arsipkan'}</button>
   <button class="pop-i" data-note-act="duplikat">
     <svg class="ico"><use href="#i-copy"/></svg>Duplikat</button>
+  <button class="pop-i" data-note-act="kunci">
+    <svg class="ico"><use href="#i-lock"/></svg>${punyaKunci(n) ? 'Ganti / buka kunci' : 'Kunci catatan…'}</button>
   <button class="pop-i" data-note-act="ekspor">
     <svg class="ico"><use href="#i-dl"/></svg>Ekspor .md</button>
   <button class="pop-i" data-note-act="bagi">

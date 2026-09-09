@@ -26,10 +26,10 @@
 - [ ] C17. Pilihan mutu/kompresi gambar di Pengaturan
 
 ## Bagian D — ketenangan pikiran & keandalan
-- [ ] D18. Riwayat versi catatan (snapshot lintas sesi)
-- [ ] D19. Kunci aplikasi (PIN)
-- [ ] D20. Tombol "Unduh cadangan" di Pengaturan
-- [ ] D21. Sapuan hapus/arsip di daftar catatan
+- [ ] D18. Riwayat versi catatan (snapshot lintas sesi) — tidak perlu dulu (keputusan pengguna)
+- [x] D19. Kunci catatan per-catatan (PIN 1–4 digit; sidik jari perangkat bila lupa PIN)
+- [x] D20. Tombol "Unduh cadangan" di Pengaturan
+- [x] D21. Sapuan hapus/arsip di daftar catatan
 
 ## Bagian E — lebih besar (nanti)
 - [ ] E22. Sinkronisasi antar-perangkat (WebDAV/Drive/server)

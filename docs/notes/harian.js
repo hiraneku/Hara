@@ -4,10 +4,12 @@
    dari catatan aktif; belum ada → dibuat dengan blok kosong siap tulis
    (pola templat bawaan jurnal). */
 
-import { state, save } from '../core/store.js?v=20260909032733';
-import { go } from '../core/router.js?v=20260909032733';
-import { toast } from '../core/toast.js?v=20260909032733';
-import { makeNote, makeBlock } from './note-model.js?v=20260909032733';
+import { state, save } from '../core/store.js?v=20260909041737';
+import { go } from '../core/router.js?v=20260909041737';
+import { toast } from '../core/toast.js?v=20260909041737';
+import { makeNote, makeBlock } from './note-model.js?v=20260909041737';
+import { openNote } from './model.js?v=20260909041737';
+import { terkunciAktif } from './kunci.js?v=20260909041737';
 
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
   'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -23,9 +25,10 @@ export function bukaJurnalHari() {
   const judul = judulJurnalHari();
   let n = state.notes.find(x => !x.deletedAt && (x.title || '').trim() === judul);
   if (n) {
-    state.openId = n.id;
-    go('editor');
-    toast('Jurnal hari ini dibuka');
+    /* lewat openNote supaya kunci catatan (D19) tetap dihormati */
+    const terkunci = terkunciAktif(n);
+    openNote(n.id);
+    if (!terkunci) toast('Jurnal hari ini dibuka');
     return;
   }
   n = makeNote({ title: judul, blocks: [
