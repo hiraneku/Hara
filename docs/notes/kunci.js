@@ -18,10 +18,10 @@
    dimuat dinamis supaya tidak ada lingkaran impor (row/tags → kunci →
    menus/pop → bar/render → menus/tag → tags). */
 
-import { state } from '../core/store.js?v=20260909122014';
-import { toast } from '../core/toast.js?v=20260909122014';
-import { go, cur } from '../core/router.js?v=20260909122014';
-import { t as tr } from '../core/i18n.js?v=20260909122014';
+import { state } from '../core/store.js?v=20260910030412';
+import { toast } from '../core/toast.js?v=20260910030412';
+import { go, cur } from '../core/router.js?v=20260910030412';
+import { t as tr } from '../core/i18n.js?v=20260910030412';
 
 const KEY_REG = 'hara.v1.kunci';
 const KEY_FP = 'hara.v1.kunci.fp';      /* credential sidik jari per catatan */
@@ -251,7 +251,7 @@ export const layarKunciView = () => {
 
 /* Panel popup: pasang PIN baru (dari menu ··· catatan). */
 export async function panelPasangPin(anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909122014');
+  const { openPop } = await import('./menus/pop.js?v=20260910030412');
   const n = state.notes.find(x => x.id === state.openId);
   if (!n) return;
   const dukung = sidikDidukung();
@@ -276,7 +276,7 @@ export async function panelPasangPin(anchor) {
 
 /* Panel popup: kelola kunci (saat catatan terbuka di sesi ini). */
 export async function panelKelolaKunci(anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909122014');
+  const { openPop } = await import('./menus/pop.js?v=20260910030412');
   const n = state.notes.find(x => x.id === state.openId);
   if (!n) return;
   const adaFp = credTerdaftar(n.id);
@@ -294,7 +294,7 @@ export async function panelKelolaKunci(anchor) {
 
 /* Panel verifikasi (PIN / sidik jari) sebelum ganti/lepas kunci. */
 async function panelVerifikasi(id, mode, anchor) {
-  const { openPop } = await import('./menus/pop.js?v=20260909122014');
+  const { openPop } = await import('./menus/pop.js?v=20260910030412');
   const adaFp = credTerdaftar(id);
   const judul = mode === 'ganti' ? tr('Ganti PIN') : tr('Buka kunci catatan');
   const jangkar = anchor || document.getElementById('dots') ||
@@ -316,7 +316,7 @@ async function panelVerifikasi(id, mode, anchor) {
 
 /* Panel: tetapkan PIN baru setelah verifikasi berhasil (ganti / lupa). */
 async function panelPinBaru(id, judul, keterangan, jangkar) {
-  const { openPop } = await import('./menus/pop.js?v=20260909122014');
+  const { openPop } = await import('./menus/pop.js?v=20260910030412');
   openPop(`<div class="pop-h">${judul}</div>
     ${keterangan ? `<p class="pop-note">${keterangan}</p>` : ''}
     <label class="pin-lbl" for="pg1">${tr('PIN baru (1–4 digit)')}</label>
@@ -462,7 +462,7 @@ async function alurLupaPin(jangkar) {
 }
 
 async function pasangDariPanel() {
-  const { closeAll } = await import('./menus/pop.js?v=20260909122014');
+  const { closeAll } = await import('./menus/pop.js?v=20260910030412');
   const p = document.getElementById('pop');
   const a1 = p && p.querySelector('#pp1');
   const a2 = p && p.querySelector('#pp2');
@@ -490,7 +490,7 @@ async function pasangDariPanel() {
 
 /* verifikasi (panel kelola) dengan PIN */
 async function verifPinPanel(k) {
-  const { closeAll } = await import('./menus/pop.js?v=20260909122014');
+  const { closeAll } = await import('./menus/pop.js?v=20260910030412');
   const p = document.getElementById('pop');
   const inp = p && p.querySelector('#pv');
   const err = p && p.querySelector('[data-pin-err]');
@@ -509,7 +509,7 @@ async function verifPinPanel(k) {
 
 /* verifikasi (panel kelola) dengan sidik jari */
 async function verifSidik(k) {
-  const { closeAll } = await import('./menus/pop.js?v=20260909122014');
+  const { closeAll } = await import('./menus/pop.js?v=20260910030412');
   toast(tr('Verifikasi sidik jari perangkat…'));
   const ok = await cobaSidik(k.id);
   if (!ok) { toast(tr('Sidik jari tidak cocok / dibatalkan')); return; }
@@ -525,7 +525,7 @@ async function verifSidik(k) {
 
 /* simpan PIN baru dari popup (ganti PIN / lupa PIN) */
 async function simpanPinBaru() {
-  const { closeAll } = await import('./menus/pop.js?v=20260909122014');
+  const { closeAll } = await import('./menus/pop.js?v=20260910030412');
   const p = document.getElementById('pop');
   const a1 = p && p.querySelector('#pg1');
   const a2 = p && p.querySelector('#pg2');

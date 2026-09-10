@@ -1,9 +1,9 @@
 /* Markdown otomatis saat mengetik: **tebal**, # judul, - daftar, dst.
    Memakai offset absolut supaya pola tetap cocok walau teks terpecah node. */
-import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260909122014';
-import { setBlock, setCallout } from './blocks.js?v=20260909122014';
-import { MARKTAG, MARKCLS } from './marks.js?v=20260909122014';
-import { updateCount } from './cleanup.js?v=20260909122014';
+import { docEl, sel, curBlock, caretEnd } from './caret.js?v=20260910030412';
+import { setBlock, setCallout } from './blocks.js?v=20260910030412';
+import { MARKTAG, MARKCLS } from './marks.js?v=20260910030412';
+import { updateCount } from './cleanup.js?v=20260910030412';
 
 export const INLINE=[
   {re:/\*\*([^*\n]+)\*\*$/,m:'b'},
@@ -381,11 +381,18 @@ export function autoTagDalam(b) {
   const r = s.getRangeAt(0);
   if (!r.collapsed) return;
   const node = r.startContainer;
-  if (!node || node.nodeType !== 3) return;
-  if (r.startOffset !== node.length) return;   /* karet di ujung ketikan */
+  /* Karet biasanya di ujung node teks (ketikan normal). Keyboard IME
+     (Android) kadang meninggalkan karet berjangkar pada ELEMEN blok di
+     posisi paling belakang — itu juga "ujung ketikan", terima. */
+  let caretAbs0;
+  if (node && node.nodeType === 3) {
+    if (r.startOffset !== node.length) return;
+    caretAbs0 = absOff(b, node, r.startOffset);
+  } else if (node === b && r.startOffset === b.childNodes.length) {
+    caretAbs0 = (b.textContent || '').length;
+  } else return;
   const pa = node.parentElement;
   if (pa && pa.closest && pa.closest('span.tg, span.wl, code, pre, a')) return;
-  const caretAbs0 = absOff(b, node, r.startOffset);
   const before0 = b.textContent.slice(0, caretAbs0);
   /* #nama yang diikuti delimiter; nama harus didahului awal/spasi/"(" */
   const re = /(^|[\s(])(#[\p{L}\p{N}_\/.-]+)([ \t\u00a0\u3000,;:!?)\]}\u3001\u3002\uFF0C\uFF1A\uFF1B\uFF01\uFF1F])/gu;
@@ -406,6 +413,26 @@ export function autoTagDalam(b) {
     if (p1p && p1p.closest && p1p.closest('span.tg, span.wl, code, pre, a')) continue;
     gantiTag(b, awalAbs, akhirAbs, tag, caretAbs0);
   }
+  /* Karet yang mendarat TEPAT di ujung-dalam span tag dipindah ke luarnya:
+     posisi itu ambigu, dan ketikan/komposisi berikutnya akan masuk ke
+     dalam tag (alias "menempel" ke nama tag). */
+  karetKeluarDariSpanDalam();
+}
+
+/* Geser karet yang sedang berada TEPAT di ujung-dalam sebuah span tag ke
+   posisi setelah span. Mengembalikan true bila digeser. */
+export function karetKeluarDariSpanDalam() {
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const r = s.getRangeAt(0);
+  if (!r.collapsed) return false;
+  const n = r.startContainer;
+  if (!n || n.nodeType !== 3) return false;
+  if (r.startOffset !== n.length) return false;
+  const el = n.parentElement;
+  const sp = el && el.closest ? el.closest('span.tg') : null;
+  if (!sp || !sp.isConnected) return false;
+  return keluarDariUjungTag(sp);
 }
 
 /* ── Konversi DI DEPAN karakter penutup (jalur utama) ──

@@ -1,16 +1,17 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260909122014';
-import { setBlock, indent } from './blocks.js?v=20260909122014';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260909122014';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20260909122014';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260909122014';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260909122014';
-import { onTitle } from '../model.js?v=20260909122014';
-import { tanganiPaste } from './paste.js?v=20260909122014';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260909122014';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260909122014';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260909122014';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20260909122014';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20260910030412';
+import { setBlock, indent } from './blocks.js?v=20260910030412';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20260910030412';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20260910030412';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20260910030412';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20260910030412';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20260910030412';
+import { onTitle } from '../model.js?v=20260910030412';
+import { tanganiPaste } from './paste.js?v=20260910030412';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20260910030412';
+import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20260910030412';
+import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20260910030412';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20260910030412';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -80,8 +81,35 @@ export function bindEditor() {
     refresh();                    /* pastikanBlockId + record + autosave */
   });
 
+  /* ── KOMPOSISI IME (keyboard Android/iOS) ──
+     Selama IME mengompasisi, DOM TIDAK BOLEH diubah: browser menyimpan
+     rentang teks komposisinya sendiri, dan begitu kita mengganti struktur
+     di situ (mis. membungkus #halo jadi span tepat saat spasi penutup
+     masuk), teks komposisi mendarat di tempat yang salah — spasi penutup
+     "hilang" dan huruf lanjutan menempel ke dalam tag. Jadi: selama
+     komposisi teks dibiarkan apa adanya; begitu komposisi selesai, tag
+     dirapikan (autoTagDalam) dan tampilan disegarkan. */
+  document.addEventListener('compositionstart',()=>{ if(docEl()) setKomposisi(true); });
+  document.addEventListener('compositionend',()=>{
+    if(!docEl()) return;
+    /* biarkan input yang menyusul (bila ada) lewat tanpa mengubah DOM;
+       perapian dijalankan setelahnya */
+    setTimeout(()=>{
+      setKomposisi(false);
+      /* format yang menyala (tebal/miring/…) baru dibungkus sekarang —
+         selama komposisi DOM sengaja tidak disentuh */
+      if(pending.size || sticky.size){ try{ terapkanFormatAktif(); }catch(err){} }
+      try{ autoTagDalam(curBlock()); }catch(err){ /* jangan ganggu ketikan */ }
+      try{ autoFormat(); }catch(err){}
+      refresh();
+    },0);
+  });
+
   document.addEventListener('beforeinput',e=>{
     if(!inDoc(e.target)) return;
+    /* IME sedang mengompasisi: jangan sentuh DOM, biarkan browser/IME
+       menangani teksnya (tag dirapikan setelah komposisi selesai) */
+    if(sedangKomposisi()) return;
     if(pending.size && e.inputType==='insertText') flushPending();
 
     /* ── Sisipkan huruf pertama SENDIRI ──
@@ -223,6 +251,9 @@ export function bindEditor() {
   document.addEventListener('input',e=>{
     if(inDoc(e.target)){
       if(isReplaying()) return;
+      /* IME sedang mengompasisi: DOM tidak disentuh sama sekali (lihat
+         catatan di compositionstart). Perapian menyusul setelah selesai. */
+      if(sedangKomposisi()) return;
       /* menu "/" mengikuti apa yang diketik */
       if(slashAktif()) perbaruiSlash();
       else cekPemicuGaring();
@@ -252,6 +283,13 @@ export function bindEditor() {
   });
   document.addEventListener('keydown',e=>{
     if(!inDoc(e.target)) return;
+    /* IME sedang mengompasisi: Enter/panah/angka dipakai memilih kandidat
+       IME — jangan dirampas editor (dulu Enter memecah blok saat pengguna
+       hanya mengonfirmasi kata di keyboard Android). Kalau bendera kita
+       masih tertinggal padahal browser sudah tidak mengompasisi,
+       bersihkan dulu supaya editor tidak terkunci. */
+    if(e.isComposing) return;
+    if(sedangKomposisi()) setKomposisi(false);
     /* ── menu "/" sedang terbuka: kuasai tombol navigasi ── */
     if(slashAktif()){
       if(e.key==='Escape'){ e.preventDefault(); tutupSlash(); return; }

@@ -1,15 +1,15 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260909122014';
-import { esc, stamp } from '../../core/dom.js?v=20260909122014';
-import { rowFor } from './row.js?v=20260909122014';
-import { plainText } from '../note-model.js?v=20260909122014';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20260909122014';
-import { AK, akSekarang } from '../../core/theme.js?v=20260909122014';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260909122014';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260909122014';
-import { terlihat } from '../kunci.js?v=20260909122014';
+import { state } from '../../core/store.js?v=20260910030412';
+import { esc, stamp } from '../../core/dom.js?v=20260910030412';
+import { rowFor } from './row.js?v=20260910030412';
+import { plainText } from '../note-model.js?v=20260910030412';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20260910030412';
+import { AK, akSekarang } from '../../core/theme.js?v=20260910030412';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260910030412';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260910030412';
+import { terlihat } from '../kunci.js?v=20260910030412';
 
 /* ── Halaman Tag: daftar yang bisa disaring ── */
 

@@ -413,10 +413,112 @@ cek('T60 gumpalan: tag terdeteksi & masuk cache',
   state.notes.find(x=>x.id===state.openId).tags.includes('halo'),
   JSON.stringify(state.notes.find(x=>x.id===state.openId).tags));
 
+/* ══ IME / keyboard Android: teks masuk sebagai KOMPOSISI ══
+   Di Android (GBoard), tiap kata masuk lewat jalur komposisi: browser
+   memiliki rentang teksnya, dan mengubah DOM saat itu membuat spasi
+   penutup tag "hilang" lalu huruf lanjutan menempel ke dalam tag.
+   Aturan: selama komposisi DOM TIDAK disentuh; setelah selesai, tag
+   dirapikan (autoTagDalam) dan tampilan disegarkan. */
+const mulaiKomposisi=()=>DOC().dispatchEvent(new w.CompositionEvent('compositionstart',{bubbles:true,data:''}));
+const inputKomposisi=ch=>DOC().dispatchEvent(new w.InputEvent('input',{bubbles:true,inputType:'insertCompositionText',data:ch}));
+const akhirKomposisi=ch=>{DOC().dispatchEvent(new w.CompositionEvent('compositionend',{bubbles:true,data:ch||''}));d.dispatchEvent(new w.Event('selectionchange'));};
+const sisipDi=(titik,teks)=>{const n=titik.nodeType===3?titik:titik.firstChild;n.insertData(titik.nodeType===3?titik.length:n.length,teks);
+  const r=d.createRange();r.setStart(n,n.length);r.collapse(true);SEL.removeAllRanges();SEL.addRange(r);};
+const sisipDiKaret=teks=>{const r=SEL.getRangeAt(0);let n=r.startContainer,o=r.startOffset;
+  if(n.nodeType!==3){const t=d.createTextNode('');n.insertBefore(t,n.childNodes[o]||null);n=t;o=0;}
+  n.insertData(o,teks);
+  const nr=d.createRange();nr.setStart(n,o+teks.length);nr.collapse(true);SEL.removeAllRanges();SEL.addRange(nr);};
+const karetDiDalamTag=()=>{const r=SEL.getRangeAt(0);const c=r.startContainer;
+  return !!(c&&c.nodeType===3&&c.parentElement&&c.parentElement.closest&&c.parentElement.closest('span.tg'));};
+
+/* T62-T65: "#halo " masuk sebagai satu komposisi (huruf+spasi sekaligus) */
+fresh();
+mulaiKomposisi();
+sisipDiKaret('#halo ');
+inputKomposisi('#halo ');
+cek('T62 saat IME mengompasisi DOM tidak disentuh (tag belum dibungkus)',
+  !DOC().querySelector('span.tg') && DOC().firstElementChild.textContent==='#halo ',
+  DOC().firstElementChild.innerHTML);
+akhirKomposisi('#halo ');
+await sleep(60);
+const spIm=DOC().querySelector('span.tg');
+cek('T63 komposisi selesai: #halo jadi tag, spasi tetap DI LUAR tag',
+  !!spIm && spIm.textContent==='#halo' && DOC().firstElementChild.textContent==='#halo ' &&
+  !!spIm.nextSibling && spIm.nextSibling.textContent===' ', DOC().firstElementChild.innerHTML);
+cek('T64 karet berada di luar span tag setelah komposisi', !karetDiDalamTag(),
+  JSON.stringify(SEL.getRangeAt(0).startContainer.textContent));
+type('kamu');
+cek('T65 ketikan lanjutan mendarat di luar tag (tanpa menempel)',
+  DOC().firstElementChild.textContent==='#halo kamu' &&
+  DOC().querySelectorAll('span.tg').length===1 && DOC().querySelector('span.tg').textContent==='#halo',
+  DOC().firstElementChild.innerHTML);
+
+/* T66-T70: spasi penutup yang mendarat DI DALAM span (perilaku Android
+   yang dilaporkan: "spasi tidak bisa") dibereskan setelah komposisi */
+fresh(); type('#halo ');
+const spIm2=DOC().querySelector('span.tg');
+const ttB=spIm2.getAttribute('data-tt');
+mulaiKomposisi();
+sisipDi(spIm2.firstChild,' ');
+inputKomposisi(' ');
+cek('T66 spasi IME masuk ke dalam span: DOM belum disentuh saat komposisi',
+  DOC().querySelector('span.tg').textContent==='#halo ', DOC().firstElementChild.innerHTML);
+akhirKomposisi(' ');
+await sleep(60);
+const spIm3=DOC().querySelector('span.tg');
+cek('T67 komposisi selesai: tag kembali "#halo", spasi keluar dari span',
+  !!spIm3 && spIm3.textContent==='#halo' && DOC().firstElementChild.textContent==='#halo  ',
+  DOC().firstElementChild.innerHTML);
+cek('T68 warna tag tidak berubah gara-gara spasi komposisi',
+  !!spIm3 && spIm3.getAttribute('data-tt')===ttB, spIm3?`${spIm3.getAttribute('data-tt')} vs ${ttB}`:'hilang');
+cek('T69 karet dipindah ke luar span setelah spasi dikeluarkan', !karetDiDalamTag(),
+  JSON.stringify(SEL.getRangeAt(0).startContainer.textContent));
+mulaiKomposisi();
+sisipDiKaret('kamu');   /* IME mengetik di posisi karet */
+inputKomposisi('kamu');
+akhirKomposisi('kamu');
+await sleep(60);
+cek('T70 kata berikutnya lewat IME tidak menempel ke tag (satu span saja)',
+  (()=>{const semua=DOC().querySelectorAll('span.tg');
+    return semua.length===1 && semua[0].textContent==='#halo' &&
+      DOC().firstElementChild.textContent.replace(/\s+/g,' ').trim()==='#halo kamu';})(),
+  DOC().firstElementChild.innerHTML);
+
+/* T72: Enter saat IME mengompasisi TIDAK dirampas editor (dulu blok
+   terpecah hanya karena pengguna mengonfirmasi kata) */
+fresh(); type('Halo ');
+mulaiKomposisi();
+const evEnter=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true,isComposing:true});
+DOC().dispatchEvent(evEnter);
+cek('T72 Enter saat komposisi tidak memecah blok / tidak dicegah',
+  !evEnter.defaultPrevented && DOC().children.length===1, DOC().innerHTML.slice(0,120));
+akhirKomposisi('Halo ');
+await sleep(60);
+enter();
+cek('T73 setelah komposisi selesai, Enter kembali normal (blok baru)',
+  DOC().children.length===2, DOC().innerHTML.slice(0,160));
+
+/* T71: karet berjangkar ELEMEN di ujung blok (khas IME Android) —
+   sapuan tetap menemukan #halo yang baru saja diketik */
+fresh();
+{
+  const t=d.createTextNode('');DOC().firstElementChild.appendChild(t);
+  t.insertData(0,'#halo ');
+  const b=DOC().firstElementChild;
+  const r=d.createRange();r.setStart(b,b.childNodes.length);r.collapse(true);
+  SEL.removeAllRanges();SEL.addRange(r);
+}
+DOC().dispatchEvent(new w.InputEvent('input',{bubbles:true,inputType:'insertText',data:' '}));
+await sleep(30);
+cek('T71 karet berjangkar elemen di ujung blok: #halo tetap jadi tag',
+  (()=>{const s=DOC().querySelector('span.tg');
+    return !!s && s.textContent==='#halo' && DOC().firstElementChild.textContent==='#halo ';})(),
+  DOC().firstElementChild.innerHTML);
+
 /* ══ spasi diketik saat karet di ujung-dalam tag tidak membuat span ganda ══ */
 fresh(); type('Halo #halo ');
-const spE2=DOC().querySelector('span.tg');
-const tnE2=spE2.firstChild;
+const spAkhir=DOC().querySelector('span.tg');
+const tnE2=spAkhir.firstChild;
 const rE2=d.createRange(); rE2.setStart(tnE2, tnE2.length); rE2.collapse(true);
 SEL.removeAllRanges(); SEL.addRange(rE2);
 type(' ');                                     /* guard: keluar dulu, spasi di luar */
