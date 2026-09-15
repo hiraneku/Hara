@@ -1,15 +1,22 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20260910030412';
-import { esc, stamp } from '../../core/dom.js?v=20260910030412';
-import { rowFor } from './row.js?v=20260910030412';
-import { plainText } from '../note-model.js?v=20260910030412';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20260910030412';
-import { AK, akSekarang } from '../../core/theme.js?v=20260910030412';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260910030412';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20260910030412';
-import { terlihat } from '../kunci.js?v=20260910030412';
+import { state } from '../../core/store.js?v=20260915025704';
+import { esc, stamp } from '../../core/dom.js?v=20260915025704';
+import { rowFor } from './row.js?v=20260915025704';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20260915025704';
+import { AK, akSekarang } from '../../core/theme.js?v=20260915025704';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20260915025704';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20260915025704';
+import { terlihat } from '../kunci.js?v=20260915025704';
+import { pecahKueri, catatanCocok, kataSorot, riwayatCari } from '../cari.js?v=20260915025704';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20260915025704';
+
+/* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
+   pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
+let kueriCari = '';
+export const setKueriCari = q => { kueriCari = q || ''; };
+export const kueriCariSekarang = () => kueriCari;
 
 /* ── Halaman Tag: daftar yang bisa disaring ── */
 
@@ -42,39 +49,77 @@ export function daftarTagHtml(q) {
   return `<div class="card">${baris}</div>`;
 }
 
-/* ── Cari: membaca data nyata (judul + isi + tag) ── */
+/* ── Cari: membaca data nyata (judul + isi + tag) ──
+
+   Kueri dipecah di cari.js: tag:nama / judul:kata / #nama / "frasa" /
+   kata biasa. Hasil disorot (kata yang cocok ditandai <mark>) dan
+   operator yang aktif ditampilkan sebagai chip supaya jelas KENAPA
+   sebuah catatan ikut muncul. Riwayat pencarian tampil saat kolom
+   masih kosong. */
+const chipOperator = k => {
+  const isi = [
+    ...k.tag.map(x => `tag:${x}`),
+    ...k.judul.map(x => `judul:${x}`),
+  ];
+  if (!isi.length) return '';
+  return `<div class="rx-op">${isi.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>`;
+};
+
+export function riwayatHtml() {
+  const r = riwayatCari();
+  if (!r.length) return '';
+  return `<div class="rx-bar"><span class="rx-t">${tr('Terakhir dicari')}</span>
+      <button type="button" class="rx-x" data-riwayat-hapus>${tr('Bersihkan')}</button></div>
+    <div class="rx-list">${r.map(q =>
+      `<button type="button" class="rx-chip" data-cari-riwayat="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
+}
+
 export function renderHasilCari(q) {
   const w = document.getElementById('cari-hasil');
   if (!w) return;
-  q = (q || '').trim();
-  if (!q) {
-    w.innerHTML = '<p class="dm-kosong" style="padding:6px 2px">' + tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.') + '</p>';
+  const mentah = (q || '').trim();
+  if (!mentah) {
+    w.innerHTML = riwayatHtml() +
+      '<p class="dm-kosong" style="padding:6px 2px">' +
+      tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.') + '</p>';
     return;
   }
-  const tagSaja = /^#/.test(q);
-  const kata = (tagSaja ? q.slice(1) : q).toLowerCase().split(/\s+/).filter(Boolean);
+  const k = pecahKueri(mentah);
   /* D19: catatan terkunci yang belum dibuka tidak ikut hasil cari sama
      sekali — kalau tidak, barisnya bisa membocorkan bahwa catatan
      tertentu mengandung kata kunci itu. */
-  let daftar = state.notes.filter(n => !n.deletedAt && terlihat(n));
-  daftar = daftar.filter(n => {
-    if (tagSaja)
-      /* tag dari cache, atau langsung dari isi bila cache kosong — tag
-         selalu bisa dicari selama masih ada di catatan */
-      return kata.every(k => tagUntukTampil(n).some(t => t.toLowerCase().includes(k)));
-    const teks = `${n.title || ''} ${tagUntukTampil(n).join(' ')} ${plainText(n)}`.toLowerCase();
-    return kata.every(k => teks.includes(k));
-  });
+  const daftar = state.notes
+    .filter(n => !n.deletedAt && terlihat(n) && catatanCocok(n, k));
   daftar.sort((a, b) => b.updatedAt - a.updatedAt);
   const hasil = daftar.slice(0, 40);
   if (!hasil.length) {
-    w.innerHTML = `<p class="dm-kosong" style="padding:6px 2px">${tr('Tidak ada yang cocok dengan “{q}”.', { q: esc(q) })}</p>`;
+    w.innerHTML = `<p class="dm-kosong" style="padding:6px 2px">${tr('Tidak ada yang cocok dengan “{q}”.', { q: esc(mentah) })}</p>`;
     return;
   }
+  const sorot = kataSorot(k);
   w.innerHTML = `<div class="overline" style="margin:2px 2px 8px">${hasil.length === daftar.length
       ? tr('{n} hasil', { n: hasil.length })
       : tr('{n} hasil dari {m}', { n: hasil.length, m: daftar.length })}</div>
-    <div class="card">${hasil.map(rowFor).join('')}</div>`;
+    ${chipOperator(k)}
+    <div class="card">${hasil.map(n => rowFor(n, null, { sorot })).join('')}</div>`;
+}
+
+/* ── Pengaturan → Gambar (C17): mutu gambar saat disisipkan ──
+   Satu baris per pilihan; yang aktif ditandai. Dipanggil ulang setelah
+   pilihan diganti supaya tanda centangnya ikut berpindah. */
+export const barisMutuGambar = () => PILIHAN.map(o => {
+  const on = mutuSekarang() === o.k;
+  return `<button type="button" class="row" data-mutu="${o.k}" aria-pressed="${on}">
+      <div class="row-b"><div class="row-t">${tr(o.nama)}</div>
+        <div class="row-s" style="white-space:normal;line-height:1.45">${tr(o.ket)}</div></div>
+      <span class="mtu-ck${on ? ' on' : ''}" aria-hidden="true">
+        <svg class="ico"><use href="#i-check2"/></svg></span>
+    </button>`;
+}).join('');
+
+export function muatMutuGambar() {
+  const box = document.getElementById('mutu-gambar');
+  if (box) box.innerHTML = barisMutuGambar();
 }
 
 export const miscViews = {
@@ -92,10 +137,10 @@ search:()=>`<div class="page">
     padding:0 13px;height:44px;margin-bottom:20px">
     <svg class="ico" style="color:var(--faint)"><use href="#i-search"/></svg>
     <input id="cari-in" placeholder="${tr('Cari di judul, isi, dan tag')}" autocomplete="off"
-      aria-label="${tr('Cari catatan')}"
+      aria-label="${tr('Cari catatan')}" value="${esc(kueriCari)}"
       style="flex:1;border:none;background:none;outline:none;font-size:15px"></div>
-  <div id="cari-hasil"><p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
-  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Tag juga bisa dicari lewat chip # di baris daftar.')}</p></div>`,
+  <div id="cari-hasil">${riwayatHtml()}<p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
+  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
 
 tags:()=>{
   const sem = semuaTag();
@@ -119,7 +164,12 @@ arsip:()=>{
   const a = state.notes.filter(n => n.archived && !n.deletedAt);
   return `<div class="page">
     ${a.length
-      ? `<div class="card">${a.map(n => rowFor(n, 'arsip')).join('')}</div>
+      ? `<div class="list-bar" style="margin:0 0 12px">
+           <button type="button" class="urut-chip" data-pilih-buka
+             title="${tr('Pilih beberapa catatan — bisa juga dengan menahan satu baris')}">
+             <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>
+         </div>
+         <div class="card">${a.map(n => rowFor(n, 'arsip')).join('')}</div>
          <p class="note">${tr('Geser baris ke kiri untuk mengembalikan atau menghapus. Buka catatan lalu pilih "Kembalikan dari arsip" (menu ···) juga bisa.')}</p>`
       : `<div class="empty"><h3>${tr('Arsip kosong')}</h3>
          <p>${tr('Catatan yang diarsipkan hilang dari daftar utama tapi tetap tersimpan di sini dan bisa dikembalikan.')}</p></div>`}
@@ -197,6 +247,9 @@ set:()=>{ const akPilih = akSekarang() || '';
   <div class="sec"><h2>${tr('Isi bar mekanik')}</h2></div>
   <div class="card" style="margin-bottom:24px" id="bar-prefs"></div>
   <p class="note">${tr('Undo dan Redo selalu tampil — tanpa keduanya kesalahan ketik tak bisa dibatalkan.')}</p>
+  <div class="sec"><h2>${tr('Gambar')}</h2></div>
+  <div class="card" style="margin-bottom:12px" id="mutu-gambar">${barisMutuGambar()}</div>
+  <p class="note" style="padding:0 0 24px">${tr('Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.')}</p>
   <div class="sec"><h2>${tr('Data')}</h2></div>
   <div class="card">
     <div class="row"><div class="row-b"><div class="row-t">${tr('Impor')}</div>

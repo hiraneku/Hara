@@ -27,6 +27,10 @@ for f in tools/uji/*.mjs; do node $f; done
 | `warna.mjs` | warna teks & roda warna |
 | `bagian-b.mjs` | B7 urut/filter · B8 daftar isi · B9 Tugas/Reminder · B10 tag berwarna · B11 templat · B12 jurnal · B13 slash |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
+| `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |
+| `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |
+| `bilah-sorot.mjs` | F27 bilah format di atas teks yang disorot |
+| `mutu-gambar.mjs` | C17 pilihan mutu gambar di Pengaturan · keputusan pengecilan |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —
 telusuri sampai akar, lalu tambahkan kasusnya ke suite ini.

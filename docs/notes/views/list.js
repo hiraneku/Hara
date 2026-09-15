@@ -3,15 +3,15 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20260910030412';
-import { esc, tglHari } from '../../core/dom.js?v=20260910030412';
-import { rowFor } from './row.js?v=20260910030412';
-import { stt } from './data.js?v=20260910030412';
-import { tagDariIsi } from '../tags.js?v=20260910030412';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20260910030412';
-import { judulJurnalHari } from '../harian.js?v=20260910030412';
-import { terlihat } from '../kunci.js?v=20260910030412';
-import { t as tr } from '../../core/i18n.js?v=20260910030412';
+import { state } from '../../core/store.js?v=20260915025704';
+import { esc, tglHari } from '../../core/dom.js?v=20260915025704';
+import { rowFor } from './row.js?v=20260915025704';
+import { stt } from './data.js?v=20260915025704';
+import { tagDariIsi } from '../tags.js?v=20260915025704';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20260915025704';
+import { judulJurnalHari } from '../harian.js?v=20260915025704';
+import { terlihat } from '../kunci.js?v=20260915025704';
+import { t as tr } from '../../core/i18n.js?v=20260915025704';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -123,6 +123,9 @@ export const notesView = () => {
     <button type="button" class="urut-chip" data-urut-buka aria-haspopup="menu"
       title="${tr('Urutkan daftar catatan')}"><svg class="ico"><use href="#i-sort"/></svg>${tr('Urut:')}
       <b>${esc(namaUrut(urutSekarang()))}</b></button>
+    ${daftar.length ? `<button type="button" class="urut-chip" data-pilih-buka
+      title="${tr('Pilih beberapa catatan — bisa juga dengan menahan satu baris')}">
+      <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>` : ''}
   </div>
   ${pin.length ? overline(tr('Disematkan')) + kartu(pin, 'utama') : ''}
   ${lain.length ? (pin.length ? overline(tr('Lainnya')) : '') + kartu(lain, 'utama') : ''}

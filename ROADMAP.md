@@ -23,7 +23,7 @@
 - [x] C14. Ganti gambar (tanpa mengubah posisi/ukuran/rotasi)
 - [x] C15. Sisipkan ulang gambar dari galeri catatan
 - [x] C16. Thumbnail gambar di daftar catatan
-- [ ] C17. Pilihan mutu/kompresi gambar di Pengaturan
+- [x] C17. Pilihan mutu/kompresi gambar di Pengaturan (hemat/seimbang/tinggi/tanpa kompresi) — berlaku untuk sisipan baru
 
 ## Bagian D — ketenangan pikiran & keandalan
 - [ ] D18. Riwayat versi catatan (snapshot lintas sesi) — tidak perlu dulu (keputusan pengguna)
@@ -35,3 +35,8 @@
 - [ ] E22. Sinkronisasi antar-perangkat (WebDAV/Drive/server)
 - [ ] E23. Tabel (tunggu fondasi stabil)
 - [ ] E24. Widget / pintasan layar kunci
+
+## Bagian F — ronde 7 (SELESAI)
+- [x] F25. Pilih banyak catatan: tahan-lama di baris, bilah mini, aksi sekaligus (semat/arsip/hapus)
+- [x] F26. Pencarian lebih tajam: operator tag:/judul:, sorot hasil, riwayat pencarian
+- [x] F27. Bilah format di atas teks yang disorot (tebal/miring/sorot/kode/warna/tautan/hapus format)

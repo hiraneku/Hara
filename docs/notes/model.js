@@ -7,17 +7,17 @@
    menghapus permanen atau lewat 30 hari (disapu otomatis saat aplikasi
    dibuka). Pola ini sesuai DESIGN.md §3.9 & NOTES.md ("tempat sampah
    30 hari") — tanpa dialog konfirmasi untuk aksi yang bisa diurungkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260910030412';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260910030412';
-import { toast } from '../core/toast.js?v=20260910030412';
-import { go } from '../core/router.js?v=20260910030412';
-import { saveSoon } from './editor/cleanup.js?v=20260910030412';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260910030412';
-import { hapusDrafMilik } from '../core/recovery.js?v=20260910030412';
-import { bersihkanBlobYatim } from './editor/image.js?v=20260910030412';
-import { terkunciAktif, lepasKunci } from './kunci.js?v=20260910030412';
-import { tagUntukTampil } from './tags.js?v=20260910030412';
-import { t as tr } from '../core/i18n.js?v=20260910030412';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20260915025704';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20260915025704';
+import { toast } from '../core/toast.js?v=20260915025704';
+import { go } from '../core/router.js?v=20260915025704';
+import { saveSoon } from './editor/cleanup.js?v=20260915025704';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20260915025704';
+import { hapusDrafMilik } from '../core/recovery.js?v=20260915025704';
+import { bersihkanBlobYatim } from './editor/image.js?v=20260915025704';
+import { terkunciAktif, lepasKunci } from './kunci.js?v=20260915025704';
+import { tagUntukTampil } from './tags.js?v=20260915025704';
+import { t as tr } from '../core/i18n.js?v=20260915025704';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
@@ -56,25 +56,35 @@ export function buatNoteBerjudul(judul) {
 const JEDA_UNDO = 6000;          /* ms — cukup untuk mengetuk Urungkan */
 const UMUR_SAMPAH = 30 * 24 * 3600 * 1000;   /* 30 hari */
 
-let hapusTerakhir = null;        /* { n, asal } — yang masih bisa di-Urungkan */
+/* Yang masih bisa di-Urungkan. Sejak mode pilih (tahan-lama di daftar),
+   isinya SELALU daftar: satu catatan pun dibungkus satu elemen. Nilai
+   `deletedAt`/`archived` sebelum dihapus ikut disimpan, supaya
+   "Urungkan" memulihkan keadaan PERSIS (bukan menebak). */
+let hapusTerakhir = null;        /* { daftar:[{n,deletedAt,archived}], asal } */
 let timerUndo = null;
 
-/* Soft-delete bersama: tandai deletedAt + beri jendela Urungkan.
+/* Inti soft-delete: tandai deletedAt + beri jendela Urungkan.
    `asal` menentukan ke mana batalkanHapus kembali: 'editor' atau
-   'list' (aksi sapuan D21). */
-function softHapus(n, asal) {
+   'list' (aksi sapuan D21 & mode pilih). */
+function lakukanHapus(catatan, asal) {
+  if (!catatan.length) return;
   resetAutosave();
-  hapusDrafMilik(n.id);
-  n.deletedAt = Date.now();
-  n.archived = false;
+  catatan.forEach(n => hapusDrafMilik(n.id));
+  const daftar = catatan.map(n => ({ n, deletedAt: n.deletedAt || null, archived: !!n.archived }));
+  catatan.forEach(n => { n.deletedAt = Date.now(); n.archived = false; });
   save();
 
   /* ganti entri "Urungkan" sebelumnya (kalau masih ada) */
   clearTimeout(timerUndo);
-  hapusTerakhir = { n, asal };
+  hapusTerakhir = { daftar, asal };
   timerUndo = setTimeout(() => { hapusTerakhir = null; }, JEDA_UNDO);
-  toast(tr('Catatan dipindah ke sampah'), { label: tr('Urungkan'), cb: batalkanHapus }, JEDA_UNDO);
+  const pesan = catatan.length === 1
+    ? tr('Catatan dipindah ke sampah')
+    : tr('{n} catatan dipindah ke sampah', { n: catatan.length });
+  toast(pesan, { label: tr('Urungkan'), cb: batalkanHapus }, JEDA_UNDO);
 }
+
+function softHapus(n, asal) { lakukanHapus([n], asal); }
 
 export function delNote() {
   /* catatan dibuang dari editor: perubahan tertunda & drafnya dibuang */
@@ -91,18 +101,52 @@ export function hapusNoteDariList(id) {
   softHapus(n, 'list');
 }
 
+/* Hapus sekaligus dari mode pilih (tahan-lama di baris daftar).
+   Satu penyimpanan, satu toast, satu "Urungkan" yang memulihkan
+   SEMUA catatan yang barusan dihapus. */
+export function hapusBanyakDariList(daftar) {
+  const catatan = (daftar || [])
+    .map(findNote)
+    .filter(n => n && !n.deletedAt);
+  lakukanHapus(catatan, 'list');
+  return catatan.length;
+}
+
+/* Semat/lepas semat sekaligus. `semat` = true → sematkan semuanya. */
+export function sematBanyak(daftar, semat = true) {
+  const catatan = (daftar || []).map(findNote).filter(Boolean);
+  if (!catatan.length) return 0;
+  catatan.forEach(n => { n.pinned = !!semat; });
+  save();
+  toast(semat ? tr('Disematkan') : tr('Sematan dilepas'));
+  return catatan.length;
+}
+
+/* Arsip/kembalikan sekaligus. `arsip` = true → arsipkan semuanya. */
+export function arsipBanyak(daftar, arsip = true) {
+  const catatan = (daftar || []).map(findNote).filter(Boolean);
+  if (!catatan.length) return 0;
+  catatan.forEach(n => { n.archived = !!arsip; });
+  save();
+  toast(arsip ? tr('Diarsipkan') : tr('Dikembalikan dari arsip'));
+  return catatan.length;
+}
+
 /* Urungkan dalam jendela 6 detik: kembalikan dari sampah. */
 function batalkanHapus() {
   if (!hapusTerakhir) return;
   const h = hapusTerakhir;
   hapusTerakhir = null;
   clearTimeout(timerUndo);
-  const n = h.n;
-  n.deletedAt = null;
+  h.daftar.forEach(({ n, deletedAt, archived }) => {
+    n.deletedAt = deletedAt;
+    n.archived = archived;
+  });
   save();
-  state.openId = n.id;
+  const tunggal = h.daftar.length === 1 ? h.daftar[0].n : null;
+  if (tunggal) state.openId = tunggal.id;
   toast(tr('Catatan dikembalikan'));
-  go(h.asal === 'editor' ? 'editor' : 'notes');
+  go(tunggal && h.asal === 'editor' ? 'editor' : 'notes');
 }
 
 /* Pulihkan satu catatan dari layar Sampah. */
@@ -121,7 +165,12 @@ export function hapusPermanen(id) {
   if (i < 0) return;
   state.notes.splice(i, 1);
   lepasKunci(id);               /* kunci ikut dibuang bersama catatannya */
-  if (hapusTerakhir && hapusTerakhir.n && hapusTerakhir.n.id === id) { hapusTerakhir = null; clearTimeout(timerUndo); }
+  if (hapusTerakhir && hapusTerakhir.daftar.some(x => x.n.id === id)) {
+    /* entri Urungkan menunjuk catatan yang barusan dihapus permanen —
+       jangan biarkan tombolnya memulihkan sesuatu yang sudah tak ada */
+    hapusTerakhir.daftar = hapusTerakhir.daftar.filter(x => x.n.id !== id);
+    if (!hapusTerakhir.daftar.length) { hapusTerakhir = null; clearTimeout(timerUndo); }
+  }
   save();
   pastikanAdaCatatan();
   bersihkanBlobYatim();

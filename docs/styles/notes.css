@@ -996,3 +996,85 @@ span.tg[data-tt]{color:var(--lc,var(--accent))}
 .srow-b .row{background:var(--surface)}
 .srow .row:last-child{border-bottom:1px solid var(--border)}
 .srow:last-child .row{border-bottom:none}
+
+/* ════════════ PILIH BANYAK — tahan-lama di baris daftar ════════════
+   Bilah mini menimpa header selama mode pilih (pola "contextual bar"
+   yang sudah dikenal di ponsel). Di layar lebar digeser 240px supaya
+   sidebar tidak tertutup. */
+.pilih-bar{position:fixed;top:0;left:240px;right:0;min-height:56px;z-index:60;
+  display:flex;align-items:center;gap:4px;padding:0 10px;
+  background:var(--surface);border-bottom:1px solid var(--border-strong);
+  box-shadow:var(--shadow-pop)}
+.pilih-bar[hidden]{display:none}
+.pb-n{font-size:14px;font-weight:600;margin:0 6px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.pb-t{margin-left:auto;height:32px;padding:0 12px;border-radius:999px;flex:none;
+  background:var(--sunken);color:var(--text);font-size:13px;font-weight:500}
+.pb-t:hover{background:var(--border)}
+.pb-i{width:36px;height:36px;flex:none;display:grid;place-items:center;
+  border-radius:var(--r-md);color:var(--muted);transition:.12s var(--ease)}
+.pb-i:hover{background:var(--sunken);color:var(--text)}
+.pb-i .ico{width:18px;height:18px}
+.pb-i[disabled]{opacity:.32;pointer-events:none}
+.pb-danger:hover{color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent)}
+@media(max-width:768px){.pilih-bar{left:0}}
+
+/* kotak centang baris + penanda terpilih */
+.pilih-ck{width:20px;height:20px;border-radius:999px;flex:none;position:relative;
+  border:1.7px solid var(--border-strong);transition:.12s var(--ease)}
+body.sedang-pilih #wrap .row[data-open]{cursor:pointer}
+body.sedang-pilih .row .pinx{display:none}
+.row.picked{background:var(--accent-weak)}
+.row.picked:hover{background:var(--accent-weak)}
+.row.picked .pilih-ck{background:var(--accent);border-color:var(--accent)}
+.row.picked .pilih-ck::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;
+  border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(40deg)}
+.srow-b .row.picked{background:var(--accent-weak)}
+[data-theme=dark] .row.picked .pilih-ck::after{border-color:#131711}
+
+/* ════════════ CARI TAJAM — sorot hasil, operator, riwayat ════════════ */
+
+/* kata yang cocok dengan kueri di judul/cuplikan hasil cari */
+mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
+  padding:0 2px;box-shadow:inset 0 -1px 0 var(--accent)}
+.dm .row-t mark.cari-hl,.dm .row-s mark.cari-hl{font-weight:600}
+
+/* chip operator yang sedang aktif (tag:…, judul:…) */
+.rx-op{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 10px}
+.rx-op .chip{font-family:var(--mono);font-size:11.5px}
+
+/* riwayat pencarian — tampil saat kolom cari masih kosong */
+.rx-bar{display:flex;align-items:center;gap:8px;margin:0 2px 8px}
+.rx-t{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint)}
+.rx-x{margin-left:auto;font-size:12.5px;color:var(--faint);padding:2px 6px;border-radius:var(--r-sm)}
+.rx-x:hover{background:var(--sunken);color:var(--text)}
+.rx-list{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 20px}
+.rx-chip{height:30px;padding:0 12px;border-radius:999px;background:var(--sunken);
+  color:var(--text);font-size:13px;max-width:100%;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;transition:.12s var(--ease)}
+.rx-chip:hover{background:var(--border)}
+
+/* ════════════ BILAH FORMAT DI ATAS SOROTAN ════════════
+   Muncul saat teks di editor disorot. Posisinya diatur JS (fixed),
+   jadi bilah tidak ikut tergulir bersama isi. */
+.teks-bar{position:fixed;z-index:55;display:flex;align-items:center;gap:1px;
+  padding:4px;background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:999px;box-shadow:var(--shadow-modal)}
+.teks-bar[hidden]{display:none}
+.tb-i{width:36px;height:36px;flex:none;display:grid;place-items:center;
+  border-radius:999px;color:var(--text);font-size:14.5px;line-height:1;
+  transition:.12s var(--ease)}
+.tb-i:hover{background:var(--sunken)}
+.tb-i:active{background:var(--accent-weak)}
+.tb-i .bi{width:17px;height:17px}
+.teks-bar .tb-i+.tb-i{margin-left:0}
+
+/* ════════════ MUTU GAMBAR (C17, Pengaturan) ════════════ */
+.row[data-mutu]{text-align:left}
+.mtu-ck{width:22px;height:22px;flex:none;display:grid;place-items:center;
+  border-radius:999px;border:1.7px solid var(--border-strong);color:transparent;
+  transition:.12s var(--ease)}
+.mtu-ck .ico{width:12px;height:12px}
+.mtu-ck.on{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme=dark] .mtu-ck.on{color:#131711}

@@ -12,16 +12,20 @@
    dengan menggeser baris ke kiri (swipe.js). Baris lain (beranda, cari,
    sampah) tetap polos.
 
+   Sorot (ronde 7): hasil pencarian menandai kata yang cocok lewat
+   opsi.sorot (daftar kata) — dipakai renderHasilCari.
+
    Kunci (D19): catatan terkunci yang belum dibuka di sesi ini dirender
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20260910030412';
-import { excerptOf } from '../note-model.js?v=20260910030412';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20260910030412';
-import { tagUntukTampil } from '../tags.js?v=20260910030412';
-import { terlihat } from '../kunci.js?v=20260910030412';
-import { t as tr } from '../../core/i18n.js?v=20260910030412';
+import { esc, stamp } from '../../core/dom.js?v=20260915025704';
+import { excerptOf } from '../note-model.js?v=20260915025704';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20260915025704';
+import { tagUntukTampil } from '../tags.js?v=20260915025704';
+import { terlihat } from '../kunci.js?v=20260915025704';
+import { sorotHtml } from '../cari.js?v=20260915025704';
+import { t as tr } from '../../core/i18n.js?v=20260915025704';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {
@@ -35,8 +39,11 @@ const thumbOf = n => {
 
 /* Baris polos (button). Dibuat terpisah supaya pembungkus sapuan tidak
    menaruh tombol di dalam tombol. */
-function barisIsi(n, boleh) {
+function barisIsi(n, boleh, sorot) {
   const cuplikan = boleh ? excerptOf(n) : '';
+  /* hasil cari: kata yang cocok ditandai <mark> di judul & cuplikan.
+     sorotHtml() meng-escape teksnya sendiri, jadi jalur ini tetap aman. */
+  const hl = t => (sorot && sorot.length ? sorotHtml(t, sorot) : esc(t));
   /* cache tag, atau isi bila cache kosong — chip tetap tampil seperti
      tag di catatan sambutan */
   const tg = boleh ? tagUntukTampil(n) : [];
@@ -62,16 +69,16 @@ function barisIsi(n, boleh) {
   <span class="row-m">${stamp(n.updatedAt)}</span>`;
   }
   return `${thumbOf(n)}
-  <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${esc(n.title) || tr('Tanpa judul')}</div>
-  ${cuplikan ? `<div class="row-s">${esc(cuplikan)}</div>` : ''}${chips}</div>
+  <div class="row-b"><div class="row-t"${n.title ? '' : ' style="color:var(--faint)"'}>${hl(n.title) || tr('Tanpa judul')}</div>
+  ${cuplikan ? `<div class="row-s">${hl(cuplikan)}</div>` : ''}${chips}</div>
   <span class="row-m">${stamp(n.updatedAt)}</span>${pinx}`;
 }
 
 /* `geser` = 'utama' (daftar catatan) atau 'arsip' (layar arsip) — keduanya
    mendapat aksi sapuan; nilai lain (beranda/cari) = baris polos. */
-export const rowFor = (n, geser) => {
+export const rowFor = (n, geser, opsi) => {
   const boleh = terlihat(n);   /* tanpa kunci, atau kunci dibuka di sesi ini */
-  const isi = barisIsi(n, boleh);
+  const isi = barisIsi(n, boleh, opsi && opsi.sorot);
   const polos = `<button class="row" data-open="${n.id}">${isi}</button>`;
   if (!geser) return polos;
   if (n.deletedAt) return polos;   /* sampah memakai barisnya sendiri */

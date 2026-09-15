@@ -18,6 +18,8 @@
    jsdom tidak punya PointerEvent — suite menguji tombol aksi
    (data-sw-*) langsung dan tidak menguji pointer gesture. */
 
+import { sedangPilih } from './pilih.js?v=20260915025704';
+
 const AMBANG_MULAI = 10;    /* px gerak sebelum dianggap sapuan */
 const AMBANG_BUKA = -92;    /* px: lewat ini = terbuka penuh */
 const BUKA = -164;          /* px: posisi terbuka (dua tombol × 82px) */
@@ -39,6 +41,10 @@ function tutupLain(kecuali) {
 
 export function bindSwipe() {
   document.addEventListener('pointerdown', e => {
+    /* mode pilih (tahan-lama di baris) memakai baris yang sama: sapuan
+       dimatikan selama mode itu menyala supaya tidak ada dua gestur
+       yang berebut satu baris */
+    if (sedangPilih()) return;
     const lapis = e.target.closest('.srow-b');
     if (!lapis) return;
     const srow = lapis.closest('.srow');

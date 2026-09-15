@@ -358,7 +358,10 @@ export const EN = {
   "Buat tugas": "Create task",
   "Cari di judul, isi, dan tag": "Search titles, content, and tags",
   "Cari catatan": "Search notes",
-  "Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Tag juga bisa dicari lewat chip # di baris daftar.": "Search reads the real data: every word must match (title, content, or tag). Tags can also be searched from the # chips in list rows.",
+  'Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".':
+    'Search reads the real data: every word must match (title, content, or tag). Narrow it with tag:name or judul:title, and use quotes for an exact phrase — e.g. judul:"resep kue".',
+  'Terakhir dicari': 'Recent searches',
+  'Bersihkan': 'Clear',
   "Belum ada tag": "No tags yet",
   "Tag adalah #kata di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.": "A tag is #word inside a note. As soon as one exists it shows up here and in the tag chips of list rows.",
   "Semua tag": "All tags",
@@ -637,4 +640,38 @@ export const EN = {
   'Posisi kanan': 'Align right',
   'Luruskan': 'Straighten',
   'Luruskan (0°)': 'Straighten (0°)',
+
+  /* ── pilih banyak (tahan-lama di baris daftar) ── */
+  'Pilih': 'Select',
+  'Pilih catatan': 'Select notes',
+  'Selesai memilih': 'Done selecting',
+  '{n} dipilih': { one: '{n} selected', other: '{n} selected' },
+  'Pilih semua': 'Select all',
+  'Pilih beberapa catatan — bisa juga dengan menahan satu baris':
+    'Select several notes — or press and hold a row',
+  'Aksi untuk catatan terpilih': 'Actions for selected notes',
+  '{n} catatan dipindah ke sampah':
+    { one: '{n} note moved to trash', other: '{n} notes moved to trash' },
+  'Tidak ada yang bisa dihapus': 'Nothing can be deleted',
+
+  /* ── bilah format di atas teks yang disorot ── */
+  'Format teks yang disorot': 'Format selected text',
+
+  /* ── mutu gambar saat disisipkan (C17, Pengaturan) ── */
+  'Gambar': 'Images',
+  'Hemat ruang': 'Save space',
+  'Seimbang': 'Balanced',
+  'Mutu tinggi': 'High quality',
+  'Tanpa kompresi': 'No compression',
+  'Sisi terpanjang 1280 px · mutu 72% — paling hemat':
+    'Longest side 1280 px · quality 72% — smallest files',
+  'Sisi terpanjang 1600 px · mutu 82% — bawaan':
+    'Longest side 1600 px · quality 82% — default',
+  'Sisi terpanjang 2048 px · mutu 92% — lebih tajam':
+    'Longest side 2048 px · quality 92% — sharper',
+  'Berkas asli disimpan apa adanya — paling besar':
+    'The original file is kept as is — largest',
+  'Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.':
+    'Applies to images you add from now on; images already in your notes are untouched. GIFs are always kept as is so their animation survives.',
+  'Mutu gambar': 'Image quality',
 };

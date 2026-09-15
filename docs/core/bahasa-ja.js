@@ -357,7 +357,10 @@ export const JA = {
   "Buat tugas": "タスクを作成",
   "Cari di judul, isi, dan tag": "タイトル・本文・タグを検索",
   "Cari catatan": "ノートを検索",
-  "Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Tag juga bisa dicari lewat chip # di baris daftar.": "検索は実際のデータを読みます：すべてのキーワードに一致する必要があります（タイトル・本文・タグ）。タグは一覧行の # チップからも検索できます。",
+  'Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".':
+    '検索は実際のデータを読みます：すべてのキーワードが一致する必要があります（タイトル・本文・タグ）。tag:名前 や judul:タイトル で絞り込み、完全なフレーズは引用符で囲みます（例: judul:"resep kue"）。',
+  'Terakhir dicari': '最近の検索',
+  'Bersihkan': '消去',
   "Belum ada tag": "タグはまだありません",
   "Tag adalah #kata di dalam catatan. Begitu ada, tag muncul di sini dan di chip baris daftar.": "タグとはノート内の #キーワード のことです。作ると、ここや一覧行のチップに表示されます。",
   "Semua tag": "すべてのタグ",
@@ -635,4 +638,37 @@ export const JA = {
   'Posisi kanan': '右寄せ',
   'Luruskan': 'まっすぐにする',
   'Luruskan (0°)': 'まっすぐにする（0°）',
+
+  /* ── 複数選択（一覧の行を長押し） ── */
+  'Pilih': '選択',
+  'Pilih catatan': 'ノートを選択',
+  'Selesai memilih': '選択を終了',
+  '{n} dipilih': '{n}件選択中',
+  'Pilih semua': 'すべて選択',
+  'Pilih beberapa catatan — bisa juga dengan menahan satu baris':
+    '複数のノートを選択 — 行を長押しでも選べます',
+  'Aksi untuk catatan terpilih': '選択したノートの操作',
+  '{n} catatan dipindah ke sampah': '{n}件のノートをごみ箱に移動しました',
+  'Tidak ada yang bisa dihapus': '削除できるものがありません',
+
+  /* ── 選択テキストの書式バー ── */
+  'Format teks yang disorot': '選択したテキストの書式',
+
+  /* ── 画像の品質（C17・設定） ── */
+  'Gambar': '画像',
+  'Hemat ruang': '容量を節約',
+  'Seimbang': 'バランス',
+  'Mutu tinggi': '高画質',
+  'Tanpa kompresi': '圧縮しない',
+  'Sisi terpanjang 1280 px · mutu 72% — paling hemat':
+    '長辺 1280 px・品質 72% — 最も軽い',
+  'Sisi terpanjang 1600 px · mutu 82% — bawaan':
+    '長辺 1600 px・品質 82% — 既定',
+  'Sisi terpanjang 2048 px · mutu 92% — lebih tajam':
+    '長辺 2048 px・品質 92% — より精細',
+  'Berkas asli disimpan apa adanya — paling besar':
+    '元のファイルをそのまま保存 — 最も大きい',
+  'Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.':
+    'これから挿入する画像に適用されます。ノートにある既存の画像は変更しません。GIF はアニメーションを保つため常にそのまま保存します。',
+  'Mutu gambar': '画像の品質',
 };

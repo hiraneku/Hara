@@ -4,18 +4,16 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260910030412';
-import { refresh } from './cleanup.js?v=20260910030412';
-import { pastikanKolomAkhir } from './blocks.js?v=20260910030412';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260915025704';
+import { refresh } from './cleanup.js?v=20260915025704';
+import { pastikanKolomAkhir } from './blocks.js?v=20260915025704';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260910030412';
-import { state } from '../../core/store.js?v=20260910030412';
-import { cur } from '../../core/router.js?v=20260910030412';
-import { toast } from '../../core/toast.js?v=20260910030412';
-import { t as tr } from '../../core/i18n.js?v=20260910030412';
-
-const MAKS_SISI = 1600;    /* piksel — foto ponsel dikecilkan sampai sini */
-const MUTU      = 0.82;
+  from '../../core/blobs.js?v=20260915025704';
+import { state } from '../../core/store.js?v=20260915025704';
+import { cur } from '../../core/router.js?v=20260915025704';
+import { toast } from '../../core/toast.js?v=20260915025704';
+import { t as tr } from '../../core/i18n.js?v=20260915025704';
+import { rencanaKecil } from '../mutu-gambar.js?v=20260915025704';
 
 /* Id blob dengan pola waktu+acak+urut (sama seperti id blok/catatan) —
    id model lama (`Date.now() % 100000` + counter sesi) bisa terbit lagi
@@ -27,23 +25,25 @@ const idBaru = () =>
   'f' + Date.now().toString(36).slice(-6) +
   Math.random().toString(36).slice(2, 6) + (_urut++).toString(36);
 
-/* Kecilkan gambar besar supaya hemat ruang & cepat dimuat. */
+/* Kecilkan gambar besar supaya hemat ruang & cepat dimuat.
+
+   Ukuran & mutunya mengikuti pilihan Pengaturan (C17, mutu-gambar.js).
+   "Tanpa kompresi" dan GIF diteruskan apa adanya; keputusan itu dibuat
+   rencanaKecil() supaya bisa diuji tanpa canvas. */
 function kecilkan(file) {
   return new Promise(res => {
-    /* GIF dibiarkan apa adanya — mengecilkannya menghilangkan animasi. */
-    if (file.type === 'image/gif' || !/^image\//.test(file.type)) return res(file);
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
       const { width: w, height: h } = img;
-      if (Math.max(w, h) <= MAKS_SISI) return res(file);
-      const skala = MAKS_SISI / Math.max(w, h);
+      const rencana = rencanaKecil({ lebar: w, tinggi: h, tipe: file.type });
+      if (!rencana.ubah) return res(file);
       const c = document.createElement('canvas');
-      c.width  = Math.round(w * skala);
-      c.height = Math.round(h * skala);
+      c.width  = Math.round(w * rencana.skala);
+      c.height = Math.round(h * rencana.skala);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      c.toBlob(b => res(b || file), 'image/jpeg', MUTU);
+      c.toBlob(b => res(b || file), 'image/jpeg', rencana.mutu);
     };
     img.onerror = () => { URL.revokeObjectURL(url); res(file); };
     img.src = url;
