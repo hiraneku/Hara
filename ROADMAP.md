@@ -45,3 +45,14 @@
 - [x] G28. Tempel dari luar aplikasi ikut mekanik: "1. / 2. / 3." jadi daftar bernomor,
       butir & to-do, heading, kutipan, callout, pembatas, pagar kode ``` ```,
       dan tautan (https://…, www.…, surel, [teks](alamat), <alamat>) jadi tautan a.lk
+
+## Bagian H — ronde 9 (SELESAI)
+- [x] H29. Tempelan dari luar benar-benar berderet: batas baris ditentukan `<br>`
+      DAN elemen blok di kedalaman mana pun (dulu `<div>1. a<br>2. b</div>` jadi
+      satu baris "1. a 2. b"), kalimat yang sudah ada tidak ditelan jadi butir
+      pertama ("…kalimat" + "1. Halo / 2. Dunia" → kalimat utuh, daftarnya di
+      bawahnya bernomor 1-2), baris ber-markup tetap ikut mekanik (nomor tebal),
+      daftar bersarang & indentasi `&nbsp;` jadi indentasi Hara, kotak centang
+      dari halaman lain jadi to-do, dan baris tunggal berjenis di blok kosong
+      langsung jadi blok jenisnya (seperti mengetik "1. ") sementara di tengah
+      kalimat penandanya tidak dibuang.

@@ -36,6 +36,7 @@ const {state}=await st('core/store.js');
 const {saveNow}=await st('notes/editor/cleanup.js');
 const {go}=await st('core/router.js');
 const tmp=await st('notes/editor/tempel-mekanik.js');
+const pst=await st('notes/editor/paste.js');
 const d=w.document,SEL=w.getSelection();
 let gagal=0;
 const oke=(nama,baik,det='')=>{ if(!baik){gagal++;console.log('FAIL',nama,det?'\n      '+det:'');} else console.log('ok  ',nama); };
@@ -46,6 +47,7 @@ const N=()=>{ saveNow(); return state.notes.find(x=>x.id===state.openId); };
 const tipe=()=>N().blocks.map(b=>b.type);
 const isiBlocks=()=>N().blocks.map(b=>b.content);
 const teksSimpan=()=>isiBlocks().join(' ');
+const teksBulat=()=>N().blocks.map(b=>b.content.replace(/<[^>]*>/g,''));
 
 go('notes'); klik(d.querySelector('[data-open="w"]')); await sleep(40);
 function siap(html){
@@ -310,10 +312,11 @@ oke('E7c span tag punya warna label (data-tt)',
   taruhCaret(0,4);
   tempel('1. a\n2. b\n3. c');
   await sleep(30);
-  oke('E8a sebelum undo: teks lama tersambung + 2 butir daftar',
-    tipe().length===3 && tipe()[0]==='paragraph' &&
-    tipe()[1]==='ordered-list' && tipe()[2]==='ordered-list' &&
-    /Awal/.test(N().blocks[0].content), JSON.stringify(tipe()));
+  oke('E8a sebelum undo: kalimat lama utuh + 3 butir daftar (nomor berderet)',
+    tipe().length===4 && tipe()[0]==='paragraph' && teksBulat()[0]==='Awal' &&
+    tipe()[1]==='ordered-list' && tipe()[2]==='ordered-list' && tipe()[3]==='ordered-list' &&
+    JSON.stringify(teksBulat())===JSON.stringify(['Awal','a','b','c']),
+    JSON.stringify(tipe()) + ' ' + JSON.stringify(teksBulat()));
   H.undo(); await sleep(20); saveNow();
   oke('E8b undo mengembalikan satu blok', tipe().length===1 && tipe()[0]==='paragraph',
     JSON.stringify(tipe()));
@@ -336,8 +339,26 @@ siap('<div class="b-p">Catatan: </div>');
 taruhCaret(0,10);
 tempel('1. bukan daftar');
 await sleep(30);
-oke('E9d "Catatan: 1. …" tetap paragraf', tipe().length===1 && tipe()[0]==='paragraph',
-  JSON.stringify(tipe()));
+oke('E9d "Catatan: 1. …" tetap paragraf & teksnya tidak hilang',
+  tipe().length===1 && tipe()[0]==='paragraph' &&
+  /Catatan: 1\. bukan daftar/.test(DOC().textContent),
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(DOC().textContent));
+/* baris tunggal berjenis di blok KOSONG: sama seperti mengetik "1. " */
+siap('<div class="b-p"></div>');
+taruhCaret(0,0);
+tempel('1. Halo');
+await sleep(30);
+oke('E9e satu baris "1. Halo" di blok kosong langsung jadi item daftar',
+  JSON.stringify(tipe())===JSON.stringify(['ordered-list']) &&
+  teksBulat()[0]==='Halo' && DOC().querySelectorAll('.b-ol').length===1,
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(teksBulat()));
+siap('<div class="b-p"></div>');
+taruhCaret(0,0);
+tempel('- tugas');
+await sleep(30);
+oke('E9f satu baris "- tugas" di blok kosong jadi butir',
+  JSON.stringify(tipe())===JSON.stringify(['bullet']) && teksBulat()[0]==='tugas',
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(teksBulat()));
 
 /* ── 15. karet yang nyangkut di tombol tidak menelan teks ──
    Setelah layar digambar ulang, blok kosong punya tombol gagang seret
@@ -362,6 +383,144 @@ siap('<div class="b-p"></div>');
   oke('E10c teks ikut tersimpan', /teks penting/.test(N().blocks[0].content),
     JSON.stringify(N().blocks[0].content));
 }
+
+/* ── 16. BENTUK CLIPBOARD NYATA: batas baris dari <br> & elemen blok di
+   kedalaman mana pun ──
+
+   Klip dari pembaca PDF, WhatsApp, atau Chrome Android sering memisahkan
+   baris dengan <br> di dalam satu <div>/<span>; sebagian malah menaruh
+   <div> di dalam <span>. Dulu bentuk begitu diratakan jadi SATU potongan,
+   sehingga "1. Halo" + <br> + "2. Dunia" menempel jadi "1. Halo 2. Dunia"
+   — nomornya tidak berderet ke bawah, malah naik ke baris di atasnya. */
+{
+  const hb = html => pst.htmlKeBaris(html);
+  const clsHB = html => hb(html).map(b => b.cls);
+  const angka = ['b-ol','b-ol','b-ol'];
+
+  oke('F1a <span> berisi <br>: tiap baris berdiri sendiri',
+    JSON.stringify(clsHB('<span>1. a<br>2. b<br>3. c</span>')) === JSON.stringify(angka),
+    JSON.stringify(clsHB('<span>1. a<br>2. b<br>3. c</span>')));
+  oke('F1b <div> berisi <br>',
+    JSON.stringify(clsHB('<div>1. a<br>2. b<br>3. c</div>')) === JSON.stringify(angka));
+  oke('F1c <p> berisi <br>',
+    JSON.stringify(clsHB('<p>1. a<br>2. b<br>3. c</p>')) === JSON.stringify(angka));
+  oke('F1d teks telanjang + <br> di akar',
+    JSON.stringify(clsHB('1. a<br>2. b<br>3. c')) === JSON.stringify(angka));
+  oke('F1e <span> per baris dipisah <br> (Chrome Android)',
+    JSON.stringify(clsHB('<meta charset="utf-8">' +
+      '<span style="font-size:14px">1. a</span><br>' +
+      '<span style="font-size:14px">2. b</span>')) === JSON.stringify(['b-ol','b-ol']));
+  oke('F1f nomor asli tidak tertinggal sebagai teks',
+    hb('<span>1. a<br>2. b</span>').every(b => !/^\s*\d+[.)]/.test(b.html.replace(/<[^>]*>/g,''))),
+    JSON.stringify(hb('<span>1. a<br>2. b</span>').map(b => b.html)));
+  oke('F2a <div> di dalam <span> juga jadi baris',
+    JSON.stringify(clsHB('<span><div>1. a</div><div>2. b</div></span>')) === JSON.stringify(['b-ol','b-ol']),
+    JSON.stringify(clsHB('<span><div>1. a</div><div>2. b</div></span>')));
+  oke('F2b teks + <div> + teks di dalam <span> → tiga baris',
+    JSON.stringify(clsHB('<span>1. a<div>2. b</div>3. c</span>')) === JSON.stringify(angka),
+    JSON.stringify(clsHB('<span>1. a<div>2. b</div>3. c</span>')));
+  oke('F3a nomor yang dicetak tebal tetap jadi item daftar, tebalnya utuh',
+    hb('<div><b>1. Halo</b><br>2. Dunia</div>')[0].cls === 'b-ol' &&
+    hb('<div><b>1. Halo</b><br>2. Dunia</div>')[0].html === '<b>Halo</b>' &&
+    hb('<div><b>1. Halo</b><br>2. Dunia</div>')[1].html === 'Dunia',
+    JSON.stringify(hb('<div><b>1. Halo</b><br>2. Dunia</div>')));
+  oke('F3b heading ber-markup ikut mekanik',
+    hb('<div><b># Judul</b></div>')[0].cls === 'b-h1' &&
+    hb('<div><b># Judul</b></div>')[0].html === '<b>Judul</b>',
+    JSON.stringify(hb('<div><b># Judul</b></div>')));
+  oke('F3d penanda ber-markup yang ter-indentasi tidak memakan isinya',
+    hb('<div>&nbsp;&nbsp;<b>1. Halo</b></div>')[0].cls === 'b-ol' &&
+    hb('<div>&nbsp;&nbsp;<b>1. Halo</b></div>')[0].html === '<b>Halo</b>' &&
+    hb('<div>&nbsp;&nbsp;<b>1. Halo</b></div>')[0].pad === 54,
+    JSON.stringify(hb('<div>&nbsp;&nbsp;<b>1. Halo</b></div>')));
+  oke('F3c butir ber-markup ikut mekanik',
+    hb('<div><i>- a</i></div>')[0].cls === 'b-li' &&
+    hb('<div><i>- a</i></div>')[0].html === '<i>a</i>',
+    JSON.stringify(hb('<div><i>- a</i></div>')));
+  oke('F4a dua <br> beruntun = satu baris kosong di tengah',
+    hb('<div>a<br><br>b</div>').length === 3 &&
+    hb('<div>a<br><br>b</div>')[1].html === '' &&
+    hb('<div>a<br><br>b</div>')[2].html === 'b',
+    JSON.stringify(hb('<div>a<br><br>b</div>')));
+  oke('F4b <br> di ujung tiap <div> tidak menambah blok kosong',
+    hb('<div>1. a<br></div><div>2. b<br></div>').length === 2,
+    JSON.stringify(hb('<div>1. a<br></div><div>2. b<br></div>')));
+  oke('F4c <div>&nbsp;</div> kosong tidak jadi baris',
+    hb('<div>a</div><div>&nbsp;</div><div>b</div>').length === 2,
+    JSON.stringify(hb('<div>a</div><div>&nbsp;</div><div>b</div>')));
+  oke('F5a daftar bersarang HTML jadi indentasi Hara',
+    hb('<ul><li>a<ul><li>a1</li></ul></li><li>b</li></ul>')[1].pad === 46,
+    JSON.stringify(hb('<ul><li>a<ul><li>a1</li></ul></li><li>b</li></ul>')));
+  oke('F5b indentasi &nbsp; juga jadi langkah indentasi',
+    hb('<div>&nbsp;&nbsp;1. sub</div><div>1. utama</div>')[0].pad === 54,
+    JSON.stringify(hb('<div>&nbsp;&nbsp;1. sub</div><div>1. utama</div>')));
+  oke('F6a kotak centang dari halaman lain jadi to-do Hara',
+    hb('<div><input type="checkbox" checked> tugas</div>')[0].cls === 'b-todo' &&
+    hb('<div><input type="checkbox" checked> tugas</div>')[0].dicek === true &&
+    hb('<div><input type="checkbox"> tugas</div>')[0].cls === 'b-todo',
+    JSON.stringify(hb('<div><input type="checkbox" checked> tugas</div>')));
+  oke('F7a tautan yang teksnya beda dari alamatnya tidak diratakan jadi teks',
+    hb('<div><a href="https://x.test">situs</a> ya</div>')[0].html
+      .includes('<a class="lk" href="https://x.test"'));
+  oke('F8a <pre> tetap satu blok kode & <hr> jadi pembatas',
+    JSON.stringify(clsHB('<p>a</p><hr><pre>kode\nbaris</pre>')) ===
+      JSON.stringify(['b-p','b-div','b-code']),
+    JSON.stringify(clsHB('<p>a</p><hr><pre>kode\nbaris</pre>')));
+}
+
+/* ── 17. (nyata) tempel pesan berurutan dari luar aplikasi ── */
+/* Kalimat yang sudah ada TIDAK boleh ditelan jadi item pertama — dulu
+   "...kalimat" + "1. Halo / 2. Dunia" menghasilkan satu paragraf
+   "...kalimat Halo" plus satu item tersisa, jadi nomornya tidak berderet. */
+siap('<div class="b-p">Catatan saya: </div>');
+taruhCaret(0,14);
+tempel('1. Halo\n2. Dunia', '<div>1. Halo<br>2. Dunia</div>');
+await sleep(40);
+oke('F10a paragraf lama utuh, daftar mulai sebagai blok baru di bawahnya',
+  JSON.stringify(tipe())===JSON.stringify(['paragraph','ordered-list','ordered-list']) &&
+  teksBulat()[0].trim()==='Catatan saya:' && teksBulat()[1]==='Halo' && teksBulat()[2]==='Dunia',
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(teksBulat()));
+oke('F10b tak ada sisa nomor di teks mana pun',
+  N().blocks.every(b => !/\d+\./.test(b.content.replace(/<[^>]*>/g,''))),
+  JSON.stringify(N().blocks.map(b=>b.content)));
+/* Teks prosa banyak baris tetap menyambung seperti sebelumnya. */
+siap('<div class="b-p">Awal </div>');
+taruhCaret(0,5);
+tempel('kata lain\nbaris dua');
+await sleep(40);
+oke('F10c teks prosa tetap menyambung ke kalimat lama',
+  JSON.stringify(tipe())===JSON.stringify(['paragraph','paragraph']) &&
+  teksBulat()[0]==='Awal kata lain' && teksBulat()[1]==='baris dua',
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(teksBulat()));
+
+siap('<div class="b-p"></div>');
+taruhCaret(0,0);
+tempel('1. Halo\n2. Dunia',
+  '<meta charset="utf-8"><div>1. Halo<br>2. Dunia</div>');
+await sleep(40);
+oke('F9a angka turun ke bawah: dua blok daftar bernomor',
+  JSON.stringify(tipe()) === JSON.stringify(['ordered-list','ordered-list']),
+  JSON.stringify(tipe()));
+oke('F9b butir pertama isinya "Halo" — bukan "Halo 2. Dunia"',
+  N().blocks[0] && N().blocks[0].content === 'Halo',
+  JSON.stringify(N().blocks.map(b => b.content)));
+oke('F9c butir kedua terpisah dengan isi "Dunia"',
+  N().blocks[1] && N().blocks[1].content === 'Dunia',
+  JSON.stringify(N().blocks.map(b => b.content)));
+oke('F9d DOM memakai dua blok daftar Hara', DOC().querySelectorAll('.b-ol').length === 2,
+  JSON.stringify(DOC().innerHTML));
+oke('F9e nomornya berderet ke bawah: 1. lalu 2.',
+  Array.from(DOC().querySelectorAll('.b-ol')).map(b => b.getAttribute('data-n')).join(' ') === '1. 2.',
+  JSON.stringify(Array.from(DOC().querySelectorAll('.b-ol')).map(b => b.getAttribute('data-n'))));
+siap('<div class="b-p"></div>');
+taruhCaret(0,0);
+tempel('1. Halo\n2. Dunia', '<span style="font-size:14px">1. Halo</span><br>' +
+  '<span style="font-size:14px">2. Dunia</span>');
+await sleep(40);
+oke('F9f bentuk span+br juga turun jadi daftar bernomor',
+  JSON.stringify(tipe()) === JSON.stringify(['ordered-list','ordered-list']) &&
+  N().blocks[0].content === 'Halo',
+  JSON.stringify(tipe()) + ' ' + JSON.stringify(N().blocks.map(b => b.content)));
 
 console.log(gagal ? `\ntotal: ${gagal} GAGAL` : '\nSemua uji tempel-mekanik LOLOS');
 if (gagal) process.exit(1);

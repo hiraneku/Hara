@@ -22,7 +22,12 @@
 
    Aturannya sengaja MENGIKUTI autoFormat() saat mengetik (editor/
    markdown.js) — paste memakai mekanik yang sama, bukan jalur kedua
-   yang lama-lama berbeda perilaku. Indentasi awal diterjemahkan jadi
+   yang lama-lama berbeda perilaku.
+
+   Fungsi di sini bekerja PER BARIS. Yang memutuskan di mana satu baris
+   berakhir adalah paste.js: <br> dan elemen blok memotong baris di
+   kedalaman mana pun, jadi "1. Halo" + <br> + "2. Dunia" tidak lagi
+   menempel jadi satu baris. Indentasi awal diterjemahkan jadi
    padding 24px per langkah, sama dengan tombol indent.
 
    Yang sengaja TIDAK dilakukan:
@@ -34,7 +39,7 @@
    Semua teks di-escape lewat esc() dan tautan disaring tautanAman(),
    jadi clipboard berisi <script> atau javascript: tidak bisa lolos. */
 
-import { esc } from '../../core/dom.js?v=20260918121139';
+import { esc } from '../../core/dom.js?v=20260918132648';
 
 /* Karakter penutup kata tag — sama dengan TUTUP_CHAR di markdown.js. */
 const TUTUP_TAG = new Set([' ', '\u00a0', '\t', ',', ';', ':', '!', '?',
@@ -189,57 +194,104 @@ const JENIS_CAL = { info: 'info', tip: 'tip', warn: 'warn', warning: 'warn',
   peringatan: 'warn', bahaya: 'danger', danger: 'danger' };
 const LABEL_CAL = { info: 'Info', tip: 'Tip', warn: 'Peringatan', danger: 'Bahaya' };
 
+/* Indentasi awal baris = kelipatan DUA spasi — satu tab dihitung dua
+   spasi, dan &nbsp; dianggap spasi (clipboard HTML sering meng-indentasi
+   dengan &nbsp;). Satu spasi di awal kalimat BUKAN indentasi: spasi itu
+   tetap bagian teks, kalau tidak " lanjut" yang disalin akan kehilangan
+   spasinya.
+
+   Mengembalikan { level, isi, panjang }: `isi` = teks setelah indentasi
+   yang dipakai; `panjang` = jumlah karakter AWAL teks asli yang terpakai
+   sebagai indentasi (dihitung pada teks asli, sebelum tab/&nbsp;
+   diterjemahkan) — dipakai paste.js untuk memotong HTML ber-markup. */
+export function bagiIndent(mentah) {
+  const t = String(mentah == null ? '' : mentah);
+  const pisah = t.match(/^([ \t\u00a0]*)([\s\S]*)$/);
+  const spasi = pisah[1].replace(/\t/g, '  ').replace(/\u00a0/g, ' ');
+  const level = Math.min(6, Math.floor(spasi.length / 2));
+  const pakai = level * 2;
+  let panjang = 0, hitung = 0;
+  while (panjang < pisah[1].length && hitung < pakai) {
+    hitung += pisah[1][panjang] === '\t' ? 2 : 1;
+    panjang++;
+  }
+  return { level, isi: spasi.slice(pakai) + pisah[2], panjang };
+}
+
+/* Padding indentasi sebuah jenis blok: padding bawaan jenisnya (lihat
+   styles/notes.css) DITAMBAH 24px per langkah indentasi — sama dengan
+   tombol indent. Dipakai barisMekanik() dan paste.js. */
+export function padUntuk(cls, level) {
+  if (!level) return 0;
+  return (cls === 'b-div' ? 0 : (PAD_DAFTAR[cls] || 0)) + 24 * level;
+}
+
+/* Penanda awal baris → { cls, sisa, panjang, attr?, dicek? }, null kalau
+   baris ini teks biasa. Dipakai barisMekanik() DAN paste.js: penanda
+   yang ikut ter-format di clipboard — mis. nomornya dicetak tebal,
+   "**1.** a" — tetap diakui sebagai daftar, bukan tinggal jadi tulisan
+   tangan yang tidak pernah ikut nomor otomatis.
+
+   Satu spasi sisa dari indentasi ganjil dimaafkan di depan penanda. */
+export function polaBaris(isi) {
+  const t = String(isi == null ? '' : isi);
+
+  /* callout: > [!info] … */
+  const cal = t.match(/^[ ]?>\s*\[!(info|tip|warn|warning|danger|bahaya|peringatan)\]\s*([\s\S]*)$/i);
+  if (cal) {
+    const jenis = JENIS_CAL[cal[1].toLowerCase()];
+    return { cls: 'b-cal', sisa: cal[2].trim(), panjang: t.length - cal[2].length,
+      attr: { 'data-cal': jenis, 'data-cal-label': LABEL_CAL[jenis] } };
+  }
+  /* kutipan */
+  const kutip = t.match(/^[ ]?>\s+([\s\S]*)$/);
+  if (kutip) return { cls: 'b-quote', sisa: kutip[1], panjang: t.length - kutip[1].length };
+
+  /* heading */
+  const h = t.match(/^[ ]?(#{1,3})\s+([\s\S]*)$/);
+  if (h) return { cls: 'b-h' + h[1].length, sisa: h[2], panjang: t.length - h[2].length };
+
+  /* to-do: - [ ] / - [x] */
+  const todo = t.match(/^[ ]?[-*+]\s+\[([ xX]?)\]\s*([\s\S]*)$/);
+  if (todo) return { cls: 'b-todo', sisa: todo[2], panjang: t.length - todo[2].length,
+    dicek: /[xX]/.test(todo[1]) };
+
+  /* daftar bernomor: 1. / 1)  */
+  const ol = t.match(/^[ ]?\d+[.)]\s+([\s\S]*)$/);
+  if (ol) return { cls: 'b-ol', sisa: ol[1], panjang: t.length - ol[1].length };
+
+  /* daftar butir: - / * / + */
+  const ul = t.match(/^[ ]?[-*+]\s+([\s\S]*)$/);
+  if (ul) return { cls: 'b-li', sisa: ul[1], panjang: t.length - ul[1].length };
+
+  /* pembatas */
+  if (/^[ ]?-{3,}\s*$/.test(t)) return { cls: 'b-div', sisa: '', panjang: t.length };
+
+  return null;
+}
+
 /* Satu baris teks polos → { cls, html, pad?, attr?, dicek? }.
    Tidak ada pola yang cocok → paragraf biasa (perilaku lama). */
 export function barisMekanik(mentah) {
-  const t0 = String(mentah == null ? '' : mentah);
-  const pisah = t0.match(/^([ \t]*)([\s\S]*)$/);
-  /* Indentasi = kelipatan DUA spasi (satu tab dihitung dua spasi) —
-     sama dengan kebiasaan menulis daftar bersarang. Satu spasi di awal
-     kalimat BUKAN indentasi: spasi itu tetap bagian teks, kalau tidak
-     " lanjut" yang disalin akan kehilangan spasinya. */
-  const spasiAwal = pisah[1].replace(/\t/g, '  ');
-  const level = Math.min(6, Math.floor(spasiAwal.length / 2));
-  const isi = spasiAwal.slice(level * 2) + pisah[2];
-
+  const { level, isi } = bagiIndent(mentah);
   const buat = (cls, teks, tambahan = {}) => {
     const b = { cls, html: inlineKeHtml(teks) };
-    if (level > 0) b.pad = (PAD_DAFTAR[cls] || 0) + 24 * level;
+    if (level > 0) b.pad = padUntuk(cls, level);
     return Object.assign(b, tambahan);
   };
 
-  /* callout: > [!info] … */
-  const cal = isi.match(/^>\s*\[!(info|tip|warn|warning|danger|bahaya|peringatan)\]\s*([\s\S]*)$/i);
-  if (cal) {
-    const jenis = JENIS_CAL[cal[1].toLowerCase()];
-    return buat('b-cal', cal[2].trim(),
-      { attr: { 'data-cal': jenis, 'data-cal-label': LABEL_CAL[jenis] } });
-  }
-  /* kutipan */
-  const kutip = isi.match(/^>\s+([\s\S]*)$/);
-  if (kutip) return buat('b-quote', kutip[1]);
-
-  /* heading */
-  const h = isi.match(/^(#{1,3})\s+([\s\S]*)$/);
-  if (h) return buat('b-h' + h[1].length, h[2]);
-
-  /* to-do: - [ ] / - [x] */
-  const todo = isi.match(/^[-*+]\s+\[([ xX]?)\]\s*([\s\S]*)$/);
-  if (todo) return buat('b-todo', todo[2], { dicek: /[xX]/.test(todo[1]) });
-
-  /* daftar bernomor: 1. / 1)  */
-  const ol = isi.match(/^\d+[.)]\s+([\s\S]*)$/);
-  if (ol) return buat('b-ol', ol[1]);
-
-  /* daftar butir: - / * / + */
-  const ul = isi.match(/^[-*+]\s+([\s\S]*)$/);
-  if (ul) return buat('b-li', ul[1]);
-
-  /* pembatas */
-  if (/^-{3,}\s*$/.test(isi))
-    return Object.assign({ cls: 'b-div', html: '' }, level > 0 ? { pad: 24 * level } : {});
-
-  return buat('b-p', isi);
+  const p = polaBaris(isi);
+  if (!p) return buat('b-p', isi);
+  if (p.cls === 'b-div')
+    return Object.assign({ cls: 'b-div', html: '' }, level > 0 ? { pad: padUntuk('b-div', level) } : {});
+  const tambahan = {};
+  if (p.attr) tambahan.attr = p.attr;
+  if (p.cls === 'b-todo') tambahan.dicek = !!p.dicek;
+  /* `asli` = baris UTUH termasuk penandanya ("1. a"). Dipakai paste.js
+     saat baris tunggal disisipkan di tengah kalimat yang sudah ada:
+     penandanya tidak boleh hilang begitu saja. */
+  tambahan.asli = inlineKeHtml(mentah);
+  return buat(p.cls, p.sisa, tambahan);
 }
 
 /* Teks polos banyak baris → daftar baris siap sisip. Pagar kode
