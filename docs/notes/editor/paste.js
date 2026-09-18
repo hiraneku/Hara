@@ -22,23 +22,17 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260918132648';
-import { sisipGambar } from './image.js?v=20260918132648';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260918132843';
+import { sisipGambar } from './image.js?v=20260918132843';
 import { barisMekanik, teksKeBaris, bagiIndent, polaBaris, padUntuk,
   tautkanTeks, tautanAman, hrefDari, htmlTautan }
-  from './tempel-mekanik.js?v=20260918132648';
+  from './tempel-mekanik.js?v=20260918132843';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
 const INLINE_AMAN = {
   B: 'b', STRONG: 'b', I: 'i', EM: 'i', U: 'u',
   S: 's', STRIKE: 's', DEL: 's', CODE: 'code',
-};
-
-/* Blok HTML yang dipetakan ke jenis blok kita. */
-const BLOK_HTML = {
-  H1: 'b-h1', H2: 'b-h2', H3: 'b-h3', H4: 'b-h3', H5: 'b-h3', H6: 'b-h3',
-  BLOCKQUOTE: 'b-quote', PRE: 'b-code', LI: 'b-li', P: 'b-p', DIV: 'b-p',
 };
 
 /* Kelas blok yang mungkin menempel — harus dilepas sebelum diganti. */

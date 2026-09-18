@@ -17,11 +17,11 @@
    sedangPilih) dan tombol semat kecil di baris disembunyikan (CSS):
    semuanya lewat bilah mini supaya tidak ada aksi yang salah sasaran. */
 
-import { cur, go, onAfterRender, onBeforeLeave } from '../core/router.js?v=20260918132648';
-import { toast } from '../core/toast.js?v=20260918132648';
-import { getar } from './bar/prefs.js?v=20260918132648';
-import { t as tr } from '../core/i18n.js?v=20260918132648';
-import { findNote, hapusBanyakDariList, sematBanyak, arsipBanyak } from './model.js?v=20260918132648';
+import { cur, go, onAfterRender, onBeforeLeave } from '../core/router.js?v=20260918132843';
+import { toast } from '../core/toast.js?v=20260918132843';
+import { getar } from './bar/prefs.js?v=20260918132843';
+import { t as tr } from '../core/i18n.js?v=20260918132843';
+import { findNote, hapusBanyakDariList, sematBanyak, arsipBanyak } from './model.js?v=20260918132843';
 
 const TAHAN = 480;        /* ms menahan sebelum mode pilih menyala */
 const GESER_BATAL = 10;   /* px — lebih dari ini dianggap scroll/sapuan */
