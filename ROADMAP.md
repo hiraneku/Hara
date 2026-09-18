@@ -40,3 +40,8 @@
 - [x] F25. Pilih banyak catatan: tahan-lama di baris, bilah mini, aksi sekaligus (semat/arsip/hapus)
 - [x] F26. Pencarian lebih tajam: operator tag:/judul:, sorot hasil, riwayat pencarian
 - [x] F27. Bilah format di atas teks yang disorot (tebal/miring/sorot/kode/warna/tautan/hapus format)
+
+## Bagian G — ronde 8 (SELESAI)
+- [x] G28. Tempel dari luar aplikasi ikut mekanik: "1. / 2. / 3." jadi daftar bernomor,
+      butir & to-do, heading, kutipan, callout, pembatas, pagar kode ``` ```,
+      dan tautan (https://…, www.…, surel, [teks](alamat), <alamat>) jadi tautan a.lk

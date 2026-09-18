@@ -6,16 +6,24 @@
 
    Prinsip:
    • HTML clipboard disaring keras: hanya tag inline yang memang didukung
-     sistem marks yang lolos. Script, event handler, style, dan atribut
-     asing dibuang total.
+     sistem marks yang lolos — plus <a href> yang AMAN, yang diubah jadi
+     tautan Hara (a.lk). Script, event handler, style, dan atribut asing
+     dibuang total.
+   • Teks dari luar disesuaikan ke MEKANIK Hara (editor/tempel-mekanik.js):
+     "1. a / 2. b" jadi daftar bernomor, "- a" jadi butir, "- [ ] a" jadi
+     to-do, "# Judul" jadi heading, "> kutipan", "---" pembatas, pagar
+     kode ``` ``` jadi blok kode, dan alamat telanjang jadi tautan a.lk.
    • Blok lama mempertahankan id; blok baru dapat id sendiri lewat
      pastikanBlockId() yang sudah ada.
    • Autosave & history memakai mekanisme yang sudah ada — tidak ada
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260915025704';
-import { sisipGambar } from './image.js?v=20260915025704';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260918121139';
+import { sisipGambar } from './image.js?v=20260918121139';
+import { esc } from '../../core/dom.js?v=20260918121139';
+import { barisMekanik, teksKeBaris, tautkanTeks, tautanAman, htmlTautan }
+  from './tempel-mekanik.js?v=20260918121139';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
@@ -43,7 +51,8 @@ export function bersihkanInline(node) {
   let keluar = '';
   for (const anak of Array.from(node.childNodes)) {
     if (anak.nodeType === 3) {                       /* teks */
-      keluar += escHtml(anak.data);
+      /* alamat telanjang ikut ditautkan — teksnya tetap ter-escape */
+      keluar += tautkanTeks(anak.data);
       continue;
     }
     if (anak.nodeType !== 1) continue;               /* komentar dll: buang */
@@ -55,6 +64,17 @@ export function bersihkanInline(node) {
 
     if (tag === 'BR') { keluar += ' '; continue; }
 
+    /* Tautan dari aplikasi lain: disaring, lalu ditulis ulang dalam
+       bentuk tautan Hara supaya bisa dibuka & disunting seperti tautan
+       yang dibuat lewat menu. Alamat tak aman (javascript:, data:)
+       kehilangan tautannya, teksnya tetap tampil. */
+    if (tag === 'A') {
+      const href = tautanAman(anak.getAttribute('href'));
+      const teks = (anak.textContent || '').trim() || href;
+      keluar += (href && teks) ? htmlTautan(href, teks) : bersihkanInline(anak);
+      continue;
+    }
+
     const aman = INLINE_AMAN[tag];
     const dalam = bersihkanInline(anak);
     if (!dalam) continue;
@@ -64,6 +84,19 @@ export function bersihkanInline(node) {
     else keluar += dalam;        /* tag tak dikenal: isinya saja */
   }
   return keluar;
+}
+
+/* Baris dari <div>/<p>: teks polos dilewatkan mekanik (daftar, heading,
+   tautan), sedangkan isi bermarkup dibiarkan apa adanya. `isi` adalah
+   hasil bersihkanInline yang sudah ter-escape — kalau sama dengan
+   escape teks mentahnya, berarti tidak ada markup sama sekali. */
+function barisPolosAtauHtml(el, isi) {
+  const raw = (el.textContent || '').trim();
+  if (raw && isi === esc(raw)) {
+    const b = barisMekanik(raw);
+    if (b) return b;
+  }
+  return { cls: 'b-p', html: isi };
 }
 
 /* Pecah HTML clipboard jadi daftar { cls, html }.
@@ -85,7 +118,7 @@ export function htmlKeBaris(html) {
 
   const jelajah = induk => {
     for (const anak of Array.from(induk.childNodes)) {
-      if (anak.nodeType === 3) { sisa += escHtml(anak.data); continue; }
+      if (anak.nodeType === 3) { sisa += tautkanTeks(anak.data); continue; }
       if (anak.nodeType !== 1) continue;
       const tag = anak.tagName;
       if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') continue;
@@ -117,10 +150,14 @@ export function htmlKeBaris(html) {
         continue;
       }
 
+      /* Wadah umum (<div>/<p>): kalau isinya teks polos tanpa markup,
+         jalankan mekanik tempel — halaman web yang menyalin
+         "1. a / 2. b" sebagai <div> tetap jadi daftar bernomor. Kalau
+         ada markup (tebal, tautan, …), HTML-nya yang dipakai. */
       if (tag === 'DIV' || tag === 'P') {
         dorongSisa();
         const isi = bersihkanInline(anak).trim();
-        if (isi) baris.push({ cls: 'b-p', html: isi });
+        if (isi) baris.push(barisPolosAtauHtml(anak, isi));
         continue;
       }
 
@@ -141,9 +178,15 @@ export function htmlKeBaris(html) {
   return baris;
 }
 
-/* Teks polos → daftar baris. Baris kosong beruntun dipadatkan. */
-export function teksKeBaris(teks) {
-  return String(teks || '')
+/* Teks polos → daftar baris: tiap baris lewat mekanik Hara
+   (tempel-mekanik.js) — daftar bernomor, butir, to-do, heading,
+   kutipan, pembatas, pagar kode, tautan, dan format inline. */
+export { teksKeBaris };
+
+/* Teks polos APA ADANYA — dipakai saat menempel ke dalam blok kode:
+   markdown, tautan, dan daftar tidak boleh diubah di sana. */
+export function polosKeBaris(teks) {
+  return String(teks == null ? '' : teks)
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map(b => ({ cls: 'b-p', html: escHtml(b) }));
@@ -160,6 +203,19 @@ export function sisipBaris(baris, { kodeMentah = false } = {}) {
   let r = s.getRangeAt(0);
   if (!d.contains(r.startContainer)) return false;
 
+  /* Karet dikendalikan sendiri: DOM di bawahnya berubah (blok bisa
+     berganti elemen, mis. div → h1) dan seleksi browser bisa berpindah
+     jangkar saat itu. Text node karet disimpan, lalu dipasang ulang
+     tepat sebelum menyisipkan. */
+  const karet = { node: r.startContainer, off: r.startOffset };
+  const pasangKaret = () => {
+    if (!karet || karet.node.nodeType !== 3 || !karet.node.isConnected) return;
+    const nr = document.createRange();
+    nr.setStart(karet.node, Math.min(karet.off, karet.node.length));
+    nr.collapse(true);
+    s.removeAllRanges(); s.addRange(nr);
+  };
+
   /* seleksi aktif ikut tergantikan */
   if (!r.collapsed) r.deleteContents();
   r = s.getRangeAt(0);
@@ -168,6 +224,22 @@ export function sisipBaris(baris, { kodeMentah = false } = {}) {
   if (!blok) return false;
   blok = nearestEditable(blok);
   if (!blok) return false;
+
+  /* Karet bisa berjangkar di dalam ELEMEN yang contenteditable=false —
+     gagang seret atau kotak centang to-do, mis. setelah layar digambar
+     ulang pada blok kosong. Kalau dibiarkan, teks tempelan mendarat di
+     dalam tombol itu dan ikut terbuang saat blok dibaca kembali.
+     Pindahkan karet ke text node tepat sesudah tombolnya. */
+  if (r.startContainer.nodeType === 1 &&
+      r.startContainer.closest && r.startContainer.closest('[contenteditable="false"]')) {
+    const tombol = r.startContainer.closest('[contenteditable="false"]');
+    const jangkar = document.createTextNode('');
+    tombol.after(jangkar);
+    const nr = document.createRange();
+    nr.setStart(jangkar, 0); nr.collapse(true);
+    s.removeAllRanges(); s.addRange(nr);
+    r = nr;
+  }
 
   /* Di dalam blok kode, paste SELALU teks biasa — newline jadi baris
      dalam blok yang sama, bukan blok baru. */
@@ -194,26 +266,22 @@ export function sisipBaris(baris, { kodeMentah = false } = {}) {
      paragraf. Blok aktif tetap memakai id lamanya. */
   const kosong = (blok.textContent || '').replace(/[\u200b\u00a0\s]/g, '') === '';
   const clsAwal = baris[0].cls;
-  let mulai = 0;
+  const mulai = 0;
   if (kosong && clsAwal && clsAwal !== 'b-p') {
     BLOK_KELAS.forEach(c => blok.classList.remove(c));
     blok.classList.add(clsAwal);
-    if (clsAwal === 'b-todo' && !blok.querySelector(':scope > .cbx')) {
-      const box = document.createElement('button');
-      box.className = 'cbx'; box.contentEditable = 'false';
-      box.type = 'button'; box.setAttribute('role','checkbox'); box.setAttribute('aria-checked','false');
-      box.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
-      blok.insertBefore(box, blok.firstChild);
-    }
+    lengkapiBlok(blok, baris[0]);
+    blok = samakanElemen(blok, clsAwal);
   }
+  pasangKaret();
   sisipHtmlDiCaret(baris[mulai].html);
 
   let acuan = blok;
   for (let i = 1; i < baris.length; i++) {
     const b = document.createElement('div');
     b.className = baris[i].cls || 'b-p';
-    if (baris[i].cls === 'b-div') b.contentEditable = 'false';
     b.innerHTML = baris[i].html || '';
+    lengkapiBlok(b, baris[i]);
     /* JANGAN salin data-bid: blok baru wajib dapat id sendiri */
     acuan.after(b);
     acuan = b;
@@ -236,12 +304,66 @@ export function sisipBaris(baris, { kodeMentah = false } = {}) {
   return true;
 }
 
+/* Heading memakai elemen <h1>/<h2>/<h3> sungguhan (semantik & CSS-nya
+   mengandalkan tag), sedangkan jenis lain memakai <div>. Blok pertama
+   hasil tempelan memakai ulang elemen yang sudah ada — jadi elemennya
+   ikut diganti seperti yang dilakukan setBlock() saat mengetik.
+   Semua atribut disalin supaya data-bid (id blok) tetap sama. */
+function samakanElemen(el, cls) {
+  const tagHeading = { 'b-h1': 'h1', 'b-h2': 'h2', 'b-h3': 'h3' }[cls];
+  const sekarang = el.tagName.toLowerCase();
+  const headingSekarang = sekarang === 'h1' || sekarang === 'h2' || sekarang === 'h3';
+  if (tagHeading && sekarang !== tagHeading) return tukarElemen(el, tagHeading);
+  if (!tagHeading && headingSekarang) return tukarElemen(el, 'div');
+  return el;
+}
+
+function tukarElemen(el, tag) {
+  const baru = document.createElement(tag);
+  for (const at of Array.from(el.attributes)) baru.setAttribute(at.name, at.value);
+  while (el.firstChild) baru.appendChild(el.firstChild);
+  el.replaceWith(baru);
+  return baru;
+}
+
+/* Sisa yang tidak dibawa classList: padding indentasi, atribut jenis
+   (data-cal callout), dan kotak centang to-do. Dipakai untuk blok
+   pertama maupun blok lanjutan, jadi hasil tempelan selalu berbentuk
+   blok yang sama dengan hasil mekanik saat mengetik. */
+function lengkapiBlok(el, baris) {
+  if (!el || !baris) return;
+  if (baris.pad) el.style.paddingLeft = baris.pad + 'px';
+  if (baris.attr) for (const k of Object.keys(baris.attr)) el.setAttribute(k, baris.attr[k]);
+  if (baris.cls === 'b-div') el.contentEditable = 'false';
+  if (baris.cls === 'b-todo') {
+    if (baris.dicek) el.classList.add('done');
+    if (!el.querySelector(':scope > .cbx')) {
+      const box = document.createElement('button');
+      box.className = 'cbx' + (baris.dicek ? ' on' : '');
+      box.contentEditable = 'false';
+      box.type = 'button';
+      box.setAttribute('role', 'checkbox');
+      box.setAttribute('aria-checked', baris.dicek ? 'true' : 'false');
+      box.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
+      el.insertBefore(box, el.firstChild);
+    }
+  }
+}
+
 /* Potong isi blok setelah caret, kembalikan HTML-nya. */
 function ambilEkorBlok(blok, r) {
   const sisa = document.createRange();
   sisa.selectNodeContents(blok);
   try { sisa.setStart(r.startContainer, r.startOffset); }
   catch (e) { return ''; }
+  /* Tidak ada isi setelah karet: JANGAN dipotong. extractContents() pada
+     text node kosong akan melepas node itu dari blok — dan node itulah
+     tempat karet berada, sehingga sisipan berikutnya mendarat di luar
+     blok (mis. teks muncul sebelum <h1> yang baru dibentuk). */
+  const uji = sisa.cloneContents();
+  const adaIsi = (uji.textContent || '') !== '' ||
+    !!(uji.querySelector && uji.querySelector('img,[data-blob],br'));
+  if (!adaIsi) return '';
   const frag = sisa.extractContents();
   const tmp = document.createElement('div');
   tmp.appendChild(frag);
@@ -327,11 +449,20 @@ export function tanganiPaste(e) {
     try { baris = htmlKeBaris(html); }
     catch (err) { baris = []; }          /* parsing gagal -> jatuh ke teks */
   }
-  if (!baris.length) baris = teksKeBaris(teks || html.replace(/<[^>]*>/g, ''));
+  /* Tidak ada HTML (atau parsingnya gagal): teks polos dari luar —
+     daftar bernomor, butir, heading, tautan — ikut mekanik Hara. */
+  if (!baris.length) {
+    const mentah = teks || html.replace(/<[^>]*>/g, '');
+    /* di dalam blok kode: apa adanya — daftar & tautan tidak diubah */
+    baris = diKode ? polosKeBaris(mentah) : teksKeBaris(mentah);
+  }
 
-  /* buang baris kosong di ujung agar tidak menambah blok hampa */
-  while (baris.length > 1 && !baris[baris.length - 1].html.trim()) baris.pop();
-  while (baris.length > 1 && !baris[0].html.trim()) baris.shift();
+  /* Buang baris HAMPA di ujung agar tidak menambah blok kosong.
+     Pembatas (b-div) isinya memang kosong tapi bukan baris hampa — harus
+     ikut tersisip, kalau tidak "---" di akhir tempelan hilang. */
+  const hampa = b => (!b.cls || b.cls === 'b-p') && !String(b.html || '').trim();
+  while (baris.length > 1 && hampa(baris[baris.length - 1])) baris.pop();
+  while (baris.length > 1 && hampa(baris[0])) baris.shift();
   if (!baris.length) return false;
 
   return sisipBaris(baris, { kodeMentah: diKode });
