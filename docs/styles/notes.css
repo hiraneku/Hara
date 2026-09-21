@@ -90,12 +90,6 @@ body.drag-blk{cursor:grabbing;user-select:none}
 .hl{background:#F3E7B8;border-radius:3px;padding:0 3px}
 [data-theme=dark] .hl{background:#4A4222;color:#F0E5C0}
 code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:.87em}
-/* blok tersemat */
-.emb{border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;background:var(--surface)}
-.emb-h{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:6px;margin-bottom:7px;
-  letter-spacing:.06em;text-transform:uppercase}
-.emb-h .ico{width:12px;height:12px}
-
 /* backlink & graph */
 .panel{max-width:34rem;margin:36px auto 0;border-top:1px solid var(--border);padding-top:22px}
 .panel-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px}
@@ -927,8 +921,6 @@ span.tg[data-tt]{color:var(--lc,var(--accent))}
 
 /* ════════════ BAGIAN D19 — kunci catatan (PIN per catatan) ════════════ */
 
-/* baris buta catatan terkunci di daftar utama / arsip */
-.row.row-kunci{color:var(--text)}
 .row-ki{width:46px;height:46px;border-radius:10px;flex:none;align-self:center;
   display:grid;place-items:center;background:var(--accent-weak);color:var(--accent)}
 .row-ki .ico{width:19px;height:19px}

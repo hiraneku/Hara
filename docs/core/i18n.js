@@ -15,8 +15,8 @@
    - Modul ini TIDAK mengimpor modul inti lain — aman dipakai modul
      mana pun tanpa risiko lingkaran impor. */
 
-import { EN } from './bahasa-en.js?v=20260918132843';
-import { JA } from './bahasa-ja.js?v=20260918132843';
+import { EN } from './bahasa-en.js?v=20260921045615';
+import { JA } from './bahasa-ja.js?v=20260921045615';
 
 const KUNCI = 'hara.v1.bahasa';     /* 'id' | 'en' | 'ja' — bawaan 'id' */
 const KODE = ['id', 'en', 'ja'];
@@ -47,8 +47,6 @@ export function setBahasa(b) {
   const l = document.documentElement;
   if (l) l.lang = b;
 }
-
-export const isInggris = () => bahasaSekarang() === 'en';
 
 /* Lokale Intl untuk bahasa aktif — dipakai toLocaleString /
    toLocaleDateString (angka, tanggal panjang, dsb.). */

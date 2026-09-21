@@ -1,6 +1,8 @@
-# Roadmap sementara — fitur catatan Hara
+# Roadmap & catatan rilis — Hara
 
-> Berkas TEMPORER. Dihapus setelah semua butir selesai dikerjakan.
+> Riwayat ronde: apa yang selesai, apa yang ditunda. Butir yang DITUNDA
+> (D18, E22–E24) tetap terbuka sampai diminta — bukan pekerjaan yang jalan
+> sendiri. Rencana jangka panjang ada di `docs/PLAN.md`.
 
 ## Bagian A — prioritas cepat (SELESAI)
 - [x] A1. Atur ukuran teks saat membaca (A−/A+) — 15–24px, tersimpan, mode baca & tulis
@@ -56,3 +58,23 @@
       dari halaman lain jadi to-do, dan baris tunggal berjenis di blok kosong
       langsung jadi blok jenisnya (seperti mengetik "1. ") sementara di tengah
       kalimat penandanya tidak dibuang.
+
+## Bagian I — ronde 10 (SELESAI, bersih-bersih)
+- [x] I30. Bersih-bersih repo: kode mati dibuang (19 ekspor/fungsi: `$`, `$$`,
+      `isInggris`, `BUKA_TAGWARNA`, `fontLekat`/`adaPendingNone`/`modeBawaan`/
+      `fontPerluKeluar`, `adaPendingHapusSorot`/`reBungkusSorotanLekat`/
+      `sorotPerluKeluar`, `adaPendingHapus`/`modeBawaanWarna`/`reBungkusLekat`/
+      `warnaPerluKeluar`, `varianJudulJurnalHari`, `bilaTenggat`, `tutupSwipe`,
+      `kueriCariSekarang`), CSS mati (`.emb`, `.emb-h`, `.row-kunci`), dan 3 ikon
+      SVG yang tak dirujuk (`i-tbl`, `i-restore`, `i-ul`).
+- [x] I31. Berkas basi dihapus: `docs/BACKLOG-BAR.md` (statusnya bertentangan
+      dengan isinya), `docs/deploy/github-pages-workflow.yml` (menunjuk branch
+      lama + folder `docs/prototype` yang sudah tidak ada), `docs/demo-zona.html`
+      (halaman demo desain yang tak dirujuk).
+- [x] I32. Dokumen yang salah diperbarui: peta folder `docs/ARSITEKTUR.md` (modul
+      baru + aturan localStorage yang sebenarnya), `README.md` (status fitur),
+      `docs/deploy/README.md` (angka aset & bagian Actions yang basi), dan tautan
+      `prototype/index.html` di `docs/DESIGN.md` yang berkasnya sudah tidak ada.
+- [ ] I33. Ditahan: dokumen rencana jangka panjang (`docs/PLAN.md`, `docs/NOTES.md`,
+      `docs/DESIGN.md`, `docs/deploy/APK.md`) dan data terjemahan lama
+      (`tools/en/*.json`) — dibiarkan sampai pengguna memutuskan.

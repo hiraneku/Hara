@@ -10,17 +10,26 @@ satu core, satu pencarian, dan satu tempat penyimpanan.
 
 ## Status
 
-Prototipe berjalan. Modul Catatan sudah layak dipakai harian: editor blok WYSIWYG,
-wikilink + backlink + unlinked mention + local graph, properti & tag, tempat sampah
-30 hari, pencarian, tema terang/gelap. Reminder & Tugas menyusul.
+Berjalan di web dan layak dipakai harian. Yang sudah ada di modul Catatan:
+
+- **Editor blok** WYSIWYG: heading, daftar & daftar bernomor, to-do (dengan tenggat),
+  kutipan, callout, kode, pembatas, gambar (lebar/zona/kompresi), format inline
+  (tebal, miring, coret, sorot, kode, warna, font).
+- **Jaringan catatan**: wikilink, backlink, rujukan, graf, tag + warna label,
+  properti, daftar isi.
+- **Kerja harian**: jurnal harian, templat, pencarian (operator `tag:` / `judul:` / `#` / `"frasa"`),
+  pilih banyak, sapuan hapus/arsip, tempat sampah 30 hari, mode baca (A−/A+, zen,
+  cari di dalam catatan), kunci catatan PIN, bagikan, cadangan ekspor/impor.
+- **Layar Tugas & Reminder** (dihitung dari to-do di catatan), tema terang/gelap +
+  warna aksen, bahasa Indonesia/Inggris/Jepang, jalan offline (local-first).
 
 Coba langsung di **https://hiraneku.github.io/Hara/** — data tersimpan di perangkat
 Anda, tanpa akun.
 
 ## Dokumen
 
-- [`docs/PLAN.md`](docs/PLAN.md) — visi, arsitektur modul, data model, roadmap, risiko
-- [`docs/NOTES.md`](docs/NOTES.md) — spesifikasi modul Catatan
-- [`docs/ARSITEKTUR.md`](docs/ARSITEKTUR.md) — struktur kode & aturan mainnya
-- [`docs/DESIGN.md`](docs/DESIGN.md) — token desain
+- [`ROADMAP.md`](ROADMAP.md) — catatan rilis tiap ronde (apa yang sudah selesai)
+- [`docs/ARSITEKTUR.md`](docs/ARSITEKTUR.md) — peta folder, aturan main, cara cap versi
 - [`docs/deploy/`](docs/deploy/) — cara penerbitan ke GitHub Pages
+- `docs/PLAN.md`, `docs/NOTES.md`, `docs/DESIGN.md`, `docs/deploy/APK.md` — dokumen
+  rencana/arah jangka panjang (belum dikerjakan; lihat "nanti" di ROADMAP)

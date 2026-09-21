@@ -6,7 +6,7 @@
    (tenggat hari ini atau sudah lewat & belum selesai). Dihitung dari
    isi — tidak menyimpan apa pun ke catatan. */
 
-import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260918132843';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20260921045615';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 /* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */
@@ -79,16 +79,6 @@ export const tenggatHariIni = daftar => {
     });
   });
   return hasil.sort((a, b) => a.waktu - b.waktu);
-};
-
-export const bilaTenggat = ms => {
-  try {
-    return new Date(ms).toLocaleDateString(LOKALE(),
-      { day: 'numeric', month: 'short' });
-  } catch (e) {
-    const t = new Date(ms);
-    return `${t.getDate()}/${t.getMonth() + 1}`;
-  }
 };
 
 /* Label "lewat 3 hari" / "hari ini" / "3 hari lagi" di chip layar

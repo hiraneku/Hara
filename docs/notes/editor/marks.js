@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260918132843';
-import { refresh } from './cleanup.js?v=20260918132843';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20260921045615';
+import { refresh } from './cleanup.js?v=20260921045615';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };

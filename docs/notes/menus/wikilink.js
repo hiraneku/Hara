@@ -1,7 +1,7 @@
 /* Menu "[[" — tautkan ke catatan lain. */
-import { state } from '../../core/store.js?v=20260918132843';
-import { esc } from '../../core/dom.js?v=20260918132843';
-import { t as tr } from '../../core/i18n.js?v=20260918132843';
+import { state } from '../../core/store.js?v=20260921045615';
+import { esc } from '../../core/dom.js?v=20260921045615';
+import { t as tr } from '../../core/i18n.js?v=20260921045615';
 
 export function wlMenu() {
   let h = `<div class="pop-h">${tr('Tautkan ke catatan')}</div>`;

@@ -16,9 +16,9 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260918132843';
-import { refresh } from './cleanup.js?v=20260918132843';
-import { normalizeWarna } from './warna.js?v=20260918132843';
+import { docEl, sel, curBlock } from './caret.js?v=20260921045615';
+import { refresh } from './cleanup.js?v=20260921045615';
+import { normalizeWarna } from './warna.js?v=20260921045615';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -59,7 +59,6 @@ let _pending = null;             /* sorotan yang menunggu dipakai */
 let _lekat = null;               /* sorotan yang melekat lintas ketikan */
 let _modeBawaan = false;         /* hapus-sorotan melekat sampai batal */
 export const sorotPending = () => (_pending === HAPUS ? '' : _pending);
-export const adaPendingHapusSorot = () => _pending === HAPUS;
 export const modeBawaanSorot = () => _modeBawaan;
 export const sorotLekat = () => _lekat;
 
@@ -266,31 +265,6 @@ export function bungkusSorotanPending() {
   return el;
 }
 
-/* Sorotan lekat tapi caret berada di span sorotan LAIN → keluar lalu
-   bungkus ulang dengan warna yang benar. Dipanggil tiap karakter,
-   karena browser kerap menarik caret kembali ke span lama. */
-export function reBungkusSorotanLekat() {
-  if (!_lekat) return;
-  keluarDariSorotan();
-  const el = buatSpan(_lekat);
-  const t0 = document.createTextNode('');
-  el.appendChild(t0);
-  const sx = sel();
-  if (sx && sx.rangeCount) {
-    sx.getRangeAt(0).insertNode(el);
-    const rx = document.createRange();
-    rx.setStart(t0, 0); rx.collapse(true);
-    sx.removeAllRanges(); sx.addRange(rx);
-  }
-}
-
-export function sorotPerluKeluar() {
-  if (!_lekat) return false;
-  const s = sel();
-  if (!(s && s.rangeCount)) return false;
-  const host = sorotAround(s.getRangeAt(0).startContainer);
-  return !!(host && host.getAttribute('data-sorotan') !== _lekat);
-}
 
 /* Pindah blok membatalkan sorotan yang menunggu — sama seperti font. */
 let blokTerakhir = null;

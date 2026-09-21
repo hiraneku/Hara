@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260918132843';
-import { refresh } from './cleanup.js?v=20260918132843';
+import { docEl, sel, curBlock } from './caret.js?v=20260921045615';
+import { refresh } from './cleanup.js?v=20260921045615';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -178,14 +178,11 @@ function pilihTeks(induk, dari, panjang) {
    seperti `sticky` pada marks. Tanpa ini, ketikan setelah karakter pertama
    bisa jatuh ke span font LAMA saat browser menarik caret ke sana. */
 let _lekat = null;
-export const fontLekat = () => _lekat;
 /* Mode bawaan MELEKAT: bertahan lintas ketikan sampai dibatalkan.
    Tanpa ini, huruf ke-2 diserahkan ke browser yang menarik caret
    kembali ke dalam span font lama. */
 let _modeBawaan = false;
 export const fontPending = () => (_pending === NONE ? '' : _pending);
-export const adaPendingNone = () => _pending === NONE;
-export const modeBawaan = () => _modeBawaan;
 
 /* Font perlu dibungkus untuk ketikan berikutnya?
    • ada font yang menunggu (atau "Bawaan" yang menunggu);
@@ -389,13 +386,4 @@ document.addEventListener('selectionchange', () => {
   blokTerakhir = b;
 });
 
-/* Apakah caret berada di span font yang BUKAN font yang sedang dipilih?
-   Kalau ya, ketikan berikutnya harus dipecah keluar dulu — kalau tidak,
-   ia ikut font lama dan pilihan baru tampak "nyangkut". */
-export function fontPerluKeluar() {
-  if (!_lekat) return false;
-  const s = sel();
-  if (!(s && s.rangeCount)) return false;
-  const host = fontAround(s.getRangeAt(0).startContainer);
-  return !!(host && host.getAttribute('data-font') !== _lekat);
-}
+

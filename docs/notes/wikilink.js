@@ -6,8 +6,8 @@
    dengan tombol pengubah (Ctrl/⌘/Alt) membuka catatan yang sudah ada —
    klik biasa tetap untuk meletakkan kursor/menyunting teks. */
 
-import { state } from '../core/store.js?v=20260918132843';
-import { tandaiLabelTag } from './label-tag.js?v=20260918132843';
+import { state } from '../core/store.js?v=20260921045615';
+import { tandaiLabelTag } from './label-tag.js?v=20260921045615';
 
 /* Judul sasaran sebuah span wikilink, tanpa [[ ]] dan tanpa alias |… */
 export function judulSpan(span) {

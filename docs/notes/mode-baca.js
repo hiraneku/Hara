@@ -10,10 +10,10 @@
    hanya bisa diubah oleh aplikasi itu sendiri (sinkron lewat welcomeV
    di core/store.js). Penghapusan oleh pengguna tetap dibolehkan. */
 
-import { state } from '../core/store.js?v=20260918132843';
-import { cur } from '../core/router.js?v=20260918132843';
-import { docEl } from './editor/caret.js?v=20260918132843';
-import { t as tr } from '../core/i18n.js?v=20260918132843';
+import { state } from '../core/store.js?v=20260921045615';
+import { cur } from '../core/router.js?v=20260921045615';
+import { docEl } from './editor/caret.js?v=20260921045615';
+import { t as tr } from '../core/i18n.js?v=20260921045615';
 
 const KUNCI = 'hara.v1.baca';
 let _baca = false;

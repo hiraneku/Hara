@@ -14,8 +14,8 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20260918132843';
-import { refresh } from './cleanup.js?v=20260918132843';
+import { docEl, sel, curBlock } from './caret.js?v=20260921045615';
+import { refresh } from './cleanup.js?v=20260921045615';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -131,8 +131,6 @@ let _pending = null;             /* warna yang menunggu dipakai */
 let _lekat = null;               /* warna yang melekat lintas ketikan */
 let _modeBawaan = false;         /* hapus-warna melekat sampai batal */
 export const warnaPending = () => (_pending === HAPUS ? '' : _pending);
-export const adaPendingHapus = () => _pending === HAPUS;
-export const modeBawaanWarna = () => _modeBawaan;
 export const warnaLekat = () => _lekat;
 
 /* Warna perlu dibungkus untuk ketikan berikutnya?
@@ -338,31 +336,6 @@ export function bungkusWarnaPending() {
   return el;
 }
 
-/* Warna melekat tapi caret berada di span warna LAIN → keluar lalu
-   bungkus ulang dengan warna yang benar. Dipanggil tiap karakter,
-   karena browser kerap menarik caret kembali ke span lama. */
-export function reBungkusLekat() {
-  if (!_lekat) return;
-  keluarDariWarna();
-  const el = buatSpan(_lekat);
-  const t0 = document.createTextNode('');
-  el.appendChild(t0);
-  const sx = sel();
-  if (sx && sx.rangeCount) {
-    sx.getRangeAt(0).insertNode(el);
-    const rx = document.createRange();
-    rx.setStart(t0, 0); rx.collapse(true);
-    sx.removeAllRanges(); sx.addRange(rx);
-  }
-}
-
-export function warnaPerluKeluar() {
-  if (!_lekat) return false;
-  const s = sel();
-  if (!(s && s.rangeCount)) return false;
-  const host = warnaAround(s.getRangeAt(0).startContainer);
-  return !!(host && host.getAttribute('data-warna') !== _lekat);
-}
 
 /* Pindah blok membatalkan warna yang menunggu — sama seperti font. */
 let blokTerakhir = null;

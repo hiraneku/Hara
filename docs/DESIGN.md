@@ -1,6 +1,6 @@
 # Hara — Design System & Struktur Antarmuka
 
-Status: draft v1 · Pendamping [`PLAN.md`](PLAN.md) · Prototipe: [`docs/prototype/index.html`](prototype/index.html)
+Status: draft v1 · Pendamping [`PLAN.md`](PLAN.md) · Aplikasi berjalan: https://hiraneku.github.io/Hara/
 
 ---
 

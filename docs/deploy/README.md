@@ -3,7 +3,7 @@
 Hara prototipe adalah **aplikasi ES modules murni** di dalam `docs/` — tanpa build,
 tanpa dependensi. GitHub Pages tinggal menyajikan folder `docs/` apa adanya.
 
-## Status sekarang (7 Sep 2026)
+## Status sekarang (21 Sep 2026)
 
 **GitHub Pages SUDAH AKTIF** dan menjadi alamat utama aplikasi:
 
@@ -13,9 +13,12 @@ https://hiraneku.github.io/Hara/
 
 - Repo: publik (`hiraneku/Hara`)
 - Sumber: **Deploy from a branch** → branch `arena/01a07a14-hara` · folder `/docs`
-- Aplikasi penuh ada di akar URL (bukan subfolder `/prototype/`)
+- Aplikasi penuh ada di akar URL (bukan di subfolder)
 - **Setiap push ke branch `arena/01a07a14-hara` otomatis membangun ulang situs** —
   selesai dalam 1–2 menit. Tidak perlu langkah manual apa pun.
+
+Isi yang disajikan: **85 berkas aset** (HTML/CSS/JS, ±950 KB) — tanpa build, tanpa
+dependensi runtime. Berkas `.md` di folder itu hanya dokumen, tidak dipakai aplikasi.
 
 Karena GitHub Pages menyajikan modul ES dengan cache agresif (browser HP bisa
 menahan berkas lama berhari-hari), jalankan ini sebelum commit:
@@ -37,12 +40,6 @@ Bila perlu mengarahkan ke cabang atau folder lain:
 
 > Cabang `main` saat ini HANYA berisi README — jangan arahkan Pages ke `main`
 > kalau ingin aplikasinya tampil.
-
-## Alternatif: GitHub Actions
-
-`docs/deploy/github-pages-workflow.yml` bisa disalin ke `.github/workflows/pages.yml`
-kalau ingin *build* lewat Actions (mis. untuk upload artefak `dist/` nanti). Saat ini
-tidak diperlukan — deploy dari branch sudah cukup.
 
 ## Catatan
 

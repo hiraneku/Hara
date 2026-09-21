@@ -18,7 +18,7 @@
    jsdom tidak punya PointerEvent — suite menguji tombol aksi
    (data-sw-*) langsung dan tidak menguji pointer gesture. */
 
-import { sedangPilih } from './pilih.js?v=20260918132843';
+import { sedangPilih } from './pilih.js?v=20260921045615';
 
 const AMBANG_MULAI = 10;    /* px gerak sebelum dianggap sapuan */
 const AMBANG_BUKA = -92;    /* px: lewat ini = terbuka penuh */
@@ -121,11 +121,3 @@ export function bindSwipe() {
   document.addEventListener('scroll', () => { geser = null; }, true);
 }
 
-/* Tutup baris yang sedang terbuka (dipanggil saat daftar digambar ulang
-   atau berpindah layar). */
-export function tutupSwipe() {
-  document.querySelectorAll('.srow.open').forEach(s => {
-    s.classList.remove('open');
-    s.querySelectorAll('.sa').forEach(b => b.setAttribute('tabindex', '-1'));
-  });
-}
