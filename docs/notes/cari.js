@@ -23,9 +23,9 @@
    sorotan tidak pernah salah tempat karena entitas (&amp;) dihitung
    sebagai teks biasa. */
 
-import { esc } from '../core/dom.js?v=20260929145357';
-import { tagUntukTampil } from './tags.js?v=20260929145357';
-import { plainText } from './note-model.js?v=20260929145357';
+import { esc } from '../core/dom.js?v=20260929151703';
+import { tagUntukTampil } from './tags.js?v=20260929151703';
+import { plainText } from './note-model.js?v=20260929151703';
 
 const KEY = 'hara.cari.v1';
 const MAKS_RIWAYAT = 6;

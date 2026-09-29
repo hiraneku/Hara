@@ -1,12 +1,12 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20260929145357';
-import { findNote } from '../model.js?v=20260929145357';
-import { esc } from '../../core/dom.js?v=20260929145357';
-import { blocksToDom } from '../note-model.js?v=20260929145357';
-import { barisProps } from '../meta-ui.js?v=20260929145357';
-import { t as tr } from '../../core/i18n.js?v=20260929145357';
-import { renderStickersHtml } from '../hamoji.js?v=20260929145357';
+import { state } from '../../core/store.js?v=20260929151703';
+import { findNote } from '../model.js?v=20260929151703';
+import { esc } from '../../core/dom.js?v=20260929151703';
+import { blocksToDom } from '../note-model.js?v=20260929151703';
+import { barisProps } from '../meta-ui.js?v=20260929151703';
+import { t as tr } from '../../core/i18n.js?v=20260929151703';
+import { renderStickersHtml } from '../hamoji.js?v=20260929151703';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];

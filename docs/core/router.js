@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20260929145357';
+import { t as tr } from './i18n.js?v=20260929151703';
 
 const views  = {};
 const titles = {};
