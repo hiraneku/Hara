@@ -4,16 +4,16 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260929140908';
-import { refresh } from './cleanup.js?v=20260929140908';
-import { pastikanKolomAkhir } from './blocks.js?v=20260929140908';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20260929141729';
+import { refresh } from './cleanup.js?v=20260929141729';
+import { pastikanKolomAkhir } from './blocks.js?v=20260929141729';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20260929140908';
-import { state } from '../../core/store.js?v=20260929140908';
-import { cur } from '../../core/router.js?v=20260929140908';
-import { toast } from '../../core/toast.js?v=20260929140908';
-import { t as tr } from '../../core/i18n.js?v=20260929140908';
-import { rencanaKecil } from '../mutu-gambar.js?v=20260929140908';
+  from '../../core/blobs.js?v=20260929141729';
+import { state } from '../../core/store.js?v=20260929141729';
+import { cur } from '../../core/router.js?v=20260929141729';
+import { toast } from '../../core/toast.js?v=20260929141729';
+import { t as tr } from '../../core/i18n.js?v=20260929141729';
+import { rencanaKecil } from '../mutu-gambar.js?v=20260929141729';
 
 /* Id blob dengan pola waktu+acak+urut (sama seperti id blok/catatan) —
    id model lama (`Date.now() % 100000` + counter sesi) bisa terbit lagi

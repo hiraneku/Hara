@@ -12,17 +12,17 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929140908';
-import { touch } from './note-model.js?v=20260929140908';
-import { saveSoon } from './editor/cleanup.js?v=20260929140908';
-import { openPop, closeAll } from './menus/pop.js?v=20260929140908';
-import { esc } from '../core/dom.js?v=20260929140908';
-import { toast } from '../core/toast.js?v=20260929140908';
-import { t as tr } from '../core/i18n.js?v=20260929140908';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929140908';
-import { refresh } from './editor/cleanup.js?v=20260929140908';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929140908';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929140908';
+import { state } from '../core/store.js?v=20260929141729';
+import { touch } from './note-model.js?v=20260929141729';
+import { saveSoon } from './editor/cleanup.js?v=20260929141729';
+import { openPop, closeAll } from './menus/pop.js?v=20260929141729';
+import { esc } from '../core/dom.js?v=20260929141729';
+import { toast } from '../core/toast.js?v=20260929141729';
+import { t as tr } from '../core/i18n.js?v=20260929141729';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929141729';
+import { refresh } from './editor/cleanup.js?v=20260929141729';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929141729';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929141729';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -1000,11 +1000,12 @@ export function panelHamojiHtml() {
             : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
 
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}">
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
               <div class="hamoji-item-preview-box">
                 ${previewHtml}
               </div>
               <div class="hamoji-item-name">${esc(item.name || '')}</div>
+              ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
             </button>
           `;
         }).join('')}
@@ -1184,11 +1185,12 @@ export function bindHamoji() {
             : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
 
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}">
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
               <div class="hamoji-item-preview-box">
                 ${previewHtml}
               </div>
               <div class="hamoji-item-name">${esc(item.name || '')}</div>
+              ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
             </button>
           `;
         }).join('');

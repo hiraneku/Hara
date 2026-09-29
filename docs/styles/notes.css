@@ -1136,6 +1136,10 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   align-items: center;
   justify-content: center;
 }
+.hamoji-stk-body .hamoji-custom-graphic {
+  font-size: var(--stk-size, 26px);
+  line-height: 1.2;
+}
 .hamoji-stk-text {
   font-family: var(--sans);
   font-size: var(--stk-size, 24px);
@@ -1657,6 +1661,22 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .h-svg-puff, .h-svg-drops, .h-svg-anger, .h-svg-tear, .h-svg-star {
   vertical-align: middle;
   display: inline-block;
+}
+
+.hamoji-item-card.is-custom-stk {
+  border-color: rgba(127, 179, 153, 0.25);
+  position: relative;
+}
+.hamoji-stk-badge {
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-weak);
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Custom Input Row */
