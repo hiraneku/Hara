@@ -21,6 +21,8 @@ export const JA = {
   'Catatan': 'ノート',
   'Reminder': 'リマインダー',
   'Tugas': 'タスク',
+  'Ganti Nama': '一括リネーム',
+  'Ganti Nama Massal': '一括リネーム',
   'Cari': '検索',
   'Tag': 'タグ',
   'Arsip': 'アーカイブ',

@@ -20,6 +20,8 @@ export const EN = {
   'Catatan': 'Notes',
   'Reminder': 'Reminder',
   'Tugas': 'Tasks',
+  'Ganti Nama': 'Renamer',
+  'Ganti Nama Massal': 'Bulk Renamer',
   'Cari': 'Search',
   'Tag': 'Tags',
   'Arsip': 'Archive',

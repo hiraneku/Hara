@@ -7,10 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20260929100150">
-<link rel="stylesheet" href="./styles/base.css?v=20260929100150">
-<link rel="stylesheet" href="./styles/shell.css?v=20260929100150">
-<link rel="stylesheet" href="./styles/notes.css?v=20260929100150">
+<link rel="stylesheet" href="./styles/tokens.css?v=20260929100848">
+<link rel="stylesheet" href="./styles/base.css?v=20260929100848">
+<link rel="stylesheet" href="./styles/shell.css?v=20260929100848">
+<link rel="stylesheet" href="./styles/notes.css?v=20260929100848">
+<link rel="stylesheet" href="./styles/renamer.css?v=20260929100848">
 </head>
 <body>
 <svg style="display:none">
@@ -74,6 +75,7 @@
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></symbol>
 <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.8-1.7"/><path d="M12 15v2"/></symbol>
 <symbol id="i-finger" viewBox="0 0 24 24"><path d="M8 11V8a4 4 0 0 1 7.4-2.3"/><path d="M12 8v6"/><path d="M7 12a5 5 0 0 1 10 0v2"/><path d="M5.5 13.5a6.5 6.5 0 0 1 13 0v1"/><path d="M9 13v-1a3 3 0 0 1 6 0"/><path d="M12 19v-3"/></symbol>
+<symbol id="i-rename" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></symbol>
 </svg>
 
 <div class="app">
@@ -83,6 +85,7 @@
   <button class="nav-i" data-go="notes"><svg class="ico"><use href="#i-note"/></svg><span data-i18n="Catatan">Catatan</span><span class="ct">1</span></button>
   <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg><span data-i18n="Reminder">Reminder</span></button>
   <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg><span data-i18n="Tugas">Tugas</span></button>
+  <button class="nav-i" data-go="renamer"><svg class="ico"><use href="#i-rename"/></svg><span data-i18n="Ganti Nama">Ganti Nama</span></button>
   <div class="nav-sep"></div>
   <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
   <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg><span data-i18n="Tag">Tag</span></button>
@@ -111,6 +114,7 @@
   <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg><span data-i18n="Dari templat…">Dari templat…</span></button>
   <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg><span data-i18n="Reminder baru">Reminder baru</span></button>
   <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg><span data-i18n="Tugas baru">Tugas baru</span></button>
+  <button class="sheet-i" data-go="renamer"><svg class="ico" style="color:var(--accent)"><use href="#i-rename"/></svg><span data-i18n="Ganti Nama Massal">Ganti Nama Massal</span></button>
 </div>
 
 <!-- BAR MEKANIK -->
@@ -130,6 +134,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
 </nav>
 
-<script type="module" src="./app.js?v=20260929100150"></script>
+<script type="module" src="./app.js?v=20260929100848"></script>
 </body>
 </html>

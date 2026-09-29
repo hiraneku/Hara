@@ -4,11 +4,11 @@
    struktur data baru — tenggat hidup di dalam isi catatan, sehingga
    layar ini tidak pernah bisa berbeda dari catatan aslinya. */
 
-import { state } from '../../core/store.js?v=20260929100150';
-import { esc } from '../../core/dom.js?v=20260929100150';
-import { tugasMendatang, tenggatHariIni, sisaWaktu, labelTenggat } from '../pengingat.js?v=20260929100150';
-import { rowFor } from './row.js?v=20260929100150';
-import { t as tr } from '../../core/i18n.js?v=20260929100150';
+import { state } from '../../core/store.js?v=20260929100848';
+import { esc } from '../../core/dom.js?v=20260929100848';
+import { tugasMendatang, tenggatHariIni, sisaWaktu, labelTenggat } from '../pengingat.js?v=20260929100848';
+import { rowFor } from './row.js?v=20260929100848';
+import { t as tr } from '../../core/i18n.js?v=20260929100848';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
 
