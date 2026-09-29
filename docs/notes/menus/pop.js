@@ -1,19 +1,19 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260929111258';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260929111258';
-import { insertInline } from './insert.js?v=20260929111258';
-import { focusKeep } from '../bar/render.js?v=20260929111258';
-import { applyLink } from './link.js?v=20260929111258';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20260929111258';
-import { setFont } from '../editor/font.js?v=20260929111258';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260929111258';
-import { setSorotan } from '../editor/sorotan.js?v=20260929111258';
-import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20260929111258';
-import { setCallout } from '../editor/blocks.js?v=20260929111258';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260929111258';
-import { getar } from '../bar/prefs.js?v=20260929111258';
-import { toast } from '../../core/toast.js?v=20260929111258';
-import { t as tr } from '../../core/i18n.js?v=20260929111258';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20260929112243';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20260929112243';
+import { insertInline } from './insert.js?v=20260929112243';
+import { focusKeep } from '../bar/render.js?v=20260929112243';
+import { applyLink } from './link.js?v=20260929112243';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20260929112243';
+import { setFont } from '../editor/font.js?v=20260929112243';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20260929112243';
+import { setSorotan } from '../editor/sorotan.js?v=20260929112243';
+import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20260929112243';
+import { setCallout } from '../editor/blocks.js?v=20260929112243';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20260929112243';
+import { getar } from '../bar/prefs.js?v=20260929112243';
+import { toast } from '../../core/toast.js?v=20260929112243';
+import { t as tr } from '../../core/i18n.js?v=20260929112243';
 
 export const pop = () => document.getElementById('pop');
 
@@ -71,9 +71,23 @@ export function openPop(html, anchor) {
   if (p.querySelector('#roda-w')) rodaPasang();   /* roda warna menu */
   tambat = (anchor && anchor.nodeType === 1) ? anchor : null;
   p.classList.add('on');
-  const r = anchor.getBoundingClientRect();
-  p.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 302)) + 'px';
-  p.style.top  = Math.max(12, r.top - p.offsetHeight - 10) + 'px';
+
+  const hasAnchor = !!(anchor && typeof anchor.getBoundingClientRect === 'function');
+  const isModalBox = !!p.querySelector('.rn-modal-box');
+
+  if (!hasAnchor || isModalBox) {
+    p.classList.add('pop-modal');
+    document.getElementById('scrim')?.classList.add('on');
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.transform = 'translate(-50%, -50%)';
+  } else {
+    p.classList.remove('pop-modal');
+    p.style.transform = '';
+    const r = anchor.getBoundingClientRect();
+    p.style.left = Math.max(12, Math.min(r.left, window.innerWidth - 302)) + 'px';
+    p.style.top  = Math.max(12, r.top - p.offsetHeight - 10) + 'px';
+  }
 
   /* Form tautan: fokus kolom yang relevan — mengubah tautan: teksnya
      diblok utk langsung diketik ulang; tautan baru: kolom alamat. */
@@ -85,10 +99,9 @@ export function bindPop() {
   const p = pop();
   if (!p) return;
 
-  /* tombol × di ujung judul — menutup popup apa pun (tombol dibuat
-     ulang tiap ganti isi, jadi dipasang dengan delegasi) */
+  /* tombol × di ujung judul / tombol dengan atribut data-pop-close — menutup popup apa pun */
   p.addEventListener('click', e => {
-    if (e.target.closest('.pop-x')) { closeAll(); return; }
+    if (e.target.closest('.pop-x') || e.target.closest('[data-pop-close]')) { closeAll(); return; }
   });
 
   /* strip warna: gerakan mendatar (termasuk diagonal yang didominasi
@@ -211,7 +224,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20260929111258').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20260929112243').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -220,7 +233,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20260929111258').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20260929112243').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -230,7 +243,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20260929111258').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20260929112243').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
@@ -248,7 +261,7 @@ export function bindPop() {
          ke area dokumen supaya panel tag tetap muncul di tempat wajar */
       closeAll();
       const jangkar = document.querySelector('.ed-doc');
-      import('../tagwarna.js?v=20260929111258').then(m => m.panelTag(jangkar));
+      import('../tagwarna.js?v=20260929112243').then(m => m.panelTag(jangkar));
       return;
     }
     else if (t.dataset.blk)     setBlock(t.dataset.blk);
@@ -261,7 +274,12 @@ export function bindPop() {
 export function closeAll() {
   /* status menu "/" ikut berakhir saat popup ditutup dari mana pun */
   document.querySelectorAll('.mb-g.open').forEach(x => x.classList.remove('open'));
-  pop()?.classList.remove('on');
+  const p = pop();
+  if (p) {
+    p.classList.remove('on');
+    p.classList.remove('pop-modal');
+    p.style.transform = '';
+  }
   document.getElementById('sheet')?.classList.remove('on');
   document.getElementById('scrim')?.classList.remove('on');
 }

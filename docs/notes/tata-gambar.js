@@ -21,11 +21,11 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20260929111258';
-import { refresh } from './editor/cleanup.js?v=20260929111258';
-import { snap } from './editor/history.js?v=20260929111258';
-import { modeBacaBerlaku } from './mode-baca.js?v=20260929111258';
-import { t as tr } from '../core/i18n.js?v=20260929111258';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20260929112243';
+import { refresh } from './editor/cleanup.js?v=20260929112243';
+import { snap } from './editor/history.js?v=20260929112243';
+import { modeBacaBerlaku } from './mode-baca.js?v=20260929112243';
+import { t as tr } from '../core/i18n.js?v=20260929112243';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -223,7 +223,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20260929111258')
+    import('./editor/image.js?v=20260929112243')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();

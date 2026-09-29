@@ -7,13 +7,13 @@
  * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929111258';
-import { toast } from '../core/toast.js?v=20260929111258';
-import { t as tr } from '../core/i18n.js?v=20260929111258';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929111258';
-import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20260929111258';
-import { state as haraStoreState } from '../core/store.js?v=20260929111258';
-import { esc } from '../core/dom.js?v=20260929111258';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929112243';
+import { toast } from '../core/toast.js?v=20260929112243';
+import { t as tr } from '../core/i18n.js?v=20260929112243';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929112243';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20260929112243';
+import { state as haraStoreState } from '../core/store.js?v=20260929112243';
+import { esc } from '../core/dom.js?v=20260929112243';
 import {
   createRenamerItem,
   createRule,
@@ -24,19 +24,19 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20260929111258';
-import { runPipeline, sortFiles } from './engine.js?v=20260929111258';
+} from './model.js?v=20260929112243';
+import { runPipeline, sortFiles } from './engine.js?v=20260929112243';
 import {
   renamerView,
   filterAndSearchItems,
   renderFilterTabsContent,
   renderTableContainerContent,
   renderFooterBar,
-} from './view.js?v=20260929111258';
-import { createZipBlob } from './zip.js?v=20260929111258';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929111258';
-import { parseExif } from './exif.js?v=20260929111258';
-import { parseId3 } from './id3.js?v=20260929111258';
+} from './view.js?v=20260929112243';
+import { createZipBlob } from './zip.js?v=20260929112243';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929112243';
+import { parseExif } from './exif.js?v=20260929112243';
+import { parseId3 } from './id3.js?v=20260929112243';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -426,7 +426,7 @@ async function prosesInputFiles(fileList) {
       try {
         const buf = await f.arrayBuffer();
         const extracted = await extractZip(buf);
-        if (extracted.length > 0) {
+        if (extracted && extracted.length > 0) {
           bukaModalSeleksiZip(f.name, extracted);
           return;
         } else {
@@ -599,7 +599,10 @@ function bukaDialogKustomNamaZip() {
   const current = renamerState.exportZipName || 'Arsip_Terganti_Nama.zip';
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Ubah Nama Berkas ZIP')}</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 class="rn-modal-title">${tr('Ubah Nama Berkas ZIP')}</h3>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
       <p style="font-size:13px;color:var(--muted);margin:0">
         ${tr('Tentukan nama berkas .zip saat Anda mengklik tombol "Unduh ZIP".')}
       </p>
@@ -622,20 +625,21 @@ function bukaDialogKustomNamaZip() {
 function bukaDialogTambahAturan() {
   const options = Object.entries(RULE_METADATA).map(([key, meta]) => `
     <button class="rn-type-card" data-rn-add-type="${key}">
-      <div class="rn-type-card-icon">
-        <svg class="ico"><use href="#${meta.icon}"/></svg>
+      <div class="rn-type-card-title">
+        <svg class="ico" style="width:16px;height:16px;color:var(--accent)"><use href="#${meta.icon}"/></svg>
+        ${meta.label}
       </div>
-      <div>
-        <div class="rn-type-card-title">${meta.label}</div>
-        <div class="rn-type-card-desc">${meta.desc}</div>
-      </div>
+      <div class="rn-type-card-desc">${meta.desc}</div>
     </button>
   `).join('');
 
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Pilih Jenis Aturan')}</h3>
-      <div class="rn-type-list">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 class="rn-modal-title">${tr('Pilih Jenis Aturan')}</h3>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
+      <div class="rn-type-grid">
         ${options}
       </div>
     </div>
@@ -676,7 +680,10 @@ function bukaDialogPresets() {
 
   const html = `
     <div class="rn-modal-box" style="max-width: 600px">
-      <h3 class="rn-modal-title">${tr('Resep Cepat')}</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 class="rn-modal-title">${tr('Resep Cepat')}</h3>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
       <div class="rn-preset-grid">
         ${presetsHtml}
       </div>
@@ -696,7 +703,10 @@ function bukaDialogSimpanPreset() {
   }
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Simpan Resep Aturan')}</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 class="rn-modal-title">${tr('Simpan Resep Aturan')}</h3>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
       <p style="font-size:13px;color:var(--muted);margin:0">${tr('Simpan kombinasi aturan saat ini agar bisa dipakai kembali kapan saja.')}</p>
       <div class="rn-field">
         <label>${tr('Nama Resep:')}</label>
@@ -718,7 +728,10 @@ function bukaDialogUndo() {
   if (renamerState.undoStack.length === 0) return;
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Kembalikan Nama Berkas?')}</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 class="rn-modal-title">${tr('Kembalikan Nama Berkas?')}</h3>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
       <p style="font-size:13px;color:var(--muted);margin:0">
         ${tr('Apakah Anda yakin ingin membatalkan perubahan nama dan mengembalikannya ke nama sebelum aksi terakhir?')}
       </p>
@@ -1139,18 +1152,18 @@ export const renamerModule = {
 
     // Drag and drop handler pada dropzone
     document.addEventListener('dragover', e => {
-      const dz = e.target.closest('#rn-dz');
+      const dz = e.target.closest('#rn-dropzone') || e.target.closest('#rn-dz');
       if (dz) {
         e.preventDefault();
         dz.classList.add('dragover');
       }
     });
     document.addEventListener('dragleave', e => {
-      const dz = e.target.closest('#rn-dz');
+      const dz = e.target.closest('#rn-dropzone') || e.target.closest('#rn-dz');
       if (dz) dz.classList.remove('dragover');
     });
     document.addEventListener('drop', e => {
-      const dz = e.target.closest('#rn-dz');
+      const dz = e.target.closest('#rn-dropzone') || e.target.closest('#rn-dz');
       if (dz) {
         e.preventDefault();
         dz.classList.remove('dragover');

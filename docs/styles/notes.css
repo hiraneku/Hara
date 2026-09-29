@@ -139,6 +139,8 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .pop::-webkit-scrollbar{width:0}
 .pop.on{display:block}
+.pop.pop-modal{width:auto!important;max-width:min(94vw,620px)!important;max-height:min(88vh,720px)!important;padding:0!important;border:none!important;background:transparent!important;box-shadow:none!important;z-index:95!important}
+.pop.pop-modal .pop-top{display:none!important}
 /* Judul satu baris dengan tombol × di ujung kanan — sejajar teks judul */
 .pop-h.ber-x{display:flex;align-items:center;gap:6px;padding-right:8px}
 .pop-h .pop-x{margin-left:auto;width:30px;height:26px;flex:none;display:grid;
