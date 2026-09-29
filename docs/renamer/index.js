@@ -1,17 +1,18 @@
 /**
- * Modul Bulk Renamer — Hara (Fase 5 + Auto-Unzip & Clean UI)
+ * Modul Bulk Renamer — Hara
  *
  * Mengikuti kontrak modul Hara:
  * - registerViews ke router
  * - state management independen
- * - integrasi UI, preset, file picker, auto ZIP extractor, ZIP export, EXIF parser, dan engine
+ * - integrasi UI, preset, file picker, auto ZIP extractor dengan seleksi kategori, ZIP export kustom, EXIF parser, dan engine
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929104101';
-import { toast } from '../core/toast.js?v=20260929104101';
-import { t as tr } from '../core/i18n.js?v=20260929104101';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929104101';
-import { unduh } from '../notes/data-io.js?v=20260929104101';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929104844';
+import { toast } from '../core/toast.js?v=20260929104844';
+import { t as tr } from '../core/i18n.js?v=20260929104844';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929104844';
+import { unduh } from '../notes/data-io.js?v=20260929104844';
+import { esc } from '../core/dom.js?v=20260929104844';
 import {
   createRenamerItem,
   createRule,
@@ -20,12 +21,14 @@ import {
   RULE_METADATA,
   DEFAULT_PRESETS,
   FILE_STATUS,
-} from './model.js?v=20260929104101';
-import { runPipeline, sortFiles } from './engine.js?v=20260929104101';
-import { renamerView } from './view.js?v=20260929104101';
-import { createZipBlob } from './zip.js?v=20260929104101';
-import { extractZip } from './unzip.js?v=20260929104101';
-import { parseExif } from './exif.js?v=20260929104101';
+  formatFileSize,
+  sanitizeFileName,
+} from './model.js?v=20260929104844';
+import { runPipeline, sortFiles } from './engine.js?v=20260929104844';
+import { renamerView } from './view.js?v=20260929104844';
+import { createZipBlob } from './zip.js?v=20260929104844';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929104844';
+import { parseExif } from './exif.js?v=20260929104844';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -56,9 +59,13 @@ export const renamerState = {
   searchQuery: '',
   sortBy: 'name-asc',
   collisionStrategy: 'warn',
+  exportZipName: 'Arsip_Terganti_Nama.zip',
   undoStack: [],
   directoryHandle: null,
 };
+
+// State sementara dialog ekstraksi ZIP
+let _pendingZipExtract = null;
 
 // Data contoh untuk demo instan (termasuk simulasi EXIF kamera)
 const SAMPLE_DEMO_FILES = [
@@ -108,6 +115,7 @@ export function renderRenamerScreen() {
       searchQuery: renamerState.searchQuery,
       sortBy: renamerState.sortBy,
       collisionStrategy: renamerState.collisionStrategy,
+      exportZipName: renamerState.exportZipName,
       hasUndo: renamerState.undoStack.length > 0,
     },
     pipelineRes
@@ -130,6 +138,104 @@ async function ekstrakExifItem(file) {
   } catch (e) {
     return null;
   }
+}
+
+/**
+ * Membuka Modal Pemilihan Berkas dari dalam ZIP
+ */
+function bukaModalSeleksiZip(zipFileName, rawExtractedFiles) {
+  // Hitung kategori dan siapkan state pilihan
+  const categories = new Set();
+  const fileItems = rawExtractedFiles.map((f, idx) => {
+    categories.add(f.category);
+    return {
+      ...f,
+      id: `zip-f-${idx}`,
+      selected: true,
+    };
+  });
+
+  _pendingZipExtract = {
+    zipName: zipFileName,
+    files: fileItems,
+    selectedCategory: 'all',
+  };
+
+  renderModalSeleksiZipContent();
+}
+
+function renderModalSeleksiZipContent() {
+  if (!_pendingZipExtract) return;
+  const { zipName, files, selectedCategory } = _pendingZipExtract;
+
+  // Hitung jumlah per kategori
+  const counts = { all: files.length };
+  files.forEach(f => {
+    counts[f.category] = (counts[f.category] || 0) + 1;
+  });
+
+  // Filter tampilan
+  const displayFiles = selectedCategory === 'all'
+    ? files
+    : files.filter(f => f.category === selectedCategory);
+
+  const selectedCount = files.filter(f => f.selected).length;
+
+  const html = `
+    <div class="rn-modal-box" style="max-width: 600px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div>
+          <h3 class="rn-modal-title">${tr('Pilih Berkas dari ZIP')}</h3>
+          <p style="font-size:12.5px;color:var(--muted);margin:3px 0 0">
+            ${esc(zipName)} · ${tr('{n} berkas ditemukan', { n: files.length })}
+          </p>
+        </div>
+        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
+      </div>
+
+      <!-- Kategori Filter -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button class="rn-token-chip ${selectedCategory === 'all' ? 'on' : ''}" data-rn-zip-cat="all" style="${selectedCategory === 'all' ? 'background:var(--accent);color:#fff;font-weight:600' : ''}">
+          Semua (${counts.all})
+        </button>
+        ${Object.entries(CATEGORY_LABELS).filter(([k]) => k !== 'all' && counts[k]).map(([k, label]) => `
+          <button class="rn-token-chip ${selectedCategory === k ? 'on' : ''}" data-rn-zip-cat="${k}" style="${selectedCategory === k ? 'background:var(--accent);color:#fff;font-weight:600' : ''}">
+            ${label} (${counts[k]})
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Tombol Aksi Seleksi Cepat -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px;font-size:12px;color:var(--muted)">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="rn-zip-select-all" ${selectedCount === files.length ? 'checked' : ''}>
+          <span>${tr('Pilih Semua')} (${selectedCount}/${files.length})</span>
+        </label>
+        <span style="font-size:11.5px">${tr('Centang berkas yang ingin dimasukkan ke editor')}</span>
+      </div>
+
+      <!-- Daftar Berkas Checkbox -->
+      <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--bg); display: flex; flex-direction: column">
+        ${displayFiles.map(f => `
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px" hover-bg="var(--sunken)">
+            <input type="checkbox" class="rn-zip-item-chk" data-rn-zip-id="${f.id}" ${f.selected ? 'checked' : ''}>
+            <span style="font-family:var(--mono);flex:1;word-break:break-all">${esc(f.name)}</span>
+            <span style="color:var(--muted);font-size:11px;flex:none">${formatFileSize(f.size)}</span>
+          </label>
+        `).join('')}
+      </div>
+
+      <!-- Tombol Ekstrak -->
+      <div class="rn-actions-top" style="justify-content: flex-end; margin-top: 6px">
+        <button class="btn btn-sec" data-pop-close>${tr('Batal')}</button>
+        <button class="btn btn-pri" id="rn-zip-confirm-extract" ${selectedCount === 0 ? 'disabled style="opacity:.5"' : ''}>
+          <svg class="ico"><use href="#i-plus"/></svg> ${tr('Ekstrak ({n} Berkas)', { n: selectedCount })}
+        </button>
+      </div>
+    </div>
+  `;
+
+  openPop(html, document.body);
 }
 
 /**
@@ -208,43 +314,34 @@ function pilihBerkasBiasa() {
 }
 
 /**
- * Menangani pemilihan file dari input (dengan Auto-Extract ZIP)
+ * Menangani pemilihan file dari input (dengan Dialog Pemilihan ZIP)
  */
 async function prosesInputFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
-  const loaded = [];
+  const regularFiles = [];
 
   for (const file of Array.from(fileList)) {
-    // 1. Jika berkas adalah .ZIP, otomatis ekstrak semua isinya
+    // 1. Jika berkas adalah .ZIP, ekstrak dan buka dialog seleksi kategori
     if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip') {
       try {
-        toast(tr('Mengekstrak isi dari {name}…', { name: file.name }));
+        toast(tr('Membaca isi arsip {name}…', { name: file.name }));
         const zipFiles = await extractZip(file);
-        for (const zf of zipFiles) {
-          const zBlob = new Blob([zf.data]);
-          const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
-          loaded.push(
-            createRenamerItem({
-              originalName: zf.name,
-              size: zf.size,
-              lastModified: zf.lastModified,
-              path: file.name,
-              file: zBlob,
-              meta: { exif },
-            })
-          );
+        if (zipFiles.length === 0) {
+          toast(tr('Berkas ZIP kosong'));
+        } else {
+          // Buka modal seleksi agar pengguna bisa memilih kategori atau file spesifik
+          bukaModalSeleksiZip(file.name, zipFiles);
         }
-        toast(tr('Berhasil mengekstrak {n} berkas dari {name}', { n: zipFiles.length, name: file.name }));
-        continue;
       } catch (err) {
         console.error(err);
-        toast(tr('Gagal mengekstrak berkas ZIP: ') + err.message);
+        toast(tr('Gagal membaca berkas ZIP: ') + err.message);
       }
+      continue;
     }
 
     // 2. Berkas biasa
     const exif = await ekstrakExifItem(file);
-    loaded.push(
+    regularFiles.push(
       createRenamerItem({
         originalName: file.name,
         size: file.size,
@@ -256,9 +353,11 @@ async function prosesInputFiles(fileList) {
     );
   }
 
-  renamerState.files = sortFiles([...renamerState.files, ...loaded], renamerState.sortBy);
-  toast(tr('{n} berkas ditambahkan', { n: loaded.length }));
-  renderRenamerScreen();
+  if (regularFiles.length > 0) {
+    renamerState.files = sortFiles([...renamerState.files, ...regularFiles], renamerState.sortBy);
+    toast(tr('{n} berkas ditambahkan', { n: regularFiles.length }));
+    renderRenamerScreen();
+  }
 }
 
 /**
@@ -312,7 +411,7 @@ async function eksekusiGantiNama() {
 }
 
 /**
- * Ekspor & Unduh Berkas ZIP Terganti Nama
+ * Ekspor & Unduh Berkas ZIP Terganti Nama dengan Nama Kustom
  */
 async function eksporZipRenamed() {
   const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
@@ -336,14 +435,41 @@ async function eksporZipRenamed() {
     }
 
     const zipBlob = await createZipBlob(entries);
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const zipName = `Berkas_Terganti_Nama_${dateStr}.zip`;
-    unduh(zipName, zipBlob, 'application/zip');
-    toast(`${tr('Berhasil mengunduh')}: ${zipName}`);
+    let targetZipName = sanitizeFileName(renamerState.exportZipName || 'Arsip_Terganti_Nama.zip');
+    if (!targetZipName.toLowerCase().endsWith('.zip')) {
+      targetZipName += '.zip';
+    }
+
+    unduh(targetZipName, zipBlob, 'application/zip');
+    toast(`${tr('Berhasil mengunduh')}: ${targetZipName}`);
   } catch (err) {
     console.error(err);
     toast(tr('Gagal membuat berkas ZIP: ') + err.message);
   }
+}
+
+/**
+ * Dialog Pengaturan Nama Berkas ZIP Target
+ */
+function bukaDialogConfigZipName(anchorEl) {
+  const current = renamerState.exportZipName || 'Arsip_Terganti_Nama.zip';
+  const html = `
+    <div class="rn-modal-box">
+      <h3 class="rn-modal-title">${tr('Ubah Nama Berkas ZIP Hasil Ekspor')}</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0">
+        ${tr('Tentukan nama berkas .zip saat Anda mengklik tombol "Unduh ZIP".')}
+      </p>
+      <div class="rn-field">
+        <label>${tr('Nama Berkas ZIP:')}</label>
+        <input type="text" class="rn-input-text" id="rn-zip-name-input" value="${esc(current)}" placeholder="Misal: Foto_Liburan_Bali_2026.zip" autofocus>
+      </div>
+      <div class="rn-actions-top" style="justify-content: flex-end; margin-top: 10px">
+        <button class="btn btn-sec" data-pop-close>${tr('Batal')}</button>
+        <button class="btn btn-pri" id="rn-save-zip-name-btn">${tr('Simpan Nama ZIP')}</button>
+      </div>
+    </div>
+  `;
+  openPop(html, anchorEl || document.body);
 }
 
 /**
@@ -510,6 +636,7 @@ export const renamerModule = {
               searchQuery: renamerState.searchQuery,
               sortBy: renamerState.sortBy,
               collisionStrategy: renamerState.collisionStrategy,
+              exportZipName: renamerState.exportZipName,
               hasUndo: renamerState.undoStack.length > 0,
             },
             res
@@ -540,6 +667,7 @@ export const renamerModule = {
         if (act === 'add-rule') return bukaDialogTambahAturan(actBtn);
         if (act === 'presets') return bukaDialogPresets(actBtn);
         if (act === 'save-preset') return bukaDialogSimpanPreset(actBtn);
+        if (act === 'config-zip-name') return bukaDialogConfigZipName(actBtn);
         if (act === 'apply-rename') return eksekusiGantiNama();
         if (act === 'export-zip') return eksporZipRenamed();
         if (act === 'undo') return bukaDialogUndo(actBtn);
@@ -567,6 +695,76 @@ export const renamerModule = {
             return renderRenamerScreen();
           }
         }
+      }
+
+      // Simpan Nama ZIP Kustom
+      if (e.target && e.target.id === 'rn-save-zip-name-btn') {
+        const inp = document.getElementById('rn-zip-name-input');
+        const val = (inp ? inp.value : '').trim();
+        if (val) {
+          renamerState.exportZipName = val;
+          closeAll();
+          toast(tr('Nama berkas ZIP diperbarui: ') + val);
+          renderRenamerScreen();
+        }
+        return;
+      }
+
+      // Kategori Filter dalam Dialog ZIP
+      const zipCatBtn = e.target.closest('[data-rn-zip-cat]');
+      if (zipCatBtn && _pendingZipExtract) {
+        _pendingZipExtract.selectedCategory = zipCatBtn.dataset.rnZipCat;
+        renderModalSeleksiZipContent();
+        return;
+      }
+
+      // Checkbox Pilih Semua dalam Dialog ZIP
+      if (e.target && e.target.id === 'rn-zip-select-all' && _pendingZipExtract) {
+        const checked = e.target.checked;
+        _pendingZipExtract.files.forEach(f => { f.selected = checked; });
+        renderModalSeleksiZipContent();
+        return;
+      }
+
+      // Checkbox per item dalam Dialog ZIP
+      const itemChk = e.target.closest('.rn-zip-item-chk');
+      if (itemChk && _pendingZipExtract) {
+        const id = itemChk.dataset.rnZipId;
+        const target = _pendingZipExtract.files.find(f => f.id === id);
+        if (target) {
+          target.selected = itemChk.checked;
+          renderModalSeleksiZipContent();
+        }
+        return;
+      }
+
+      // Konfirmasi Ekstrak Berkas Terpilih dari ZIP
+      if (e.target && e.target.id === 'rn-zip-confirm-extract' && _pendingZipExtract) {
+        const selected = _pendingZipExtract.files.filter(f => f.selected);
+        const newItems = [];
+        for (const zf of selected) {
+          const zBlob = new Blob([zf.data]);
+          const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
+          newItems.push(
+            createRenamerItem({
+              originalName: zf.name,
+              size: zf.size,
+              lastModified: zf.lastModified,
+              path: _pendingZipExtract.zipName,
+              file: zBlob,
+              meta: { exif },
+            })
+          );
+        }
+
+        renamerState.files = sortFiles([...renamerState.files, ...newItems], renamerState.sortBy);
+        const count = newItems.length;
+        const zipName = _pendingZipExtract.zipName;
+        _pendingZipExtract = null;
+        closeAll();
+        toast(tr('Berhasil mengekstrak {n} berkas dari {name}', { n: count, name: zipName }));
+        renderRenamerScreen();
+        return;
       }
 
       // Konfirmasi Undo

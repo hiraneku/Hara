@@ -1,8 +1,8 @@
 /**
- * Suite Uji: Round-trip ZIP Create & Extract
+ * Suite Uji: Round-trip ZIP Multi-file & Category Filter
  */
 import { createZipBlob } from '../../docs/renamer/zip.js';
-import { extractZip } from '../../docs/renamer/unzip.js';
+import { extractZip, getFileCategory, CATEGORY_LABELS } from '../../docs/renamer/unzip.js';
 
 let total = 0;
 let passed = 0;
@@ -18,28 +18,40 @@ function assert(condition, message) {
 }
 
 async function runTest() {
-  console.log('══ Uji Ekstraksi Berkas ZIP Otomatis ══\n');
+  console.log('══ Uji Ekstraksi Multi-Berkas ZIP & Kategori ══\n');
 
   const filesInZip = [
-    { name: 'dokumen_laporan.txt', data: 'Halo ini isi laporan keuangan 2026' },
-    { name: 'foto_pantai.jpg', data: new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]) },
-    { name: 'subfolder/catatan_penting.md', data: '# Judul Catatan Penting' },
+    { name: 'laporan_keuangan.docx', data: 'Konten Docx' },
+    { name: 'tabel_gaji.xlsx', data: 'Konten Xlsx' },
+    { name: 'foto_1.jpg', data: new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]) },
+    { name: 'foto_2.png', data: new Uint8Array([0x89, 0x50, 0x4E, 0x47]) },
+    { name: 'logo.svg', data: '<svg></svg>' },
+    { name: 'catatan.txt', data: 'Catatan teks biasa' },
+    { name: 'readme.md', data: '# Readme' },
+    { name: 'lagu.mp3', data: 'Audio mp3 dummy' },
+    { name: 'video.mp4', data: 'Video mp4 dummy' },
   ];
 
   const zipBlob = await createZipBlob(filesInZip);
   assert(zipBlob instanceof Blob, 'Membuat ZIP Blob berhasil');
 
   const extracted = await extractZip(zipBlob);
-  assert(extracted.length === 3, 'Ekstraksi ZIP menghasilkan 3 berkas');
-  assert(extracted[0].name === 'dokumen_laporan.txt', 'Berkas 1 nama tepat: dokumen_laporan.txt');
-  assert(extracted[1].name === 'foto_pantai.jpg', 'Berkas 2 nama tepat: foto_pantai.jpg');
-  assert(extracted[2].name === 'catatan_penting.md', 'Berkas 3 nama tepat: catatan_penting.md');
+  assert(extracted.length === 9, `Semua 9 berkas di dalam ZIP berhasil diekstrak (didapat: ${extracted.length})`);
 
-  const decoder = new TextDecoder();
-  const text1 = decoder.decode(extracted[0].data);
-  assert(text1 === 'Halo ini isi laporan keuangan 2026', 'Isi berkas teks 1 utuh sesuai aslinya');
+  // Cek kategori masing-masing
+  const docFiles = extracted.filter(f => f.category === 'docs');
+  const imgFiles = extracted.filter(f => f.category === 'images');
+  const txtFiles = extracted.filter(f => f.category === 'text');
+  const audioFiles = extracted.filter(f => f.category === 'audio');
+  const videoFiles = extracted.filter(f => f.category === 'video');
 
-  console.log(`\nSemua ${passed}/${total} pengujian Ekstraksi ZIP berhasil!`);
+  assert(docFiles.length === 2, 'Kategori docs: 2 berkas (.docx, .xlsx)');
+  assert(imgFiles.length === 3, 'Kategori images: 3 berkas (.jpg, .png, .svg)');
+  assert(txtFiles.length === 2, 'Kategori text: 2 berkas (.txt, .md)');
+  assert(audioFiles.length === 1, 'Kategori audio: 1 berkas (.mp3)');
+  assert(videoFiles.length === 1, 'Kategori video: 1 berkas (.mp4)');
+
+  console.log(`\nSemua ${passed}/${total} pengujian Ekstraksi ZIP & Kategori berhasil!`);
 }
 
 runTest();

@@ -4,14 +4,14 @@
  * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20260929104101';
-import { t as tr } from '../core/i18n.js?v=20260929104101';
+import { esc } from '../core/dom.js?v=20260929104844';
+import { t as tr } from '../core/i18n.js?v=20260929104844';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929104101';
+} from './model.js?v=20260929104844';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -466,6 +466,9 @@ export function renamerView(state, pipelineResult) {
             ${invalidCount > 0 ? ` · <span class="rn-footer-error"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
           </div>
           <div class="rn-actions-top">
+            <button class="btn btn-sec" data-rn-act="config-zip-name" title="${tr('Ubah nama berkas .zip hasil unduhan')}">
+              <svg class="ico"><use href="#i-cog"/></svg> <span style="font-family:var(--mono);font-size:12px">${esc(state.exportZipName || 'Arsip_Terganti_Nama.zip')}</span>
+            </button>
             <button class="btn btn-sec" data-rn-act="export-zip" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} title="${tr('Unduh semua berkas dengan nama baru ke berkas ZIP')}">
               <svg class="ico"><use href="#i-dl"/></svg> ${tr('Unduh ZIP')}
             </button>
