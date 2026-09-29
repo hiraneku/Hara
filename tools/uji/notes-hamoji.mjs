@@ -50,6 +50,7 @@ const {
   tambahStikerHamoji,
   hapusStikerHamoji,
   ubahWarnaStiker,
+  ubahRotasiStiker,
 } = await import(`${AKAR}/docs/notes/hamoji.js?v=${V}`);
 
 const { makeNote, normalizeNote } = await import(`${AKAR}/docs/notes/note-model.js?v=${V}`);
@@ -97,8 +98,8 @@ assert(getHamojiColor() === '', 'T12 Warna kustom default tereset');
 const noteDenganStiker = makeNote({
   title: 'Catatan Stiker Transparan',
   stickers: [
-    { id: 'stk_1', text: '(♡ v ♡)', x: 40, y: 120, size: 28, color: '#e53935', rot: 0 },
-    { id: 'stk_2', text: 'ʕ•ᴥ•ʔ', x: 200, y: 180, size: 36, color: '#43a047', rot: 0 },
+    { id: 'stk_1', text: '(♡ v ♡)', x: 40, y: 120, size: 28, color: '#e53935', rot: 15 },
+    { id: 'stk_2', text: 'ʕ•ᴥ•ʔ', x: 200, y: 180, size: 36, color: '#43a047', rot: -20 },
   ],
 });
 
@@ -111,41 +112,47 @@ const normal = normalizeNote({
   id: 'n_test',
   title: 'Normalisasi Stiker',
   blocks: [{ type: 'paragraph', content: 'Halo' }],
-  stickers: [{ id: 'stk_3', text: '(˶ᵔ ᵕ ᵔ˶)', x: 50, y: 80, size: 24, color: '#8e24aa' }],
+  stickers: [{ id: 'stk_3', text: '(˶ᵔ ᵕ ᵔ˶)', x: 50, y: 80, size: 24, color: '#8e24aa', rot: 45 }],
 });
 
 assert(normal.stickers.length === 1, 'T16 normalizeNote memelihara array stiker dan properti color');
 assert(normal.stickers[0].color === '#8e24aa', 'T17 Properti color ternormalisasi');
+assert(normal.stickers[0].rot === 45, 'T18 Properti rotasi ternormalisasi');
 
-// 6. Render Stiker HTML (Tanpa Background)
+// 6. Render Stiker HTML (Tanpa Background + Handle Rotasi)
 const htmlStiker = renderStickersHtml(noteDenganStiker.stickers);
-assert(htmlStiker.includes('hamoji-sticker'), 'T18 HTML Stiker mengandung class hamoji-sticker');
-assert(htmlStiker.includes('color:#e53935'), 'T19 HTML Stiker menyertakan inline color custom');
-assert(htmlStiker.includes('hamoji-stk-color-btn'), 'T20 HTML Stiker menyertakan tombol ganti warna');
+assert(htmlStiker.includes('hamoji-sticker'), 'T19 HTML Stiker mengandung class hamoji-sticker');
+assert(htmlStiker.includes('color:#e53935'), 'T20 HTML Stiker menyertakan inline color custom');
+assert(htmlStiker.includes('hamoji-stk-color-btn'), 'T21 HTML Stiker menyertakan tombol ganti warna');
+assert(htmlStiker.includes('hamoji-stk-rot-btn'), 'T22 HTML Stiker menyertakan tombol/handle rotasi');
+assert(htmlStiker.includes('rotate(15deg)'), 'T23 HTML Stiker menerapkan rotasi transform');
 
 // 7. Navigasi & Editor Integration
 go('editor');
 const hamojiBtn = document.getElementById('hamoji-btn');
-assert(hamojiBtn !== null, 'T21 Tombol #hamoji-btn ada di header DOM');
-assert(hamojiBtn.style.display === 'grid', 'T22 Tombol #hamoji-btn tampil dengan display grid (presisi di tengah)');
+assert(hamojiBtn !== null, 'T24 Tombol #hamoji-btn ada di header DOM');
+assert(hamojiBtn.style.display === 'grid', 'T25 Tombol #hamoji-btn tampil dengan display grid (presisi di tengah)');
 
 // 8. Buka Modal Hamoji
 bukaModalHamoji(hamojiBtn);
 const modal = document.querySelector('.hamoji-modal');
-assert(modal !== null, 'T23 Modal Hamoji berhasil terbuka di viewport');
-assert(modal.querySelector('.hamoji-color-section') !== null, 'T24 Seksi pemilihan warna tersedia di modal');
+assert(modal !== null, 'T26 Modal Hamoji berhasil terbuka di viewport');
+assert(modal.querySelector('.hamoji-color-section') !== null, 'T27 Seksi pemilihan warna tersedia di modal');
 
-// 9. Tambah, Ubah Warna & Hapus Stiker pada Catatan Aktif
+// 9. Tambah, Ubah Warna, Putar & Hapus Stiker pada Catatan Aktif
 state.openId = state.notes[0].id;
 const nAktif = state.notes[0];
 const stkBaru = tambahStikerHamoji('( ˆ ◡ ˆ )', '#1e88e5');
-assert(stkBaru && stkBaru.text === '( ˆ ◡ ˆ )', 'T25 Stiker baru berhasil ditambahkan');
-assert(stkBaru.color === '#1e88e5', 'T26 Stiker baru menyimpan warna kustom');
+assert(stkBaru && stkBaru.text === '( ˆ ◡ ˆ )', 'T28 Stiker baru berhasil ditambahkan');
+assert(stkBaru.color === '#1e88e5', 'T29 Stiker baru menyimpan warna kustom');
 
 ubahWarnaStiker(stkBaru.id, '#d81b60');
-assert(nAktif.stickers.find(s => s.id === stkBaru.id).color === '#d81b60', 'T27 Ubah warna stiker berhasil diperbarui');
+assert(nAktif.stickers.find(s => s.id === stkBaru.id).color === '#d81b60', 'T30 Ubah warna stiker berhasil diperbarui');
+
+ubahRotasiStiker(stkBaru.id, 35);
+assert(nAktif.stickers.find(s => s.id === stkBaru.id).rot === 35, 'T31 Rotasi stiker berhasil diperbarui');
 
 hapusStikerHamoji(stkBaru.id);
-assert(!nAktif.stickers.some(s => s.id === stkBaru.id), 'T28 Stiker berhasil dihapus dari nAktif.stickers');
+assert(!nAktif.stickers.some(s => s.id === stkBaru.id), 'T32 Stiker berhasil dihapus dari nAktif.stickers');
 
-console.log('\nSemua 28/28 pengujian Hamoji berhasil!');
+console.log('\nSemua 32/32 pengujian Hamoji berhasil!');
