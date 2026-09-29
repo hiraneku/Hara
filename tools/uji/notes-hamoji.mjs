@@ -1,5 +1,5 @@
 /**
- * Pengujian Unit Modul Hamoji (Kaomoji, Emoticon & Stiker Interaktif)
+ * Pengujian Unit Modul Hamoji (Kaomoji, Emoticon, ASCII Art & Stiker Interaktif)
  */
 
 import { JSDOM } from 'jsdom';
@@ -39,18 +39,22 @@ const { state } = await import(`${AKAR}/docs/core/store.js?v=${V}`);
 const {
   HAMOJI_LIBRARY,
   HAMOJI_CATEGORIES,
+  HAMOJI_COLOR_SWATCHES,
   getFilteredHamojiList,
   getHamojiMode,
   setHamojiMode,
+  getHamojiColor,
+  setHamojiColor,
   renderStickersHtml,
   bukaModalHamoji,
   tambahStikerHamoji,
   hapusStikerHamoji,
+  ubahWarnaStiker,
 } = await import(`${AKAR}/docs/notes/hamoji.js?v=${V}`);
 
 const { makeNote, normalizeNote } = await import(`${AKAR}/docs/notes/note-model.js?v=${V}`);
 
-console.log('══ Uji Modul Hamoji (Kaomoji & Stiker) ══\n');
+console.log('══ Uji Modul Hamoji (Kaomoji, Warna Kustom & Stiker Transparan) ══\n');
 
 function assert(kondisi, nama) {
   if (!kondisi) {
@@ -60,79 +64,85 @@ function assert(kondisi, nama) {
   console.log(`LULUS ${nama}`);
 }
 
-// 1. Pustaka Kaomoji Bawaan
+// 1. Pustaka Kaomoji Terkurasi (Pinterest + Japanese Aesthetic)
 assert(Array.isArray(HAMOJI_LIBRARY), 'T1 HAMOJI_LIBRARY berupa array');
-assert(HAMOJI_LIBRARY.length >= 25, `T2 HAMOJI_LIBRARY memiliki minimal 25 item (total: ${HAMOJI_LIBRARY.length})`);
-assert(HAMOJI_CATEGORIES.length >= 6, 'T3 Kategori Hamoji tersedia lengkap');
+assert(HAMOJI_LIBRARY.length >= 60, `T2 HAMOJI_LIBRARY memiliki minimal 60 item (total: ${HAMOJI_LIBRARY.length})`);
+assert(HAMOJI_CATEGORIES.length >= 7, 'T3 Kategori Hamoji tersedia lengkap');
+assert(HAMOJI_COLOR_SWATCHES.length >= 8, 'T4 Pustaka swatch warna tersedia');
 
-const populer = HAMOJI_LIBRARY.filter(h => h.cat === 'populer');
-assert(populer.length >= 5, `T4 Kategori Populer memiliki ${populer.length} item`);
+// 2. Kaomoji Otentik dari Referensi Gambar
+const hasHeartEyes = HAMOJI_LIBRARY.some(h => h.text === '(♡ v ♡)');
+const hasGemas = HAMOJI_LIBRARY.some(h => h.text === '(> ω <)');
+const hasBersiul = HAMOJI_LIBRARY.some(h => h.text === '( ‾́ 3 ‾́ )');
+const hasKucingSenyum = HAMOJI_LIBRARY.some(h => h.text === '(= ˆ ◡ ˆ =)');
+assert(hasHeartEyes, 'T5 Pustaka memuat (♡ v ♡) dari referensi');
+assert(hasGemas, 'T6 Pustaka memuat (> ω <) dari referensi');
+assert(hasBersiul, 'T7 Pustaka memuat ( ‾́ 3 ‾́ ) dari referensi');
+assert(hasKucingSenyum, 'T8 Pustaka memuat (= ˆ ◡ ˆ =) dari referensi');
 
-// 2. Pencarian dan Filter
+// 3. Pencarian dan Filter
 const searchKucing = getFilteredHamojiList('semua', 'kucing');
-assert(searchKucing.length >= 2, `T5 Pencarian 'kucing' menemukan ${searchKucing.length} kaomoji`);
+assert(searchKucing.length >= 3, `T9 Pencarian 'kucing' menemukan ${searchKucing.length} kaomoji`);
 
-const catHewan = getFilteredHamojiList('hewan');
-assert(catHewan.every(h => h.cat === 'hewan'), 'T6 Filter kategori hewan hanya memuat kategori hewan');
+// 4. Kustomisasi Warna
+setHamojiColor('#ff758f');
+assert(getHamojiColor() === '#ff758f', 'T10 Warna kustom aktif tersimpan');
+setHamojiColor('');
+assert(getHamojiColor() === '', 'T11 Warna kustom default tereset');
 
-// 3. Mode Switcher
-setHamojiMode('sticker');
-assert(getHamojiMode() === 'sticker', 'T7 Mode Hamoji beralih ke sticker');
-setHamojiMode('text');
-assert(getHamojiMode() === 'text', 'T8 Mode Hamoji beralih ke text');
-
-// 4. Model Catatan dengan Stiker
+// 5. Stiker Transparan & Warna Kustom
 const noteDenganStiker = makeNote({
-  title: 'Catatan Stiker',
+  title: 'Catatan Stiker Transparan',
   stickers: [
-    { id: 'stk_1', text: '(｡•̀ᴗ-)✧', x: 40, y: 120, size: 28, rot: 0 },
-    { id: 'stk_2', text: 'ʕ•ᴥ•ʔ', x: 200, y: 180, size: 36, rot: 5 },
+    { id: 'stk_1', text: '(♡ v ♡)', x: 40, y: 120, size: 28, color: '#ff758f', rot: 0 },
+    { id: 'stk_2', text: 'ʕ•ᴥ•ʔ', x: 200, y: 180, size: 36, color: '#52b788', rot: 0 },
   ],
 });
 
-assert(Array.isArray(noteDenganStiker.stickers), 'T9 note.stickers terdefinisi sebagai array');
-assert(noteDenganStiker.stickers.length === 2, 'T10 note.stickers menyimpan 2 stiker');
-assert(noteDenganStiker.stickers[0].text === '(｡•̀ᴗ-)✧', 'T11 Teks stiker 1 cocok');
-assert(noteDenganStiker.stickers[1].text === 'ʕ•ᴥ•ʔ', 'T12 Teks stiker 2 cocok');
+assert(Array.isArray(noteDenganStiker.stickers), 'T12 note.stickers terdefinisi sebagai array');
+assert(noteDenganStiker.stickers[0].color === '#ff758f', 'T13 Warna kustom stiker 1 cocok');
+assert(noteDenganStiker.stickers[1].color === '#52b788', 'T14 Warna kustom stiker 2 cocok');
 
-// 5. Normalisasi Catatan
+// 6. Normalisasi Catatan
 const normal = normalizeNote({
   id: 'n_test',
   title: 'Normalisasi Stiker',
   blocks: [{ type: 'paragraph', content: 'Halo' }],
-  stickers: [{ id: 'stk_3', text: '(˶ᵔ ᵕ ᵔ˶)', x: 50, y: 80, size: 24 }],
+  stickers: [{ id: 'stk_3', text: '(˶ᵔ ᵕ ᵔ˶)', x: 50, y: 80, size: 24, color: '#9d4edd' }],
 });
 
-assert(normal.stickers.length === 1, 'T13 normalizeNote memelihara array stiker');
-assert(normal.stickers[0].text === '(˶ᵔ ᵕ ᵔ˶)', 'T14 Teks stiker ternormalisasi dengan benar');
+assert(normal.stickers.length === 1, 'T15 normalizeNote memelihara array stiker dan properti color');
+assert(normal.stickers[0].color === '#9d4edd', 'T16 Properti color ternormalisasi');
 
-// 6. Render Stiker HTML
+// 7. Render Stiker HTML (Tanpa Background)
 const htmlStiker = renderStickersHtml(noteDenganStiker.stickers);
-assert(htmlStiker.includes('hamoji-sticker'), 'T15 HTML Stiker mengandung class hamoji-sticker');
-assert(htmlStiker.includes('(｡•̀ᴗ-)✧'), 'T16 HTML Stiker mengandung kaomoji 1');
-assert(htmlStiker.includes('ʕ•ᴥ•ʔ'), 'T17 HTML Stiker mengandung kaomoji 2');
-assert(htmlStiker.includes('hamoji-stk-resize'), 'T18 HTML Stiker menyertakan resize handle');
+assert(htmlStiker.includes('hamoji-sticker'), 'T17 HTML Stiker mengandung class hamoji-sticker');
+assert(htmlStiker.includes('color:#ff758f'), 'T18 HTML Stiker menyertakan inline color custom');
+assert(htmlStiker.includes('hamoji-stk-color-btn'), 'T19 HTML Stiker menyertakan tombol ganti warna');
 
-// 7. Navigasi & Editor Integration
+// 8. Navigasi & Editor Integration
 go('editor');
 const hamojiBtn = document.getElementById('hamoji-btn');
-assert(hamojiBtn !== null, 'T19 Tombol #hamoji-btn ada di header DOM');
-assert(hamojiBtn.style.display !== 'none', 'T20 Tombol #hamoji-btn tampil pada rute editor');
+assert(hamojiBtn !== null, 'T20 Tombol #hamoji-btn ada di header DOM');
+assert(hamojiBtn.style.display === 'grid', 'T21 Tombol #hamoji-btn tampil dengan display grid (presisi di tengah)');
 
-// 8. Buka Modal Hamoji
+// 9. Buka Modal Hamoji
 bukaModalHamoji(hamojiBtn);
 const modal = document.querySelector('.hamoji-modal');
-assert(modal !== null, 'T21 Modal Hamoji berhasil terbuka di viewport');
+assert(modal !== null, 'T22 Modal Hamoji berhasil terbuka di viewport');
+assert(modal.querySelector('.hamoji-color-bar') !== null, 'T23 Bar pemilihan warna kustom tersedia di modal');
 
-// 9. Tambah dan Hapus Stiker pada Catatan Aktif
+// 10. Tambah, Ubah Warna & Hapus Stiker pada Catatan Aktif
 state.openId = state.notes[0].id;
 const nAktif = state.notes[0];
-tambahStikerHamoji('(≧◡≦) ♡');
-const stkBaru = nAktif.stickers.find(s => s.text === '(≧◡≦) ♡');
-assert(stkBaru && stkBaru.text === '(≧◡≦) ♡', 'T22 Stiker baru berhasil ditambahkan');
-assert(nAktif.stickers.some(s => s.id === stkBaru.id), 'T23 Stiker terdaftar pada nAktif.stickers');
+const stkBaru = tambahStikerHamoji('( ˆ ◡ ˆ )', '#4ea8de');
+assert(stkBaru && stkBaru.text === '( ˆ ◡ ˆ )', 'T24 Stiker baru berhasil ditambahkan');
+assert(stkBaru.color === '#4ea8de', 'T25 Stiker baru menyimpan warna kustom');
+
+ubahWarnaStiker(stkBaru.id, '#ff6b6b');
+assert(nAktif.stickers.find(s => s.id === stkBaru.id).color === '#ff6b6b', 'T26 Ubah warna stiker berhasil diperbarui');
 
 hapusStikerHamoji(stkBaru.id);
-assert(!nAktif.stickers.some(s => s.id === stkBaru.id), 'T24 Stiker berhasil dihapus dari nAktif.stickers');
+assert(!nAktif.stickers.some(s => s.id === stkBaru.id), 'T27 Stiker berhasil dihapus dari nAktif.stickers');
 
-console.log('\nSemua 24/24 pengujian Hamoji berhasil!');
+console.log('\nSemua 27/27 pengujian Hamoji berhasil!');

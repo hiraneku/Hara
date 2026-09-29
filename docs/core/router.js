@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20260929120314';
+import { t as tr } from './i18n.js?v=20260929122204';
 
 const views  = {};
 const titles = {};
@@ -44,7 +44,7 @@ export function go(v) {
   document.getElementById('del').style.display  = 'none';
   document.getElementById('dots').style.display = isEd ? 'grid' : 'none';
   const hamojiBtn = document.getElementById('hamoji-btn');
-  if (hamojiBtn) hamojiBtn.style.display = isEd ? 'inline-flex' : 'none';
+  if (hamojiBtn) hamojiBtn.style.display = isEd ? 'grid' : 'none';
   document.getElementById('mech').classList.toggle('on', isEd);
   document.getElementById('bnav').classList.toggle('hide', pakaiEd);
   document.getElementById('fab').classList.toggle('hide', pakaiEd);
