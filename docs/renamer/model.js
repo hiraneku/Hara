@@ -324,4 +324,49 @@ export const DEFAULT_PRESETS = [
       },
     ],
   },
+  {
+    id: 'preset-audio-track',
+    name: 'Format Musik & Lagu (ID3)',
+    desc: 'Format trek musik: {track} - {artist} - {title}',
+    rules: [
+      {
+        type: RULE_TYPES.TOKEN,
+        params: { pattern: '{track} - {artist} - {title}' },
+      },
+      {
+        type: RULE_TYPES.EXTENSION,
+        params: { mode: 'lower' },
+      },
+    ],
+  },
+  {
+    id: 'preset-manga-chapter',
+    name: 'Komik & Manga (Halaman)',
+    desc: 'Format halaman komik: [Manga] - Ch.01 - Page {num}',
+    rules: [
+      {
+        type: RULE_TYPES.TOKEN,
+        params: { pattern: '[Manga] - Ch.01 - Page {num}', digits: 3, startNum: 1 },
+      },
+      {
+        type: RULE_TYPES.EXTENSION,
+        params: { mode: 'lower' },
+      },
+    ],
+  },
+  {
+    id: 'preset-invoice-doc',
+    name: 'Dokumen & Invoice (INV_Tanggal)',
+    desc: 'Format invoice/faktur: INV_{date}_{num}',
+    rules: [
+      {
+        type: RULE_TYPES.TOKEN,
+        params: { pattern: 'INV_{date}_{num}', digits: 3, startNum: 1 },
+      },
+      {
+        type: RULE_TYPES.EXTENSION,
+        params: { mode: 'lower' },
+      },
+    ],
+  },
 ];

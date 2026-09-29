@@ -4,15 +4,16 @@
  * Mengikuti kontrak modul Hara:
  * - registerViews ke router
  * - state management independen
- * - integrasi UI, preset, file picker, auto ZIP extractor dengan seleksi kategori, ZIP export kustom, EXIF parser, dan engine
+ * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929104844';
-import { toast } from '../core/toast.js?v=20260929104844';
-import { t as tr } from '../core/i18n.js?v=20260929104844';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929104844';
-import { unduh } from '../notes/data-io.js?v=20260929104844';
-import { esc } from '../core/dom.js?v=20260929104844';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929105515';
+import { toast } from '../core/toast.js?v=20260929105515';
+import { t as tr } from '../core/i18n.js?v=20260929105515';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929105515';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20260929105515';
+import { state as haraStoreState } from '../core/store.js?v=20260929105515';
+import { esc } from '../core/dom.js?v=20260929105515';
 import {
   createRenamerItem,
   createRule,
@@ -23,12 +24,13 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20260929104844';
-import { runPipeline, sortFiles } from './engine.js?v=20260929104844';
-import { renamerView } from './view.js?v=20260929104844';
-import { createZipBlob } from './zip.js?v=20260929104844';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929104844';
-import { parseExif } from './exif.js?v=20260929104844';
+} from './model.js?v=20260929105515';
+import { runPipeline, sortFiles } from './engine.js?v=20260929105515';
+import { renamerView } from './view.js?v=20260929105515';
+import { createZipBlob } from './zip.js?v=20260929105515';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929105515';
+import { parseExif } from './exif.js?v=20260929105515';
+import { parseId3 } from './id3.js?v=20260929105515';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -67,14 +69,14 @@ export const renamerState = {
 // State sementara dialog ekstraksi ZIP
 let _pendingZipExtract = null;
 
-// Data contoh untuk demo instan (termasuk simulasi EXIF kamera)
+// Data contoh untuk demo instan (termasuk simulasi EXIF kamera & Audio ID3)
 const SAMPLE_DEMO_FILES = [
-  { name: 'IMG_2026_09_29%20(1).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:15:00') },
-  { name: 'IMG_2026_09_29%20(2).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:16:30') },
-  { name: 'Draft%20Laporan%20Keuangan%20[FINAL].docx', camera: null, date: null },
-  { name: 'Foto_Liburan_Keluarga_Bali (01).PNG', camera: 'iPhone 15 Pro', date: new Date('2026-08-14T15:20:00') },
-  { name: 'Podcast_Episode_01_Audio.mp3', camera: null, date: null },
-  { name: 'DATA_KARYAWAN_2026_V1.XLSX', camera: null, date: null },
+  { name: 'IMG_2026_09_29%20(1).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:15:00'), id3: null },
+  { name: 'IMG_2026_09_29%20(2).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:16:30'), id3: null },
+  { name: 'Track_01_Audio.mp3', camera: null, date: null, id3: { artist: 'NIKI', title: 'High School in Jakarta', track: '01', album: 'Nicole' } },
+  { name: 'Track_02_Audio.mp3', camera: null, date: null, id3: { artist: 'NIKI', title: 'Backburner', track: '02', album: 'Nicole' } },
+  { name: 'Draft%20Laporan%20Keuangan%20[FINAL].docx', camera: null, date: null, id3: null },
+  { name: 'Manga_Ch01_Page (1).PNG', camera: null, date: null, id3: null },
 ];
 
 export function muatBerkasDemo() {
@@ -87,11 +89,55 @@ export function muatBerkasDemo() {
       file: new Blob([`Contoh isi dummy berkas ${item.name}`], { type: 'text/plain' }),
       meta: {
         exif: item.camera ? { model: item.camera, date: item.date } : null,
+        id3: item.id3 || null,
       },
     })
   );
   renamerState.files = sortFiles(renamerState.files, renamerState.sortBy);
   toast(tr('6 berkas contoh demo berhasil dimuat'));
+  renderRenamerScreen();
+}
+
+/**
+ * Memuat seluruh catatan dari Hara ke antrean Renamer
+ */
+export function imporCatatanHara() {
+  const activeNotes = (haraStoreState.notes || []).filter(n => !n.deletedAt);
+  if (activeNotes.length === 0) {
+    toast(tr('Belum ada catatan di Hara untuk dimuat'));
+    return;
+  }
+
+  const loaded = activeNotes.map(n => {
+    const rawTitle = (n.title || '').trim() || 'Tanpa Judul';
+    const safeName = `${namaBerkasAman(rawTitle)}.md`;
+    const mdContent = markdownDariCatatan(n);
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+
+    return createRenamerItem({
+      originalName: safeName,
+      size: blob.size,
+      lastModified: n.updatedAt || Date.now(),
+      path: 'Catatan_Hara',
+      file: blob,
+      meta: {
+        noteId: n.id,
+        tags: n.tags || [],
+      },
+    });
+  });
+
+  renamerState.files = sortFiles(loaded, renamerState.sortBy);
+  renamerState.exportZipName = `Ekspor_Catatan_Hara_${new Date().toISOString().slice(0, 10)}.zip`;
+
+  // Pasang preset penamaan rapi untuk catatan
+  renamerState.rules = [
+    createRule(RULE_TYPES.CLEAN, { removeWebSpam: true, collapseSpaces: true, sanitizeOS: true }),
+    createRule(RULE_TYPES.TOKEN, { pattern: '{date}_{name}', digits: 2 }),
+    createRule(RULE_TYPES.EXTENSION, { mode: 'lower' }),
+  ];
+
+  toast(tr('Berhasil memuat {n} catatan Hara!', { n: loaded.length }));
   renderRenamerScreen();
 }
 
@@ -124,7 +170,7 @@ export function renderRenamerScreen() {
 }
 
 /**
- * Membaca EXIF dari berkas secara async
+ * Membaca EXIF dari berkas gambar JPEG
  */
 async function ekstrakExifItem(file) {
   if (!file || !(file instanceof Blob)) return null;
@@ -132,9 +178,33 @@ async function ekstrakExifItem(file) {
   if (!/\.(jpe?g)$/i.test(name)) return null;
 
   try {
-    const slice = file.slice(0, 65536); // Baca header 64KB pertama
+    const slice = file.slice(0, 65536);
     const buf = await slice.arrayBuffer();
     return parseExif(buf);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Membaca ID3 dari berkas audio
+ */
+async function ekstrakId3Item(file) {
+  if (!file || !(file instanceof Blob)) return null;
+  const name = file.name || '';
+  if (!/\.(mp3|m4a|flac|wav|ogg)$/i.test(name)) return null;
+
+  try {
+    const size = file.size;
+    // Baca 16KB awal (ID3v2) dan 128 byte akhir (ID3v1)
+    const sliceStart = await file.slice(0, 16384).arrayBuffer();
+    let id3Data = parseId3(sliceStart);
+
+    if (!id3Data.title && size > 128) {
+      const sliceEnd = await file.slice(size - 128, size).arrayBuffer();
+      id3Data = parseId3(sliceEnd);
+    }
+    return id3Data;
   } catch (e) {
     return null;
   }
@@ -144,7 +214,6 @@ async function ekstrakExifItem(file) {
  * Membuka Modal Pemilihan Berkas dari dalam ZIP
  */
 function bukaModalSeleksiZip(zipFileName, rawExtractedFiles) {
-  // Hitung kategori dan siapkan state pilihan
   const categories = new Set();
   const fileItems = rawExtractedFiles.map((f, idx) => {
     categories.add(f.category);
@@ -168,13 +237,11 @@ function renderModalSeleksiZipContent() {
   if (!_pendingZipExtract) return;
   const { zipName, files, selectedCategory } = _pendingZipExtract;
 
-  // Hitung jumlah per kategori
   const counts = { all: files.length };
   files.forEach(f => {
     counts[f.category] = (counts[f.category] || 0) + 1;
   });
 
-  // Filter tampilan
   const displayFiles = selectedCategory === 'all'
     ? files
     : files.filter(f => f.category === selectedCategory);
@@ -211,13 +278,13 @@ function renderModalSeleksiZipContent() {
           <input type="checkbox" id="rn-zip-select-all" ${selectedCount === files.length ? 'checked' : ''}>
           <span>${tr('Pilih Semua')} (${selectedCount}/${files.length})</span>
         </label>
-        <span style="font-size:11.5px">${tr('Centang berkas yang ingin dimasukkan ke editor')}</span>
+        <span style="font-size:11.5px">${tr('Centang berkas yang ingin dimasukkan')}</span>
       </div>
 
       <!-- Daftar Berkas Checkbox -->
       <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--bg); display: flex; flex-direction: column">
         ${displayFiles.map(f => `
-          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px" hover-bg="var(--sunken)">
+          <label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12.5px">
             <input type="checkbox" class="rn-zip-item-chk" data-rn-zip-id="${f.id}" ${f.selected ? 'checked' : ''}>
             <span style="font-family:var(--mono);flex:1;word-break:break-all">${esc(f.name)}</span>
             <span style="color:var(--muted);font-size:11px;flex:none">${formatFileSize(f.size)}</span>
@@ -251,13 +318,13 @@ async function pilihFolderWeb() {
         if (entry.kind === 'file') {
           const file = await entry.getFile();
 
-          // Auto-ekstrak jika menemukan berkas .ZIP di dalam folder
           if (file.name.toLowerCase().endsWith('.zip')) {
             try {
               const zipFiles = await extractZip(file);
               for (const zf of zipFiles) {
                 const zBlob = new Blob([zf.data]);
                 const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
+                const id3 = /\.(mp3|m4a|flac|wav)$/i.test(zf.name) ? parseId3(zf.data) : null;
                 loaded.push(
                   createRenamerItem({
                     originalName: zf.name,
@@ -265,7 +332,7 @@ async function pilihFolderWeb() {
                     lastModified: zf.lastModified,
                     path: file.name,
                     file: zBlob,
-                    meta: { exif },
+                    meta: { exif, id3 },
                   })
                 );
               }
@@ -274,6 +341,7 @@ async function pilihFolderWeb() {
           }
 
           const exif = await ekstrakExifItem(file);
+          const id3 = await ekstrakId3Item(file);
           loaded.push(
             createRenamerItem({
               originalName: file.name,
@@ -282,7 +350,7 @@ async function pilihFolderWeb() {
               path: dirHandle.name,
               handle: entry,
               file,
-              meta: { exif },
+              meta: { exif, id3 },
             })
           );
         }
@@ -296,11 +364,10 @@ async function pilihFolderWeb() {
       renderRenamerScreen();
       return;
     } catch (err) {
-      if (err.name === 'AbortError') return; // User cancel
+      if (err.name === 'AbortError') return;
     }
   }
 
-  // Fallback: input folder
   const inp = document.getElementById('rn-folder-input');
   if (inp) inp.click();
 }
@@ -314,14 +381,13 @@ function pilihBerkasBiasa() {
 }
 
 /**
- * Menangani pemilihan file dari input (dengan Dialog Pemilihan ZIP)
+ * Menangani pemilihan file dari input
  */
 async function prosesInputFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
   const regularFiles = [];
 
   for (const file of Array.from(fileList)) {
-    // 1. Jika berkas adalah .ZIP, ekstrak dan buka dialog seleksi kategori
     if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip') {
       try {
         toast(tr('Membaca isi arsip {name}…', { name: file.name }));
@@ -329,7 +395,6 @@ async function prosesInputFiles(fileList) {
         if (zipFiles.length === 0) {
           toast(tr('Berkas ZIP kosong'));
         } else {
-          // Buka modal seleksi agar pengguna bisa memilih kategori atau file spesifik
           bukaModalSeleksiZip(file.name, zipFiles);
         }
       } catch (err) {
@@ -339,8 +404,8 @@ async function prosesInputFiles(fileList) {
       continue;
     }
 
-    // 2. Berkas biasa
     const exif = await ekstrakExifItem(file);
+    const id3 = await ekstrakId3Item(file);
     regularFiles.push(
       createRenamerItem({
         originalName: file.name,
@@ -348,7 +413,7 @@ async function prosesInputFiles(fileList) {
         lastModified: file.lastModified,
         path: file.webkitRelativePath ? file.webkitRelativePath.split('/')[0] : '',
         file,
-        meta: { exif },
+        meta: { exif, id3 },
       })
     );
   }
@@ -374,13 +439,11 @@ async function eksekusiGantiNama() {
 
   const itemsToRename = pipelineRes.items.filter(i => i.status === FILE_STATUS.OK);
 
-  // Jika menggunakan File System Access API dengan permission
   if (renamerState.directoryHandle && itemsToRename.some(i => i.handle)) {
     try {
       toast(tr('Mengganti nama berkas di disk…'));
       const historyEntry = { timestamp: Date.now(), mappings: [] };
 
-      // Safe Two-pass rename
       for (const item of itemsToRename) {
         if (item.handle && item.handle.move) {
           await item.handle.move(item.newName);
@@ -399,7 +462,6 @@ async function eksekusiGantiNama() {
     }
   }
 
-  // Fallback: Update state di antrean
   const historyEntry = { timestamp: Date.now(), mappings: [] };
   itemsToRename.forEach(item => {
     historyEntry.mappings.push({ from: item.originalName, to: item.newName });
@@ -657,6 +719,7 @@ export const renamerModule = {
         const id = actBtn.dataset.rnId;
 
         if (act === 'demo') return muatBerkasDemo();
+        if (act === 'import-notes') return imporCatatanHara();
         if (act === 'pick-folder') return pilihFolderWeb();
         if (act === 'pick-files') return pilihBerkasBiasa();
         if (act === 'clear-files') {
@@ -671,6 +734,26 @@ export const renamerModule = {
         if (act === 'apply-rename') return eksekusiGantiNama();
         if (act === 'export-zip') return eksporZipRenamed();
         if (act === 'undo') return bukaDialogUndo(actBtn);
+
+        // Operasi per baris berkas (manual reorder)
+        if (act === 'file-up' && id) {
+          const idx = renamerState.files.findIndex(f => f.id === id);
+          if (idx > 0) {
+            const temp = renamerState.files[idx];
+            renamerState.files[idx] = renamerState.files[idx - 1];
+            renamerState.files[idx - 1] = temp;
+            return renderRenamerScreen();
+          }
+        }
+        if (act === 'file-down' && id) {
+          const idx = renamerState.files.findIndex(f => f.id === id);
+          if (idx < renamerState.files.length - 1) {
+            const temp = renamerState.files[idx];
+            renamerState.files[idx] = renamerState.files[idx + 1];
+            renamerState.files[idx + 1] = temp;
+            return renderRenamerScreen();
+          }
+        }
 
         // Operasi per aturan
         if (act === 'del-rule' && id) {
@@ -745,6 +828,7 @@ export const renamerModule = {
         for (const zf of selected) {
           const zBlob = new Blob([zf.data]);
           const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
+          const id3 = /\.(mp3|m4a|flac|wav)$/i.test(zf.name) ? parseId3(zf.data) : null;
           newItems.push(
             createRenamerItem({
               originalName: zf.name,
@@ -752,7 +836,7 @@ export const renamerModule = {
               lastModified: zf.lastModified,
               path: _pendingZipExtract.zipName,
               file: zBlob,
-              meta: { exif },
+              meta: { exif, id3 },
             })
           );
         }

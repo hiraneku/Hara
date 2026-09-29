@@ -12,7 +12,7 @@ import {
   ILLEGAL_CHARS_REGEX,
   sanitizeFileName,
   formatFileSize,
-} from './model.js?v=20260929104844';
+} from './model.js?v=20260929105515';
 
 /**
  * Daftar nama terlarang yang diproteksi sistem operasi (Windows, DOS, FAT32):
@@ -144,6 +144,12 @@ export function parseTokens(pattern, { name, ext, index, count, lastModified, si
     ? `${meta.exif.make || ''} ${meta.exif.model || ''}`.trim().replace(/\s+/g, '_')
     : 'Camera';
 
+  const id3 = meta && meta.id3 ? meta.id3 : {};
+  const artistStr = id3.artist || 'Unknown_Artist';
+  const titleStr = id3.title || name || 'Unknown_Title';
+  const albumStr = id3.album || 'Unknown_Album';
+  const trackStr = id3.track ? String(id3.track).padStart(2, '0') : numPadded;
+
   return pattern
     .replace(/\{name\}/gi, name || '')
     .replace(/\{ext\}/gi, cleanExt)
@@ -159,6 +165,10 @@ export function parseTokens(pattern, { name, ext, index, count, lastModified, si
     .replace(/\{min\}/gi, min)
     .replace(/\{size\}/gi, sizeStr)
     .replace(/\{camera\}/gi, cameraStr)
+    .replace(/\{artist\}/gi, artistStr)
+    .replace(/\{title\}/gi, titleStr)
+    .replace(/\{album\}/gi, albumStr)
+    .replace(/\{track\}/gi, trackStr)
     .replace(/\{parent\}/gi, path || '')
     .replace(/\{total\}/gi, String(count || 1));
 }
@@ -376,6 +386,7 @@ export function runPipeline(fileItems = [], rules = [], options = {}) {
         size: item.size,
         path: item.path,
         exif: item.meta ? item.meta.exif : null,
+        id3: item.meta ? item.meta.id3 : null,
       });
     }
 

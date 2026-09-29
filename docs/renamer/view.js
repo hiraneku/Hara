@@ -4,14 +4,14 @@
  * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20260929104844';
-import { t as tr } from '../core/i18n.js?v=20260929104844';
+import { esc } from '../core/dom.js?v=20260929105515';
+import { t as tr } from '../core/i18n.js?v=20260929105515';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929104844';
+} from './model.js?v=20260929105515';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -186,6 +186,10 @@ export function renderRuleInputs(rule) {
             <span class="rn-token-chip" data-rn-insert-token="{num}">{num}</span>
             <span class="rn-token-chip" data-rn-insert-token="{date}">{date}</span>
             <span class="rn-token-chip" data-rn-insert-token="{time}">{time}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{track}">{track}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{artist}">{artist}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{title}">{title}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{album}">{album}</span>
             <span class="rn-token-chip" data-rn-insert-token="{camera}">{camera}</span>
             <span class="rn-token-chip" data-rn-insert-token="{size}">{size}</span>
             <span class="rn-token-chip" data-rn-insert-token="{ext}">{ext}</span>
@@ -277,8 +281,11 @@ export function renamerView(state, pipelineResult) {
             <button class="btn btn-sec" data-rn-act="pick-files">
               <svg class="ico"><use href="#i-plus"/></svg> ${tr('Pilih Berkas / .ZIP')}
             </button>
+            <button class="btn btn-sec" data-rn-act="import-notes" title="${tr('Muat seluruh catatan yang ada di Hara untuk dirapikan / diekspor')}">
+              <svg class="ico"><use href="#i-note"/></svg> ${tr('Catatan Hara')}
+            </button>
             <button class="btn btn-sec" data-rn-act="demo">
-              <svg class="ico"><use href="#i-bulb"/></svg> ${tr('Muat Berkas Contoh')}
+              <svg class="ico"><use href="#i-bulb"/></svg> ${tr('Muat Contoh')}
             </button>
           </div>
           <input type="file" id="rn-file-input" multiple style="display:none">
@@ -410,14 +417,15 @@ export function renamerView(state, pipelineResult) {
             <table class="rn-preview-table">
               <thead>
                 <tr>
-                  <th style="width:43%">${tr('Nama Asli')}</th>
+                  <th style="width:5%;text-align:center">#</th>
+                  <th style="width:40%">${tr('Nama Asli')}</th>
                   <th class="rn-arrow-cell"></th>
-                  <th style="width:43%">${tr('Nama Baru')}</th>
-                  <th style="width:14%;text-align:right">${tr('Status')}</th>
+                  <th style="width:40%">${tr('Nama Baru')}</th>
+                  <th style="width:15%;text-align:right">${tr('Status')}</th>
                 </tr>
               </thead>
               <tbody>
-                ${displayItems.map(item => {
+                ${displayItems.map((item, rowIdx) => {
                   const isChanged = item.status === FILE_STATUS.OK;
                   const isConflict = item.status === FILE_STATUS.CONFLICT;
                   const isInvalid = item.status === FILE_STATUS.INVALID;
@@ -437,6 +445,12 @@ export function renamerView(state, pipelineResult) {
 
                   return `
                     <tr title="${item.errorMsg ? esc(item.errorMsg) : ''}">
+                      <td style="text-align:center;padding:6px 4px">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:2px">
+                          <button class="rn-btn-micro" data-rn-act="file-up" data-rn-id="${item.id}" ${rowIdx === 0 ? 'disabled' : ''} title="${tr('Pindah ke atas')}">▲</button>
+                          <button class="rn-btn-micro" data-rn-act="file-down" data-rn-id="${item.id}" ${rowIdx === displayItems.length - 1 ? 'disabled' : ''} title="${tr('Pindah ke bawah')}">▼</button>
+                        </div>
+                      </td>
                       <td>
                         <div class="rn-name-old">${esc(item.originalName)}</div>
                       </td>
