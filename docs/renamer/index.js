@@ -7,13 +7,13 @@
  * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929105515';
-import { toast } from '../core/toast.js?v=20260929105515';
-import { t as tr } from '../core/i18n.js?v=20260929105515';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929105515';
-import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20260929105515';
-import { state as haraStoreState } from '../core/store.js?v=20260929105515';
-import { esc } from '../core/dom.js?v=20260929105515';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929111258';
+import { toast } from '../core/toast.js?v=20260929111258';
+import { t as tr } from '../core/i18n.js?v=20260929111258';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929111258';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20260929111258';
+import { state as haraStoreState } from '../core/store.js?v=20260929111258';
+import { esc } from '../core/dom.js?v=20260929111258';
 import {
   createRenamerItem,
   createRule,
@@ -24,13 +24,19 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20260929105515';
-import { runPipeline, sortFiles } from './engine.js?v=20260929105515';
-import { renamerView } from './view.js?v=20260929105515';
-import { createZipBlob } from './zip.js?v=20260929105515';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929105515';
-import { parseExif } from './exif.js?v=20260929105515';
-import { parseId3 } from './id3.js?v=20260929105515';
+} from './model.js?v=20260929111258';
+import { runPipeline, sortFiles } from './engine.js?v=20260929111258';
+import {
+  renamerView,
+  filterAndSearchItems,
+  renderFilterTabsContent,
+  renderTableContainerContent,
+  renderFooterBar,
+} from './view.js?v=20260929111258';
+import { createZipBlob } from './zip.js?v=20260929111258';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20260929111258';
+import { parseExif } from './exif.js?v=20260929111258';
+import { parseId3 } from './id3.js?v=20260929111258';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -170,6 +176,60 @@ export function renderRenamerScreen() {
 }
 
 /**
+ * Perbarui pratinjau live secara presisi & langsung tanpa menghancurkan
+ * elemen input yang sedang diketik pengguna (mencegah keyboard tertutup di HP / kehilangan fokus).
+ */
+export function updateLivePreviewOnly() {
+  if (cur !== 'renamer') return;
+  const tableContainer = document.querySelector('.rn-table-container');
+  if (!tableContainer) {
+    return renderRenamerScreen();
+  }
+
+  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+    collisionStrategy: renamerState.collisionStrategy,
+  });
+
+  const displayItems = filterAndSearchItems(
+    pipelineRes.items,
+    renamerState.filter,
+    renamerState.searchQuery
+  );
+
+  // 1. Update tabel preview
+  tableContainer.innerHTML = renderTableContainerContent(displayItems, renamerState.files.length);
+
+  // 2. Update tab filter & angka
+  const filterTabs = document.querySelector('.rn-filter-tabs');
+  if (filterTabs) {
+    filterTabs.innerHTML = renderFilterTabsContent(renamerState, pipelineRes);
+  }
+
+  // 3. Update footer bar
+  const footerBar = document.querySelector('.rn-footer-bar');
+  const newFooterHtml = renderFooterBar(renamerState, pipelineRes);
+  if (footerBar) {
+    if (newFooterHtml) {
+      footerBar.outerHTML = newFooterHtml;
+    } else {
+      footerBar.remove();
+    }
+  } else if (newFooterHtml) {
+    const container = document.querySelector('.rn-container');
+    if (container) {
+      container.insertAdjacentHTML('beforeend', newFooterHtml);
+    }
+  }
+
+  // 4. Update badge jumlah aturan aktif
+  const chipRules = document.querySelector('.rn-card-title .chip-a');
+  if (chipRules) {
+    const activeCount = renamerState.rules.filter(r => r.enabled).length;
+    chipRules.textContent = `${activeCount}/${renamerState.rules.length}`;
+  }
+}
+
+/**
  * Membaca EXIF dari berkas gambar JPEG
  */
 async function ekstrakExifItem(file) {
@@ -292,54 +352,31 @@ function renderModalSeleksiZipContent() {
         `).join('')}
       </div>
 
-      <!-- Tombol Ekstrak -->
-      <div class="rn-actions-top" style="justify-content: flex-end; margin-top: 6px">
+      <!-- Footer Modal Ekstraksi -->
+      <div class="rn-actions-top" style="justify-content:space-between;margin-top:12px">
         <button class="btn btn-sec" data-pop-close>${tr('Batal')}</button>
         <button class="btn btn-pri" id="rn-zip-confirm-extract" ${selectedCount === 0 ? 'disabled style="opacity:.5"' : ''}>
-          <svg class="ico"><use href="#i-plus"/></svg> ${tr('Ekstrak ({n} Berkas)', { n: selectedCount })}
+          ${tr('Ekstrak & Muat ({n} Berkas)', { n: selectedCount })}
         </button>
       </div>
     </div>
   `;
 
-  openPop(html, document.body);
+  openPop(html);
 }
 
 /**
- * Membuka pemilih folder menggunakan File System Access API
+ * Membuka File System Access Directory Picker (jika didukung)
  */
-async function pilihFolderWeb() {
-  if (window.showDirectoryPicker) {
+async function bukaFolderPicker() {
+  if ('showDirectoryPicker' in window) {
     try {
-      const dirHandle = await window.showDirectoryPicker();
-      renamerState.directoryHandle = dirHandle;
+      const handle = await window.showDirectoryPicker();
+      renamerState.directoryHandle = handle;
       const loaded = [];
-      for await (const entry of dirHandle.values()) {
+      for await (const entry of handle.values()) {
         if (entry.kind === 'file') {
           const file = await entry.getFile();
-
-          if (file.name.toLowerCase().endsWith('.zip')) {
-            try {
-              const zipFiles = await extractZip(file);
-              for (const zf of zipFiles) {
-                const zBlob = new Blob([zf.data]);
-                const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
-                const id3 = /\.(mp3|m4a|flac|wav)$/i.test(zf.name) ? parseId3(zf.data) : null;
-                loaded.push(
-                  createRenamerItem({
-                    originalName: zf.name,
-                    size: zf.size,
-                    lastModified: zf.lastModified,
-                    path: file.name,
-                    file: zBlob,
-                    meta: { exif, id3 },
-                  })
-                );
-              }
-              continue;
-            } catch (err) {}
-          }
-
           const exif = await ekstrakExifItem(file);
           const id3 = await ekstrakId3Item(file);
           loaded.push(
@@ -347,22 +384,16 @@ async function pilihFolderWeb() {
               originalName: file.name,
               size: file.size,
               lastModified: file.lastModified,
-              path: dirHandle.name,
-              handle: entry,
+              path: handle.name || '',
               file,
-              meta: { exif, id3 },
+              meta: { handle: entry, exif, id3 },
             })
           );
         }
       }
-      if (loaded.length === 0) {
-        toast(tr('Folder kosong, tidak ada berkas'));
-      } else {
-        renamerState.files = sortFiles(loaded, renamerState.sortBy);
-        toast(tr('{n} berkas berhasil dimuat dari folder', { n: loaded.length }));
-      }
-      renderRenamerScreen();
-      return;
+      renamerState.files = sortFiles(loaded, renamerState.sortBy);
+      toast(tr('{n} berkas berhasil dimuat dari folder!', { n: loaded.length }));
+      return renderRenamerScreen();
     } catch (err) {
       if (err.name === 'AbortError') return;
     }
@@ -387,137 +418,188 @@ async function prosesInputFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
   const regularFiles = [];
 
-  for (const file of Array.from(fileList)) {
-    if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip') {
+  for (let i = 0; i < fileList.length; i++) {
+    const f = fileList[i];
+    const isZip = f.name.toLowerCase().endsWith('.zip');
+
+    if (isZip) {
       try {
-        toast(tr('Membaca isi arsip {name}…', { name: file.name }));
-        const zipFiles = await extractZip(file);
-        if (zipFiles.length === 0) {
-          toast(tr('Berkas ZIP kosong'));
+        const buf = await f.arrayBuffer();
+        const extracted = await extractZip(buf);
+        if (extracted.length > 0) {
+          bukaModalSeleksiZip(f.name, extracted);
+          return;
         } else {
-          bukaModalSeleksiZip(file.name, zipFiles);
+          toast(tr('Arsip ZIP kosong atau tidak dapat diekstrak'));
         }
       } catch (err) {
         console.error(err);
-        toast(tr('Gagal membaca berkas ZIP: ') + err.message);
+        toast(tr('Gagal membaca berkas ZIP'));
       }
-      continue;
+    } else {
+      const exif = await ekstrakExifItem(f);
+      const id3 = await ekstrakId3Item(f);
+      regularFiles.push(
+        createRenamerItem({
+          originalName: f.name,
+          size: f.size,
+          lastModified: f.lastModified,
+          path: f.webkitRelativePath || '',
+          file: f,
+          meta: { exif, id3 },
+        })
+      );
     }
-
-    const exif = await ekstrakExifItem(file);
-    const id3 = await ekstrakId3Item(file);
-    regularFiles.push(
-      createRenamerItem({
-        originalName: file.name,
-        size: file.size,
-        lastModified: file.lastModified,
-        path: file.webkitRelativePath ? file.webkitRelativePath.split('/')[0] : '',
-        file,
-        meta: { exif, id3 },
-      })
-    );
   }
 
   if (regularFiles.length > 0) {
     renamerState.files = sortFiles([...renamerState.files, ...regularFiles], renamerState.sortBy);
-    toast(tr('{n} berkas ditambahkan', { n: regularFiles.length }));
+    toast(tr('Berhasil memuat {n} berkas!', { n: regularFiles.length }));
     renderRenamerScreen();
   }
 }
 
 /**
- * Eksekusi Ganti Nama Berkas
+ * Eksekusi ganti nama di browser (Download file ZIP atau Direct FileSystem API)
  */
-async function eksekusiGantiNama() {
+async function terapkanGantiNama() {
   const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
     collisionStrategy: renamerState.collisionStrategy,
   });
-  if (pipelineRes.hasErrors || pipelineRes.changedCount === 0) {
-    toast(tr('Tidak ada perubahan atau ada konflik nama'));
+
+  if (pipelineRes.hasErrors) {
+    toast(tr('Ada konflik nama berkas atau nama tidak valid. Mohon perbaiki aturan terlebih dahulu.'));
     return;
   }
 
-  const itemsToRename = pipelineRes.items.filter(i => i.status === FILE_STATUS.OK);
+  const toRename = pipelineRes.items.filter(x => x.status === FILE_STATUS.OK);
+  if (toRename.length === 0) {
+    toast(tr('Tidak ada nama berkas yang perlu diubah.'));
+    return;
+  }
 
-  if (renamerState.directoryHandle && itemsToRename.some(i => i.handle)) {
+  // Jika kita punya direct Directory Handle (File System API)
+  if (renamerState.directoryHandle && 'move' in FileSystemFileHandle.prototype) {
     try {
-      toast(tr('Mengganti nama berkas di disk…'));
-      const historyEntry = { timestamp: Date.now(), mappings: [] };
-
-      for (const item of itemsToRename) {
-        if (item.handle && item.handle.move) {
-          await item.handle.move(item.newName);
-          historyEntry.mappings.push({ from: item.originalName, to: item.newName, handle: item.handle });
+      let success = 0;
+      for (const item of toRename) {
+        if (item.meta && item.meta.handle) {
+          await item.meta.handle.move(item.newName);
           item.originalName = item.newName;
+          const [b, e] = (function (fn) {
+            const idx = fn.lastIndexOf('.');
+            return idx > 0 ? [fn.slice(0, idx), fn.slice(idx + 1)] : [fn, ''];
+          })(item.newName);
+          item.baseName = b;
+          item.ext = e;
+          success++;
         }
       }
-
-      renamerState.undoStack.push(historyEntry);
-      toast(tr('Berhasil mengganti nama {n} berkas!', { n: itemsToRename.length }));
-      renderRenamerScreen();
-      return;
-    } catch (err) {
-      console.error(err);
-      toast(tr('Gagal mengubah berkas di disk: ') + err.message);
+      toast(tr('Berhasil mengubah langsung {n} berkas di dalam folder!', { n: success }));
+      renamerState.files = sortFiles(renamerState.files, renamerState.sortBy);
+      return renderRenamerScreen();
+    } catch (e) {
+      console.warn('Direct move unsupported or denied, fallback to ZIP', e);
     }
   }
 
-  const historyEntry = { timestamp: Date.now(), mappings: [] };
-  itemsToRename.forEach(item => {
-    historyEntry.mappings.push({ from: item.originalName, to: item.newName });
-    item.originalName = item.newName;
-  });
-  renamerState.undoStack.push(historyEntry);
-  toast(tr('Berhasil menerapkan ganti nama pada {n} berkas!', { n: itemsToRename.length }));
-  renderRenamerScreen();
-}
-
-/**
- * Ekspor & Unduh Berkas ZIP Terganti Nama dengan Nama Kustom
- */
-async function eksporZipRenamed() {
-  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
-    collisionStrategy: renamerState.collisionStrategy,
-  });
-  if (pipelineRes.hasErrors || renamerState.files.length === 0) {
-    toast(tr('Perbaiki error sebelum mengunduh ZIP'));
-    return;
-  }
-
-  toast(tr('Sedang menyiapkan arsip ZIP…'));
-
+  // Fallback: Kemas seluruh file ke ZIP dengan nama baru
   try {
-    const entries = [];
+    toast(tr('Sedang mengemas berkas ke dalam ZIP...'));
+    const zipEntries = [];
     for (const item of pipelineRes.items) {
-      let data = item.file || 'DUMMY DATA';
-      entries.push({
+      let contentBlob = item.file;
+      if (!contentBlob) {
+        contentBlob = new Blob([`Contoh dummy ${item.newName}`], { type: 'text/plain' });
+      }
+      const buf = await contentBlob.arrayBuffer();
+      zipEntries.push({
         name: item.newName,
-        data,
+        data: buf,
+        lastModified: item.lastModified,
       });
     }
 
-    const zipBlob = await createZipBlob(entries);
-    let targetZipName = sanitizeFileName(renamerState.exportZipName || 'Arsip_Terganti_Nama.zip');
-    if (!targetZipName.toLowerCase().endsWith('.zip')) {
-      targetZipName += '.zip';
-    }
+    const zipBlob = await createZipBlob(zipEntries);
+    const targetZipName = (renamerState.exportZipName || 'Arsip_Terganti_Nama.zip').trim();
+    const finalZipName = targetZipName.toLowerCase().endsWith('.zip') ? targetZipName : `${targetZipName}.zip`;
 
-    unduh(targetZipName, zipBlob, 'application/zip');
-    toast(`${tr('Berhasil mengunduh')}: ${targetZipName}`);
+    unduh(zipBlob, finalZipName);
+
+    // Simpan history untuk Undo
+    renamerState.undoStack.push({
+      files: renamerState.files.map(f => ({ ...f })),
+      rules: renamerState.rules.map(r => cloneRule(r)),
+      timestamp: Date.now(),
+    });
+
+    // Update in-memory state nama berkas
+    pipelineRes.items.forEach(it => {
+      const target = renamerState.files.find(f => f.id === it.id);
+      if (target) {
+        target.originalName = it.newName;
+        target.baseName = it.baseName;
+        target.ext = it.ext;
+      }
+    });
+
+    toast(tr('Arsip "{name}" berhasil diunduh!', { name: finalZipName }));
+    renderRenamerScreen();
   } catch (err) {
     console.error(err);
-    toast(tr('Gagal membuat berkas ZIP: ') + err.message);
+    toast(tr('Gagal mengemas ZIP: ') + err.message);
   }
 }
 
 /**
- * Dialog Pengaturan Nama Berkas ZIP Target
+ * Unduh langsung paket ZIP tanpa mengubah memori aktif
  */
-function bukaDialogConfigZipName(anchorEl) {
+async function unduhArsipZip() {
+  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+    collisionStrategy: renamerState.collisionStrategy,
+  });
+
+  if (pipelineRes.hasErrors) {
+    toast(tr('Ada konflik nama berkas atau nama tidak valid. Mohon selesaikan terlebih dahulu.'));
+    return;
+  }
+
+  try {
+    toast(tr('Sedang membuat arsip ZIP...'));
+    const zipEntries = [];
+    for (const item of pipelineRes.items) {
+      let contentBlob = item.file;
+      if (!contentBlob) {
+        contentBlob = new Blob([`Dummy ${item.newName}`], { type: 'text/plain' });
+      }
+      const buf = await contentBlob.arrayBuffer();
+      zipEntries.push({
+        name: item.newName,
+        data: buf,
+        lastModified: item.lastModified,
+      });
+    }
+
+    const zipBlob = await createZipBlob(zipEntries);
+    const targetZipName = (renamerState.exportZipName || 'Arsip_Terganti_Nama.zip').trim();
+    const finalZipName = targetZipName.toLowerCase().endsWith('.zip') ? targetZipName : `${targetZipName}.zip`;
+
+    unduh(zipBlob, finalZipName);
+    toast(tr('Arsip "{name}" berhasil diunduh!', { name: finalZipName }));
+  } catch (e) {
+    console.error(e);
+    toast(tr('Gagal mengunduh ZIP: ') + e.message);
+  }
+}
+
+/**
+ * Dialog Kustomisasi Nama File ZIP Target
+ */
+function bukaDialogKustomNamaZip() {
   const current = renamerState.exportZipName || 'Arsip_Terganti_Nama.zip';
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Ubah Nama Berkas ZIP Hasil Ekspor')}</h3>
+      <h3 class="rn-modal-title">${tr('Ubah Nama Berkas ZIP')}</h3>
       <p style="font-size:13px;color:var(--muted);margin:0">
         ${tr('Tentukan nama berkas .zip saat Anda mengklik tombol "Unduh ZIP".')}
       </p>
@@ -531,78 +613,87 @@ function bukaDialogConfigZipName(anchorEl) {
       </div>
     </div>
   `;
-  openPop(html, anchorEl || document.body);
+  openPop(html);
 }
 
 /**
- * Dialog Riwayat & Pembatalan (Undo Inspector)
+ * Dialog Tambah Aturan Baru
  */
-function bukaDialogUndo(anchorEl) {
-  if (renamerState.undoStack.length === 0) {
-    toast(tr('Tidak ada riwayat ganti nama'));
-    return;
-  }
-
-  const lastOp = renamerState.undoStack[renamerState.undoStack.length - 1];
-  const time = new Date(lastOp.timestamp).toLocaleTimeString();
+function bukaDialogTambahAturan() {
+  const options = Object.entries(RULE_METADATA).map(([key, meta]) => `
+    <button class="rn-type-card" data-rn-add-type="${key}">
+      <div class="rn-type-card-icon">
+        <svg class="ico"><use href="#${meta.icon}"/></svg>
+      </div>
+      <div>
+        <div class="rn-type-card-title">${meta.label}</div>
+        <div class="rn-type-card-desc">${meta.desc}</div>
+      </div>
+    </button>
+  `).join('');
 
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Batalkan Ganti Nama')}</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0">
-        ${tr('Sesi ganti nama pukul {time} ({n} berkas):', { time, n: lastOp.mappings.length })}
-      </p>
-      <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px;background:var(--bg);font-family:var(--mono);font-size:12px;display:flex;flex-direction:column;gap:4px">
-        ${lastOp.mappings.slice(0, 15).map(m => `
-          <div><span style="color:var(--muted)">${esc(m.from)}</span> ➔ <b>${esc(m.to)}</b></div>
-        `).join('')}
-        ${lastOp.mappings.length > 15 ? `<div style="color:var(--faint)">…dan ${lastOp.mappings.length - 15} berkas lainnya</div>` : ''}
-      </div>
-      <div class="rn-actions-top" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn btn-sec" data-pop-close>${tr('Tutup')}</button>
-        <button class="btn btn-pri" id="rn-undo-confirm" style="background:var(--danger)">${tr('Kembalikan ke Nama Semula')}</button>
+      <h3 class="rn-modal-title">${tr('Pilih Jenis Aturan')}</h3>
+      <div class="rn-type-list">
+        ${options}
       </div>
     </div>
   `;
-  openPop(html, anchorEl || document.body);
+  openPop(html);
 }
 
 /**
- * Eksekusi Undo / Rollback
+ * Dialog Resep Cepat & Preset
  */
-async function batalkanGantiNamaKonfirmasi() {
-  const lastOp = renamerState.undoStack.pop();
-  if (!lastOp) return;
+function bukaDialogPresets() {
+  const customList = muatCustomPresets();
+  const presetsHtml = DEFAULT_PRESETS.map(p => `
+    <button class="rn-preset-card" data-rn-apply-preset="${p.id}">
+      <div class="rn-preset-card-title">${p.name}</div>
+      <div class="rn-preset-card-desc">${p.desc}</div>
+    </button>
+  `).join('');
 
-  if (lastOp.mappings.some(m => m.handle)) {
-    try {
-      toast(tr('Mengembalikan nama berkas di disk…'));
-      for (const m of lastOp.mappings) {
-        if (m.handle && m.handle.move) {
-          await m.handle.move(m.from);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  const customPresetsHtml = customList.length === 0 ? '' : `
+    <div style="font-weight:700;font-size:13px;color:var(--muted);margin-top:16px;text-transform:uppercase;letter-spacing:.05em">
+      ${tr('Resep Tersimpan Saya')}
+    </div>
+    <div class="rn-preset-grid" style="margin-top:6px">
+      ${customList.map(p => `
+        <div class="rn-preset-card" style="display:flex;align-items:center;justify-content:space-between">
+          <div style="cursor:pointer;flex:1" data-rn-apply-custom-preset="${p.id}">
+            <div class="rn-preset-card-title">${esc(p.name)}</div>
+            <div class="rn-preset-card-desc">${p.rules.length} ${tr('aturan')}</div>
+          </div>
+          <button class="rn-btn-micro" data-rn-del-preset="${p.id}" style="color:var(--danger)" title="${tr('Hapus resep')}">
+            <svg class="ico" style="width:13px;height:13px"><use href="#i-trash"/></svg>
+          </button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const html = `
+    <div class="rn-modal-box" style="max-width: 600px">
+      <h3 class="rn-modal-title">${tr('Resep Cepat')}</h3>
+      <div class="rn-preset-grid">
+        ${presetsHtml}
+      </div>
+      ${customPresetsHtml}
+    </div>
+  `;
+  openPop(html);
+}
+
+/**
+ * Dialog Simpan Susunan Aturan Aktif sebagai Preset Baru
+ */
+function bukaDialogSimpanPreset() {
+  if (renamerState.rules.length === 0) {
+    toast(tr('Tambahkan minimal 1 aturan untuk disimpan sebagai resep'));
+    return;
   }
-
-  const map = new Map(lastOp.mappings.map(m => [m.to, m.from]));
-  renamerState.files.forEach(f => {
-    if (map.has(f.originalName)) {
-      f.originalName = map.get(f.originalName);
-    }
-  });
-
-  closeAll();
-  toast(tr('Ganti nama berhasil diurungkan!'));
-  renderRenamerScreen();
-}
-
-/**
- * Dialog Simpan Resep Kustom
- */
-function bukaDialogSimpanPreset(anchorEl) {
   const html = `
     <div class="rn-modal-box">
       <h3 class="rn-modal-title">${tr('Simpan Resep Aturan')}</h3>
@@ -617,132 +708,125 @@ function bukaDialogSimpanPreset(anchorEl) {
       </div>
     </div>
   `;
-  openPop(html, anchorEl || document.body);
+  openPop(html);
 }
 
 /**
- * Menu Dialog Tambah Aturan
+ * Dialog Konfirmasi Undo
  */
-function bukaDialogTambahAturan(anchorEl) {
+function bukaDialogUndo() {
+  if (renamerState.undoStack.length === 0) return;
   const html = `
     <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Pilih Jenis Aturan')}</h3>
-      <div class="rn-type-grid">
-        ${Object.entries(RULE_METADATA).map(([type, meta]) => `
-          <button class="rn-type-card" data-rn-add-type="${type}">
-            <div class="rn-type-card-title">
-              <svg class="ico" style="width:16px;height:16px;color:var(--accent)"><use href="#${meta.icon}"/></svg>
-              ${meta.label}
-            </div>
-            <div class="rn-type-card-desc">${meta.desc}</div>
-          </button>
-        `).join('')}
+      <h3 class="rn-modal-title">${tr('Kembalikan Nama Berkas?')}</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0">
+        ${tr('Apakah Anda yakin ingin membatalkan perubahan nama dan mengembalikannya ke nama sebelum aksi terakhir?')}
+      </p>
+      <div class="rn-actions-top" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-sec" data-pop-close>${tr('Tidak')}</button>
+        <button class="btn btn-pri" id="rn-undo-confirm">${tr('Ya, Batalkan')}</button>
       </div>
     </div>
   `;
-  openPop(html, anchorEl || document.body);
+  openPop(html);
+}
+
+function batalkanGantiNamaKonfirmasi() {
+  const previous = renamerState.undoStack.pop();
+  if (previous) {
+    renamerState.files = previous.files;
+    renamerState.rules = previous.rules;
+    closeAll();
+    toast(tr('Perubahan nama berhasil dibatalkan (Undo)!'));
+    renderRenamerScreen();
+  }
 }
 
 /**
- * Menu Dialog Resep / Preset
+ * Inisialisasi Modul Bulk Renamer
  */
-function bukaDialogPresets(anchorEl) {
-  const customList = muatCustomPresets();
-  const html = `
-    <div class="rn-modal-box">
-      <h3 class="rn-modal-title">${tr('Resep Cepat Siap Pakai')}</h3>
-      <div class="rn-type-grid">
-        ${DEFAULT_PRESETS.map(p => `
-          <button class="rn-type-card" data-rn-apply-preset="${p.id}">
-            <div class="rn-type-card-title">
-              <svg class="ico" style="width:16px;height:16px;color:var(--accent)"><use href="#i-tpl"/></svg>
-              ${p.name}
-            </div>
-            <div class="rn-type-card-desc">${p.desc}</div>
-          </button>
-        `).join('')}
-        ${customList.map(p => `
-          <div class="rn-type-card" style="position:relative">
-            <button data-rn-apply-custom-preset="${p.id}" style="background:none;border:none;text-align:left;cursor:pointer;width:100%;padding:0">
-              <div class="rn-type-card-title">
-                <svg class="ico" style="width:16px;height:16px;color:var(--accent)"><use href="#i-copy"/></svg>
-                ${esc(p.name)}
-              </div>
-              <div class="rn-type-card-desc">${tr('{n} aturan tersimpan', { n: p.rules.length })}</div>
-            </button>
-            <button data-rn-del-preset="${p.id}" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--danger);cursor:pointer" title="${tr('Hapus resep')}">✕</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  openPop(html, anchorEl || document.body);
-}
-
 export const renamerModule = {
   id: 'renamer',
-  name: 'Ganti Nama',
+  label: 'Bulk Renamer',
+  icon: 'i-edit',
   init() {
-    // 1. Daftarkan view ke router Hara
-    registerViews(
-      {
-        renamer: () => {
-          const res = runPipeline(renamerState.files, renamerState.rules, {
+    registerViews({
+      renamer: () => {
+        const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+          collisionStrategy: renamerState.collisionStrategy,
+        });
+        return renamerView(
+          {
+            files: renamerState.files,
+            rules: renamerState.rules,
+            filter: renamerState.filter,
+            searchQuery: renamerState.searchQuery,
+            sortBy: renamerState.sortBy,
             collisionStrategy: renamerState.collisionStrategy,
-          });
-          return renamerView(
-            {
-              files: renamerState.files,
-              rules: renamerState.rules,
-              filter: renamerState.filter,
-              searchQuery: renamerState.searchQuery,
-              sortBy: renamerState.sortBy,
-              collisionStrategy: renamerState.collisionStrategy,
-              exportZipName: renamerState.exportZipName,
-              hasUndo: renamerState.undoStack.length > 0,
-            },
-            res
-          );
-        },
+            exportZipName: renamerState.exportZipName,
+            hasUndo: renamerState.undoStack.length > 0,
+          },
+          pipelineRes
+        );
       },
-      {
-        renamer: 'Ganti Nama Massal',
-      }
-    );
+    });
 
-    // 2. Global Event Listener untuk interaksi Renamer
+    onAfterRender(() => {
+      if (cur !== 'renamer') return;
+      // Dropzone event binding
+      const dz = document.getElementById('rn-dropzone');
+      if (dz) {
+        dz.addEventListener('dragover', e => {
+          e.preventDefault();
+          dz.classList.add('dragover');
+        });
+        dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+        dz.addEventListener('drop', e => {
+          e.preventDefault();
+          dz.classList.remove('dragover');
+          if (e.dataTransfer && e.dataTransfer.files) {
+            prosesInputFiles(e.dataTransfer.files);
+          }
+        });
+      }
+    });
+
+    // Delegasi Event Klik Global Modul Renamer
     document.addEventListener('click', e => {
-      // Tombol aksi umum
       const actBtn = e.target.closest('[data-rn-act]');
       if (actBtn) {
         const act = actBtn.dataset.rnAct;
         const id = actBtn.dataset.rnId;
 
-        if (act === 'demo') return muatBerkasDemo();
-        if (act === 'import-notes') return imporCatatanHara();
-        if (act === 'pick-folder') return pilihFolderWeb();
+        // Aksi Sumber Berkas
         if (act === 'pick-files') return pilihBerkasBiasa();
+        if (act === 'pick-folder') return bukaFolderPicker();
+        if (act === 'demo') return muatBerkasDemo();
+        if (act === 'import-hara-notes') return imporCatatanHara();
         if (act === 'clear-files') {
           renamerState.files = [];
           toast(tr('Daftar berkas dikosongkan'));
           return renderRenamerScreen();
         }
-        if (act === 'add-rule') return bukaDialogTambahAturan(actBtn);
-        if (act === 'presets') return bukaDialogPresets(actBtn);
-        if (act === 'save-preset') return bukaDialogSimpanPreset(actBtn);
-        if (act === 'config-zip-name') return bukaDialogConfigZipName(actBtn);
-        if (act === 'apply-rename') return eksekusiGantiNama();
-        if (act === 'export-zip') return eksporZipRenamed();
-        if (act === 'undo') return bukaDialogUndo(actBtn);
 
-        // Operasi per baris berkas (manual reorder)
+        // Aksi Aturan & Preset
+        if (act === 'add-rule') return bukaDialogTambahAturan();
+        if (act === 'presets') return bukaDialogPresets();
+        if (act === 'save-preset') return bukaDialogSimpanPreset();
+        if (act === 'config-zip-name') return bukaDialogKustomNamaZip();
+        if (act === 'undo') return bukaDialogUndo();
+        if (act === 'export-zip') return unduhArsipZip();
+        if (act === 'apply-rename') return terapkanGantiNama();
+
+        // Operasi geser baris file manual
         if (act === 'file-up' && id) {
           const idx = renamerState.files.findIndex(f => f.id === id);
           if (idx > 0) {
             const temp = renamerState.files[idx];
             renamerState.files[idx] = renamerState.files[idx - 1];
             renamerState.files[idx - 1] = temp;
-            return renderRenamerScreen();
+            updateLivePreviewOnly();
+            return;
           }
         }
         if (act === 'file-down' && id) {
@@ -751,7 +835,8 @@ export const renamerModule = {
             const temp = renamerState.files[idx];
             renamerState.files[idx] = renamerState.files[idx + 1];
             renamerState.files[idx + 1] = temp;
-            return renderRenamerScreen();
+            updateLivePreviewOnly();
+            return;
           }
         }
 
@@ -788,7 +873,7 @@ export const renamerModule = {
           renamerState.exportZipName = val;
           closeAll();
           toast(tr('Nama berkas ZIP diperbarui: ') + val);
-          renderRenamerScreen();
+          updateLivePreviewOnly();
         }
         return;
       }
@@ -906,7 +991,8 @@ export const renamerModule = {
       const filterBtn = e.target.closest('[data-rn-filter]');
       if (filterBtn) {
         renamerState.filter = filterBtn.dataset.rnFilter;
-        return renderRenamerScreen();
+        updateLivePreviewOnly();
+        return;
       }
 
       // Tambah tipe aturan dari modal
@@ -938,13 +1024,23 @@ export const renamerModule = {
         const token = tokenChip.dataset.rnInsertToken;
         const input = document.querySelector('[data-rn-param="pattern"]');
         if (input) {
-          input.value += token;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
+          const startPos = input.selectionStart ?? input.value.length;
+          const endPos = input.selectionEnd ?? input.value.length;
+          const prevVal = input.value;
+          input.value = prevVal.slice(0, startPos) + token + prevVal.slice(endPos);
+          input.selectionStart = input.selectionEnd = startPos + token.length;
+          input.focus();
+          const ruleId = input.dataset.rnId;
+          const rule = renamerState.rules.find(r => r.id === ruleId);
+          if (rule) {
+            rule.params.pattern = input.value;
+          }
+          updateLivePreviewOnly();
         }
       }
     });
 
-    // Tangani perubahan parameter aturan secara langsung (Live Input)
+    // Tangani perubahan parameter aturan secara langsung (Live Input tanpa reload DOM)
     document.addEventListener('input', e => {
       const inp = e.target.closest('[data-rn-param]');
       if (inp) {
@@ -952,8 +1048,13 @@ export const renamerModule = {
         const paramName = inp.dataset.rnParam;
         const rule = renamerState.rules.find(r => r.id === id);
         if (rule) {
-          rule.params[paramName] = inp.value;
-          renderRenamerScreen();
+          if (paramName === 'start' || paramName === 'count' || paramName === 'index') {
+            const numVal = parseInt(inp.value, 10);
+            rule.params[paramName] = isNaN(numVal) ? 0 : numVal;
+          } else {
+            rule.params[paramName] = inp.value;
+          }
+          updateLivePreviewOnly();
         }
         return;
       }
@@ -961,12 +1062,8 @@ export const renamerModule = {
       // Filter pencarian Live Preview
       if (e.target && e.target.id === 'rn-search-preview') {
         renamerState.searchQuery = e.target.value;
-        renderRenamerScreen();
-        const reInput = document.getElementById('rn-search-preview');
-        if (reInput) {
-          reInput.focus();
-          reInput.setSelectionRange(reInput.value.length, reInput.value.length);
-        }
+        updateLivePreviewOnly();
+        return;
       }
     });
 
@@ -979,7 +1076,28 @@ export const renamerModule = {
         const rule = renamerState.rules.find(r => r.id === id);
         if (rule) {
           rule.params[paramName] = boolInp.checked;
-          renderRenamerScreen();
+          updateLivePreviewOnly();
+        }
+      }
+
+      // Select parameter di dalam aturan
+      const selectInp = e.target.closest('select[data-rn-param]');
+      if (selectInp) {
+        const id = selectInp.dataset.rnId;
+        const paramName = selectInp.dataset.rnParam;
+        const rule = renamerState.rules.find(r => r.id === id);
+        if (rule) {
+          if (paramName === 'digits') {
+            rule.params[paramName] = parseInt(selectInp.value, 10) || 1;
+          } else {
+            rule.params[paramName] = selectInp.value;
+          }
+          // Jika select mengubah posisi/mode yang memunculkan/menyembunyikan field lain
+          if (paramName === 'position' || paramName === 'mode') {
+            renderRenamerScreen();
+          } else {
+            updateLivePreviewOnly();
+          }
         }
       }
 
@@ -993,7 +1111,7 @@ export const renamerModule = {
       // Toggle collision strategy selector
       if (e.target && e.target.id === 'rn-collision-select') {
         renamerState.collisionStrategy = e.target.value;
-        renderRenamerScreen();
+        updateLivePreviewOnly();
       }
 
       // Toggle aktifkan/nonaktifkan aturan
@@ -1003,7 +1121,12 @@ export const renamerModule = {
         const rule = renamerState.rules.find(r => r.id === id);
         if (rule) {
           rule.enabled = toggle.checked;
-          renderRenamerScreen();
+          const card = toggle.closest('.rn-rule-item');
+          if (card) {
+            if (rule.enabled) card.classList.remove('disabled');
+            else card.classList.add('disabled');
+          }
+          updateLivePreviewOnly();
         }
       }
 

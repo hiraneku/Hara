@@ -4,14 +4,14 @@
  * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20260929105515';
-import { t as tr } from '../core/i18n.js?v=20260929105515';
+import { esc } from '../core/dom.js?v=20260929111258';
+import { t as tr } from '../core/i18n.js?v=20260929111258';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929105515';
+} from './model.js?v=20260929111258';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -203,6 +203,147 @@ export function renderRuleInputs(rule) {
   }
 }
 
+/**
+ * Filter dan saring daftar item preview
+ */
+export function filterAndSearchItems(items, filter, searchQuery) {
+  let displayItems = items || [];
+  if (filter === 'changed') {
+    displayItems = displayItems.filter(x => x.status === FILE_STATUS.OK);
+  } else if (filter === 'conflict') {
+    displayItems = displayItems.filter(x => x.status === FILE_STATUS.CONFLICT || x.status === FILE_STATUS.INVALID);
+  }
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    displayItems = displayItems.filter(
+      x => x.originalName.toLowerCase().includes(q) || x.newName.toLowerCase().includes(q)
+    );
+  }
+  return displayItems;
+}
+
+/**
+ * Render tombol tab filter
+ */
+export function renderFilterTabsContent(state, pipelineResult) {
+  const { filter = 'all' } = state;
+  const { total = 0, changedCount = 0, conflictCount = 0, invalidCount = 0 } = pipelineResult;
+  return `
+    <button class="rn-filter-btn ${filter === 'all' ? 'active' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
+    <button class="rn-filter-btn ${filter === 'changed' ? 'active' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
+    <button class="rn-filter-btn ${filter === 'conflict' ? 'active' : ''}" data-rn-filter="conflict" style="${conflictCount + invalidCount > 0 ? 'color:var(--danger)' : ''}">
+      ${tr('Konflik / Error')} (${conflictCount + invalidCount})
+    </button>
+  `;
+}
+
+/**
+ * Render isi tabel preview
+ */
+export function renderTableContainerContent(displayItems, filesCount) {
+  if (displayItems.length === 0) {
+    return `
+      <div style="padding:40px;text-align:center;color:var(--muted)">
+        ${filesCount === 0 ? tr('Belum ada berkas untuk dipratinjau') : tr('Tidak ada berkas yang sesuai filter')}
+      </div>
+    `;
+  }
+
+  return `
+    <table class="rn-preview-table">
+      <thead>
+        <tr>
+          <th style="width:5%;text-align:center">#</th>
+          <th style="width:40%">${tr('Nama Asli')}</th>
+          <th class="rn-arrow-cell"></th>
+          <th style="width:40%">${tr('Nama Baru')}</th>
+          <th style="width:15%;text-align:right">${tr('Status')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${displayItems.map((item, rowIdx) => {
+          const isChanged = item.status === FILE_STATUS.OK;
+          const isConflict = item.status === FILE_STATUS.CONFLICT;
+          const isInvalid = item.status === FILE_STATUS.INVALID;
+
+          let badgeClass = 'rn-pill-same';
+          let badgeText = tr('Sama');
+          if (isChanged) {
+            badgeClass = 'rn-pill-ok';
+            badgeText = tr('Siap');
+          } else if (isConflict) {
+            badgeClass = 'rn-pill-conflict';
+            badgeText = tr('Konflik');
+          } else if (isInvalid) {
+            badgeClass = 'rn-pill-invalid';
+            badgeText = tr('Invalid');
+          }
+
+          return `
+            <tr title="${item.errorMsg ? esc(item.errorMsg) : ''}">
+              <td style="text-align:center;padding:6px 4px">
+                <div style="display:flex;align-items:center;justify-content:center;gap:2px">
+                  <button class="rn-btn-micro" data-rn-act="file-up" data-rn-id="${item.id}" ${rowIdx === 0 ? 'disabled' : ''} title="${tr('Pindah ke atas')}">▲</button>
+                  <button class="rn-btn-micro" data-rn-act="file-down" data-rn-id="${item.id}" ${rowIdx === displayItems.length - 1 ? 'disabled' : ''} title="${tr('Pindah ke bawah')}">▼</button>
+                </div>
+              </td>
+              <td>
+                <div class="rn-name-old">${esc(item.originalName)}</div>
+              </td>
+              <td class="rn-arrow-cell">➔</td>
+              <td>
+                <div class="rn-name-target ${isChanged ? 'is-changed' : ''}">${esc(item.newName)}</div>
+                ${item.errorMsg ? `<div style="font-size:11px;color:var(--danger);margin-top:2px">${esc(item.errorMsg)}</div>` : ''}
+              </td>
+              <td style="text-align:right">
+                <span class="rn-pill ${badgeClass}">${badgeText}</span>
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Render footer bar
+ */
+export function renderFooterBar(state, pipelineResult) {
+  const { files = [] } = state;
+  const {
+    total = 0,
+    changedCount = 0,
+    conflictCount = 0,
+    invalidCount = 0,
+    hasErrors = false,
+  } = pipelineResult;
+
+  if (files.length === 0) return '';
+
+  return `
+    <div class="rn-footer-bar">
+      <div class="rn-footer-info">
+        <b>${total}</b> ${tr('berkas')} · <span style="color:var(--accent)"><b>${changedCount}</b> ${tr('akan diubah')}</span>
+        ${conflictCount > 0 ? ` · <span class="rn-footer-error"><b>${conflictCount}</b> ${tr('konflik nama')}</span>` : ''}
+        ${invalidCount > 0 ? ` · <span class="rn-footer-error"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
+      </div>
+      <div class="rn-actions-top">
+        <button class="btn btn-sec" data-rn-act="config-zip-name" title="${tr('Ubah nama berkas .zip hasil unduhan')}">
+          <svg class="ico"><use href="#i-cog"/></svg> <span style="font-family:var(--mono);font-size:12px">${esc(state.exportZipName || 'Arsip_Terganti_Nama.zip')}</span>
+        </button>
+        <button class="btn btn-sec" data-rn-act="export-zip" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} title="${tr('Unduh semua berkas dengan nama baru ke berkas ZIP')}">
+          <svg class="ico"><use href="#i-dl"/></svg> ${tr('Unduh ZIP')}
+        </button>
+        <button class="btn btn-pri" data-rn-act="apply-rename" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>
+          <svg class="ico"><use href="#i-pen"/></svg> ${tr('Ganti Nama ({n} Berkas)', { n: changedCount })}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 export function renamerView(state, pipelineResult) {
   const {
     files = [],
@@ -215,74 +356,51 @@ export function renamerView(state, pipelineResult) {
   } = state;
   const {
     items = [],
-    total = 0,
-    changedCount = 0,
-    conflictCount = 0,
-    invalidCount = 0,
-    hasErrors = false,
   } = pipelineResult;
 
   const totalSize = files.reduce((acc, f) => acc + (f.size || 0), 0);
-
-  // Filter items
-  let displayItems = items;
-  if (filter === 'changed') {
-    displayItems = items.filter(x => x.status === FILE_STATUS.OK);
-  } else if (filter === 'conflict') {
-    displayItems = items.filter(x => x.status === FILE_STATUS.CONFLICT || x.status === FILE_STATUS.INVALID);
-  }
-
-  // Filter pencarian
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    displayItems = displayItems.filter(
-      x => x.originalName.toLowerCase().includes(q) || x.newName.toLowerCase().includes(q)
-    );
-  }
+  const displayItems = filterAndSearchItems(items, filter, searchQuery);
 
   return `
-    <div class="rn-page">
-      <!-- Header -->
-      <div class="rn-head">
-        <div class="rn-title-group">
-          <h2>${tr('Ganti Nama Massal')}</h2>
-          <p>${tr('Ubah dan rapikan nama banyak berkas atau isi ZIP secara terstruktur & aman')}</p>
+    <div class="rn-container">
+      <!-- Header Modul -->
+      <div class="rn-header">
+        <div class="rn-header-left">
+          <h2 class="rn-title">${tr('Bulk File Renamer')}</h2>
+          <span class="rn-subtitle">${tr('Ubah nama ratusan berkas & foto seketika tanpa risiko salah!')}</span>
         </div>
-        <div class="rn-actions-top">
-          <button class="btn btn-sec" data-rn-act="demo" title="${tr('Coba langsung dengan data contoh')}">
-            <svg class="ico"><use href="#i-bulb"/></svg> ${tr('Contoh Demo')}
-          </button>
-          <button class="btn btn-sec" data-rn-act="presets" title="${tr('Gunakan resep siap pakai')}">
-            <svg class="ico"><use href="#i-tpl"/></svg> ${tr('Resep Cepat')}
-          </button>
-          <button class="btn btn-sec" data-rn-act="save-preset" title="${tr('Simpan susunan aturan ini sebagai resep kustom')}">
-            <svg class="ico"><use href="#i-copy"/></svg> ${tr('Simpan Resep')}
-          </button>
+        <div class="rn-header-actions">
           ${hasUndo ? `
-            <button class="btn btn-sec" data-rn-act="undo" title="${tr('Batalkan ganti nama terakhir')}">
-              <svg class="ico"><use href="#i-undo"/></svg> ${tr('Urungkan')}
+            <button class="btn btn-sec" data-rn-act="undo" title="${tr('Kembalikan nama berkas sebelumnya (Undo)')}">
+              <svg class="ico"><use href="#i-undo"/></svg> ${tr('Undo')}
             </button>
           ` : ''}
+          <button class="btn btn-sec" data-rn-act="presets" title="${tr('Buka resep & template aturan')}">
+            <svg class="ico"><use href="#i-book"/></svg> ${tr('Resep Cepat')}
+          </button>
+          <button class="btn btn-sec" data-rn-act="save-preset" ${rules.length === 0 ? 'disabled style="opacity:.5"' : ''} title="${tr('Simpan susunan aturan ini sebagai resep baru')}">
+            <svg class="ico"><use href="#i-save"/></svg> ${tr('Simpan Resep')}
+          </button>
         </div>
       </div>
 
-      <!-- Sumber Berkas / Dropzone -->
+      <!-- Area Dropzone / Sumber Berkas -->
       ${files.length === 0 ? `
-        <div class="rn-dropzone" id="rn-dz">
-          <div class="rn-dz-icon">
-            <svg class="ico"><use href="#i-arch"/></svg>
+        <div class="rn-dropzone" id="rn-dropzone">
+          <div class="rn-drop-icon">
+            <svg class="ico" style="width:40px;height:40px"><use href="#i-arch"/></svg>
           </div>
-          <div class="rn-dz-title">${tr('Pilih Berkas, Folder, atau Berkas .ZIP')}</div>
-          <div class="rn-dz-desc">${tr('Tarik berkas atau .ZIP ke sini. Berkas ZIP akan otomatis diekstrak isinya. Diproses 100% di perangkat Anda.')}</div>
-          <div class="rn-dz-btns">
-            <button class="btn btn-pri" data-rn-act="pick-folder">
+          <div class="rn-drop-title">${tr('Tarik & letakkan berkas, folder, atau file .zip di sini')}</div>
+          <div class="rn-drop-sub">${tr('Bisa memproses foto kamera, musik MP3, dokumen, manga, hingga ribuan file seketika')}</div>
+          <div class="rn-drop-actions">
+            <button class="btn btn-pri" data-rn-act="pick-files">
+              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Pilih Berkas / ZIP')}
+            </button>
+            <button class="btn btn-sec" data-rn-act="pick-folder">
               <svg class="ico"><use href="#i-arch"/></svg> ${tr('Pilih Folder')}
             </button>
-            <button class="btn btn-sec" data-rn-act="pick-files">
-              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Pilih Berkas / .ZIP')}
-            </button>
-            <button class="btn btn-sec" data-rn-act="import-notes" title="${tr('Muat seluruh catatan yang ada di Hara untuk dirapikan / diekspor')}">
-              <svg class="ico"><use href="#i-note"/></svg> ${tr('Catatan Hara')}
+            <button class="btn btn-sec" data-rn-act="import-hara-notes" title="${tr('Impor seluruh catatan aktif di Hara ke Renamer')}">
+              <svg class="ico"><use href="#i-pen"/></svg> ${tr('Catatan Hara')}
             </button>
             <button class="btn btn-sec" data-rn-act="demo">
               <svg class="ico"><use href="#i-bulb"/></svg> ${tr('Muat Contoh')}
@@ -297,23 +415,26 @@ export function renamerView(state, pipelineResult) {
             <div class="rn-source-icon">
               <svg class="ico"><use href="#i-arch"/></svg>
             </div>
-            <div class="rn-source-text">
-              <div class="title">${tr('{n} berkas siap diolah', { n: files.length })}</div>
-              <div class="meta">${formatFileSize(totalSize)} · ${files[0].path ? esc(files[0].path) : tr('Penyimpanan lokal')}</div>
+            <div>
+              <div class="rn-source-title">${files.length} ${tr('Berkas Dimuat')}</div>
+              <div class="rn-source-meta">${formatFileSize(totalSize)} · ${files.filter(f => f.isZip).length > 0 ? tr('Termasuk arsip ZIP') : tr('Siap ditransformasikan')}</div>
             </div>
           </div>
-          <div class="rn-source-controls">
+          <div class="rn-actions-top">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:12px;color:var(--muted)">${tr('Urut:')}</span>
-              <select class="rn-select-clean" id="rn-sort-select" style="height:32px;width:auto;font-size:12px">
-                <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>Nama Asli (A–Z)</option>
-                <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>Nama Asli (Z–A)</option>
-                <option value="date-asc" ${sortBy === 'date-asc' ? 'selected' : ''}>Tanggal (Lama ➔ Baru)</option>
-                <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>Tanggal (Baru ➔ Lama)</option>
-                <option value="size-asc" ${sortBy === 'size-asc' ? 'selected' : ''}>Ukuran (Kecil ➔ Besar)</option>
-                <option value="size-desc" ${sortBy === 'size-desc' ? 'selected' : ''}>Ukuran (Besar ➔ Kecil)</option>
+              <span style="font-size:12px;color:var(--muted)">${tr('Urutkan Asal:')}</span>
+              <select class="rn-select-clean" id="rn-sort-select" style="height:32px;font-size:12px">
+                <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>${tr('Nama (A-Z, Alami 1,2,10)')}</option>
+                <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>${tr('Nama (Z-A)')}</option>
+                <option value="date-asc" ${sortBy === 'date-asc' ? 'selected' : ''}>${tr('Tanggal (Terlama)')}</option>
+                <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>${tr('Tanggal (Terbaru)')}</option>
+                <option value="size-asc" ${sortBy === 'size-asc' ? 'selected' : ''}>${tr('Ukuran (Terkecil)')}</option>
+                <option value="size-desc" ${sortBy === 'size-desc' ? 'selected' : ''}>${tr('Ukuran (Terbesar)')}</option>
               </select>
             </div>
+            <button class="btn btn-sec" data-rn-act="import-hara-notes" style="height:32px;font-size:12px" title="${tr('Impor seluruh catatan aktif di Hara ke Renamer')}">
+              <svg class="ico"><use href="#i-pen"/></svg> ${tr('+ Catatan')}
+            </button>
             <button class="btn btn-sec" data-rn-act="pick-files" style="height:32px;font-size:12px">
               <svg class="ico"><use href="#i-plus"/></svg> ${tr('Tambah / ZIP')}
             </button>
@@ -400,98 +521,17 @@ export function renamerView(state, pipelineResult) {
 
         <div class="rn-table-toolbar">
           <div class="rn-filter-tabs">
-            <button class="rn-filter-btn ${filter === 'all' ? 'active' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
-            <button class="rn-filter-btn ${filter === 'changed' ? 'active' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
-            <button class="rn-filter-btn ${filter === 'conflict' ? 'active' : ''}" data-rn-filter="conflict" style="${conflictCount > 0 ? 'color:var(--danger)' : ''}">
-              ${tr('Konflik / Error')} (${conflictCount + invalidCount})
-            </button>
+            ${renderFilterTabsContent(state, pipelineResult)}
           </div>
         </div>
 
         <div class="rn-table-container">
-          ${displayItems.length === 0 ? `
-            <div style="padding:40px;text-align:center;color:var(--muted)">
-              ${files.length === 0 ? tr('Belum ada berkas untuk dipratinjau') : tr('Tidak ada berkas yang sesuai filter')}
-            </div>
-          ` : `
-            <table class="rn-preview-table">
-              <thead>
-                <tr>
-                  <th style="width:5%;text-align:center">#</th>
-                  <th style="width:40%">${tr('Nama Asli')}</th>
-                  <th class="rn-arrow-cell"></th>
-                  <th style="width:40%">${tr('Nama Baru')}</th>
-                  <th style="width:15%;text-align:right">${tr('Status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${displayItems.map((item, rowIdx) => {
-                  const isChanged = item.status === FILE_STATUS.OK;
-                  const isConflict = item.status === FILE_STATUS.CONFLICT;
-                  const isInvalid = item.status === FILE_STATUS.INVALID;
-
-                  let badgeClass = 'rn-pill-same';
-                  let badgeText = tr('Sama');
-                  if (isChanged) {
-                    badgeClass = 'rn-pill-ok';
-                    badgeText = tr('Siap');
-                  } else if (isConflict) {
-                    badgeClass = 'rn-pill-conflict';
-                    badgeText = tr('Konflik');
-                  } else if (isInvalid) {
-                    badgeClass = 'rn-pill-invalid';
-                    badgeText = tr('Invalid');
-                  }
-
-                  return `
-                    <tr title="${item.errorMsg ? esc(item.errorMsg) : ''}">
-                      <td style="text-align:center;padding:6px 4px">
-                        <div style="display:flex;align-items:center;justify-content:center;gap:2px">
-                          <button class="rn-btn-micro" data-rn-act="file-up" data-rn-id="${item.id}" ${rowIdx === 0 ? 'disabled' : ''} title="${tr('Pindah ke atas')}">▲</button>
-                          <button class="rn-btn-micro" data-rn-act="file-down" data-rn-id="${item.id}" ${rowIdx === displayItems.length - 1 ? 'disabled' : ''} title="${tr('Pindah ke bawah')}">▼</button>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="rn-name-old">${esc(item.originalName)}</div>
-                      </td>
-                      <td class="rn-arrow-cell">➔</td>
-                      <td>
-                        <div class="rn-name-target ${isChanged ? 'is-changed' : ''}">${esc(item.newName)}</div>
-                        ${item.errorMsg ? `<div style="font-size:11px;color:var(--danger);margin-top:2px">${esc(item.errorMsg)}</div>` : ''}
-                      </td>
-                      <td style="text-align:right">
-                        <span class="rn-pill ${badgeClass}">${badgeText}</span>
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          `}
+          ${renderTableContainerContent(displayItems, files.length)}
         </div>
       </div>
 
       <!-- Bilah Aksi Bawah (Sticky Bottom Action Bar) -->
-      ${files.length > 0 ? `
-        <div class="rn-footer-bar">
-          <div class="rn-footer-info">
-            <b>${total}</b> ${tr('berkas')} · <span style="color:var(--accent)"><b>${changedCount}</b> ${tr('akan diubah')}</span>
-            ${conflictCount > 0 ? ` · <span class="rn-footer-error"><b>${conflictCount}</b> ${tr('konflik nama')}</span>` : ''}
-            ${invalidCount > 0 ? ` · <span class="rn-footer-error"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
-          </div>
-          <div class="rn-actions-top">
-            <button class="btn btn-sec" data-rn-act="config-zip-name" title="${tr('Ubah nama berkas .zip hasil unduhan')}">
-              <svg class="ico"><use href="#i-cog"/></svg> <span style="font-family:var(--mono);font-size:12px">${esc(state.exportZipName || 'Arsip_Terganti_Nama.zip')}</span>
-            </button>
-            <button class="btn btn-sec" data-rn-act="export-zip" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} title="${tr('Unduh semua berkas dengan nama baru ke berkas ZIP')}">
-              <svg class="ico"><use href="#i-dl"/></svg> ${tr('Unduh ZIP')}
-            </button>
-            <button class="btn btn-pri" data-rn-act="apply-rename" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>
-              <svg class="ico"><use href="#i-pen"/></svg> ${tr('Ganti Nama ({n} Berkas)', { n: changedCount })}
-            </button>
-          </div>
-        </div>
-      ` : ''}
+      ${renderFooterBar(state, pipelineResult)}
     </div>
   `;
 }
