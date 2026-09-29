@@ -1,17 +1,17 @@
 /**
- * Modul Bulk Renamer — Hara (Fase 5)
+ * Modul Bulk Renamer — Hara (Fase 5 + Auto-Unzip & Clean UI)
  *
  * Mengikuti kontrak modul Hara:
  * - registerViews ke router
  * - state management independen
- * - integrasi UI, preset, file picker, ZIP export, EXIF parser, dan engine
+ * - integrasi UI, preset, file picker, auto ZIP extractor, ZIP export, EXIF parser, dan engine
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929103335';
-import { toast } from '../core/toast.js?v=20260929103335';
-import { t as tr } from '../core/i18n.js?v=20260929103335';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929103335';
-import { unduh } from '../notes/data-io.js?v=20260929103335';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929104101';
+import { toast } from '../core/toast.js?v=20260929104101';
+import { t as tr } from '../core/i18n.js?v=20260929104101';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929104101';
+import { unduh } from '../notes/data-io.js?v=20260929104101';
 import {
   createRenamerItem,
   createRule,
@@ -20,11 +20,12 @@ import {
   RULE_METADATA,
   DEFAULT_PRESETS,
   FILE_STATUS,
-} from './model.js?v=20260929103335';
-import { runPipeline, sortFiles } from './engine.js?v=20260929103335';
-import { renamerView } from './view.js?v=20260929103335';
-import { createZipBlob } from './zip.js?v=20260929103335';
-import { parseExif } from './exif.js?v=20260929103335';
+} from './model.js?v=20260929104101';
+import { runPipeline, sortFiles } from './engine.js?v=20260929104101';
+import { renamerView } from './view.js?v=20260929104101';
+import { createZipBlob } from './zip.js?v=20260929104101';
+import { extractZip } from './unzip.js?v=20260929104101';
+import { parseExif } from './exif.js?v=20260929104101';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -143,6 +144,29 @@ async function pilihFolderWeb() {
       for await (const entry of dirHandle.values()) {
         if (entry.kind === 'file') {
           const file = await entry.getFile();
+
+          // Auto-ekstrak jika menemukan berkas .ZIP di dalam folder
+          if (file.name.toLowerCase().endsWith('.zip')) {
+            try {
+              const zipFiles = await extractZip(file);
+              for (const zf of zipFiles) {
+                const zBlob = new Blob([zf.data]);
+                const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
+                loaded.push(
+                  createRenamerItem({
+                    originalName: zf.name,
+                    size: zf.size,
+                    lastModified: zf.lastModified,
+                    path: file.name,
+                    file: zBlob,
+                    meta: { exif },
+                  })
+                );
+              }
+              continue;
+            } catch (err) {}
+          }
+
           const exif = await ekstrakExifItem(file);
           loaded.push(
             createRenamerItem({
@@ -184,12 +208,41 @@ function pilihBerkasBiasa() {
 }
 
 /**
- * Menangani pemilihan file dari input
+ * Menangani pemilihan file dari input (dengan Auto-Extract ZIP)
  */
 async function prosesInputFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
   const loaded = [];
+
   for (const file of Array.from(fileList)) {
+    // 1. Jika berkas adalah .ZIP, otomatis ekstrak semua isinya
+    if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip') {
+      try {
+        toast(tr('Mengekstrak isi dari {name}…', { name: file.name }));
+        const zipFiles = await extractZip(file);
+        for (const zf of zipFiles) {
+          const zBlob = new Blob([zf.data]);
+          const exif = /\.(jpe?g)$/i.test(zf.name) ? parseExif(zf.data) : null;
+          loaded.push(
+            createRenamerItem({
+              originalName: zf.name,
+              size: zf.size,
+              lastModified: zf.lastModified,
+              path: file.name,
+              file: zBlob,
+              meta: { exif },
+            })
+          );
+        }
+        toast(tr('Berhasil mengekstrak {n} berkas dari {name}', { n: zipFiles.length, name: file.name }));
+        continue;
+      } catch (err) {
+        console.error(err);
+        toast(tr('Gagal mengekstrak berkas ZIP: ') + err.message);
+      }
+    }
+
+    // 2. Berkas biasa
     const exif = await ekstrakExifItem(file);
     loaded.push(
       createRenamerItem({
@@ -202,6 +255,7 @@ async function prosesInputFiles(fileList) {
       })
     );
   }
+
   renamerState.files = sortFiles([...renamerState.files, ...loaded], renamerState.sortBy);
   toast(tr('{n} berkas ditambahkan', { n: loaded.length }));
   renderRenamerScreen();
@@ -365,9 +419,9 @@ function bukaDialogSimpanPreset(anchorEl) {
     <div class="rn-modal-box">
       <h3 class="rn-modal-title">${tr('Simpan Resep Aturan')}</h3>
       <p style="font-size:13px;color:var(--muted);margin:0">${tr('Simpan kombinasi aturan saat ini agar bisa dipakai kembali kapan saja.')}</p>
-      <div class="rn-input-group" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <div class="rn-field">
         <label>${tr('Nama Resep:')}</label>
-        <input type="text" class="rn-input" id="rn-preset-name-in" style="width:100%" placeholder="${tr('Misal: Format Foto Dokumentasi')}" autofocus>
+        <input type="text" class="rn-input-text" id="rn-preset-name-in" placeholder="${tr('Misal: Format Foto Dokumentasi')}" autofocus>
       </div>
       <div class="rn-actions-top" style="justify-content:flex-end;margin-top:10px">
         <button class="btn btn-sec" data-pop-close>${tr('Batal')}</button>

@@ -1,182 +1,196 @@
 /**
  * Tampilan & Antarmuka Pengguna Modul Bulk Renamer — Hara
+ *
+ * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20260929103335';
-import { t as tr } from '../core/i18n.js?v=20260929103335';
+import { esc } from '../core/dom.js?v=20260929104101';
+import { t as tr } from '../core/i18n.js?v=20260929104101';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929103335';
+} from './model.js?v=20260929104101';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
   switch (rule.type) {
     case RULE_TYPES.REPLACE:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Cari:')}</label>
-          <input type="text" class="rn-input" data-rn-param="find" data-rn-id="${rule.id}" value="${esc(p.find || '')}" placeholder="${tr('Teks / Regex ($1, $2)')}">
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Ganti jadi:')}</label>
-          <input type="text" class="rn-input" data-rn-param="replaceWith" data-rn-id="${rule.id}" value="${esc(p.replaceWith || '')}" placeholder="${tr('Teks baru')}">
-        </div>
-        <div class="rn-input-group" style="margin-left:auto">
-          <label><input type="checkbox" data-rn-param-bool="matchCase" data-rn-id="${rule.id}" ${p.matchCase ? 'checked' : ''}> ${tr('Huruf peka (Aa)')}</label>
-          <label style="margin-left:8px"><input type="checkbox" data-rn-param-bool="isRegex" data-rn-id="${rule.id}" ${p.isRegex ? 'checked' : ''}> Regex</label>
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Teks / Pola yang Dicari:')}</label>
+            <input type="text" class="rn-input-text" data-rn-param="find" data-rn-id="${rule.id}" value="${esc(p.find || '')}" placeholder="${tr('Misal: IMG_ atau (\\d+)')}">
+          </div>
+          <div class="rn-field">
+            <label>${tr('Ganti Menjadi:')}</label>
+            <input type="text" class="rn-input-text" data-rn-param="replaceWith" data-rn-id="${rule.id}" value="${esc(p.replaceWith || '')}" placeholder="${tr('Misal: Foto_ atau $1')}">
+          </div>
+          <div class="rn-field-inline" style="grid-column: 1 / -1; padding-top: 2px">
+            <label><input type="checkbox" data-rn-param-bool="matchCase" data-rn-id="${rule.id}" ${p.matchCase ? 'checked' : ''}> ${tr('Peka Huruf Besar/Kecil (Aa)')}</label>
+            <label style="margin-left: 12px"><input type="checkbox" data-rn-param-bool="isRegex" data-rn-id="${rule.id}" ${p.isRegex ? 'checked' : ''}> ${tr('Mode Regex ($1, $2)')}</label>
+          </div>
         </div>
       `;
 
     case RULE_TYPES.INSERT:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Teks:')}</label>
-          <input type="text" class="rn-input" data-rn-param="text" data-rn-id="${rule.id}" value="${esc(p.text || '')}" placeholder="${tr('Teks sisipan')}">
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Posisi:')}</label>
-          <select class="rn-select" data-rn-param="position" data-rn-id="${rule.id}">
-            <option value="prefix" ${p.position === 'prefix' ? 'selected' : ''}>${tr('Awalan (Depan)')}</option>
-            <option value="suffix" ${p.position === 'suffix' ? 'selected' : ''}>${tr('Akhiran (Belakang)')}</option>
-            <option value="index" ${p.position === 'index' ? 'selected' : ''}>${tr('Posisi Huruf ke-N')}</option>
-          </select>
-        </div>
-        ${p.position === 'index' ? `
-          <div class="rn-input-group">
-            <label>${tr('Indeks:')}</label>
-            <input type="number" class="rn-input" style="width:70px" data-rn-param="index" data-rn-id="${rule.id}" value="${p.index || 0}" min="0">
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Teks yang Disisipkan:')}</label>
+            <input type="text" class="rn-input-text" data-rn-param="text" data-rn-id="${rule.id}" value="${esc(p.text || '')}" placeholder="${tr('Misal: [Draf] atau _v1')}">
           </div>
-        ` : ''}
+          <div class="rn-field">
+            <label>${tr('Posisi Sisip:')}</label>
+            <select class="rn-select-clean" data-rn-param="position" data-rn-id="${rule.id}">
+              <option value="prefix" ${p.position === 'prefix' ? 'selected' : ''}>${tr('Awalan (Di Paling Depan)')}</option>
+              <option value="suffix" ${p.position === 'suffix' ? 'selected' : ''}>${tr('Akhiran (Di Belakang Nama)')}</option>
+              <option value="index" ${p.position === 'index' ? 'selected' : ''}>${tr('Posisi Karakter ke-N')}</option>
+            </select>
+          </div>
+          ${p.position === 'index' ? `
+            <div class="rn-field">
+              <label>${tr('Posisi Indeks Huruf:')}</label>
+              <input type="number" class="rn-input-text" data-rn-param="index" data-rn-id="${rule.id}" value="${p.index || 0}" min="0">
+            </div>
+          ` : ''}
+        </div>
       `;
 
     case RULE_TYPES.NUMBERING:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Mulai:')}</label>
-          <input type="number" class="rn-input" style="width:65px" data-rn-param="start" data-rn-id="${rule.id}" value="${p.start || 1}" min="0">
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Digit (001):')}</label>
-          <select class="rn-select" data-rn-param="digits" data-rn-id="${rule.id}">
-            <option value="1" ${p.digits === 1 ? 'selected' : ''}>1 (1, 2, 3)</option>
-            <option value="2" ${p.digits === 2 ? 'selected' : ''}>2 (01, 02)</option>
-            <option value="3" ${p.digits === 3 ? 'selected' : ''}>3 (001, 002)</option>
-            <option value="4" ${p.digits === 4 ? 'selected' : ''}>4 (0001, 0002)</option>
-          </select>
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Posisi:')}</label>
-          <select class="rn-select" data-rn-param="position" data-rn-id="${rule.id}">
-            <option value="suffix" ${p.position === 'suffix' ? 'selected' : ''}>${tr('Akhir Nama')}</option>
-            <option value="prefix" ${p.position === 'prefix' ? 'selected' : ''}>${tr('Awal Nama')}</option>
-            <option value="replace" ${p.position === 'replace' ? 'selected' : ''}>${tr('Ganti Seluruh Nama')}</option>
-          </select>
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Pemisah:')}</label>
-          <input type="text" class="rn-input" style="width:60px" data-rn-param="prefix" data-rn-id="${rule.id}" value="${esc(p.prefix || '')}" placeholder="_">
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Mulai dari Nomor:')}</label>
+            <input type="number" class="rn-input-text" data-rn-param="start" data-rn-id="${rule.id}" value="${p.start || 1}" min="0">
+          </div>
+          <div class="rn-field">
+            <label>${tr('Format Digit (Padding 0):')}</label>
+            <select class="rn-select-clean" data-rn-param="digits" data-rn-id="${rule.id}">
+              <option value="1" ${p.digits === 1 ? 'selected' : ''}>1 Digit (1, 2, 3...)</option>
+              <option value="2" ${p.digits === 2 ? 'selected' : ''}>2 Digit (01, 02, 03...)</option>
+              <option value="3" ${p.digits === 3 ? 'selected' : ''}>3 Digit (001, 002, 003...)</option>
+              <option value="4" ${p.digits === 4 ? 'selected' : ''}>4 Digit (0001, 0002...)</option>
+            </select>
+          </div>
+          <div class="rn-field">
+            <label>${tr('Posisi Nomor:')}</label>
+            <select class="rn-select-clean" data-rn-param="position" data-rn-id="${rule.id}">
+              <option value="suffix" ${p.position === 'suffix' ? 'selected' : ''}>${tr('Di Akhir Nama')}</option>
+              <option value="prefix" ${p.position === 'prefix' ? 'selected' : ''}>${tr('Di Awal Nama')}</option>
+              <option value="replace" ${p.position === 'replace' ? 'selected' : ''}>${tr('Ganti Seluruh Nama')}</option>
+            </select>
+          </div>
+          <div class="rn-field">
+            <label>${tr('Pemisah / Awalan:')}</label>
+            <input type="text" class="rn-input-text" data-rn-param="prefix" data-rn-id="${rule.id}" value="${esc(p.prefix !== undefined ? p.prefix : '_')}" placeholder="Misal: _ atau -">
+          </div>
         </div>
       `;
 
     case RULE_TYPES.CASE:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Ubah ke:')}</label>
-          <select class="rn-select" data-rn-param="format" data-rn-id="${rule.id}">
-            <option value="lower" ${p.format === 'lower' ? 'selected' : ''}>huruf kecil (lowercase)</option>
-            <option value="upper" ${p.format === 'upper' ? 'selected' : ''}>HURUF BESAR (UPPERCASE)</option>
-            <option value="title" ${p.format === 'title' ? 'selected' : ''}>Huruf Depan Besar (Title Case)</option>
-            <option value="sentence" ${p.format === 'sentence' ? 'selected' : ''}>Kalimat (Sentence case)</option>
-            <option value="kebab" ${p.format === 'kebab' ? 'selected' : ''}>kebab-case (pemisah strip)</option>
-            <option value="snake" ${p.format === 'snake' ? 'selected' : ''}>snake_case (pemisah garis bawah)</option>
-            <option value="camel" ${p.format === 'camel' ? 'selected' : ''}>camelCase</option>
-          </select>
-        </div>
-        <div class="rn-input-group">
-          <label>${tr('Target:')}</label>
-          <select class="rn-select" data-rn-param="target" data-rn-id="${rule.id}">
-            <option value="base" ${p.target === 'base' ? 'selected' : ''}>${tr('Nama Saja (tanpa ekstensi)')}</option>
-            <option value="ext" ${p.target === 'ext' ? 'selected' : ''}>${tr('Ekstensi Saja')}</option>
-            <option value="all" ${p.target === 'all' ? 'selected' : ''}>${tr('Semua (Nama & Ekstensi)')}</option>
-          </select>
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Ubah Format Huruf:')}</label>
+            <select class="rn-select-clean" data-rn-param="format" data-rn-id="${rule.id}">
+              <option value="lower" ${p.format === 'lower' ? 'selected' : ''}>huruf kecil (lowercase)</option>
+              <option value="upper" ${p.format === 'upper' ? 'selected' : ''}>HURUF BESAR (UPPERCASE)</option>
+              <option value="title" ${p.format === 'title' ? 'selected' : ''}>Huruf Depan Besar (Title Case)</option>
+              <option value="sentence" ${p.format === 'sentence' ? 'selected' : ''}>Kalimat Awal Besar (Sentence case)</option>
+              <option value="kebab" ${p.format === 'kebab' ? 'selected' : ''}>kebab-case (pemisah strip -)</option>
+              <option value="snake" ${p.format === 'snake' ? 'selected' : ''}>snake_case (pemisah garis bawah _)</option>
+              <option value="camel" ${p.format === 'camel' ? 'selected' : ''}>camelCase</option>
+            </select>
+          </div>
+          <div class="rn-field">
+            <label>${tr('Bagian yang Diubah:')}</label>
+            <select class="rn-select-clean" data-rn-param="target" data-rn-id="${rule.id}">
+              <option value="base" ${p.target === 'base' ? 'selected' : ''}>${tr('Nama Saja (Ekstensi Tetap)')}</option>
+              <option value="ext" ${p.target === 'ext' ? 'selected' : ''}>${tr('Ekstensi Saja')}</option>
+              <option value="all" ${p.target === 'all' ? 'selected' : ''}>${tr('Semua (Nama & Ekstensi)')}</option>
+            </select>
+          </div>
         </div>
       `;
 
     case RULE_TYPES.TRIM:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Mode Pangkas:')}</label>
-          <select class="rn-select" data-rn-param="mode" data-rn-id="${rule.id}">
-            <option value="spaces" ${p.mode === 'spaces' ? 'selected' : ''}>${tr('Rapikan Spasi Ganda & Ujung')}</option>
-            <option value="start" ${p.mode === 'start' ? 'selected' : ''}>${tr('Hapus N Karakter Awal')}</option>
-            <option value="end" ${p.mode === 'end' ? 'selected' : ''}>${tr('Hapus N Karakter Akhir')}</option>
-            <option value="chars" ${p.mode === 'chars' ? 'selected' : ''}>${tr('Hapus Karakter Khusus')}</option>
-          </select>
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Mode Pangkas:')}</label>
+            <select class="rn-select-clean" data-rn-param="mode" data-rn-id="${rule.id}">
+              <option value="spaces" ${p.mode === 'spaces' ? 'selected' : ''}>${tr('Rapikan Spasi Ganda & Ujung')}</option>
+              <option value="start" ${p.mode === 'start' ? 'selected' : ''}>${tr('Hapus N Karakter Awal')}</option>
+              <option value="end" ${p.mode === 'end' ? 'selected' : ''}>${tr('Hapus N Karakter Akhir')}</option>
+              <option value="chars" ${p.mode === 'chars' ? 'selected' : ''}>${tr('Hapus Karakter Khusus Tertentu')}</option>
+            </select>
+          </div>
+          ${p.mode === 'start' || p.mode === 'end' ? `
+            <div class="rn-field">
+              <label>${tr('Jumlah Karakter:')}</label>
+              <input type="number" class="rn-input-text" data-rn-param="count" data-rn-id="${rule.id}" value="${p.count || 0}" min="1">
+            </div>
+          ` : ''}
+          ${p.mode === 'chars' ? `
+            <div class="rn-field">
+              <label>${tr('Karakter yang Dihapus:')}</label>
+              <input type="text" class="rn-input-text" data-rn-param="chars" data-rn-id="${rule.id}" value="${esc(p.chars || '')}" placeholder="Misal: -_">
+            </div>
+          ` : ''}
         </div>
-        ${p.mode === 'start' || p.mode === 'end' ? `
-          <div class="rn-input-group">
-            <label>${tr('Jumlah Karakter:')}</label>
-            <input type="number" class="rn-input" style="width:70px" data-rn-param="count" data-rn-id="${rule.id}" value="${p.count || 0}" min="1">
-          </div>
-        ` : ''}
-        ${p.mode === 'chars' ? `
-          <div class="rn-input-group">
-            <label>${tr('Karakter:')}</label>
-            <input type="text" class="rn-input" style="width:100px" data-rn-param="chars" data-rn-id="${rule.id}" value="${esc(p.chars || '')}" placeholder="-_">
-          </div>
-        ` : ''}
       `;
 
     case RULE_TYPES.EXTENSION:
       return `
-        <div class="rn-input-group">
-          <label>${tr('Aksi Ekstensi:')}</label>
-          <select class="rn-select" data-rn-param="mode" data-rn-id="${rule.id}">
-            <option value="lower" ${p.mode === 'lower' ? 'selected' : ''}>${tr('Seragamkan Huruf Kecil (.jpg)')}</option>
-            <option value="upper" ${p.mode === 'upper' ? 'selected' : ''}>${tr('Seragamkan Huruf Besar (.JPG)')}</option>
-            <option value="change" ${p.mode === 'change' ? 'selected' : ''}>${tr('Ganti Ekstensi Baru')}</option>
-            <option value="remove" ${p.mode === 'remove' ? 'selected' : ''}>${tr('Hapus Ekstensi')}</option>
-          </select>
-        </div>
-        ${p.mode === 'change' ? `
-          <div class="rn-input-group">
-            <label>${tr('Ekstensi Baru:')}</label>
-            <input type="text" class="rn-input" style="width:80px" data-rn-param="newExt" data-rn-id="${rule.id}" value="${esc(p.newExt || '')}" placeholder="png">
+        <div class="rn-form-grid">
+          <div class="rn-field">
+            <label>${tr('Aksi Ekstensi:')}</label>
+            <select class="rn-select-clean" data-rn-param="mode" data-rn-id="${rule.id}">
+              <option value="lower" ${p.mode === 'lower' ? 'selected' : ''}>${tr('Seragamkan Huruf Kecil (.jpg)')}</option>
+              <option value="upper" ${p.mode === 'upper' ? 'selected' : ''}>${tr('Seragamkan Huruf Besar (.JPG)')}</option>
+              <option value="change" ${p.mode === 'change' ? 'selected' : ''}>${tr('Ganti Ekstensi Baru')}</option>
+              <option value="remove" ${p.mode === 'remove' ? 'selected' : ''}>${tr('Hapus Ekstensi')}</option>
+            </select>
           </div>
-        ` : ''}
+          ${p.mode === 'change' ? `
+            <div class="rn-field">
+              <label>${tr('Ekstensi Baru (tanpa titik):')}</label>
+              <input type="text" class="rn-input-text" data-rn-param="newExt" data-rn-id="${rule.id}" value="${esc(p.newExt || '')}" placeholder="png">
+            </div>
+          ` : ''}
+        </div>
       `;
 
     case RULE_TYPES.CLEAN:
       return `
-        <div class="rn-input-group" style="flex-wrap:wrap;gap:12px">
-          <label><input type="checkbox" data-rn-param-bool="removeWebSpam" data-rn-id="${rule.id}" ${p.removeWebSpam ? 'checked' : ''}> ${tr('Bersihkan %20 dan kode web')}</label>
-          <label><input type="checkbox" data-rn-param-bool="collapseSpaces" data-rn-id="${rule.id}" ${p.collapseSpaces ? 'checked' : ''}> ${tr('Rapikan spasi/garis bawah berlebih')}</label>
-          <label><input type="checkbox" data-rn-param-bool="sanitizeOS" data-rn-id="${rule.id}" ${p.sanitizeOS ? 'checked' : ''}> ${tr('Hapus karakter ilegal OS')}</label>
-          <label><input type="checkbox" data-rn-param-bool="removeBrackets" data-rn-id="${rule.id}" ${p.removeBrackets ? 'checked' : ''}> ${tr('Hapus tanda kurung [ ] ( )')}</label>
+        <div class="rn-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+          <label class="rn-field-inline"><input type="checkbox" data-rn-param-bool="removeWebSpam" data-rn-id="${rule.id}" ${p.removeWebSpam ? 'checked' : ''}> ${tr('Bersihkan %20 dan kode URL')}</label>
+          <label class="rn-field-inline"><input type="checkbox" data-rn-param-bool="collapseSpaces" data-rn-id="${rule.id}" ${p.collapseSpaces ? 'checked' : ''}> ${tr('Rapikan spasi / strip berlebih')}</label>
+          <label class="rn-field-inline"><input type="checkbox" data-rn-param-bool="sanitizeOS" data-rn-id="${rule.id}" ${p.sanitizeOS ? 'checked' : ''}> ${tr('Sanitasi karakter terlarang OS')}</label>
+          <label class="rn-field-inline"><input type="checkbox" data-rn-param-bool="removeBrackets" data-rn-id="${rule.id}" ${p.removeBrackets ? 'checked' : ''}> ${tr('Hapus tanda kurung [ ] ( )')}</label>
         </div>
       `;
 
     case RULE_TYPES.TOKEN:
       return `
-        <div class="rn-input-group" style="width:100%">
-          <label>${tr('Pola:')}</label>
-          <input type="text" class="rn-input" style="flex:1" data-rn-param="pattern" data-rn-id="${rule.id}" value="${esc(p.pattern || '{name}_{num}')}" placeholder="{date}_{name}_{num}">
-        </div>
-        <div style="font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
-          <span>${tr('Token tersedia:')}</span>
-          <code style="cursor:pointer" data-rn-insert-token="{name}">{name}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{num}">{num}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{date}">{date}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{time}">{time}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{year}">{year}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{month}">{month}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{day}">{day}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{size}">{size}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{ext}">{ext}</code>
-          <code style="cursor:pointer" data-rn-insert-token="{parent}">{parent}</code>
+        <div class="rn-form-grid">
+          <div class="rn-field" style="grid-column: 1 / -1">
+            <label>${tr('Pola Format Berkas:')}</label>
+            <input type="text" class="rn-input-text" data-rn-param="pattern" data-rn-id="${rule.id}" value="${esc(p.pattern || '{name}_{num}')}" placeholder="{date}_{name}_{num}">
+          </div>
+          <div class="rn-tokens-bar">
+            <span style="font-size:11.5px;color:var(--muted);margin-right:2px">${tr('Klik untuk menyisipkan token:')}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{name}">{name}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{num}">{num}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{date}">{date}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{time}">{time}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{camera}">{camera}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{size}">{size}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{ext}">{ext}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{parent}">{parent}</span>
+          </div>
         </div>
       `;
 
@@ -191,6 +205,7 @@ export function renamerView(state, pipelineResult) {
     rules = [],
     filter = 'all',
     searchQuery = '',
+    sortBy = 'name-asc',
     collisionStrategy = 'warn',
     hasUndo = false,
   } = state;
@@ -227,7 +242,7 @@ export function renamerView(state, pipelineResult) {
       <div class="rn-head">
         <div class="rn-title-group">
           <h2>${tr('Ganti Nama Massal')}</h2>
-          <p>${tr('Ubah dan rapikan nama banyak berkas sekaligus dengan aman & live preview')}</p>
+          <p>${tr('Ubah dan rapikan nama banyak berkas atau isi ZIP secara terstruktur & aman')}</p>
         </div>
         <div class="rn-actions-top">
           <button class="btn btn-sec" data-rn-act="demo" title="${tr('Coba langsung dengan data contoh')}">
@@ -253,14 +268,14 @@ export function renamerView(state, pipelineResult) {
           <div class="rn-dz-icon">
             <svg class="ico"><use href="#i-arch"/></svg>
           </div>
-          <div class="rn-dz-title">${tr('Pilih Berkas atau Folder untuk Diganti Nama')}</div>
-          <div class="rn-dz-desc">${tr('Tarik berkas ke sini, atau pilih dari penyimpanan perangkat. Semua diproses langsung di perangkat Anda (local-first).')}</div>
+          <div class="rn-dz-title">${tr('Pilih Berkas, Folder, atau Berkas .ZIP')}</div>
+          <div class="rn-dz-desc">${tr('Tarik berkas atau .ZIP ke sini. Berkas ZIP akan otomatis diekstrak isinya. Diproses 100% di perangkat Anda.')}</div>
           <div class="rn-dz-btns">
             <button class="btn btn-pri" data-rn-act="pick-folder">
               <svg class="ico"><use href="#i-arch"/></svg> ${tr('Pilih Folder')}
             </button>
             <button class="btn btn-sec" data-rn-act="pick-files">
-              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Pilih Berkas')}
+              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Pilih Berkas / .ZIP')}
             </button>
             <button class="btn btn-sec" data-rn-act="demo">
               <svg class="ico"><use href="#i-bulb"/></svg> ${tr('Muat Berkas Contoh')}
@@ -276,27 +291,27 @@ export function renamerView(state, pipelineResult) {
               <svg class="ico"><use href="#i-arch"/></svg>
             </div>
             <div class="rn-source-text">
-              <div class="title">${tr('{n} berkas dipilih', { n: files.length })}</div>
-              <div class="meta">${formatFileSize(totalSize)} · ${files[0].path ? files[0].path : tr('Penyimpanan lokal')}</div>
+              <div class="title">${tr('{n} berkas siap diolah', { n: files.length })}</div>
+              <div class="meta">${formatFileSize(totalSize)} · ${files[0].path ? esc(files[0].path) : tr('Penyimpanan lokal')}</div>
             </div>
           </div>
-          <div class="rn-actions-top">
-            <div class="rn-input-group">
-              <label style="font-size:12px;color:var(--muted)">${tr('Urutkan:')}</label>
-              <select class="rn-select" id="rn-sort-select" style="height:32px;font-size:12px">
-                <option value="name-asc" ${state.sortBy === 'name-asc' ? 'selected' : ''}>Nama Asli (A–Z)</option>
-                <option value="name-desc" ${state.sortBy === 'name-desc' ? 'selected' : ''}>Nama Asli (Z–A)</option>
-                <option value="date-asc" ${state.sortBy === 'date-asc' ? 'selected' : ''}>Tanggal (Lama ➔ Baru)</option>
-                <option value="date-desc" ${state.sortBy === 'date-desc' ? 'selected' : ''}>Tanggal (Baru ➔ Lama)</option>
-                <option value="size-asc" ${state.sortBy === 'size-asc' ? 'selected' : ''}>Ukuran (Kecil ➔ Besar)</option>
-                <option value="size-desc" ${state.sortBy === 'size-desc' ? 'selected' : ''}>Ukuran (Besar ➔ Kecil)</option>
+          <div class="rn-source-controls">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:var(--muted)">${tr('Urut:')}</span>
+              <select class="rn-select-clean" id="rn-sort-select" style="height:32px;width:auto;font-size:12px">
+                <option value="name-asc" ${sortBy === 'name-asc' ? 'selected' : ''}>Nama Asli (A–Z)</option>
+                <option value="name-desc" ${sortBy === 'name-desc' ? 'selected' : ''}>Nama Asli (Z–A)</option>
+                <option value="date-asc" ${sortBy === 'date-asc' ? 'selected' : ''}>Tanggal (Lama ➔ Baru)</option>
+                <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>Tanggal (Baru ➔ Lama)</option>
+                <option value="size-asc" ${sortBy === 'size-asc' ? 'selected' : ''}>Ukuran (Kecil ➔ Besar)</option>
+                <option value="size-desc" ${sortBy === 'size-desc' ? 'selected' : ''}>Ukuran (Besar ➔ Kecil)</option>
               </select>
             </div>
             <button class="btn btn-sec" data-rn-act="pick-files" style="height:32px;font-size:12px">
-              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Tambah')}
+              <svg class="ico"><use href="#i-plus"/></svg> ${tr('Tambah / ZIP')}
             </button>
             <button class="btn btn-sec" data-rn-act="pick-folder" style="height:32px;font-size:12px">
-              <svg class="ico"><use href="#i-arch"/></svg> ${tr('Ganti Folder')}
+              <svg class="ico"><use href="#i-arch"/></svg> ${tr('Folder')}
             </button>
             <button class="btn btn-sec" data-rn-act="clear-files" style="height:32px;font-size:12px;color:var(--danger)">
               <svg class="ico"><use href="#i-trash"/></svg> ${tr('Kosongkan')}
@@ -308,17 +323,17 @@ export function renamerView(state, pipelineResult) {
       `}
 
       <!-- Rantai Aturan (Pipeline Builder) -->
-      <div class="rn-section-card">
-        <div class="rn-sec-header">
-          <div class="rn-sec-title">
-            <svg class="ico" style="color:var(--accent)"><use href="#i-listol"/></svg>
+      <div class="rn-card">
+        <div class="rn-card-head">
+          <div class="rn-card-title">
+            <svg class="ico"><use href="#i-listol"/></svg>
             ${tr('Aturan Transformasi (Pipeline)')}
             <span class="chip chip-a">${rules.filter(r => r.enabled).length}/${rules.length}</span>
           </div>
           <div class="rn-actions-top">
-            <div class="rn-input-group" style="margin-right:4px">
-              <label style="font-size:12px;color:var(--muted)">${tr('Resolusi Konflik:')}</label>
-              <select class="rn-select" id="rn-collision-select" style="height:30px;font-size:12px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:var(--muted)">${tr('Konflik:')}</span>
+              <select class="rn-select-clean" id="rn-collision-select" style="height:30px;width:auto;font-size:12px">
                 <option value="warn" ${collisionStrategy === 'warn' ? 'selected' : ''}>${tr('Peringatkan / Blokir')}</option>
                 <option value="auto-number-parens" ${collisionStrategy === 'auto-number-parens' ? 'selected' : ''}>${tr('Auto-nomor (1), (2)')}</option>
                 <option value="auto-number-underscore" ${collisionStrategy === 'auto-number-underscore' ? 'selected' : ''}>${tr('Auto-nomor _1, _2')}</option>
@@ -338,23 +353,24 @@ export function renamerView(state, pipelineResult) {
           ` : rules.map((rule, idx) => {
             const meta = RULE_METADATA[rule.type] || { label: rule.type, icon: 'i-cog' };
             return `
-              <div class="rn-rule-card ${rule.enabled ? '' : 'disabled'}" data-rule-card="${rule.id}">
-                <div class="rn-rule-head">
-                  <div class="rn-rule-reorder">
-                    <button class="rn-btn-micro" data-rn-act="move-up" data-rn-id="${rule.id}" ${idx === 0 ? 'disabled style="opacity:.3"' : ''} title="${tr('Pindah ke atas')}">▲</button>
-                    <button class="rn-btn-micro" data-rn-act="move-down" data-rn-id="${rule.id}" ${idx === rules.length - 1 ? 'disabled style="opacity:.3"' : ''} title="${tr('Pindah ke bawah')}">▼</button>
+              <div class="rn-rule-item ${rule.enabled ? '' : 'disabled'}" data-rule-card="${rule.id}">
+                <div class="rn-rule-header-row">
+                  <div class="rn-rule-left">
+                    <div class="rn-rule-order-btns">
+                      <button class="rn-btn-micro" data-rn-act="move-up" data-rn-id="${rule.id}" ${idx === 0 ? 'disabled' : ''} title="${tr('Pindah ke atas')}">▲</button>
+                      <button class="rn-btn-micro" data-rn-act="move-down" data-rn-id="${rule.id}" ${idx === rules.length - 1 ? 'disabled' : ''} title="${tr('Pindah ke bawah')}">▼</button>
+                    </div>
+                    <input type="checkbox" data-rn-act="toggle-rule" data-rn-id="${rule.id}" ${rule.enabled ? 'checked' : ''} title="${tr('Aktifkan/nonaktifkan aturan')}" style="cursor:pointer">
+                    <span class="rn-rule-tag">${meta.label}</span>
+                    <span class="rn-rule-desc">${meta.desc}</span>
                   </div>
-                  <input type="checkbox" data-rn-act="toggle-rule" data-rn-id="${rule.id}" ${rule.enabled ? 'checked' : ''} title="${tr('Aktifkan/nonaktifkan aturan')}">
-                  <div class="rn-rule-info">
-                    <span class="rn-rule-type-badge">${meta.label}</span>
-                  </div>
-                  <div class="rn-rule-actions">
+                  <div>
                     <button class="rn-btn-micro" data-rn-act="del-rule" data-rn-id="${rule.id}" title="${tr('Hapus aturan')}" style="color:var(--danger)">
-                      <svg class="ico" style="width:14px;height:14px"><use href="#i-x"/></svg>
+                      <svg class="ico" style="width:13px;height:13px"><use href="#i-x"/></svg>
                     </button>
                   </div>
                 </div>
-                <div class="rn-rule-body">
+                <div>
                   ${renderRuleInputs(rule)}
                 </div>
               </div>
@@ -364,38 +380,40 @@ export function renamerView(state, pipelineResult) {
       </div>
 
       <!-- Live Preview Table -->
-      <div class="rn-section-card">
-        <div class="rn-sec-header">
-          <div class="rn-sec-title">
-            <svg class="ico" style="color:var(--accent)"><use href="#i-search"/></svg>
+      <div class="rn-card">
+        <div class="rn-card-head">
+          <div class="rn-card-title">
+            <svg class="ico"><use href="#i-search"/></svg>
             ${tr('Live Preview')}
           </div>
           <div class="rn-actions-top">
-            <input type="text" class="rn-input" id="rn-search-preview" style="height:30px;width:180px;font-size:12px" placeholder="${tr('Cari di hasil...')}" value="${esc(searchQuery)}">
+            <input type="text" class="rn-input-text" id="rn-search-preview" style="height:30px;width:180px;font-size:12px" placeholder="${tr('Saring hasil...')}" value="${esc(searchQuery)}">
           </div>
         </div>
 
-        <div class="rn-preview-tabs">
-          <button class="rn-tab ${filter === 'all' ? 'on' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
-          <button class="rn-tab ${filter === 'changed' ? 'on' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
-          <button class="rn-tab ${filter === 'conflict' ? 'on' : ''}" data-rn-filter="conflict" style="${conflictCount > 0 ? 'color:var(--danger)' : ''}">
-            ${tr('Konflik / Invalid')} (${conflictCount + invalidCount})
-          </button>
+        <div class="rn-table-toolbar">
+          <div class="rn-filter-tabs">
+            <button class="rn-filter-btn ${filter === 'all' ? 'active' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
+            <button class="rn-filter-btn ${filter === 'changed' ? 'active' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
+            <button class="rn-filter-btn ${filter === 'conflict' ? 'active' : ''}" data-rn-filter="conflict" style="${conflictCount > 0 ? 'color:var(--danger)' : ''}">
+              ${tr('Konflik / Error')} (${conflictCount + invalidCount})
+            </button>
+          </div>
         </div>
 
-        <div class="rn-table-wrap">
+        <div class="rn-table-container">
           ${displayItems.length === 0 ? `
             <div style="padding:40px;text-align:center;color:var(--muted)">
               ${files.length === 0 ? tr('Belum ada berkas untuk dipratinjau') : tr('Tidak ada berkas yang sesuai filter')}
             </div>
           ` : `
-            <table class="rn-table">
+            <table class="rn-preview-table">
               <thead>
                 <tr>
-                  <th style="width:42%">${tr('Nama Asli')}</th>
-                  <th style="width:5%;text-align:center"></th>
-                  <th style="width:42%">${tr('Nama Baru')}</th>
-                  <th style="width:11%;text-align:right">${tr('Status')}</th>
+                  <th style="width:43%">${tr('Nama Asli')}</th>
+                  <th class="rn-arrow-cell"></th>
+                  <th style="width:43%">${tr('Nama Baru')}</th>
+                  <th style="width:14%;text-align:right">${tr('Status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -404,33 +422,31 @@ export function renamerView(state, pipelineResult) {
                   const isConflict = item.status === FILE_STATUS.CONFLICT;
                   const isInvalid = item.status === FILE_STATUS.INVALID;
 
-                  let badgeClass = 'rn-badge-unchanged';
+                  let badgeClass = 'rn-pill-same';
                   let badgeText = tr('Sama');
                   if (isChanged) {
-                    badgeClass = 'rn-badge-ok';
+                    badgeClass = 'rn-pill-ok';
                     badgeText = tr('Siap');
                   } else if (isConflict) {
-                    badgeClass = 'rn-badge-conflict';
+                    badgeClass = 'rn-pill-conflict';
                     badgeText = tr('Konflik');
                   } else if (isInvalid) {
-                    badgeClass = 'rn-badge-invalid';
+                    badgeClass = 'rn-pill-invalid';
                     badgeText = tr('Invalid');
                   }
 
                   return `
                     <tr title="${item.errorMsg ? esc(item.errorMsg) : ''}">
                       <td>
-                        <div class="rn-name-orig">${esc(item.originalName)}</div>
+                        <div class="rn-name-old">${esc(item.originalName)}</div>
                       </td>
-                      <td style="text-align:center">
-                        <span class="rn-arrow">➔</span>
-                      </td>
+                      <td class="rn-arrow-cell">➔</td>
                       <td>
-                        <div class="rn-name-new ${isChanged ? 'changed' : ''}">${esc(item.newName)}</div>
+                        <div class="rn-name-target ${isChanged ? 'is-changed' : ''}">${esc(item.newName)}</div>
                         ${item.errorMsg ? `<div style="font-size:11px;color:var(--danger);margin-top:2px">${esc(item.errorMsg)}</div>` : ''}
                       </td>
                       <td style="text-align:right">
-                        <span class="rn-badge ${badgeClass}">${badgeText}</span>
+                        <span class="rn-pill ${badgeClass}">${badgeText}</span>
                       </td>
                     </tr>
                   `;
@@ -443,11 +459,11 @@ export function renamerView(state, pipelineResult) {
 
       <!-- Bilah Aksi Bawah (Sticky Bottom Action Bar) -->
       ${files.length > 0 ? `
-        <div class="rn-bottom-bar">
-          <div class="rn-summary">
+        <div class="rn-footer-bar">
+          <div class="rn-footer-info">
             <b>${total}</b> ${tr('berkas')} · <span style="color:var(--accent)"><b>${changedCount}</b> ${tr('akan diubah')}</span>
-            ${conflictCount > 0 ? ` · <span class="rn-summary-err"><b>${conflictCount}</b> ${tr('konflik terdeteksi!')}</span>` : ''}
-            ${invalidCount > 0 ? ` · <span class="rn-summary-err"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
+            ${conflictCount > 0 ? ` · <span class="rn-footer-error"><b>${conflictCount}</b> ${tr('konflik nama')}</span>` : ''}
+            ${invalidCount > 0 ? ` · <span class="rn-footer-error"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
           </div>
           <div class="rn-actions-top">
             <button class="btn btn-sec" data-rn-act="export-zip" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} title="${tr('Unduh semua berkas dengan nama baru ke berkas ZIP')}">
