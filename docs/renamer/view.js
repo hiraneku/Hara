@@ -2,14 +2,14 @@
  * Tampilan & Antarmuka Pengguna Modul Bulk Renamer — Hara
  */
 
-import { esc } from '../core/dom.js?v=20260929101703';
-import { t as tr } from '../core/i18n.js?v=20260929101703';
+import { esc } from '../core/dom.js?v=20260929102205';
+import { t as tr } from '../core/i18n.js?v=20260929102205';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929101703';
+} from './model.js?v=20260929102205';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -18,7 +18,7 @@ export function renderRuleInputs(rule) {
       return `
         <div class="rn-input-group">
           <label>${tr('Cari:')}</label>
-          <input type="text" class="rn-input" data-rn-param="find" data-rn-id="${rule.id}" value="${esc(p.find || '')}" placeholder="${tr('Teks yang dicari')}">
+          <input type="text" class="rn-input" data-rn-param="find" data-rn-id="${rule.id}" value="${esc(p.find || '')}" placeholder="${tr('Teks / Regex ($1, $2)')}">
         </div>
         <div class="rn-input-group">
           <label>${tr('Ganti jadi:')}</label>
@@ -170,6 +170,11 @@ export function renderRuleInputs(rule) {
           <code style="cursor:pointer" data-rn-insert-token="{name}">{name}</code>
           <code style="cursor:pointer" data-rn-insert-token="{num}">{num}</code>
           <code style="cursor:pointer" data-rn-insert-token="{date}">{date}</code>
+          <code style="cursor:pointer" data-rn-insert-token="{time}">{time}</code>
+          <code style="cursor:pointer" data-rn-insert-token="{year}">{year}</code>
+          <code style="cursor:pointer" data-rn-insert-token="{month}">{month}</code>
+          <code style="cursor:pointer" data-rn-insert-token="{day}">{day}</code>
+          <code style="cursor:pointer" data-rn-insert-token="{size}">{size}</code>
           <code style="cursor:pointer" data-rn-insert-token="{ext}">{ext}</code>
           <code style="cursor:pointer" data-rn-insert-token="{parent}">{parent}</code>
         </div>
@@ -181,8 +186,22 @@ export function renderRuleInputs(rule) {
 }
 
 export function renamerView(state, pipelineResult) {
-  const { files = [], rules = [], filter = 'all', hasUndo = false } = state;
-  const { items = [], total = 0, changedCount = 0, conflictCount = 0, invalidCount = 0, hasErrors = false } = pipelineResult;
+  const {
+    files = [],
+    rules = [],
+    filter = 'all',
+    searchQuery = '',
+    collisionStrategy = 'warn',
+    hasUndo = false,
+  } = state;
+  const {
+    items = [],
+    total = 0,
+    changedCount = 0,
+    conflictCount = 0,
+    invalidCount = 0,
+    hasErrors = false,
+  } = pipelineResult;
 
   const totalSize = files.reduce((acc, f) => acc + (f.size || 0), 0);
 
@@ -192,6 +211,14 @@ export function renamerView(state, pipelineResult) {
     displayItems = items.filter(x => x.status === FILE_STATUS.OK);
   } else if (filter === 'conflict') {
     displayItems = items.filter(x => x.status === FILE_STATUS.CONFLICT || x.status === FILE_STATUS.INVALID);
+  }
+
+  // Filter pencarian
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    displayItems = displayItems.filter(
+      x => x.originalName.toLowerCase().includes(q) || x.newName.toLowerCase().includes(q)
+    );
   }
 
   return `
@@ -208,6 +235,9 @@ export function renamerView(state, pipelineResult) {
           </button>
           <button class="btn btn-sec" data-rn-act="presets" title="${tr('Gunakan resep siap pakai')}">
             <svg class="ico"><use href="#i-tpl"/></svg> ${tr('Resep Cepat')}
+          </button>
+          <button class="btn btn-sec" data-rn-act="save-preset" title="${tr('Simpan susunan aturan ini sebagai resep kustom')}">
+            <svg class="ico"><use href="#i-copy"/></svg> ${tr('Simpan Resep')}
           </button>
           ${hasUndo ? `
             <button class="btn btn-sec" data-rn-act="undo" title="${tr('Batalkan ganti nama terakhir')}">
@@ -275,6 +305,14 @@ export function renamerView(state, pipelineResult) {
             <span class="chip chip-a">${rules.filter(r => r.enabled).length}/${rules.length}</span>
           </div>
           <div class="rn-actions-top">
+            <div class="rn-input-group" style="margin-right:4px">
+              <label style="font-size:12px;color:var(--muted)">${tr('Resolusi Konflik:')}</label>
+              <select class="rn-select" id="rn-collision-select" style="height:30px;font-size:12px">
+                <option value="warn" ${collisionStrategy === 'warn' ? 'selected' : ''}>${tr('Peringatkan / Blokir')}</option>
+                <option value="auto-number-parens" ${collisionStrategy === 'auto-number-parens' ? 'selected' : ''}>${tr('Auto-nomor (1), (2)')}</option>
+                <option value="auto-number-underscore" ${collisionStrategy === 'auto-number-underscore' ? 'selected' : ''}>${tr('Auto-nomor _1, _2')}</option>
+              </select>
+            </div>
             <button class="btn btn-sec" data-rn-act="add-rule" style="height:30px;font-size:12px">
               <svg class="ico"><use href="#i-plus"/></svg> ${tr('Tambah Aturan')}
             </button>
@@ -321,13 +359,17 @@ export function renamerView(state, pipelineResult) {
             <svg class="ico" style="color:var(--accent)"><use href="#i-search"/></svg>
             ${tr('Live Preview')}
           </div>
-          <div class="rn-preview-tabs">
-            <button class="rn-tab ${filter === 'all' ? 'on' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
-            <button class="rn-tab ${filter === 'changed' ? 'on' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
-            <button class="rn-tab ${filter === 'conflict' ? 'on' : ''}" data-rn-filter="conflict" style="${conflictCount > 0 ? 'color:var(--danger)' : ''}">
-              ${tr('Konflik')} (${conflictCount + invalidCount})
-            </button>
+          <div class="rn-actions-top">
+            <input type="text" class="rn-input" id="rn-search-preview" style="height:30px;width:180px;font-size:12px" placeholder="${tr('Cari di hasil...')}" value="${esc(searchQuery)}">
           </div>
+        </div>
+
+        <div class="rn-preview-tabs">
+          <button class="rn-tab ${filter === 'all' ? 'on' : ''}" data-rn-filter="all">${tr('Semua')} (${total})</button>
+          <button class="rn-tab ${filter === 'changed' ? 'on' : ''}" data-rn-filter="changed">${tr('Berubah')} (${changedCount})</button>
+          <button class="rn-tab ${filter === 'conflict' ? 'on' : ''}" data-rn-filter="conflict" style="${conflictCount > 0 ? 'color:var(--danger)' : ''}">
+            ${tr('Konflik / Invalid')} (${conflictCount + invalidCount})
+          </button>
         </div>
 
         <div class="rn-table-wrap">
@@ -394,8 +436,12 @@ export function renamerView(state, pipelineResult) {
           <div class="rn-summary">
             <b>${total}</b> ${tr('berkas')} · <span style="color:var(--accent)"><b>${changedCount}</b> ${tr('akan diubah')}</span>
             ${conflictCount > 0 ? ` · <span class="rn-summary-err"><b>${conflictCount}</b> ${tr('konflik terdeteksi!')}</span>` : ''}
+            ${invalidCount > 0 ? ` · <span class="rn-summary-err"><b>${invalidCount}</b> ${tr('tidak valid')}</span>` : ''}
           </div>
           <div class="rn-actions-top">
+            <button class="btn btn-sec" data-rn-act="export-zip" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} title="${tr('Unduh semua berkas dengan nama baru ke berkas ZIP')}">
+              <svg class="ico"><use href="#i-dl"/></svg> ${tr('Unduh ZIP')}
+            </button>
             <button class="btn btn-pri" data-rn-act="apply-rename" ${hasErrors || changedCount === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>
               <svg class="ico"><use href="#i-pen"/></svg> ${tr('Ganti Nama ({n} Berkas)', { n: changedCount })}
             </button>

@@ -78,3 +78,17 @@
 - [ ] I33. Ditahan: dokumen rencana jangka panjang (`docs/PLAN.md`, `docs/NOTES.md`,
       `docs/DESIGN.md`, `docs/deploy/APK.md`) dan data terjemahan lama
       (`tools/en/*.json`) — dibiarkan sampai pengguna memutuskan.
+
+## Bagian J — Modul Bulk Renamer (SELESAI)
+- [x] J34. Modul Ganti Nama Massal (Bulk Renamer) local-first & touch-friendly:
+      • Model data berkas & 8 tipe aturan transformasi (Cari & Ganti / Regex dengan capture group `$1/$2`,
+        Sisip Awalan/Akhiran/Indeks, Penomoran Urut `01/001`, Ubah Huruf `kebab/camel/UPPER/lower`,
+        Pangkas Karakter, Ekstensi Berkas, Pembersihan Cepat `%20` & karakter OS, Pola Token Dinamis `{date}_{name}_{num}`);
+      • Live interactive preview dengan badge status (Siap, Sama, Konflik, Invalid) & pencarian hasil instan;
+      • Deteksi tabrakan nama (name collision) otomatis dengan 3 strategi (Peringatkan, Auto-nomor `(1)`, Auto-nomor `_1`);
+      • Keamanan OS: validasi Windows Reserved Names (CON, PRN, AUX, NUL), batas 255 karakter, dan larangan spasi/titik ujung;
+      • Integrasi Web File System Access API (ganti nama native di disk) + Fallback Ekspor Arsip ZIP biner;
+      • Preset resep bawaan + penyimpanan resep kustom pengguna (`localStorage`);
+      • Full Undo / Rollback ganti nama;
+      • Suite uji otomatis 78/78 hijau (`tools/uji/renamer-*.mjs`).
+

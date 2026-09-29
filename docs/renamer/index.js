@@ -4,13 +4,14 @@
  * Mengikuti kontrak modul Hara:
  * - registerViews ke router
  * - state management independen
- * - integrasi UI, preset, file picker, dan engine
+ * - integrasi UI, preset, file picker, ZIP export, dan engine
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929101703';
-import { toast } from '../core/toast.js?v=20260929101703';
-import { t as tr } from '../core/i18n.js?v=20260929101703';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929101703';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929102205';
+import { toast } from '../core/toast.js?v=20260929102205';
+import { t as tr } from '../core/i18n.js?v=20260929102205';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929102205';
+import { unduh } from '../notes/data-io.js?v=20260929102205';
 import {
   createRenamerItem,
   createRule,
@@ -19,9 +20,27 @@ import {
   RULE_METADATA,
   DEFAULT_PRESETS,
   FILE_STATUS,
-} from './model.js?v=20260929101703';
-import { runPipeline } from './engine.js?v=20260929101703';
-import { renamerView } from './view.js?v=20260929101703';
+} from './model.js?v=20260929102205';
+import { runPipeline } from './engine.js?v=20260929102205';
+import { renamerView } from './view.js?v=20260929102205';
+import { createZipBlob } from './zip.js?v=20260929102205';
+
+const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
+
+function muatCustomPresets() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function simpanCustomPresets(list) {
+  try {
+    localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
 
 // State internal modul renamer
 export const renamerState = {
@@ -32,6 +51,8 @@ export const renamerState = {
     createRule(RULE_TYPES.EXTENSION, { mode: 'lower' }),
   ],
   filter: 'all',
+  searchQuery: '',
+  collisionStrategy: 'warn',
   undoStack: [],
   directoryHandle: null,
 };
@@ -53,6 +74,7 @@ export function muatBerkasDemo() {
       size: (idx + 1) * 1024 * 350,
       path: 'Contoh_Demo',
       lastModified: Date.now() - idx * 86400000,
+      file: new Blob([`Contoh isi dummy berkas ${name}`], { type: 'text/plain' }),
     })
   );
   toast(tr('6 berkas contoh demo berhasil dimuat'));
@@ -67,13 +89,17 @@ export function renderRenamerScreen() {
   const wrap = document.getElementById('wrap');
   if (!wrap) return;
 
-  const pipelineRes = runPipeline(renamerState.files, renamerState.rules);
+  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+    collisionStrategy: renamerState.collisionStrategy,
+  });
   const scrollY = wrap.scrollTop;
   wrap.innerHTML = renamerView(
     {
       files: renamerState.files,
       rules: renamerState.rules,
       filter: renamerState.filter,
+      searchQuery: renamerState.searchQuery,
+      collisionStrategy: renamerState.collisionStrategy,
       hasUndo: renamerState.undoStack.length > 0,
     },
     pipelineRes
@@ -154,7 +180,9 @@ function prosesInputFiles(fileList) {
  * Eksekusi Ganti Nama Berkas
  */
 async function eksekusiGantiNama() {
-  const pipelineRes = runPipeline(renamerState.files, renamerState.rules);
+  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+    collisionStrategy: renamerState.collisionStrategy,
+  });
   if (pipelineRes.hasErrors || pipelineRes.changedCount === 0) {
     toast(tr('Tidak ada perubahan atau ada konflik nama'));
     return;
@@ -187,7 +215,7 @@ async function eksekusiGantiNama() {
     }
   }
 
-  // Fallback / Simulasi: Update nama berkas di antrean
+  // Fallback: Update state di antrean
   const historyEntry = { timestamp: Date.now(), mappings: [] };
   itemsToRename.forEach(item => {
     historyEntry.mappings.push({ from: item.originalName, to: item.newName });
@@ -196,6 +224,41 @@ async function eksekusiGantiNama() {
   renamerState.undoStack.push(historyEntry);
   toast(tr('Berhasil menerapkan ganti nama pada {n} berkas!', { n: itemsToRename.length }));
   renderRenamerScreen();
+}
+
+/**
+ * Ekspor & Unduh Berkas ZIP Terganti Nama
+ */
+async function eksporZipRenamed() {
+  const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {
+    collisionStrategy: renamerState.collisionStrategy,
+  });
+  if (pipelineRes.hasErrors || renamerState.files.length === 0) {
+    toast(tr('Perbaiki error sebelum mengunduh ZIP'));
+    return;
+  }
+
+  toast(tr('Sedang menyiapkan arsip ZIP…'));
+
+  try {
+    const entries = [];
+    for (const item of pipelineRes.items) {
+      let data = item.file || 'DUMMY DATA';
+      entries.push({
+        name: item.newName,
+        data,
+      });
+    }
+
+    const zipBlob = await createZipBlob(entries);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const zipName = `Berkas_Terganti_Nama_${dateStr}.zip`;
+    unduh(zipName, zipBlob, 'application/zip');
+    toast(`${tr('Berhasil mengunduh')}: ${zipName}`);
+  } catch (err) {
+    console.error(err);
+    toast(tr('Gagal membuat berkas ZIP: ') + err.message);
+  }
 }
 
 /**
@@ -208,6 +271,20 @@ async function batalkanGantiNama() {
     return;
   }
 
+  // Jika di disk native
+  if (lastOp.mappings.some(m => m.handle)) {
+    try {
+      toast(tr('Mengembalikan nama berkas di disk…'));
+      for (const m of lastOp.mappings) {
+        if (m.handle && m.handle.move) {
+          await m.handle.move(m.from);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const map = new Map(lastOp.mappings.map(m => [m.to, m.from]));
   renamerState.files.forEach(f => {
     if (map.has(f.originalName)) {
@@ -217,6 +294,27 @@ async function batalkanGantiNama() {
 
   toast(tr('Ganti nama sebelumnya berhasil diurungkan!'));
   renderRenamerScreen();
+}
+
+/**
+ * Dialog Simpan Resep Kustom
+ */
+function bukaDialogSimpanPreset(anchorEl) {
+  const html = `
+    <div class="rn-modal-box">
+      <h3 class="rn-modal-title">${tr('Simpan Resep Aturan')}</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0">${tr('Simpan kombinasi aturan saat ini agar bisa dipakai kembali kapan saja.')}</p>
+      <div class="rn-input-group" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <label>${tr('Nama Resep:')}</label>
+        <input type="text" class="rn-input" id="rn-preset-name-in" style="width:100%" placeholder="${tr('Misal: Format Foto Dokumentasi')}" autofocus>
+      </div>
+      <div class="rn-actions-top" style="justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-sec" data-pop-close>${tr('Batal')}</button>
+        <button class="btn btn-pri" id="rn-save-preset-confirm">${tr('Simpan Resep')}</button>
+      </div>
+    </div>
+  `;
+  openPop(html, anchorEl || document.body);
 }
 
 /**
@@ -246,6 +344,7 @@ function bukaDialogTambahAturan(anchorEl) {
  * Menu Dialog Resep / Preset
  */
 function bukaDialogPresets(anchorEl) {
+  const customList = muatCustomPresets();
   const html = `
     <div class="rn-modal-box">
       <h3 class="rn-modal-title">${tr('Resep Cepat Siap Pakai')}</h3>
@@ -258,6 +357,18 @@ function bukaDialogPresets(anchorEl) {
             </div>
             <div class="rn-type-card-desc">${p.desc}</div>
           </button>
+        `).join('')}
+        ${customList.map(p => `
+          <div class="rn-type-card" style="position:relative">
+            <button data-rn-apply-custom-preset="${p.id}" style="background:none;border:none;text-align:left;cursor:pointer;width:100%;padding:0">
+              <div class="rn-type-card-title">
+                <svg class="ico" style="width:16px;height:16px;color:var(--accent)"><use href="#i-copy"/></svg>
+                ${esc(p.name)}
+              </div>
+              <div class="rn-type-card-desc">${tr('{n} aturan tersimpan', { n: p.rules.length })}</div>
+            </button>
+            <button data-rn-del-preset="${p.id}" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--danger);cursor:pointer" title="${tr('Hapus resep')}">✕</button>
+          </div>
         `).join('')}
       </div>
     </div>
@@ -273,12 +384,16 @@ export const renamerModule = {
     registerViews(
       {
         renamer: () => {
-          const res = runPipeline(renamerState.files, renamerState.rules);
+          const res = runPipeline(renamerState.files, renamerState.rules, {
+            collisionStrategy: renamerState.collisionStrategy,
+          });
           return renamerView(
             {
               files: renamerState.files,
               rules: renamerState.rules,
               filter: renamerState.filter,
+              searchQuery: renamerState.searchQuery,
+              collisionStrategy: renamerState.collisionStrategy,
               hasUndo: renamerState.undoStack.length > 0,
             },
             res
@@ -308,7 +423,9 @@ export const renamerModule = {
         }
         if (act === 'add-rule') return bukaDialogTambahAturan(actBtn);
         if (act === 'presets') return bukaDialogPresets(actBtn);
+        if (act === 'save-preset') return bukaDialogSimpanPreset(actBtn);
         if (act === 'apply-rename') return eksekusiGantiNama();
+        if (act === 'export-zip') return eksporZipRenamed();
         if (act === 'undo') return batalkanGantiNama();
 
         // Operasi per aturan
@@ -334,6 +451,52 @@ export const renamerModule = {
             return renderRenamerScreen();
           }
         }
+      }
+
+      // Konfirmasi Simpan Preset
+      if (e.target && e.target.id === 'rn-save-preset-confirm') {
+        const nameIn = document.getElementById('rn-preset-name-in');
+        const name = (nameIn ? nameIn.value : '').trim();
+        if (!name) {
+          toast(tr('Nama resep tidak boleh kosong'));
+          return;
+        }
+        const customList = muatCustomPresets();
+        customList.push({
+          id: 'custom-' + Date.now(),
+          name,
+          rules: renamerState.rules.map(r => ({ type: r.type, params: { ...r.params } })),
+        });
+        simpanCustomPresets(customList);
+        closeAll();
+        toast(tr('Resep "{name}" berhasil disimpan!', { name }));
+        return;
+      }
+
+      // Terapkan Custom Preset
+      const customPresetBtn = e.target.closest('[data-rn-apply-custom-preset]');
+      if (customPresetBtn) {
+        closeAll();
+        const pId = customPresetBtn.dataset.rnApplyCustomPreset;
+        const customList = muatCustomPresets();
+        const p = customList.find(x => x.id === pId);
+        if (p) {
+          renamerState.rules = p.rules.map(r => createRule(r.type, r.params));
+          toast(tr('Resep "{name}" diterapkan!', { name: p.name }));
+          return renderRenamerScreen();
+        }
+      }
+
+      // Hapus Custom Preset
+      const delPresetBtn = e.target.closest('[data-rn-del-preset]');
+      if (delPresetBtn) {
+        const pId = delPresetBtn.dataset.rnDelPreset;
+        let customList = muatCustomPresets();
+        customList = customList.filter(x => x.id !== pId);
+        simpanCustomPresets(customList);
+        toast(tr('Resep dihapus'));
+        bukaDialogPresets();
+        return;
       }
 
       // Filter tabs
@@ -389,6 +552,18 @@ export const renamerModule = {
           rule.params[paramName] = inp.value;
           renderRenamerScreen();
         }
+        return;
+      }
+
+      // Filter pencarian Live Preview
+      if (e.target && e.target.id === 'rn-search-preview') {
+        renamerState.searchQuery = e.target.value;
+        renderRenamerScreen();
+        const reInput = document.getElementById('rn-search-preview');
+        if (reInput) {
+          reInput.focus();
+          reInput.setSelectionRange(reInput.value.length, reInput.value.length);
+        }
       }
     });
 
@@ -403,6 +578,12 @@ export const renamerModule = {
           rule.params[paramName] = boolInp.checked;
           renderRenamerScreen();
         }
+      }
+
+      // Toggle collision strategy selector
+      if (e.target && e.target.id === 'rn-collision-select') {
+        renamerState.collisionStrategy = e.target.value;
+        renderRenamerScreen();
       }
 
       // Toggle aktifkan/nonaktifkan aturan

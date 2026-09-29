@@ -79,7 +79,14 @@ docs/
 │   │                   callout, warna, font, note-menu — semua popover editor
 │   └── views/          list, editor, row, welcome, misc, tugas, data
 │
-├── styles/             tokens → base → shell → notes  (urutan cascade penting)
+├── renamer/            MODUL GANTI NAMA MASSAL (BULK RENAMER)
+│   ├── index.js        modul mendaftarkan diri: registerViews, event handlers
+│   ├── model.js        skema RenamerFileItem, RULE_TYPES, sanitasi OS, presets
+│   ├── engine.js       rule transformers, regex capture groups, collision resolver
+│   ├── view.js         UI rule cards builder, live preview table, diffs
+│   └── zip.js          binary-safe ZIP generator (fallback download)
+│
+├── styles/             tokens → base → shell → notes → renamer (urutan cascade penting)
 └── deploy/             cara menerbitkan (GitHub Pages)
 ```
 
