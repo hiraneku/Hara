@@ -1,19 +1,19 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20260929112243';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260929112243';
-import { toast } from './core/toast.js?v=20260929112243';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260929112243';
-import { notesModule } from './notes/index.js?v=20260929112243';
-import { renamerModule } from './renamer/index.js?v=20260929112243';
+import { load, state } from './core/store.js?v=20260929113251';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20260929113251';
+import { toast } from './core/toast.js?v=20260929113251';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20260929113251';
+import { notesModule } from './notes/index.js?v=20260929113251';
+import { renamerModule } from './renamer/index.js?v=20260929113251';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20260929112243';
-import { bagikanCatatan } from './notes/share.js?v=20260929112243';
-import { bukaJurnalHari } from './notes/harian.js?v=20260929112243';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20260929112243';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260929112243';
-import { simpanTemplatNote } from './notes/templat.js?v=20260929112243';
-import { panelKunciCatatan } from './notes/kunci.js?v=20260929112243';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20260929112243';
+  from './notes/model.js?v=20260929113251';
+import { bagikanCatatan } from './notes/share.js?v=20260929113251';
+import { bukaJurnalHari } from './notes/harian.js?v=20260929113251';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20260929113251';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20260929113251';
+import { simpanTemplatNote } from './notes/templat.js?v=20260929113251';
+import { panelKunciCatatan } from './notes/kunci.js?v=20260929113251';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20260929113251';
 
 const MODULES = [notesModule, renamerModule];
 

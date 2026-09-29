@@ -22,11 +22,11 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260929112243';
-import { sisipGambar } from './image.js?v=20260929112243';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20260929113251';
+import { sisipGambar } from './image.js?v=20260929113251';
 import { barisMekanik, teksKeBaris, bagiIndent, polaBaris, padUntuk,
   tautkanTeks, tautanAman, hrefDari, htmlTautan }
-  from './tempel-mekanik.js?v=20260929112243';
+  from './tempel-mekanik.js?v=20260929113251';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
