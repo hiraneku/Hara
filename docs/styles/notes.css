@@ -1073,3 +1073,318 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .mtu-ck .ico{width:12px;height:12px}
 .mtu-ck.on{background:var(--accent);border-color:var(--accent);color:#fff}
 [data-theme=dark] .mtu-ck.on{color:#131711}
+
+/* ════════════ HAMOJI (KAOMOJI & STIKER INTERAKTIF) ════════════ */
+#hamoji-btn {
+  padding: 0 8px;
+  width: auto;
+  min-width: 36px;
+  height: 36px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-md);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: .12s var(--ease);
+  cursor: pointer;
+}
+#hamoji-btn:hover {
+  background: var(--accent-weak);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.hamoji-btn-face {
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* Layer Stiker */
+.blocks {
+  position: relative;
+}
+
+.hamoji-stickers-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 6;
+}
+
+.hamoji-sticker {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  transition: box-shadow .12s var(--ease), border-color .12s var(--ease);
+  z-index: 10;
+}
+.hamoji-sticker:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+.hamoji-sticker.dragging {
+  cursor: grabbing !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.24) !important;
+  z-index: 30 !important;
+}
+.hamoji-sticker.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-weak), 0 4px 18px rgba(0,0,0,.18);
+  z-index: 25;
+}
+
+.hamoji-stk-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hamoji-stk-text {
+  font-family: var(--sans);
+  font-size: var(--stk-size, 24px);
+  line-height: 1.15;
+  color: var(--text);
+  white-space: pre;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.hamoji-stk-ctrls {
+  display: none;
+}
+.hamoji-sticker.selected .hamoji-stk-ctrls {
+  display: block;
+}
+
+/* Tombol Hapus Stiker */
+.hamoji-stk-del {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  border: 2px solid var(--surface);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  transition: transform .1s var(--ease);
+  z-index: 15;
+  padding: 0;
+}
+.hamoji-stk-del:hover {
+  transform: scale(1.15);
+}
+
+/* Gagang Resize Stiker */
+.hamoji-stk-resize {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  border: 2px solid var(--surface);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  cursor: nwse-resize;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  touch-action: none;
+  z-index: 15;
+}
+.hamoji-stk-resize:hover {
+  transform: scale(1.15);
+}
+
+/* Modal Panel Hamoji */
+.hamoji-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: min(85vh, 660px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-modal);
+}
+.hamoji-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.hamoji-title-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hamoji-mode-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  background: var(--accent-weak);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Mode Switcher: 2 Pill Toggle */
+.hamoji-mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: var(--sunken);
+  padding: 4px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+}
+.hamoji-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: .12s var(--ease);
+}
+.hamoji-mode-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.hamoji-mode-btn.active.mode-sticker {
+  color: var(--accent);
+}
+
+.hamoji-search-in {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+.hamoji-search-in:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.hamoji-cats-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.hamoji-cat-chip {
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--sunken);
+  color: var(--muted);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .1s var(--ease);
+  flex: none;
+}
+.hamoji-cat-chip.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.hamoji-grid-wrap {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  gap: 8px;
+  box-sizing: border-box;
+}
+.hamoji-item-card {
+  padding: 10px 8px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: .12s var(--ease);
+  text-align: center;
+}
+.hamoji-item-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  transform: translateY(-1px);
+}
+.hamoji-item-card:active {
+  transform: scale(.97);
+}
+.hamoji-item-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.hamoji-item-name {
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.hamoji-custom-add-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}

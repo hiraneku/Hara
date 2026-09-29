@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20260929113251';
+import { t as tr } from '../core/i18n.js?v=20260929115253';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -125,6 +125,7 @@ export function makeNote(patch = {}) {
     /* tag manual (tanpa span di isi) — opsional, hanya disimpan bila ada */
     ...(Array.isArray(patch.tagsManual) && patch.tagsManual.length
       ? { tagsManual: patch.tagsManual.slice() } : {}),
+    stickers: Array.isArray(patch.stickers) ? patch.stickers.map(s => ({ ...s })) : [],
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,
@@ -486,6 +487,7 @@ export function normalizeNote(raw) {
   if (Array.isArray(raw.blocks)) {
     return makeNote({
       ...raw,
+      stickers: Array.isArray(raw.stickers) ? raw.stickers.map(s => ({ ...s })) : [],
       blocks: raw.blocks.map(b => {
         if (!b || b.type === 'code' || b.type === 'divider') return makeBlock(b);
         /* sapu sisa span tag rusak dari data lama (bug Enter membelah

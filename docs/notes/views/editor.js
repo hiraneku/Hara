@@ -1,11 +1,12 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20260929113251';
-import { findNote } from '../model.js?v=20260929113251';
-import { esc } from '../../core/dom.js?v=20260929113251';
-import { blocksToDom } from '../note-model.js?v=20260929113251';
-import { barisProps } from '../meta-ui.js?v=20260929113251';
-import { t as tr } from '../../core/i18n.js?v=20260929113251';
+import { state } from '../../core/store.js?v=20260929115253';
+import { findNote } from '../model.js?v=20260929115253';
+import { esc } from '../../core/dom.js?v=20260929115253';
+import { blocksToDom } from '../note-model.js?v=20260929115253';
+import { barisProps } from '../meta-ui.js?v=20260929115253';
+import { t as tr } from '../../core/i18n.js?v=20260929115253';
+import { renderStickersHtml } from '../hamoji.js?v=20260929115253';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -31,7 +32,12 @@ const n=findNote(state.openId)||state.notes[0];
     ${barisProps(n,'pv')}
     <button type="button" class="prop-add" data-prop-add>+ ${tr('properti')}</button>
   </div>
-  <div class="blocks">${body}</div>
+  <div class="blocks">
+    ${body}
+    <div class="hamoji-stickers-layer" id="hamoji-stickers-layer">
+      ${renderStickersHtml(n.stickers)}
+    </div>
+  </div>
   <div class="dm" id="dm"></div>
  </div>`;
 }
