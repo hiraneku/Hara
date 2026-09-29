@@ -12,17 +12,17 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929151703';
-import { touch } from './note-model.js?v=20260929151703';
-import { saveSoon } from './editor/cleanup.js?v=20260929151703';
-import { openPop, closeAll } from './menus/pop.js?v=20260929151703';
-import { esc } from '../core/dom.js?v=20260929151703';
-import { toast } from '../core/toast.js?v=20260929151703';
-import { t as tr } from '../core/i18n.js?v=20260929151703';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929151703';
-import { refresh } from './editor/cleanup.js?v=20260929151703';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929151703';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929151703';
+import { state } from '../core/store.js?v=20260929152721';
+import { touch } from './note-model.js?v=20260929152721';
+import { saveSoon } from './editor/cleanup.js?v=20260929152721';
+import { openPop, closeAll } from './menus/pop.js?v=20260929152721';
+import { esc } from '../core/dom.js?v=20260929152721';
+import { toast } from '../core/toast.js?v=20260929152721';
+import { t as tr } from '../core/i18n.js?v=20260929152721';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929152721';
+import { refresh } from './editor/cleanup.js?v=20260929152721';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929152721';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929152721';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -32,7 +32,7 @@ const STORAGE_COLOR_KEY = 'hara.hamoji.color';
 export const HAMOJI_STICKER_SVGS = {
   // Baris 1
   // 1. (♡ v ♡)
-  c1: `<svg viewBox="0 0 88 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 28 22 C 20 16 20 10.5 24 9 C 26.5 8 28 10 28 10 C 28 10 29.5 8 32 9 C 36 10.5 36 16 28 22 Z" fill="none" stroke="#ff3b69" stroke-width="2" stroke-linejoin="round"/><path d="M 40.5 16 L 44 21 L 47.5 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 60 22 C 52 16 52 10.5 56 9 C 58.5 8 60 10 60 10 C 60 10 61.5 8 64 9 C 68 10.5 68 16 60 22 Z" fill="none" stroke="#ff3b69" stroke-width="2" stroke-linejoin="round"/><text x="80" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text></svg>`,
+  c1: `<svg viewBox="0 0 90 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="22" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="700" fill="currentColor">(</text><path d="M 27.5 23 C 20 17, 18.5 11, 22.5 8.5 C 25.5 6.5, 27.5 8.8, 27.5 10 C 27.5 8.8, 29.5 6.5, 32.5 8.5 C 36.5 11, 35 17, 27.5 23 Z" fill="#f48cb4" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><path d="M 40 14.5 L 50 14.5 C 49 18.5, 47 22.5, 45 22.5 C 43 22.5, 41 18.5, 40 14.5 Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><path d="M 62.5 23 C 55 17, 53.5 11, 57.5 8.5 C 60.5 6.5, 62.5 8.8, 62.5 10 C 62.5 8.8, 64.5 6.5, 67.5 8.5 C 71.5 11, 70 17, 62.5 23 Z" fill="#f48cb4" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><text x="82" y="17" text-anchor="middle" dominant-baseline="central" font-size="22" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="700" fill="currentColor">)</text></svg>`,
 
   // 2. (≥ ∇ ≤)
   c2: `<svg viewBox="0 0 88 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 22 10.5 L 34 15.5 L 22 20.5 M 22 23.5 L 34 23.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 38 14 L 50 14 L 44 22 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M 66 10.5 L 54 15.5 L 66 20.5 M 54 23.5 L 66 23.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="80" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text></svg>`,
@@ -57,7 +57,7 @@ export const HAMOJI_STICKER_SVGS = {
   c8: `<svg viewBox="0 0 92 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 22 17 L 28 11 L 34 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 38 17.5 L 42.5 17.5 M 44.5 17.5 L 49 17.5 M 51 17.5 L 55.5 17.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 58 17 L 64 11 L 70 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text x="84" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text></svg>`,
 
   // 9. (♡ ₃ ♡)
-  c9: `<svg viewBox="0 0 88 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 28 22 C 20 16 20 10.5 24 9 C 26.5 8 28 10 28 10 C 28 10 29.5 8 32 9 C 36 10.5 36 16 28 22 Z" fill="none" stroke="#ff3b69" stroke-width="2" stroke-linejoin="round"/><path d="M 41 13 Q 46.5 13 46.5 16 Q 44 16.5 42 16.5 Q 44 16.5 46.5 17 Q 46.5 20.5 41 20.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M 60 22 C 52 16 52 10.5 56 9 C 58.5 8 60 10 60 10 C 60 10 61.5 8 64 9 C 68 10.5 68 16 60 22 Z" fill="none" stroke="#ff3b69" stroke-width="2" stroke-linejoin="round"/><text x="80" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text></svg>`,
+  c9: `<svg viewBox="0 0 90 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="22" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="700" fill="currentColor">(</text><path d="M 27.5 23 C 20 17, 18.5 11, 22.5 8.5 C 25.5 6.5, 27.5 8.8, 27.5 10 C 27.5 8.8, 29.5 6.5, 32.5 8.5 C 36.5 11, 35 17, 27.5 23 Z" fill="#f48cb4" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><path d="M 42 13 Q 48 13 48 16 Q 45.5 16.5 43 16.5 Q 45.5 16.5 48 17 Q 48 21 42 21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M 62.5 23 C 55 17, 53.5 11, 57.5 8.5 C 60.5 6.5, 62.5 8.8, 62.5 10 C 62.5 8.8, 64.5 6.5, 67.5 8.5 C 71.5 11, 70 17, 62.5 23 Z" fill="#f48cb4" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><text x="82" y="17" text-anchor="middle" dominant-baseline="central" font-size="22" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="700" fill="currentColor">)</text></svg>`,
 
   // 10. (> 👅 <)
   c10: `<svg viewBox="0 0 88 32" class="hamoji-svg-stk"><text x="8" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 21 10 L 31 15 L 21 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 37 15 Q 44 20 51 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M 40.5 16.5 Q 40.5 24.5 44 24.5 Q 47.5 24.5 47.5 16.5 Z" fill="#ff5376" stroke="currentColor" stroke-width="1.6"/><path d="M 67 10 L 57 15 L 67 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text x="80" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text></svg>`,
