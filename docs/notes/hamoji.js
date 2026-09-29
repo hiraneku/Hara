@@ -1,22 +1,22 @@
 /**
  * Modul Hamoji — Kaomoji, Emoticon, ASCII Art & Stiker Interaktif untuk Catatan Hara
  *
- * Fitur:
- * - 2 Mode: Mode Teks (sisip teks biasa di kursor) & Mode Stiker (stiker interaktif bisa digeser & diubah ukuran)
+ * Desain modern & clean (tanpa elemen AI slop):
+ * - 2 Mode: Mode Teks (sisip teks di kursor) & Mode Stiker (stiker terapung interaktif)
  * - Pustaka Kaomoji tematik (Populer, Senang, Imut, Hewan, Ekspresi, ASCII Art)
- * - Dukungan Kaomoji Kustom tersimpan (localStorage)
- * - Mesin interaksi stiker: seret/geser bebas (touch/pointer), ubah ukuran (resize handle), hapus, simpan permanen
+ * - Dukungan Kaomoji Kustom (tersimpan di localStorage)
+ * - Mesin interaksi stiker: seret/geser bebas (touch/pointer), ubah ukuran (resize), hapus
  */
 
-import { state } from '../core/store.js?v=20260929115253';
-import { touch } from './note-model.js?v=20260929115253';
-import { saveSoon } from './editor/cleanup.js?v=20260929115253';
-import { openPop, closeAll } from './menus/pop.js?v=20260929115253';
-import { esc } from '../core/dom.js?v=20260929115253';
-import { toast } from '../core/toast.js?v=20260929115253';
-import { t as tr } from '../core/i18n.js?v=20260929115253';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929115253';
-import { refresh } from './editor/cleanup.js?v=20260929115253';
+import { state } from '../core/store.js?v=20260929120314';
+import { touch } from './note-model.js?v=20260929120314';
+import { saveSoon } from './editor/cleanup.js?v=20260929120314';
+import { openPop, closeAll } from './menus/pop.js?v=20260929120314';
+import { esc } from '../core/dom.js?v=20260929120314';
+import { toast } from '../core/toast.js?v=20260929120314';
+import { t as tr } from '../core/i18n.js?v=20260929120314';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929120314';
+import { refresh } from './editor/cleanup.js?v=20260929120314';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -26,74 +26,85 @@ export const HAMOJI_LIBRARY = [
   // Populer & Ikonik
   { id: 'h1', text: '(｡•̀ᴗ-)✧', name: 'Wink Ikonik', cat: 'populer', tags: 'wink keren senyum bintang' },
   { id: 'h2', text: '(˶ᵔ ᵕ ᵔ˶)', name: 'Senyum Damai', cat: 'populer', tags: 'senyum imut bahagia senang' },
-  { id: 'h3', text: '(๑>◡<๑)', name: 'Sangat Senang', cat: 'populer', tags: 'ceria excited gembira' },
-  { id: 'h4', text: 'ʕ•ᴥ•ʔ', name: 'Beruang Imut', cat: 'populer', tags: 'beruang hewan bear imut' },
-  { id: 'h5', text: '¯\\_(ツ)_/¯', name: 'Shrug Masa Bodoh', cat: 'populer', tags: 'shrug santai angkat tangan' },
-  { id: 'h6', text: '(⁠◕⁠ᴗ⁠◕⁠✿)', name: 'Bunga Imut', cat: 'populer', tags: 'bunga senyum ceria cantik' },
+  { id: 'h3', text: '(๑>◡<๑)', name: 'Riang Gembira', cat: 'populer', tags: 'ceria excited gembira' },
+  { id: 'h4', text: 'ʕ•ᴥ•ʔ', name: 'Beruang', cat: 'populer', tags: 'beruang hewan bear imut' },
+  { id: 'h5', text: '¯\\_(ツ)_/¯', name: 'Shrug', cat: 'populer', tags: 'shrug santai angkat tangan' },
+  { id: 'h6', text: '(⁠◕⁠ᴗ⁠◕⁠✿)', name: 'Bunga', cat: 'populer', tags: 'bunga senyum ceria cantik' },
   { id: 'h7', text: '(⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)', name: 'Malu-Malu', cat: 'populer', tags: 'malu blush imut merah' },
-  { id: 'h8', text: '(づ｡◕‿‿◕｡)づ', name: 'Pelukan Hangat', cat: 'populer', tags: 'peluk hug sayang ramah' },
+  { id: 'h8', text: '(づ｡◕‿‿◕｡)づ', name: 'Peluk Hangat', cat: 'populer', tags: 'peluk hug sayang ramah' },
   { id: 'h9', text: '(=^･ω･^=)', name: 'Kucing Manis', cat: 'populer', tags: 'kucing cat meow hewan' },
   { id: 'h10', text: '(ﾉ´ヮ`)ﾉ*: ･ﾟ', name: 'Tabur Bintang', cat: 'populer', tags: 'sihir bintang gembira' },
+  { id: 'h11b', text: '( •̀ᴗ•́ )و ̑̑', name: 'Semangat Juang', cat: 'populer', tags: 'semangat tekad gas' },
+  { id: 'h12b', text: '(¬‿¬)', name: 'Senyum Misterius', cat: 'populer', tags: 'senyum misterius smirking' },
 
   // Senang & Bahagia
   { id: 'h11', text: '(✿◠‿◠)', name: 'Senyum Manis', cat: 'senang', tags: 'senyum bunga ceria manis' },
-  { id: 'h12', text: '(*^ω^)', name: 'Tertawa Ceria', cat: 'senang', tags: 'senyum bahagia ketawa' },
+  { id: 'h12', text: '(*^ω^)', name: 'Tertawa Riang', cat: 'senang', tags: 'senyum bahagia ketawa' },
   { id: 'h13', text: '(≧◡≦)', name: 'Mata Terpejam', cat: 'senang', tags: 'puas senang manis' },
   { id: 'h14', text: '(o^▽^o)', name: 'Tawa Lebar', cat: 'senang', tags: 'gembira riang tertawa' },
-  { id: 'h15', text: '(★ω★)', name: 'Mata Bintang', cat: 'senang', tags: 'kagum terpukau bintang wow' },
+  { id: 'h15', text: '(★ω★)', name: 'Bintang Terpukau', cat: 'senang', tags: 'kagum terpukau bintang wow' },
   { id: 'h16', text: '(＾▽＾)', name: 'Senyum Hangat', cat: 'senang', tags: 'senang ramah santai' },
   { id: 'h17', text: '＼(≧▽≦)／', name: 'Sorak Bahagia', cat: 'senang', tags: 'hore hore menang hore' },
-  { id: 'h18', text: '(⌒‿⌒)', name: 'Mata Sipit Bahagia', cat: 'senang', tags: 'senang kalem senyum' },
+  { id: 'h18', text: '(⌒‿⌒)', name: 'Tenang Bahagia', cat: 'senang', tags: 'senang kalem senyum' },
+  { id: 'h18b', text: '(*˘︶˘*).｡.:*', name: 'Bersyukur', cat: 'senang', tags: 'damai bersyukur tenang' },
+  { id: 'h18c', text: '( ˘ ³˘)♥', name: 'Cium Manis', cat: 'senang', tags: 'cium kiss love manis' },
 
   // Imut & Kasih
-  { id: 'h19', text: '(♡˙︶˙♡)', name: 'Penuh Cinta', cat: 'imut', tags: 'love cinta hati manis sayang' },
-  { id: 'h20', text: '(„• ֊ •„)', name: 'Sopan & Imut', cat: 'imut', tags: 'imut pemalu lucu' },
+  { id: 'h19', text: '(♡˙︶˙♡)', name: 'Penuh Kasih', cat: 'imut', tags: 'love cinta hati manis sayang' },
+  { id: 'h20', text: '(„• ֊ •„)', name: 'Sopan Imut', cat: 'imut', tags: 'imut pemalu lucu' },
   { id: 'h21', text: '(⁄ ⁄•⁄ω⁄•⁄ ⁄)', name: 'Pipi Merah', cat: 'imut', tags: 'blush malu merah imut' },
-  { id: 'h22', text: '( ˘ ³˘)♥', name: 'Kecupan Cinta', cat: 'imut', tags: 'cium kiss love cinta' },
-  { id: 'h23', text: '(◕‿◕)♡', name: 'Hati Berbunga', cat: 'imut', tags: 'hati cinta manis gemas' },
-  { id: 'h24', text: '(｡♥‿♥｡)', name: 'Terpesona Cinta', cat: 'imut', tags: 'jatuh cinta cinta suka' },
-  { id: 'h25', text: '(੭ˊᵕˋ)੭', name: 'Semangat Imut', cat: 'imut', tags: 'semangat hore lucu' },
-  { id: 'h26', text: '(つ≧▽≦)つ', name: 'Peluk Erat', cat: 'imut', tags: 'peluk hug sayang cinta' },
+  { id: 'h23', text: '(◕‿◕)♡', name: 'Bunga Hati', cat: 'imut', tags: 'hati cinta manis gemas' },
+  { id: 'h24', text: '(｡♥‿♥｡)', name: 'Terpesona', cat: 'imut', tags: 'jatuh cinta cinta suka' },
+  { id: 'h25', text: '(੭ˊᵕˋ)੭', name: 'Cerah Ceria', cat: 'imut', tags: 'semangat hore lucu' },
+  { id: 'h26', text: '(つ≧▽≦)つ', name: 'Pelukan Erat', cat: 'imut', tags: 'peluk hug sayang cinta' },
+  { id: 'h26b', text: '(๑•́ ₃ •̀๑)', name: 'Manja Imut', cat: 'imut', tags: 'manja bibir cemberut imut' },
+  { id: 'h26c', text: '(๑•̀ㅂ•́)و✧', name: 'Tekad Kuat', cat: 'imut', tags: 'semangat tekad imut' },
 
   // Hewan & Karakter
   { id: 'h27', text: '(=^･ｪ･^=)', name: 'Kucing Penasaran', cat: 'hewan', tags: 'kucing cat meow kumis' },
-  { id: 'h28', text: '(ᵔᴥᵔ)', name: 'Anjing Lucu', cat: 'hewan', tags: 'anjing dog puppy imut' },
+  { id: 'h28', text: '(ᵔᴥᵔ)', name: 'Anjing Ceria', cat: 'hewan', tags: 'anjing dog puppy imut' },
   { id: 'h29', text: '(=^-ω-^=)', name: 'Kucing Tidur', cat: 'hewan', tags: 'kucing bobo santai' },
-  { id: 'h30', text: '(・ω・)', name: 'Kelinci / Makhluk', cat: 'hewan', tags: 'kelinci lucu hewan' },
-  { id: 'h31', text: 'U ´ᴥ` U', name: 'Anjing Telinga Panjang', cat: 'hewan', tags: 'anjing puppy dog' },
+  { id: 'h30', text: '(・ω・)', name: 'Kelinci Makhluk', cat: 'hewan', tags: 'kelinci lucu hewan' },
+  { id: 'h31', text: 'U ´ᴥ` U', name: 'Anjing Menggemaskan', cat: 'hewan', tags: 'anjing puppy dog' },
   { id: 'h32', text: '(￣(oo)￣)', name: 'Babi Lucu', cat: 'hewan', tags: 'babi pig lucu' },
-  { id: 'h33', text: '(=①ω①=)', name: 'Mata Kucing Lebar', cat: 'hewan', tags: 'kucing bulat mata' },
+  { id: 'h33', text: '(=①ω①=)', name: 'Mata Bulat', cat: 'hewan', tags: 'kucing bulat mata' },
+  { id: 'h33b', text: '( ˙-˙ )', name: 'Burung Hantu', cat: 'hewan', tags: 'burung hantu diam' },
+  { id: 'h33c', text: '₍ᐢ. ̫.ᐢ₎', name: 'Kelinci Imut', cat: 'hewan', tags: 'kelinci hewan imut' },
 
   // Ekspresi & Reaksi
-  { id: 'h34', text: '(•_•)', name: 'Lempeng / Datar', cat: 'ekspresi', tags: 'datar netral diam' },
+  { id: 'h34', text: '(•_•)', name: 'Netral', cat: 'ekspresi', tags: 'datar netral diam' },
   { id: 'h35', text: '(¬_¬)', name: 'Melirik Curiga', cat: 'ekspresi', tags: 'curiga lirik side eye' },
   { id: 'h36', text: '(╯°□°)╯︵ ┻━┻', name: 'Banting Meja', cat: 'ekspresi', tags: 'marah banting meja emosi' },
-  { id: 'h37', text: '┬─┬ノ( º _ ºノ)', name: 'Pasang Meja Kembali', cat: 'ekspresi', tags: 'tenang meja rapi santai' },
-  { id: 'h38', text: 'ಠ_ಠ', name: 'Tatapan Menghakimi', cat: 'ekspresi', tags: 'disapproval tatap serius' },
+  { id: 'h37', text: '┬─┬ノ( º _ ºノ)', name: 'Meja Rapi', cat: 'ekspresi', tags: 'tenang meja rapi santai' },
+  { id: 'h38', text: 'ಠ_ಠ', name: 'Tatap Serius', cat: 'ekspresi', tags: 'disapproval tatap serius' },
   { id: 'h39', text: '( ; ω ; )', name: 'Menangis Terharu', cat: 'ekspresi', tags: 'nangis sedih air mata terharu' },
-  { id: 'h40', text: '( ╥ω╥ )', name: 'Menangis Deras', cat: 'ekspresi', tags: 'sedih nangis patah hati' },
+  { id: 'h40', text: '( ╥ω╥ )', name: 'Menangis Sedih', cat: 'ekspresi', tags: 'sedih nangis patah hati' },
   { id: 'h41', text: '(>_<)', name: 'Meringis', cat: 'ekspresi', tags: 'aduh pusing sakit malu' },
-  { id: 'h42', text: '(°ロ°) !', name: 'Terkejut Kaget', cat: 'ekspresi', tags: 'kaget shocked terkejut' },
+  { id: 'h42', text: '(°ロ°) !', name: 'Terkejut', cat: 'ekspresi', tags: 'kaget shocked terkejut' },
+  { id: 'h42b', text: '(ง\'̀-\'́)ง', name: 'Siap Bertarung', cat: 'ekspresi', tags: 'tinju tarung semangat' },
+  { id: 'h42c', text: '(⊙_⊙)', name: 'Melotot Kaget', cat: 'ekspresi', tags: 'melotot kaget heran' },
 
   // ASCII & Text Art
   { id: 'h43', text: '✧･ﾟ: *✧･ﾟ:*', name: 'Kilau Bintang', cat: 'ascii', tags: 'bintang kilau sparkle hiasan' },
-  { id: 'h44', text: '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧', name: 'Penyihir Berbintang', cat: 'ascii', tags: 'sihir bintang berkilau' },
-  { id: 'h45', text: '♪♫*•♪', name: 'Alunan Musik', cat: 'ascii', tags: 'musik nada lagu nyanyi' },
-  { id: 'h46', text: '[̲̅$̲̅(̲̅5̲̅)̲̅$̲̅]', name: 'Uang Kertas', cat: 'ascii', tags: 'uang dollar cuan kaya' },
-  { id: 'h47', text: '(☞ﾟヮﾟ)☞', name: 'Tunjuk Menunjuk', cat: 'ascii', tags: 'tunjuk keren asyik' },
-  { id: 'h48', text: '─=≡Σ((( つ•̀ω•́)つ', name: 'Lari Cepat / Gas', cat: 'ascii', tags: 'lari cepat gas meluncur' },
-  { id: 'h49', text: '☆*:.｡.o(≧▽≦)o.｡.:*☆', name: 'Bintang Pesta', cat: 'ascii', tags: 'pesta ramai meriah' },
+  { id: 'h44', text: '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧', name: 'Taburan Sihir', cat: 'ascii', tags: 'sihir bintang berkilau' },
+  { id: 'h45', text: '♪♫*•♪', name: 'Notasi Musik', cat: 'ascii', tags: 'musik nada lagu nyanyi' },
+  { id: 'h46', text: '[̲̅$̲̅(̲̅5̲̅)̲̅$̲̅]', name: 'Lembaran Uang', cat: 'ascii', tags: 'uang dollar cuan kaya' },
+  { id: 'h47', text: '(☞ﾟヮﾟ)☞', name: 'Menunjuk Asyik', cat: 'ascii', tags: 'tunjuk keren asyik' },
+  { id: 'h48', text: '─=≡Σ((( つ•̀ω•́)つ', name: 'Meluncur Cepat', cat: 'ascii', tags: 'lari cepat gas meluncur' },
+  { id: 'h49', text: '☆*:.｡.o(≧▽≦)o.｡.:*☆', name: 'Pesta Gemerlap', cat: 'ascii', tags: 'pesta ramai meriah' },
+  { id: 'h50', text: '(っ˘ڡ˘ς)', name: 'Lezat Nikmat', cat: 'ascii', tags: 'makan enak lezat sedap' },
+  { id: 'h51', text: 'ʕノ)ᴥ(ヾʔ', name: 'Tutup Mata', cat: 'ascii', tags: 'tutup mata malu beruang' },
 ];
 
 export const HAMOJI_CATEGORIES = [
   { id: 'semua', label: 'Semua' },
-  { id: 'populer', label: '⭐ Populer' },
-  { id: 'senang', label: '😊 Senang' },
-  { id: 'imut', label: '💖 Imut' },
-  { id: 'hewan', label: '🐱 Hewan' },
-  { id: 'ekspresi', label: '🎭 Ekspresi' },
-  { id: 'ascii', label: '✨ ASCII Art' },
-  { id: 'custom', label: '➕ Kustom' },
+  { id: 'populer', label: 'Populer' },
+  { id: 'senang', label: 'Senang' },
+  { id: 'imut', label: 'Imut' },
+  { id: 'hewan', label: 'Hewan' },
+  { id: 'ekspresi', label: 'Ekspresi' },
+  { id: 'ascii', label: 'ASCII Art' },
+  { id: 'custom', label: 'Kustom' },
 ];
 
 /* ── State Hamoji ── */
@@ -134,7 +145,7 @@ export function simpanCustomHamoji(item) {
     list.unshift({
       id: 'custom-' + Date.now().toString(36),
       text: item.text,
-      name: item.name || 'Kaomoji Saya',
+      name: item.name || 'Kustom',
       cat: 'custom',
       tags: item.tags || 'kustom custom',
     });
@@ -211,7 +222,7 @@ export function sisipkanHamojiTeks(text) {
     touch(currentNote);
     saveSoon();
   }
-  toast(tr('Kaomoji "{text}" disisipkan!', { text }));
+  toast(tr('Disisipkan: {text}', { text }));
 }
 
 /* ── Mode 2: Tempelkan sebagai Stiker Interaktif ── */
@@ -223,17 +234,14 @@ export function tambahStikerHamoji(text) {
     note.stickers = [];
   }
 
-  // Cari posisi penempatan stiker (tengah viewport / area scroll aktif)
-  const blocksEl = document.querySelector('.blocks');
   const scrollWrap = document.getElementById('wrap') || document.documentElement;
   const scrollTop = scrollWrap.scrollTop || 0;
 
-  let startX = 30;
-  let startY = Math.max(20, Math.min(scrollTop + 80, 500));
+  let startX = 24;
+  let startY = Math.max(20, Math.min(scrollTop + 70, 500));
 
-  // Variasi offset jika sudah ada stiker
   if (note.stickers.length > 0) {
-    const offset = (note.stickers.length % 5) * 20;
+    const offset = (note.stickers.length % 5) * 18;
     startX += offset;
     startY += offset;
   }
@@ -243,7 +251,7 @@ export function tambahStikerHamoji(text) {
     text: text.trim(),
     x: startX,
     y: startY,
-    size: 24, // font-size default 24px
+    size: 24,
     rot: 0,
   };
 
@@ -251,15 +259,13 @@ export function tambahStikerHamoji(text) {
   touch(note);
   saveSoon();
 
-  // Render ulang layer stiker
   sinkronkanStikerLayer(note);
 
-  // Pilih stiker baru secara otomatis
   setTimeout(() => {
     pilihStiker(newSticker.id);
-  }, 50);
+  }, 40);
 
-  toast(tr('Stiker Hamoji ditambahkan! Geser atau sesuaikan ukurannya.'));
+  toast(tr('Stiker ditempelkan'));
 }
 
 export function hapusStikerHamoji(id) {
@@ -271,38 +277,35 @@ export function hapusStikerHamoji(id) {
   sinkronkanStikerLayer(note);
 }
 
-export const bukaModalHamoji = bukaPanelHamoji;
+/* ── Render HTML Layer Stiker untuk Catatan ── */
 export function renderStickersHtml(stickers) {
   if (!Array.isArray(stickers) || stickers.length === 0) return '';
-  return stickers
-    .map(stk => `
-      <div class="hamoji-sticker" data-stk-id="${esc(stk.id)}" style="left:${stk.x || 20}px; top:${stk.y || 20}px; --stk-size:${stk.size || 24}px">
-        <div class="hamoji-stk-body">
-          <span class="hamoji-stk-text">${esc(stk.text)}</span>
-        </div>
-        <div class="hamoji-stk-ctrls">
-          <button type="button" class="hamoji-stk-del" data-stk-act="del" title="${tr('Hapus stiker')}">✕</button>
-          <div class="hamoji-stk-resize" data-stk-act="resize" title="${tr('Ubah ukuran stiker')}">↘</div>
-        </div>
+  return stickers.map(s => `
+    <div class="hamoji-sticker" data-stk-id="${esc(s.id)}" style="left:${s.x || 0}px;top:${s.y || 0}px;--stk-size:${s.size || 24}px">
+      <div class="hamoji-stk-body">
+        <span class="hamoji-stk-text">${esc(s.text)}</span>
       </div>
-    `)
-    .join('');
+      <div class="hamoji-stk-ctrls">
+        <button type="button" class="hamoji-stk-del" data-stk-act="del" aria-label="${tr('Hapus Stiker')}">✕</button>
+        <div class="hamoji-stk-resize" data-stk-act="resize" title="${tr('Ubah Ukuran')}"></div>
+      </div>
+    </div>
+  `).join('');
 }
 
 export function sinkronkanStikerLayer(note) {
   const layer = document.getElementById('hamoji-stickers-layer');
-  if (!layer) return;
-  layer.innerHTML = renderStickersHtml(note ? note.stickers : []);
+  if (layer && note) {
+    layer.innerHTML = renderStickersHtml(note.stickers);
+  }
 }
 
 export function pilihStiker(id) {
-  document.querySelectorAll('.hamoji-sticker').forEach(el => {
-    if (el.dataset.stkId === id) {
-      el.classList.add('selected');
-    } else {
-      el.classList.remove('selected');
-    }
-  });
+  batalkanPilihanStiker();
+  const el = document.querySelector(`.hamoji-sticker[data-stk-id="${id}"]`);
+  if (el) {
+    el.classList.add('selected');
+  }
 }
 
 export function batalkanPilihanStiker() {
@@ -322,62 +325,73 @@ export function panelHamojiHtml() {
       <!-- Header Panel -->
       <div class="hamoji-header-row">
         <div class="hamoji-title-box">
-          <span style="font-size:20px">✨</span>
-          <h3 class="rn-modal-title">Hamoji</h3>
-          <span class="hamoji-mode-badge">${isSticker ? '🎨 Mode Stiker' : '📝 Mode Teks'}</span>
+          <svg class="ico"><use href="#i-smile"/></svg>
+          <h3 class="hamoji-title-text">Hamoji</h3>
+          <span class="hamoji-mode-pill ${isSticker ? 'is-sticker' : ''}">
+            ${isSticker ? tr('Stiker') : tr('Teks')}
+          </span>
         </div>
-        <button class="btn btn-sec" data-pop-close style="height:28px;padding:0 8px;font-size:11px">✕</button>
-      </div>
-
-      <!-- Mode Switcher: 2 Mode (Teks & Stiker) -->
-      <div class="hamoji-mode-switch">
-        <button type="button" class="hamoji-mode-btn ${!isSticker ? 'active' : ''}" data-hamoji-set-mode="text">
-          <span>📝</span> ${tr('Mode Teks')}
-        </button>
-        <button type="button" class="hamoji-mode-btn ${isSticker ? 'active mode-sticker' : ''}" data-hamoji-set-mode="sticker">
-          <span>🎨</span> ${tr('Mode Stiker')}
+        <button class="iconbtn" data-pop-close aria-label="${tr('Tutup')}" style="width:28px;height:28px">
+          <svg class="ico"><use href="#i-x"/></svg>
         </button>
       </div>
 
-      <div style="font-size:12px;color:var(--muted);margin:-4px 0 2px">
+      <!-- Segmented Control Mode Toggle -->
+      <div class="hamoji-seg">
+        <button type="button" class="hamoji-seg-btn ${!isSticker ? 'active' : ''}" data-hamoji-set-mode="text">
+          <svg class="ico"><use href="#i-txt"/></svg>
+          <span>${tr('Mode Teks')}</span>
+        </button>
+        <button type="button" class="hamoji-seg-btn ${isSticker ? 'active' : ''}" data-hamoji-set-mode="sticker">
+          <svg class="ico"><use href="#i-pin"/></svg>
+          <span>${tr('Mode Stiker')}</span>
+        </button>
+      </div>
+
+      <!-- Caption Hint -->
+      <div class="hamoji-hint-row">
         ${isSticker
-          ? tr('💡 Klik kaomoji untuk menempelkannya sebagai stiker yang bisa digeser & diubah ukurannya.')
-          : tr('💡 Klik kaomoji untuk menyisipkannya langsung pada posisi kursor tulisan.')}
+          ? tr('Klik untuk menempelkan stiker bebas di catatan.')
+          : tr('Klik untuk menyisipkan karakter pada posisi kursor.')}
       </div>
 
       <!-- Search Input -->
-      <div>
-        <input type="text" class="hamoji-search-in" id="hamoji-search" placeholder="${tr('Cari kaomoji (misal: senyum, kucing, beruang, cinta)...')}" value="${esc(_searchQuery)}">
+      <div class="hamoji-search-box">
+        <svg class="ico hamoji-search-ico"><use href="#i-search"/></svg>
+        <input type="text" class="hamoji-search-input" id="hamoji-search" placeholder="${tr('Cari kaomoji atau simbol...')}" value="${esc(_searchQuery)}">
       </div>
 
       <!-- Kategori Chips -->
       <div class="hamoji-cats-row">
         ${HAMOJI_CATEGORIES.map(c => `
           <button type="button" class="hamoji-cat-chip ${c.id === _currentCategory ? 'active' : ''}" data-hamoji-cat="${c.id}">
-            ${c.label}
+            ${tr(c.label)}
           </button>
         `).join('')}
       </div>
 
-      <!-- Grid Daftar Kaomoji -->
+      <!-- Grid Daftar Kaomoji & Art -->
       <div class="hamoji-grid-wrap">
         ${list.length === 0 ? `
-          <div style="grid-column: 1 / -1; padding: 30px; text-align: center; color: var(--muted); font-size: 13px">
-            ${tr('Tidak ada kaomoji yang cocok.')}
+          <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--muted); font-size: 13px">
+            ${tr('Tidak ada karakter yang cocok.')}
           </div>
-        ` : list.map(item => `
-          <button type="button" class="hamoji-item-card" data-hamoji-insert="${esc(item.text)}">
-            <div class="hamoji-item-text">${esc(item.text)}</div>
-            <div class="hamoji-item-name">${esc(item.name || '')}</div>
-          </button>
-        `).join('')}
+        ` : list.map(item => {
+          const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
+          return `
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}">
+              <div class="hamoji-item-text">${esc(item.text)}</div>
+              <div class="hamoji-item-name">${esc(item.name || '')}</div>
+            </button>
+          `;
+        }).join('')}
       </div>
 
       <!-- Form Tambah Kaomoji Kustom -->
       <div class="hamoji-custom-add-box">
-        <input type="text" class="rn-input-text" id="hamoji-new-in" placeholder="${tr('Ketik kaomoji buatanmu sendiri...')}" style="height:32px;font-size:12px">
-        <button type="button" class="btn btn-sec" id="hamoji-add-btn" style="height:32px;font-size:12px;white-space:nowrap">
-          + ${tr('Simpan')}
+        <input type="text" class="hamoji-custom-input" id="hamoji-new-in" placeholder="${tr('Ketik kaomoji buatan sendiri...')}">
+        <button type="button" class="btn btn-pri hamoji-add-btn" id="hamoji-add-btn">
+          ${tr('Simpan')}
         </button>
       </div>
     </div>
@@ -388,9 +402,10 @@ export function bukaPanelHamoji(anchor) {
   openPop(panelHamojiHtml(), anchor);
 }
 
+export const bukaModalHamoji = bukaPanelHamoji;
+
 /* ── Delegasi Event & Mesin Interaksi Stiker ── */
 export function bindHamoji() {
-  // Buka Panel dari Header Button
   document.addEventListener('click', e => {
     const btn = e.target.closest('#hamoji-btn');
     if (btn) {
@@ -398,7 +413,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Ganti Mode Teks / Stiker di dalam Panel
     const modeBtn = e.target.closest('[data-hamoji-set-mode]');
     if (modeBtn) {
       const mode = modeBtn.dataset.hamojiSetMode;
@@ -407,7 +421,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Filter Kategori
     const catBtn = e.target.closest('[data-hamoji-cat]');
     if (catBtn) {
       _currentCategory = catBtn.dataset.hamojiCat;
@@ -415,7 +428,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Klik Kaomoji -> Sisip Teks atau Buat Stiker
     const itemCard = e.target.closest('[data-hamoji-insert]');
     if (itemCard) {
       const text = itemCard.dataset.hamojiInsert;
@@ -430,7 +442,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Simpan Kaomoji Kustom
     if (e.target && e.target.id === 'hamoji-add-btn') {
       const inp = document.getElementById('hamoji-new-in');
       const val = (inp ? inp.value : '').trim();
@@ -445,7 +456,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Hapus Stiker dari Tombol ✕
     const delStkBtn = e.target.closest('[data-stk-act="del"]');
     if (delStkBtn) {
       const stkEl = delStkBtn.closest('.hamoji-sticker');
@@ -463,7 +473,6 @@ export function bindHamoji() {
       return;
     }
 
-    // Pilih / Batalkan Pilihan Stiker saat klik
     const stickerEl = e.target.closest('.hamoji-sticker');
     if (stickerEl) {
       pilihStiker(stickerEl.dataset.stkId);
@@ -472,7 +481,6 @@ export function bindHamoji() {
     }
   });
 
-  // Live Search di Panel Hamoji
   document.addEventListener('input', e => {
     if (e.target && e.target.id === 'hamoji-search') {
       _searchQuery = e.target.value;
@@ -480,21 +488,24 @@ export function bindHamoji() {
       if (wrap) {
         const list = getFilteredHamojiList(_currentCategory, _searchQuery);
         wrap.innerHTML = list.length === 0 ? `
-          <div style="grid-column: 1 / -1; padding: 30px; text-align: center; color: var(--muted); font-size: 13px">
-            ${tr('Tidak ada kaomoji yang cocok.')}
+          <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--muted); font-size: 13px">
+            ${tr('Tidak ada karakter yang cocok.')}
           </div>
-        ` : list.map(item => `
-          <button type="button" class="hamoji-item-card" data-hamoji-insert="${esc(item.text)}">
-            <div class="hamoji-item-text">${esc(item.text)}</div>
-            <div class="hamoji-item-name">${esc(item.name || '')}</div>
-          </button>
-        `).join('');
+        ` : list.map(item => {
+          const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
+          return `
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}">
+              <div class="hamoji-item-text">${esc(item.text)}</div>
+              <div class="hamoji-item-name">${esc(item.name || '')}</div>
+            </button>
+          `;
+        }).join('');
       }
     }
   });
 
-  // Mesin Pointer Drag & Resize Stiker
-  let _activeDrag = null; // { type: 'move'|'resize', id, el, startX, startY, origX, origY, origSize }
+  // Pointer drag & resize
+  let _activeDrag = null;
 
   document.addEventListener('pointerdown', e => {
     const resizeHandle = e.target.closest('[data-stk-act="resize"]');
@@ -510,7 +521,6 @@ export function bindHamoji() {
     pilihStiker(id);
 
     if (resizeHandle) {
-      // Mulai Resize
       e.preventDefault();
       _activeDrag = {
         type: 'resize',
@@ -527,7 +537,6 @@ export function bindHamoji() {
     }
 
     if (!e.target.closest('.hamoji-stk-del')) {
-      // Mulai Drag / Geser
       _activeDrag = {
         type: 'move',
         id,

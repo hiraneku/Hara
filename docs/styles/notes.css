@@ -1074,36 +1074,12 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .mtu-ck.on{background:var(--accent);border-color:var(--accent);color:#fff}
 [data-theme=dark] .mtu-ck.on{color:#131711}
 
-/* ════════════ HAMOJI (KAOMOJI & STIKER INTERAKTIF) ════════════ */
+/* ════════════ HAMOJI (MODERN KAOMOJI & STICKER SYSTEM) ════════════ */
 #hamoji-btn {
-  padding: 0 8px;
-  width: auto;
-  min-width: 36px;
-  height: 36px;
   display: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--r-md);
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: .12s var(--ease);
-  cursor: pointer;
-}
-#hamoji-btn:hover {
-  background: var(--accent-weak);
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.hamoji-btn-face {
-  letter-spacing: -0.02em;
-  white-space: nowrap;
 }
 
-/* Layer Stiker */
+/* Layer Stiker Canvas */
 .blocks {
   position: relative;
 }
@@ -1125,26 +1101,28 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
+  padding: 6px 12px;
   border-radius: var(--r-md);
   background: var(--surface);
-  border: 1.5px solid transparent;
-  box-shadow: 0 2px 10px rgba(0,0,0,.08);
-  transition: box-shadow .12s var(--ease), border-color .12s var(--ease);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: box-shadow .15s var(--ease), border-color .15s var(--ease), transform .1s var(--ease);
   z-index: 10;
 }
 .hamoji-sticker:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  border-color: var(--border-strong);
 }
 .hamoji-sticker.dragging {
   cursor: grabbing !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.24) !important;
-  z-index: 30 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+  transform: scale(1.02);
+  z-index: 40 !important;
 }
 .hamoji-sticker.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-weak), 0 4px 18px rgba(0,0,0,.18);
-  z-index: 25;
+  box-shadow: 0 0 0 2px var(--accent-weak), 0 6px 20px rgba(0, 0, 0, 0.14);
+  z-index: 30;
 }
 
 .hamoji-stk-body {
@@ -1155,10 +1133,10 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .hamoji-stk-text {
   font-family: var(--sans);
   font-size: var(--stk-size, 24px);
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--text);
   white-space: pre;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -1169,47 +1147,49 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   display: block;
 }
 
-/* Tombol Hapus Stiker */
 .hamoji-stk-del {
   position: absolute;
-  top: -9px;
-  right: -9px;
+  top: -8px;
+  right: -8px;
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: var(--danger);
-  color: #fff;
-  border: 2px solid var(--surface);
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
   display: grid;
   place-items: center;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,.2);
-  transition: transform .1s var(--ease);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all .12s var(--ease);
   z-index: 15;
   padding: 0;
 }
 .hamoji-stk-del:hover {
-  transform: scale(1.15);
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  transform: scale(1.1);
 }
 
-/* Gagang Resize Stiker */
 .hamoji-stk-resize {
   position: absolute;
-  bottom: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
+  bottom: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
   border: 2px solid var(--surface);
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 10px;
   cursor: nwse-resize;
-  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   touch-action: none;
   z-index: 15;
 }
@@ -1217,133 +1197,213 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   transform: scale(1.15);
 }
 
-/* Modal Panel Hamoji */
+/* ════════════ HAMOJI MODAL DIALOG ════════════ */
 .hamoji-modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl, 16px);
   padding: 18px 20px;
   width: 100%;
-  max-width: 540px;
-  max-height: min(85vh, 660px);
+  max-width: 520px;
+  max-height: min(86vh, 680px);
   display: flex;
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
   box-shadow: var(--shadow-modal);
 }
+
+/* Modal Header */
 .hamoji-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 .hamoji-title-box {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.hamoji-mode-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: var(--r-sm);
-  background: var(--accent-weak);
+.hamoji-title-box .ico {
+  width: 20px;
+  height: 20px;
   color: var(--accent);
-  font-weight: 600;
 }
-
-/* Mode Switcher: 2 Pill Toggle */
-.hamoji-mode-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.hamoji-title-text {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.hamoji-mode-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
   background: var(--sunken);
-  padding: 4px;
-  border-radius: var(--r-md);
+  color: var(--muted);
   border: 1px solid var(--border);
 }
-.hamoji-mode-btn {
-  display: flex;
+.hamoji-mode-pill.is-sticker {
+  background: var(--accent-weak);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+/* Segmented Control (Mode Toggle) */
+.hamoji-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--sunken);
+  padding: 3px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+.hamoji-seg-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
+  height: 32px;
   border-radius: var(--r-sm);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--muted);
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: .12s var(--ease);
+  transition: all .15s var(--ease);
 }
-.hamoji-mode-btn.active {
+.hamoji-seg-btn .ico {
+  width: 14px;
+  height: 14px;
+  opacity: .7;
+}
+.hamoji-seg-btn:hover {
+  color: var(--text);
+}
+.hamoji-seg-btn.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-.hamoji-mode-btn.active.mode-sticker {
+.hamoji-seg-btn.active .ico {
+  opacity: 1;
   color: var(--accent);
 }
 
-.hamoji-search-in {
+.hamoji-hint-row {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: -4px 0 0;
+}
+
+/* Modern Search Box */
+.hamoji-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
-  height: 36px;
-  padding: 0 12px;
+}
+.hamoji-search-box .hamoji-search-ico {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.hamoji-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px 0 32px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: 12.5px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color .12s var(--ease), background .12s var(--ease);
 }
-.hamoji-search-in:focus {
+.hamoji-search-input:focus {
   border-color: var(--accent);
   background: var(--surface);
 }
 
+/* Category Filter Bar */
 .hamoji-cats-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   overflow-x: auto;
   padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hamoji-cats-row::-webkit-scrollbar {
+  display: none;
 }
 .hamoji-cat-chip {
   padding: 4px 10px;
-  border-radius: var(--r-sm);
-  font-size: 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
   font-weight: 500;
   background: var(--sunken);
   color: var(--muted);
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   cursor: pointer;
   white-space: nowrap;
-  transition: .1s var(--ease);
+  transition: all .12s var(--ease);
   flex: none;
 }
+.hamoji-cat-chip:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
 .hamoji-cat-chip.active {
-  background: var(--accent);
-  color: #fff;
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
   font-weight: 600;
 }
+[data-theme=dark] .hamoji-cat-chip.active {
+  background: var(--accent);
+  color: #131711;
+  border-color: var(--accent);
+}
 
+/* Art Grid Layout */
 .hamoji-grid-wrap {
-  max-height: 280px;
+  min-height: 180px;
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--bg);
-  padding: 10px;
+  padding: 8px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 7px;
   box-sizing: border-box;
+  align-content: start;
 }
+@media (max-width: 480px) {
+  .hamoji-grid-wrap {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+    max-height: 260px;
+  }
+}
+
 .hamoji-item-card {
-  padding: 10px 8px;
+  padding: 10px 6px;
+  min-height: 60px;
   border-radius: var(--r-md);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1351,10 +1411,11 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
-  transition: .12s var(--ease);
+  transition: border-color .12s var(--ease), background .12s var(--ease), transform .1s var(--ease);
   text-align: center;
+  box-sizing: border-box;
 }
 .hamoji-item-card:hover {
   border-color: var(--accent);
@@ -1364,17 +1425,32 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .hamoji-item-card:active {
   transform: scale(.97);
 }
+
+.hamoji-item-card.is-wide {
+  grid-column: span 2;
+  padding: 10px 12px;
+}
+@media (max-width: 480px) {
+  .hamoji-item-card.is-wide {
+    grid-column: 1 / -1;
+  }
+}
+
 .hamoji-item-text {
-  font-size: 14.5px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  line-height: 1.25;
+}
+.hamoji-item-card.is-wide .hamoji-item-text {
+  font-size: 14px;
 }
 .hamoji-item-name {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1382,9 +1458,34 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   max-width: 100%;
 }
 
+/* Custom Input Row */
 .hamoji-custom-add-box {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-top: 4px;
+  padding-top: 2px;
+}
+.hamoji-custom-input {
+  flex: 1;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+.hamoji-custom-input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.hamoji-add-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
 }

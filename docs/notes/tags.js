@@ -13,8 +13,8 @@
    tidak ada tag "hantu" yang menetap. Tag manual hanya bisa hilang bila
    field `tagsManual`-nya diubah (tidak ada UI-nya; ia milik impor). */
 
-import { state } from '../core/store.js?v=20260929115253';
-import { terlihat } from './kunci.js?v=20260929115253';
+import { state } from '../core/store.js?v=20260929120314';
+import { terlihat } from './kunci.js?v=20260929120314';
 
 /* Ambil nama tag dari satu string isi blok (HTML ringan).
    Hanya <span class="tg">#nama</span> yang dihitung — teks "#tag" yang
