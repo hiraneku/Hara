@@ -12,319 +12,169 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929141729';
-import { touch } from './note-model.js?v=20260929141729';
-import { saveSoon } from './editor/cleanup.js?v=20260929141729';
-import { openPop, closeAll } from './menus/pop.js?v=20260929141729';
-import { esc } from '../core/dom.js?v=20260929141729';
-import { toast } from '../core/toast.js?v=20260929141729';
-import { t as tr } from '../core/i18n.js?v=20260929141729';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929141729';
-import { refresh } from './editor/cleanup.js?v=20260929141729';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929141729';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929141729';
+import { state } from '../core/store.js?v=20260929143813';
+import { touch } from './note-model.js?v=20260929143813';
+import { saveSoon } from './editor/cleanup.js?v=20260929143813';
+import { openPop, closeAll } from './menus/pop.js?v=20260929143813';
+import { esc } from '../core/dom.js?v=20260929143813';
+import { toast } from '../core/toast.js?v=20260929143813';
+import { t as tr } from '../core/i18n.js?v=20260929143813';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929143813';
+import { refresh } from './editor/cleanup.js?v=20260929143813';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929143813';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929143813';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
 const STORAGE_COLOR_KEY = 'hara.hamoji.color';
 
-/* ── Pustaka Template Moji Kustom Eksklusif Stiker (40 Varian Otentik Sesuai Foto Pinterest) ── */
-export const CUSTOM_MOJI_TEMPLATES = {
+/* ── Pustaka Vektor SVG Moji Kustom Orisinal (40 Varian Persis Gambar Referensi Pinterest) ── */
+export const HAMOJI_STICKER_SVGS = {
   // Baris 1
-  c1: {
-    id: 'c1',
-    name: 'Cinta Berbinar Pink Hati',
-    tags: 'love hati cinta mata pink berbinar',
-    text: '(♡ v ♡)',
-    html: `(<span class="h-heart">♡</span> v <span class="h-heart">♡</span>)`,
-  },
-  c2: {
-    id: 'c2',
-    name: 'Sangat Riang',
-    tags: 'senang riang tawa delta',
-    text: '(≥ ∇ ≤)',
-    html: `(≥ ∇ ≤)`,
-  },
-  c3: {
-    id: 'c3',
-    name: 'Bersiul Pipi Hati',
-    tags: 'siul santai bibir manis pink hati',
-    text: '(♡ ‾́ 3 ‾́ ♡)',
-    html: `(<span class="h-heart">♡</span> ‾́ 3 ‾́ <span class="h-heart">♡</span>)`,
-  },
-  c4: {
-    id: 'c4',
-    name: 'Gemas Riang',
-    tags: 'gemas senang imut ceria w',
-    text: '(> ω <)',
-    html: `(> ω <)`,
-  },
-  c5: {
-    id: 'c5',
-    name: 'Senyum Lebar Blush',
-    tags: 'senyum tawa riang pipi merah blush',
-    text: '(˚ ▱ ˚)',
-    html: `(<span class="h-blush"></span> ˚ ▱ ˚ <span class="h-blush"></span>)`,
-  },
+  c1: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 35 24 L 26 15 C 23 12, 23 8, 27 6 C 30 4, 33 5, 35 8 C 37 5, 40 4, 43 6 C 47 8, 47 12, 44 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 75 24 L 66 15 C 63 12, 63 8, 67 6 C 70 4, 73 5, 75 8 C 77 5, 80 4, 83 6 C 87 8, 87 12, 84 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 50 18 L 55 24 L 60 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
+  c2: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 12 L 40 18 L 26 24 M 26 27 L 40 27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 84 12 L 70 18 L 84 24 M 70 27 L 84 27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 48 18 L 62 18 L 55 26 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
+
+  c3: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 10 6 C 5 12, 5 24, 10 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 100 6 C 105 12, 105 24, 100 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 22 22 L 16 16 C 14 14, 14 11, 17 9 C 19 8, 21 8, 22 10 C 23 8, 25 8, 27 9 C 30 11, 30 14, 28 16 Z" fill="#ff69b4"/><path d="M 88 22 L 82 16 C 80 14, 80 11, 83 9 C 85 8, 87 8, 88 10 C 89 8, 91 8, 93 9 C 96 11, 96 14, 94 16 Z" fill="#ff69b4"/><path d="M 32 14 L 46 14 M 43 12 L 45 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 64 14 L 78 14 M 75 12 L 77 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 52 14 C 57 14, 57 18, 54 18 C 58 18, 58 24, 52 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c4: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 12 L 40 18 L 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 84 12 L 70 18 L 84 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 46 20 C 46 26, 53 26, 55 21 C 57 26, 64 26, 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c5: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="23" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><ellipse cx="87" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><circle cx="34" cy="18" r="3.2" fill="currentColor"/><circle cx="76" cy="18" r="3.2" fill="currentColor"/><rect x="49" y="14" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`,
 
   // Baris 2
-  c6: {
-    id: 'c6',
-    name: 'Tertawa Lepas Blush',
-    tags: 'tawa tertawa gembira blush garis',
-    text: '(ˆ ▽ ˆ)',
-    html: `(<span class="h-blush-lines">//</span> ˆ ▽ ˆ <span class="h-blush-lines">//</span>)`,
-  },
-  c7: {
-    id: 'c7',
-    name: 'Senyum Lembut',
-    tags: 'senyum manis damai lembut',
-    text: '(^ ‿ ^)',
-    html: `(^ ‿ ^)`,
-  },
-  c8: {
-    id: 'c8',
-    name: 'Mata Garis Tenang',
-    tags: 'tenang santai damai strip',
-    text: '(^ --- ^)',
-    html: `(^ --- ^)`,
-  },
-  c9: {
-    id: 'c9',
-    name: 'Penuh Kasih Pink Hati',
-    tags: 'cinta love hati manis pink',
-    text: '(♡ ₃ ♡)',
-    html: `(<span class="h-heart">♡</span> ₃ <span class="h-heart">♡</span>)`,
-  },
-  c10: {
-    id: 'c10',
-    name: 'Gemas Melet Lidah Pink',
-    tags: 'gemas imut lidah melet pink',
-    text: '(> 👅 <)',
-    html: `(> <svg class="h-svg-tongue" viewBox="0 0 24 16" width="1.2em" height="0.8em" style="vertical-align:middle;display:inline-block"><path d="M4,4 Q12,12 20,4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M9,7 Q9,14 12,14 Q15,14 15,7 Z" fill="#ff6b8b" stroke="currentColor" stroke-width="1.5"/></svg> <)`,
-  },
+  c6: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 20 22 L 23 16 M 25 22 L 28 16 M 82 22 L 85 16 M 87 22 L 90 16" stroke="#ff69b4" stroke-width="2.2" stroke-linecap="round"/><path d="M 32 18 Q 38 10 44 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 66 18 Q 72 10 78 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 48 18 L 62 18 Q 55 30 48 18 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
+
+  c7: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 30 18 L 36 12 L 42 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 68 18 L 74 12 L 80 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 46 20 Q 55 28 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c8: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 30 18 L 36 12 L 42 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 68 18 L 74 12 L 80 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 46 20 L 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c9: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 35 24 L 26 15 C 23 12, 23 8, 27 6 C 30 4, 33 5, 35 8 C 37 5, 40 4, 43 6 C 47 8, 47 12, 44 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 75 24 L 66 15 C 63 12, 63 8, 67 6 C 70 4, 73 5, 75 8 C 77 5, 80 4, 83 6 C 87 8, 87 12, 84 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 52 14 C 57 14, 57 18, 54 18 C 58 18, 58 24, 52 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c10: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 12 L 40 18 L 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 84 12 L 70 18 L 84 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 46 17 Q 55 24 64 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 50 19 Q 50 28 55 28 Q 60 28 60 19 Z" fill="#ff5376" stroke="currentColor" stroke-width="1.8"/></svg>`,
 
   // Baris 3
-  c11: {
-    id: 'c11',
-    name: 'Malu Senang Blush',
-    tags: 'malu senang imut ceria blush',
-    text: '(> ‿ <)',
-    html: `(<span class="h-blush"></span> > ‿ < <span class="h-blush"></span>)`,
-  },
-  c12: {
-    id: 'c12',
-    name: 'Polos Bengong',
-    tags: 'bengong polos imut lucu o',
-    text: '(^ ӧ ^)',
-    html: `(^ ӧ ^)`,
-  },
-  c13: {
-    id: 'c13',
-    name: 'Kecupan Manis Tetes',
-    tags: 'cium love cinta manis tetes',
-    text: '(♡„ 3 ♡)',
-    html: `(<span class="h-heart">♡</span><span class="h-sweat-tick">„</span> 3 <span class="h-heart">♡</span>)`,
-  },
-  c14: {
-    id: 'c14',
-    name: 'Pipi Bintang Berseri',
-    tags: 'pipi berseri bintang senang sparkle',
-    text: '(* ^ ᴗ ^ *)',
-    html: `(<svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg> ^ ᴗ ^ <svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg>)`,
-  },
-  c15: {
-    id: 'c15',
-    name: 'Tatapan Kasih Segitiga',
-    tags: 'hati cinta tatapan pink delta',
-    text: '(♡ ∇ ♡)',
-    html: `(<span class="h-heart">♡</span> ∇ <span class="h-heart">♡</span>)`,
-  },
+  c11: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="23" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><ellipse cx="87" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><path d="M 28 13 L 40 18 L 28 23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 82 13 L 70 18 L 82 23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 47 19 Q 55 26 63 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c12: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 30 18 L 36 12 L 42 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 68 18 L 74 12 L 80 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="55" cy="20" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="52" cy="13" r="1.2" fill="currentColor"/><circle cx="58" cy="13" r="1.2" fill="currentColor"/></svg>`,
+
+  c13: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 35 24 L 26 15 C 23 12, 23 8, 27 6 C 30 4, 33 5, 35 8 C 37 5, 40 4, 43 6 C 47 8, 47 12, 44 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 75 24 L 66 15 C 63 12, 63 8, 67 6 C 70 4, 73 5, 75 8 C 77 5, 80 4, 83 6 C 87 8, 87 12, 84 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 43 23 L 41 27 M 46 23 L 44 27" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M 53 14 C 58 14, 58 18, 55 18 C 59 18, 59 24, 53 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c14: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 24 13 L 26 17 L 30 18 L 26 19 L 24 23 L 22 19 L 18 18 L 22 17 Z" fill="#f59e0b"/><path d="M 86 13 L 88 17 L 92 18 L 88 19 L 86 23 L 84 19 L 80 18 L 84 17 Z" fill="#f59e0b"/><path d="M 36 20 L 42 14 L 48 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 62 20 L 68 14 L 74 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 51 22 Q 55 24 59 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+
+  c15: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 35 24 L 26 15 C 23 12, 23 8, 27 6 C 30 4, 33 5, 35 8 C 37 5, 40 4, 43 6 C 47 8, 47 12, 44 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 75 24 L 66 15 C 63 12, 63 8, 67 6 C 70 4, 73 5, 75 8 C 77 5, 80 4, 83 6 C 87 8, 87 12, 84 15 Z" fill="none" stroke="#ff4071" stroke-width="2.2" stroke-linejoin="round"/><path d="M 48 18 L 62 18 L 55 26 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
 
   // Baris 4
-  c16: {
-    id: 'c16',
-    name: 'Kucing Ceria Kumis',
-    tags: 'kucing cat meow kumis senyum',
-    text: '(= ^ ‿ ^ =)',
-    html: `(= ^ ‿ ^ =)`,
-  },
-  c17: {
-    id: 'c17',
-    name: 'Babi Imut Hidung',
-    tags: 'babi pig lucu imut hidung',
-    text: '( ˆ(oo)ˆ )',
-    html: `( ˆ(oo)ˆ )`,
-  },
-  c18: {
-    id: 'c18',
-    name: 'Canggung Keringat Ganda',
-    tags: 'canggung keringat degdegan tetes',
-    text: '(;; - . -)',
-    html: `(<svg class="h-svg-drops" viewBox="0 0 16 20" width="0.8em" height="1em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin:0 2px"><path d="M5,7 Q2,12 5,14 Q8,12 5,7 Z M11,3 Q8,8 11,10 Q14,8 11,3 Z" fill="currentColor"/></svg> - . - )`,
-  },
-  c19: {
-    id: 'c19',
-    name: 'Tidur Nyenyak',
-    tags: 'tidur lelap tenang santai kotak',
-    text: '(˘ ▱ ˘)',
-    html: `(˘ ▱ ˘)`,
-  },
-  c20: {
-    id: 'c20',
-    name: 'Lelah Pasrah Keringat',
-    tags: 'capek lelah pasrah keringat tetes',
-    text: '(- _ - ;)',
-    html: `(- _ - <svg class="h-svg-tear" viewBox="0 0 12 18" width="0.65em" height="0.95em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin-left:2px"><path d="M6,2 Q1,10 6,15 Q11,10 6,2 Z" fill="currentColor"/></svg> )`,
-  },
+  c16: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 12 6 C 6 12, 6 24, 12 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 98 6 C 104 12, 104 24, 98 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 17 16 L 27 16 M 17 21 L 27 21 M 83 16 L 93 16 M 83 21 L 93 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M 34 19 L 40 13 L 46 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 64 19 L 70 13 L 76 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 49 20 Q 55 26 61 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c17: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 19 L 32 13 L 38 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 72 19 L 78 13 L 84 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="55" cy="20" rx="14" ry="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="20" r="2.2" fill="currentColor"/><circle cx="60" cy="20" r="2.2" fill="currentColor"/></svg>`,
+
+  c18: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 21 16 Q 19 12 21 10 Q 23 12 21 16 Z M 27 21 Q 25 17 27 15 Q 29 17 27 21 Z" fill="#38bdf8"/><path d="M 37 18 L 49 18 M 61 18 L 73 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="55" cy="21" r="1.8" fill="currentColor"/></svg>`,
+
+  c19: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 16 Q 35 22 42 16 M 68 16 Q 75 22 82 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><rect x="49" y="15" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`,
+
+  c20: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 17 L 42 17 M 68 17 L 82 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 48 23 L 62 23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 87 18 Q 85 14 87 12 Q 89 14 87 18 Z" fill="#38bdf8"/></svg>`,
 
   // Baris 5
-  c21: {
-    id: 'c21',
-    name: 'Lega Menghela Napas',
-    tags: 'lega napas hembus santai angin puff',
-    text: '(˘ ▽ ˘) 💨',
-    html: `(<svg class="h-svg-puff" viewBox="0 0 20 20" width="0.9em" height="0.9em" style="vertical-align:middle;display:inline-block;color:#94a3b8;margin-right:2px"><path d="M14,14 Q10,12 8,15 Q5,15 5,12 Q5,9 9,9 Q10,6 14,7 Q17,7 17,10 Q19,11 18,13 Q17,15 14,14 Z" fill="currentColor" opacity="0.8"/><circle cx="4" cy="16" r="1.5" fill="currentColor" opacity="0.6"/></svg> ˘ ▽ ˘ )`,
-  },
-  c22: {
-    id: 'c22',
-    name: 'Malu Merona Garis',
-    tags: 'malu merona blush garis kotak',
-    text: '(// ㅂ //)',
-    html: `(<span class="h-blush-lines">//</span> ㅂ <span class="h-blush-lines">//</span>)`,
-  },
-  c23: {
-    id: 'c23',
-    name: 'Mengantuk Datar',
-    tags: 'kantuk ngantuk tidur diam datar',
-    text: '(- . -)',
-    html: `(- . -)`,
-  },
-  c24: {
-    id: 'c24',
-    name: 'Damai Imut Blush',
-    tags: 'damai tenang imut kalem blush w',
-    text: '(˘ ω ˘)',
-    html: `(<span class="h-blush"></span> ˘ ω ˘ <span class="h-blush"></span>)`,
-  },
-  c25: {
-    id: 'c25',
-    name: 'Cemberut Khawatir',
-    tags: 'cemberut ngambek halus cemas sedih',
-    text: '(˚ ‸ ˚)',
-    html: `(˚ ‸ ˚)`,
-  },
+  c21: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 12 27 Q 6 25 5 20 Q 5 16 9 16 Q 11 12 16 13 Q 19 13 19 17 Q 21 18 20 22 Q 19 25 15 25 Z" fill="#94a3b8" opacity="0.85"/><circle cx="5" cy="27" r="1.5" fill="#94a3b8" opacity="0.7"/><path d="M 24 6 C 18 12, 18 24, 24 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 34 16 Q 41 22 48 16 M 72 16 Q 79 22 86 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 53 17 L 67 17 Q 60 28 53 17 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
+
+  c22: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 20 22 L 23 15 M 26 22 L 29 15 M 81 22 L 84 15 M 87 22 L 90 15" stroke="#ff69b4" stroke-width="2.2" stroke-linecap="round"/><path d="M 32 14 L 44 14 M 66 14 L 78 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 49 14 L 49 25 L 61 25 L 61 14 M 49 20 L 61 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
+  c23: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 18 L 44 18 M 66 18 L 82 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="55" cy="20" r="2" fill="currentColor"/></svg>`,
+
+  c24: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="23" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><ellipse cx="87" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><path d="M 28 15 Q 36 21 44 15 M 66 15 Q 74 21 82 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 46 20 C 46 26, 53 26, 55 21 C 57 26, 64 26, 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c25: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 30 11 L 40 14 M 80 11 L 70 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="35" cy="18" r="3" fill="currentColor"/><circle cx="75" cy="18" r="3" fill="currentColor"/><path d="M 48 24 L 55 19 L 62 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 
   // Baris 6
-  c26: {
-    id: 'c26',
-    name: 'Terkejut Riang Blush',
-    tags: 'kaget senang terkejut riang blush',
-    text: '(˚ ▱ ˚)',
-    html: `(<span class="h-blush"></span> ˚ ▱ ˚ <span class="h-blush"></span>)`,
-  },
-  c27: {
-    id: 'c27',
-    name: 'Senyum Pasrah Keringat',
-    tags: 'senyum pasrah ikhlas keringat tetes',
-    text: '(- ‿ - ;;)',
-    html: `(- ‿ - <svg class="h-svg-drops" viewBox="0 0 16 20" width="0.8em" height="1em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin:0 2px"><path d="M5,7 Q2,12 5,14 Q8,12 5,7 Z M11,3 Q8,8 11,10 Q14,8 11,3 Z" fill="currentColor"/></svg> )`,
-  },
-  c28: {
-    id: 'c28',
-    name: 'Kesal Menahan Diri',
-    tags: 'kesal marah urat emosi pagar tag',
-    text: '(- _ - #)',
-    html: `(- _ - <span class="h-anger-mark">#</span> )`,
-  },
-  c29: {
-    id: 'c29',
-    name: 'Senyum Santai Smug',
-    tags: 'senyum santai kalem manis',
-    text: '(- ‿ -)',
-    html: `(- ‿ -)`,
-  },
-  c30: {
-    id: 'c30',
-    name: 'Puas Bahagia Blush',
-    tags: 'puas senang bahagia tawa blush',
-    text: '(˘ ▽ ˘)',
-    html: `(<span class="h-blush"></span> ˘ ▽ ˘ <span class="h-blush"></span>)`,
-  },
+  c26: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="23" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><ellipse cx="87" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><circle cx="34" cy="18" r="3.2" fill="currentColor"/><circle cx="76" cy="18" r="3.2" fill="currentColor"/><rect x="49" y="15" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`,
+
+  c27: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 17 L 39 17 M 61 17 L 74 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 44 19 Q 50 25 56 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 81 16 Q 79 12 81 10 Q 83 12 81 16 Z M 87 21 Q 85 17 87 15 Q 89 17 87 21 Z" fill="#38bdf8"/></svg>`,
+
+  c28: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 17 L 40 17 M 60 17 L 74 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 45 22 L 55 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 80 14 L 90 14 M 80 20 L 90 20 M 83 11 L 83 23 M 87 11 L 87 23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+
+  c29: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 17 L 44 17 M 66 17 L 82 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 47 19 Q 55 27 63 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c30: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="23" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><ellipse cx="87" cy="20" rx="6" ry="4" fill="rgba(255, 105, 180, 0.7)"/><path d="M 28 15 Q 36 21 44 15 M 66 15 Q 74 21 82 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 49 17 L 61 17 Q 55 27 49 17 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>`,
 
   // Baris 7
-  c31: {
-    id: 'c31',
-    name: 'Kesal Gemas Urat Marah',
-    tags: 'kesal marah gemas urat merah',
-    text: '( ˃ ᵤ ˂ 💢 )',
-    html: `( ˘ ‸ ˘ <svg class="h-svg-anger" viewBox="0 0 24 24" width="0.9em" height="0.9em" style="vertical-align:middle;display:inline-block;color:#ef4444;margin-left:2px"><path d="M4,10 L10,10 L10,4 M14,4 L14,10 L20,10 M20,14 L14,14 L14,20 M10,20 L10,14 L4,14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg> )`,
-  },
-  c32: {
-    id: 'c32',
-    name: 'Bulat Imut Kucing',
-    tags: 'bulat imut mata titik w kucing',
-    text: '(˚ ω ˚)',
-    html: `(˚ ω ˚)`,
-  },
-  c33: {
-    id: 'c33',
-    name: 'Mabuk Kepayang Bintang',
-    tags: 'senang santai melayang bintang sparkle',
-    text: '(* ¯ ㅂ ¯ *)',
-    html: `(<svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg> ¯ ㅂ ¯ <svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg>)`,
-  },
-  c34: {
-    id: 'c34',
-    name: 'Menjerit Panik',
-    tags: 'teriak jerit panik pusing kotak',
-    text: '(> ▱ <)',
-    html: `(> ▱ <)`,
-  },
-  c35: {
-    id: 'c35',
-    name: 'Menangis Pilu',
-    tags: 'sedih nangis airmata sedih t',
-    text: '(T ^ T)',
-    html: `(T ^ T)`,
-  },
+  c31: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 15 Q 34 21 42 15 M 58 15 Q 66 21 74 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 46 22 L 50 19 L 54 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 80 11 L 84 11 L 84 7 M 87 7 L 87 11 L 91 11 M 91 14 L 87 14 L 87 18 M 84 18 L 84 14 L 80 14" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>`,
+
+  c32: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="34" cy="17" r="3.2" fill="currentColor"/><circle cx="76" cy="17" r="3.2" fill="currentColor"/><path d="M 46 20 C 46 26, 53 26, 55 21 C 57 26, 64 26, 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c33: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 23 15 L 25 18 L 28 19 L 25 20 L 23 23 L 21 20 L 18 19 L 21 18 Z" fill="#f59e0b"/><path d="M 87 15 L 89 18 L 92 19 L 89 20 L 87 23 L 85 20 L 82 19 L 85 18 Z" fill="#f59e0b"/><path d="M 32 14 L 44 14 M 66 14 L 78 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 49 14 L 49 25 L 61 25 L 61 14 M 49 20 L 61 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
+  c34: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 12 L 40 18 L 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 84 12 L 70 18 L 84 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="49" y="14" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`,
+
+  c35: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 13 L 42 13 M 34 13 L 34 26 M 68 13 L 84 13 M 76 13 L 76 26" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round"/><path d="M 50 22 L 55 17 L 60 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 
   // Baris 8
-  c36: {
-    id: 'c36',
-    name: 'Menyerah Menetes Air Mata',
-    tags: 'lemas menyerah pasrah nangis tetes',
-    text: '(‾́ ▱ T)',
-    html: `(‾́ ▱ <span class="h-tear-stream">T</span>)`,
-  },
-  c37: {
-    id: 'c37',
-    name: 'Bertekad Alis Tajam',
-    tags: 'fokus tekad tajam alis serius w',
-    text: '(•̀ ω •́)',
-    html: `(•̀ ω •́)`,
-  },
-  c38: {
-    id: 'c38',
-    name: 'Cemas Tetes Air Mata',
-    tags: 'cemas gugup keringat airmata tetes sedih',
-    text: '(˘ ︵ ˘ 💧)',
-    html: `(˘ ︵ ˘ <svg class="h-svg-tear" viewBox="0 0 12 18" width="0.65em" height="0.95em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin-left:2px"><path d="M6,2 Q1,10 6,15 Q11,10 6,2 Z" fill="currentColor"/></svg> )`,
-  },
-  c39: {
-    id: 'c39',
-    name: 'Menangis Tersedu Lebar',
-    tags: 'sedih nangis nangis patah t',
-    text: '(T ⁔ T)',
-    html: `(T ⁔ T)`,
-  },
-  c40: {
-    id: 'c40',
-    name: 'Menari Gembira Bahagia',
-    tags: 'joget nari gembira santai riang tangan',
-    text: '( / ¯ ㅂ ¯ / )',
-    html: `( / ¯ ㅂ ¯ / )`,
-  },
+  c36: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 14 L 42 14 M 39 12 L 41 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 68 13 L 84 13 M 76 13 L 76 26" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round"/><rect x="49" y="15" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`,
+
+  c37: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 10 L 42 15 M 82 10 L 68 15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="34" cy="18" r="3.2" fill="currentColor"/><circle cx="76" cy="18" r="3.2" fill="currentColor"/><path d="M 46 20 C 46 26, 53 26, 55 21 C 57 26, 64 26, 64 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c38: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 14 6 C 8 12, 8 24, 14 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 96 6 C 102 12, 102 24, 96 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 15 Q 34 21 42 15 M 58 15 Q 66 21 74 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 45 22 Q 50 17 55 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 84 22 Q 81 16 84 13 Q 87 16 84 22 Z" fill="#38bdf8"/></svg>`,
+
+  c39: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 16 6 C 10 12, 10 24, 16 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 6 C 100 12, 100 24, 94 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 24 13 L 42 13 M 33 13 L 33 27 M 68 13 L 86 13 M 77 13 L 77 27" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round"/><path d="M 48 24 Q 55 18 62 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  c40: `<svg viewBox="0 0 110 36" class="hamoji-svg-stk"><path d="M 6 26 L 16 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M 22 6 C 16 12, 16 24, 22 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 32 14 L 44 14 M 66 14 L 78 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 49 14 L 49 25 L 61 25 L 61 14 M 49 20 L 61 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 88 6 C 94 12, 94 24, 88 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 94 26 L 104 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+};
+
+export const CUSTOM_MOJI_TEMPLATES = {
+  // Baris 1
+  c1: { id: 'c1', name: 'Cinta Berbinar Pink Hati', cat: 'custom', subCat: 'cinta', tags: 'love hati cinta mata pink berbinar', text: '(♡ v ♡)', svg: HAMOJI_STICKER_SVGS.c1 },
+  c2: { id: 'c2', name: 'Sangat Riang', cat: 'custom', subCat: 'senang', tags: 'senang riang tawa delta', text: '(≥ ∇ ≤)', svg: HAMOJI_STICKER_SVGS.c2 },
+  c3: { id: 'c3', name: 'Bersiul Pipi Hati', cat: 'custom', subCat: 'cinta', tags: 'siul santai bibir manis pink hati', text: '(♡ ‾́ 3 ‾́ ♡)', svg: HAMOJI_STICKER_SVGS.c3 },
+  c4: { id: 'c4', name: 'Gemas Riang', cat: 'custom', subCat: 'senang', tags: 'gemas senang imut ceria w', text: '(> ω <)', svg: HAMOJI_STICKER_SVGS.c4 },
+  c5: { id: 'c5', name: 'Senyum Lebar Blush', cat: 'custom', subCat: 'senang', tags: 'senyum tawa riang pipi merah blush', text: '(˚ ▱ ˚)', svg: HAMOJI_STICKER_SVGS.c5 },
+
+  // Baris 2
+  c6: { id: 'c6', name: 'Tertawa Lepas Blush', cat: 'custom', subCat: 'senang', tags: 'tawa tertawa gembira blush garis', text: '(ˆ ▽ ˆ)', svg: HAMOJI_STICKER_SVGS.c6 },
+  c7: { id: 'c7', name: 'Senyum Lembut', cat: 'custom', subCat: 'senang', tags: 'senyum manis damai lembut', text: '(^ ‿ ^)', svg: HAMOJI_STICKER_SVGS.c7 },
+  c8: { id: 'c8', name: 'Mata Garis Tenang', cat: 'custom', subCat: 'senang', tags: 'tenang santai damai strip', text: '(^ --- ^)', svg: HAMOJI_STICKER_SVGS.c8 },
+  c9: { id: 'c9', name: 'Penuh Kasih Pink Hati', cat: 'custom', subCat: 'cinta', tags: 'cinta love hati manis pink', text: '(♡ ₃ ♡)', svg: HAMOJI_STICKER_SVGS.c9 },
+  c10: { id: 'c10', name: 'Gemas Melet Lidah Pink', cat: 'custom', subCat: 'senang', tags: 'gemas imut lidah melet pink', text: '(> 👅 <)', svg: HAMOJI_STICKER_SVGS.c10 },
+
+  // Baris 3
+  c11: { id: 'c11', name: 'Malu Senang Blush', cat: 'custom', subCat: 'senang', tags: 'malu senang imut ceria blush', text: '(> ‿ <)', svg: HAMOJI_STICKER_SVGS.c11 },
+  c12: { id: 'c12', name: 'Polos Bengong', cat: 'custom', subCat: 'ekspresi', tags: 'bengong polos imut lucu o', text: '(^ ӧ ^)', svg: HAMOJI_STICKER_SVGS.c12 },
+  c13: { id: 'c13', name: 'Kecupan Manis Tetes', cat: 'custom', subCat: 'cinta', tags: 'cium love cinta manis tetes', text: '(♡„ 3 ♡)', svg: HAMOJI_STICKER_SVGS.c13 },
+  c14: { id: 'c14', name: 'Pipi Bintang Berseri', cat: 'custom', subCat: 'senang', tags: 'pipi berseri bintang senang sparkle', text: '(* ^ ᴗ ^ *)', svg: HAMOJI_STICKER_SVGS.c14 },
+  c15: { id: 'c15', name: 'Tatapan Kasih Segitiga', cat: 'custom', subCat: 'cinta', tags: 'hati cinta tatapan pink delta', text: '(♡ ∇ ♡)', svg: HAMOJI_STICKER_SVGS.c15 },
+
+  // Baris 4
+  c16: { id: 'c16', name: 'Kucing Ceria Kumis', cat: 'custom', subCat: 'hewan', tags: 'kucing cat meow kumis senyum', text: '(= ^ ‿ ^ =)', svg: HAMOJI_STICKER_SVGS.c16 },
+  c17: { id: 'c17', name: 'Babi Imut Hidung', cat: 'custom', subCat: 'hewan', tags: 'babi pig lucu imut hidung', text: '( ˆ(oo)ˆ )', svg: HAMOJI_STICKER_SVGS.c17 },
+  c18: { id: 'c18', name: 'Canggung Keringat Ganda', cat: 'custom', subCat: 'ekspresi', tags: 'canggung keringat degdegan tetes', text: '(;; - . -)', svg: HAMOJI_STICKER_SVGS.c18 },
+  c19: { id: 'c19', name: 'Tidur Nyenyak', cat: 'custom', subCat: 'ekspresi', tags: 'tidur lelap tenang santai kotak', text: '(˘ ▱ ˘)', svg: HAMOJI_STICKER_SVGS.c19 },
+  c20: { id: 'c20', name: 'Lelah Pasrah Keringat', cat: 'custom', subCat: 'ekspresi', tags: 'capek lelah pasrah keringat tetes', text: '(- _ - ;)', svg: HAMOJI_STICKER_SVGS.c20 },
+
+  // Baris 5
+  c21: { id: 'c21', name: 'Lega Menghela Napas', cat: 'custom', subCat: 'ekspresi', tags: 'lega napas hembus santai angin puff', text: '(˘ ▽ ˘) 💨', svg: HAMOJI_STICKER_SVGS.c21 },
+  c22: { id: 'c22', name: 'Malu Merona Garis', cat: 'custom', subCat: 'senang', tags: 'malu merona blush garis kotak', text: '(// ㅂ //)', svg: HAMOJI_STICKER_SVGS.c22 },
+  c23: { id: 'c23', name: 'Mengantuk Datar', cat: 'custom', subCat: 'ekspresi', tags: 'kantuk ngantuk tidur diam datar', text: '(- . -)', svg: HAMOJI_STICKER_SVGS.c23 },
+  c24: { id: 'c24', name: 'Damai Imut Blush', cat: 'custom', subCat: 'senang', tags: 'damai tenang imut kalem blush w', text: '(˘ ω ˘)', svg: HAMOJI_STICKER_SVGS.c24 },
+  c25: { id: 'c25', name: 'Cemberut Khawatir', cat: 'custom', subCat: 'ekspresi', tags: 'cemberut ngambek halus cemas sedih', text: '(˚ ‸ ˚)', svg: HAMOJI_STICKER_SVGS.c25 },
+
+  // Baris 6
+  c26: { id: 'c26', name: 'Terkejut Riang Blush', cat: 'custom', subCat: 'senang', tags: 'kaget senang terkejut riang blush', text: '(˚ ▱ ˚)', svg: HAMOJI_STICKER_SVGS.c26 },
+  c27: { id: 'c27', name: 'Senyum Pasrah Keringat', cat: 'custom', subCat: 'ekspresi', tags: 'senyum pasrah ikhlas keringat tetes', text: '(- ‿ - ;;)', svg: HAMOJI_STICKER_SVGS.c27 },
+  c28: { id: 'c28', name: 'Kesal Menahan Diri', cat: 'custom', subCat: 'ekspresi', tags: 'kesal marah urat emosi pagar tag', text: '(- _ - #)', svg: HAMOJI_STICKER_SVGS.c28 },
+  c29: { id: 'c29', name: 'Senyum Santai Smug', cat: 'custom', subCat: 'senang', tags: 'senyum santai kalem manis', text: '(- ‿ -)', svg: HAMOJI_STICKER_SVGS.c29 },
+  c30: { id: 'c30', name: 'Puas Bahagia Blush', cat: 'custom', subCat: 'senang', tags: 'puas senang bahagia tawa blush', text: '(˘ ▽ ˘)', svg: HAMOJI_STICKER_SVGS.c30 },
+
+  // Baris 7
+  c31: { id: 'c31', name: 'Kesal Gemas Urat Marah', cat: 'custom', subCat: 'ekspresi', tags: 'kesal marah gemas urat merah', text: '( ˃ ᵤ ˂ 💢 )', svg: HAMOJI_STICKER_SVGS.c31 },
+  c32: { id: 'c32', name: 'Bulat Imut Kucing', cat: 'custom', subCat: 'hewan', tags: 'bulat imut mata titik w kucing', text: '(˚ ω ˚)', svg: HAMOJI_STICKER_SVGS.c32 },
+  c33: { id: 'c33', name: 'Mabuk Kepayang Bintang', cat: 'custom', subCat: 'senang', tags: 'senang santai melayang bintang sparkle', text: '(* ¯ ㅂ ¯ *)', svg: HAMOJI_STICKER_SVGS.c33 },
+  c34: { id: 'c34', name: 'Menjerit Panik', cat: 'custom', subCat: 'ekspresi', tags: 'teriak jerit panik pusing kotak', text: '(> ▱ <)', svg: HAMOJI_STICKER_SVGS.c34 },
+  c35: { id: 'c35', name: 'Menangis Pilu', cat: 'custom', subCat: 'ekspresi', tags: 'sedih nangis airmata sedih t', text: '(T ^ T)', svg: HAMOJI_STICKER_SVGS.c35 },
+
+  // Baris 8
+  c36: { id: 'c36', name: 'Menyerah Menetes Air Mata', cat: 'custom', subCat: 'ekspresi', tags: 'lemas menyerah pasrah nangis tetes', text: '(‾́ ▱ T)', svg: HAMOJI_STICKER_SVGS.c36 },
+  c37: { id: 'c37', name: 'Bertekad Alis Tajam', cat: 'custom', subCat: 'ekspresi', tags: 'fokus tekad tajam alis serius w', text: '(•̀ ω •́)', svg: HAMOJI_STICKER_SVGS.c37 },
+  c38: { id: 'c38', name: 'Cemas Tetes Air Mata', cat: 'custom', subCat: 'ekspresi', tags: 'cemas gugup keringat airmata tetes sedih', text: '(˘ ︵ ˘ 💧)', svg: HAMOJI_STICKER_SVGS.c38 },
+  c39: { id: 'c39', name: 'Menangis Tersedu Lebar', cat: 'custom', subCat: 'ekspresi', tags: 'sedih nangis nangis patah t', text: '(T ⁔ T)', svg: HAMOJI_STICKER_SVGS.c39 },
+  c40: { id: 'c40', name: 'Menari Gembira Bahagia', cat: 'custom', subCat: 'senang', tags: 'joget nari gembira santai riang tangan', text: '( / ¯ ㅂ ¯ / )', svg: HAMOJI_STICKER_SVGS.c40 },
 };
 
 /* ── Pustaka Kaomoji Kustom Bawaan (Otentik dari Referensi Gambar Pinterest) ── */
@@ -334,105 +184,25 @@ export const HAMOJI_CUSTOM_PRESETS = Object.keys(CUSTOM_MOJI_TEMPLATES).map(id =
     id: item.id,
     text: item.text,
     name: item.name,
-    cat: 'custom',
+    cat: item.cat,
+    subCat: item.subCat,
     tags: item.tags,
-    html: item.html,
+    svg: item.svg,
     isCustom: true,
   };
 });
 
-/* ── Pustaka Kaomoji Bawaan ── */
-export const HAMOJI_LIBRARY = [
-  // Populer & Ikonik
-  { id: 'h1', text: '(｡•̀ᴗ-)✧', name: 'Wink Ikonik', cat: 'populer', tags: 'wink keren senyum bintang' },
-  { id: 'h2', text: '(˶ᵔ ᵕ ᵔ˶)', name: 'Senyum Damai', cat: 'populer', tags: 'senyum imut bahagia senang' },
-  { id: 'h3', text: '(♡ v ♡)', name: 'Cinta Berbinar', cat: 'populer', tags: 'cinta love hati mata senang' },
-  { id: 'h4', text: '( ˆ ◡ ˆ )', name: 'Senyum Lembut', cat: 'populer', tags: 'senyum manis damai lembut' },
-  { id: 'h5', text: 'ʕ•ᴥ•ʔ', name: 'Beruang', cat: 'populer', tags: 'beruang hewan bear imut' },
-  { id: 'h6', text: '¯\\_(ツ)_/¯', name: 'Shrug', cat: 'populer', tags: 'shrug santai angkat tangan' },
-  { id: 'h7', text: '( ˆ ᗜ ˆ )', name: 'Tertawa Lepas', cat: 'populer', tags: 'tertawa tawa senang gembira' },
-  { id: 'h8', text: '( ˃ ᵕ ˂ )', name: 'Malu Senang', cat: 'populer', tags: 'malu senang imut ceria' },
-  { id: 'h9', text: '(= ˆ ◡ ˆ =)', name: 'Kucing Ceria', cat: 'populer', tags: 'kucing cat meow senyum' },
-  { id: 'h10', text: '(ﾉ´ヮ`)ﾉ*: ･ﾟ', name: 'Tabur Bintang', cat: 'populer', tags: 'sihir bintang gembira' },
-  { id: 'h11', text: '( •̀ᴗ•́ )و ̑̑', name: 'Semangat Juang', cat: 'populer', tags: 'semangat tekad gas' },
-  { id: 'h12', text: '( ˘ ᗜ ˘ )', name: 'Lega Bahagia', cat: 'populer', tags: 'lega puas senang damai' },
-
-  // Senang & Riang
-  { id: 'h13', text: '(≥ ∇ ≤)', name: 'Sangat Riang', cat: 'senang', tags: 'riang gembira senang tawa' },
-  { id: 'h14', text: '(> ω <)', name: 'Gemas Riang', cat: 'senang', tags: 'gemas senang imut ceria' },
-  { id: 'h15', text: '( ‾́ 3 ‾́ )', name: 'Bersiul Manis', cat: 'senang', tags: 'siul santai bibir imut' },
-  { id: 'h16', text: '(*^ω^)', name: 'Tertawa Riang', cat: 'senang', tags: 'senyum bahagia ketawa' },
-  { id: 'h17', text: '(≧◡≦)', name: 'Mata Terpejam', cat: 'senang', tags: 'puas senang manis' },
-  { id: 'h18', text: '(o^▽^o)', name: 'Tawa Lebar', cat: 'senang', tags: 'gembira riang tertawa' },
-  { id: 'h19', text: '(★ω★)', name: 'Bintang Terpukau', cat: 'senang', tags: 'kagum terpukau bintang wow' },
-  { id: 'h20', text: '( * ˆ ᴗ ˆ * )', name: 'Pipi Berseri', cat: 'senang', tags: 'senang pipi merah berseri' },
-  { id: 'h21', text: '＼(≧▽≦)／', name: 'Sorak Bahagia', cat: 'senang', tags: 'hore hore menang hore' },
-  { id: 'h22', text: '( / ¯ ㅂ ¯ / )', name: 'Menari Gembira', cat: 'senang', tags: 'joget nari gembira santai' },
-  { id: 'h23', text: '(*˘︶˘*).｡.:*', name: 'Bersyukur', cat: 'senang', tags: 'damai bersyukur tenang' },
-
-  // Imut & Kasih
-  { id: 'h24', text: '(♡ ₃ ♡)', name: 'Penuh Kasih', cat: 'imut', tags: 'love cinta hati manis sayang' },
-  { id: 'h25', text: '( ˆ ⍛ ˆ )', name: 'Polos Bengong', cat: 'imut', tags: 'bengong polos imut lucu' },
-  { id: 'h26', text: '( ˘ ³˘)♥', name: 'Kecupan Manis', cat: 'imut', tags: 'kiss cium cinta love' },
-  { id: 'h27', text: '(„• ֊ •„)', name: 'Sopan Imut', cat: 'imut', tags: 'imut pemalu lucu' },
-  { id: 'h28', text: '(⁄ ⁄•⁄ω⁄•⁄ ⁄)', name: 'Pipi Merah', cat: 'imut', tags: 'blush malu merah imut' },
-  { id: 'h29', text: '(◕‿◕)♡', name: 'Bunga Hati', cat: 'imut', tags: 'hati cinta manis gemas' },
-  { id: 'h30', text: '(｡♥‿♥｡)', name: 'Terpesona', cat: 'imut', tags: 'jatuh cinta cinta suka' },
-  { id: 'h31', text: '(つ≧▽≦)つ', name: 'Pelukan Erat', cat: 'imut', tags: 'peluk hug sayang cinta' },
-  { id: 'h32', text: '( ˃ ᵤ ˂ )', name: 'Malu Meringis', cat: 'imut', tags: 'malu imut gemas merah' },
-  { id: 'h33', text: '( * ¯ ㅂ ¯ * )', name: 'Mabuk Kepayang', cat: 'imut', tags: 'senang santai melayang' },
-
-  // Hewan & Karakter
-  { id: 'h34', text: '(=^･ｪ･^=)', name: 'Kucing Penasaran', cat: 'hewan', tags: 'kucing cat meow kumis' },
-  { id: 'h35', text: '( ˆ(oo)ˆ )', name: 'Babi Lucu', cat: 'hewan', tags: 'babi pig hewan lucu' },
-  { id: 'h36', text: '(ᵔᴥᵔ)', name: 'Anjing Ceria', cat: 'hewan', tags: 'anjing dog puppy imut' },
-  { id: 'h37', text: '₍ᐢ. ̫.ᐢ₎', name: 'Kelinci Imut', cat: 'hewan', tags: 'kelinci bunny imut' },
-  { id: 'h38', text: 'U ´ᴥ` U', name: 'Anjing Menggemaskan', cat: 'hewan', tags: 'anjing puppy dog' },
-  { id: 'h39', text: '(=^-ω-^=)', name: 'Kucing Tidur', cat: 'hewan', tags: 'kucing bobo santai' },
-  { id: 'h40', text: '(=①ω①=)', name: 'Mata Bulat', cat: 'hewan', tags: 'kucing bulat mata' },
-  { id: 'h41', text: '( ˙-˙ )', name: 'Burung Hantu', cat: 'hewan', tags: 'burung hantu diam' },
-
-  // Ekspresi & Reaksi
-  { id: 'h42', text: '( ; ˆ - ˆ ; )', name: 'Canggung Keringat', cat: 'ekspresi', tags: 'canggung keringat degdegan' },
-  { id: 'h43', text: '( ˘ ▱ ˘ )', name: 'Tidur Nyenyak', cat: 'ekspresi', tags: 'tidur lelap tenang santai' },
-  { id: 'h44', text: '( - _ - ; )', name: 'Lelah Pasrah', cat: 'ekspresi', tags: 'capek lelah pasrah' },
-  { id: 'h45', text: '( ˘ ㅂ ˘ )', name: 'Puas Santai', cat: 'ekspresi', tags: 'puas santai tenang' },
-  { id: 'h46', text: '( ´ ꒳ ` )', name: 'Nyaman Tenang', cat: 'ekspresi', tags: 'nyaman damai santai' },
-  { id: 'h47', text: '( ˆ ‸ ˆ )', name: 'Cemberut Halus', cat: 'ekspresi', tags: 'cemberut ngambek halus' },
-  { id: 'h48', text: '( - ‿ - ; )', name: 'Senyum Pasrah', cat: 'ekspresi', tags: 'senyum pasrah ikhlas' },
-  { id: 'h49', text: '( - _ - # )', name: 'Kesal Menahan', cat: 'ekspresi', tags: 'kesal marah urat emosi' },
-  { id: 'h50', text: '( - ᵤ - )', name: 'Senyum Tipis', cat: 'ekspresi', tags: 'senyum tipis misterius' },
-  { id: 'h51', text: '( •̀ ᵤ •́ )', name: 'Bertekad Serius', cat: 'ekspresi', tags: 'serius tekad fokus' },
-  { id: 'h52', text: '( > ▱ < )', name: 'Menjerit Frustrasi', cat: 'ekspresi', tags: 'teriak jerit panik pusing' },
-  { id: 'h53', text: '( T ᴖ T )', name: 'Menangis Pilu', cat: 'ekspresi', tags: 'sedih nangis airmata' },
-  { id: 'h54', text: '( ‾́ ▱ ‾́ )', name: 'Menyerah Lemas', cat: 'ekspresi', tags: 'lemas menyerah pasrah' },
-  { id: 'h55', text: '( ´ ‸ ` ; )', name: 'Cemas Keringat', cat: 'ekspresi', tags: 'cemas gugup keringat' },
-  { id: 'h56', text: '( T ^ T )', name: 'Menangis Tersedu', cat: 'ekspresi', tags: 'sedih nangis nangis' },
-  { id: 'h57', text: '(╯°□°)╯︵ ┻━┻', name: 'Banting Meja', cat: 'ekspresi', tags: 'marah banting meja emosi' },
-  { id: 'h58', text: '┬─┬ノ( º _ ºノ)', name: 'Meja Rapi', cat: 'ekspresi', tags: 'tenang meja rapi santai' },
-  { id: 'h59', text: 'ಠ_ಠ', name: 'Tatap Serius', cat: 'ekspresi', tags: 'disapproval tatap serius' },
-
-  // ASCII & Text Art
-  { id: 'h60', text: '✧･ﾟ: *✧･ﾟ:*', name: 'Kilau Bintang', cat: 'ascii', tags: 'bintang kilau sparkle hiasan' },
-  { id: 'h61', text: '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧', name: 'Taburan Sihir', cat: 'ascii', tags: 'sihir bintang berkilau' },
-  { id: 'h62', text: '♪♫*•♪', name: 'Notasi Musik', cat: 'ascii', tags: 'musik nada lagu nyanyi' },
-  { id: 'h63', text: '[̲̅$̲̅(̲̅5̲̅)̲̅$̲̅]', name: 'Lembaran Uang', cat: 'ascii', tags: 'uang dollar cuan kaya' },
-  { id: 'h64', text: '(☞ﾟヮﾟ)☞', name: 'Menunjuk Asyik', cat: 'ascii', tags: 'tunjuk keren asyik' },
-  { id: 'h65', text: '─=≡Σ((( つ•̀ω•́)つ', name: 'Meluncur Cepat', cat: 'ascii', tags: 'lari cepat gas meluncur' },
-  { id: 'h66', text: '☆*:.｡.o(≧▽≦)o.｡.:*☆', name: 'Pesta Gemerlap', cat: 'ascii', tags: 'pesta ramai meriah' },
-  { id: 'h67', text: '(っ˘ڡ˘ς)', name: 'Lezat Nikmat', cat: 'ascii', tags: 'makan enak lezat sedap' },
-  { id: 'h68', text: 'ʕノ)ᴥ(ヾʔ', name: 'Tutup Mata', cat: 'ascii', tags: 'tutup mata malu beruang' },
-];
+/* ── Pustaka Utama Hamoji (Eksklusif 40 Stiker Gambar Referensi) ── */
+export const HAMOJI_LIBRARY = HAMOJI_CUSTOM_PRESETS;
 
 export const HAMOJI_CATEGORIES = [
-  { id: 'semua', label: 'Semua' },
-  { id: 'custom', label: 'Kustom' },
-  { id: 'populer', label: 'Populer' },
-  { id: 'senang', label: 'Senang' },
-  { id: 'imut', label: 'Imut' },
-  { id: 'hewan', label: 'Hewan' },
-  { id: 'ekspresi', label: 'Ekspresi' },
-  { id: 'ascii', label: 'ASCII Art' },
+  { id: 'semua', label: 'Semua (40)' },
+  { id: 'cinta', label: 'Cinta & Hati' },
+  { id: 'senang', label: 'Senang & Ceria' },
+  { id: 'imut', label: 'Imut & Gemas' },
+  { id: 'ekspresi', label: 'Ekspresi & Reaksi' },
+  { id: 'hewan', label: 'Karakter & Hewan' },
+  { id: 'custom', label: 'Kustom Saya' },
 ];
 
 /* ── State Hamoji ── */
@@ -515,32 +285,33 @@ export function hapusCustomHamoji(id) {
   }
 }
 
-/* ── Pengambilan Koleksi Hamoji Aktif ── */
+/* ── Pengambilan Koleksi Hamoji Aktif (Eksklusif 40 Stiker Gambar Referensi) ── */
 export function getFilteredHamojiList(cat = _currentCategory, query = _searchQuery) {
   const userCustomList = muatCustomHamoji();
   
   let all = [];
-  if (cat === 'custom') {
-    // Kategori Kustom: Gabungan kustom pengguna + 40 varian estetik bawaan dari referensi gambar
+  if (cat === 'semua' || cat === 'custom') {
     all = [...userCustomList, ...HAMOJI_CUSTOM_PRESETS];
-  } else if (cat === 'semua') {
-    all = [...userCustomList, ...HAMOJI_CUSTOM_PRESETS, ...HAMOJI_LIBRARY];
-    // Buang item id kembar jika ada
-    const seen = new Set();
-    all = all.filter(item => {
-      if (seen.has(item.text)) return false;
-      seen.add(item.text);
-      return true;
-    });
   } else {
-    all = HAMOJI_LIBRARY.filter(item => item.cat === cat);
+    all = HAMOJI_CUSTOM_PRESETS.filter(item => item.cat === cat || item.subCat === cat);
+    if (all.length === 0) {
+      all = [...userCustomList, ...HAMOJI_CUSTOM_PRESETS];
+    }
   }
+
+  // Hilangkan duplikasi jika ada
+  const seen = new Set();
+  all = all.filter(item => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 
   if (query && query.trim()) {
     const q = query.toLowerCase().trim();
     all = all.filter(
       item =>
-        item.text.toLowerCase().includes(q) ||
+        (item.text && item.text.toLowerCase().includes(q)) ||
         (item.name && item.name.toLowerCase().includes(q)) ||
         (item.tags && item.tags.toLowerCase().includes(q))
     );
@@ -549,7 +320,7 @@ export function getFilteredHamojiList(cat = _currentCategory, query = _searchQue
   return all;
 }
 
-/* ── Renderer Visual Moji Kustom & Stiker ── */
+/* ── Renderer Visual Moji Kustom & Stiker (Vektor SVG Orisinal) ── */
 export function renderCustomMojiHtml(idOrText, textFallback = '', color = '') {
   let template = CUSTOM_MOJI_TEMPLATES[idOrText];
   if (!template) {
@@ -560,6 +331,9 @@ export function renderCustomMojiHtml(idOrText, textFallback = '', color = '') {
   }
 
   const colorStyle = color ? `color:${esc(color)};` : '';
+  if (template && template.svg) {
+    return `<span class="hamoji-custom-graphic" style="${colorStyle}">${template.svg}</span>`;
+  }
   if (template && template.html) {
     return `<span class="hamoji-custom-graphic" style="${colorStyle}">${template.html}</span>`;
   }

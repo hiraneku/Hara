@@ -1596,6 +1596,19 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .hamoji-item-preview-box .hamoji-custom-graphic {
   font-size: 14.5px;
 }
+.hamoji-item-preview-box .hamoji-svg-stk {
+  height: 24px;
+  width: auto;
+  max-width: 90px;
+}
+.hamoji-svg-stk {
+  display: inline-block;
+  height: var(--stk-size, 28px);
+  width: auto;
+  max-width: 100%;
+  vertical-align: middle;
+  pointer-events: none;
+}
 .hamoji-custom-graphic {
   display: inline-flex;
   align-items: center;
