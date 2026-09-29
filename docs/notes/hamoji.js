@@ -12,80 +12,334 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929135653';
-import { touch } from './note-model.js?v=20260929135653';
-import { saveSoon } from './editor/cleanup.js?v=20260929135653';
-import { openPop, closeAll } from './menus/pop.js?v=20260929135653';
-import { esc } from '../core/dom.js?v=20260929135653';
-import { toast } from '../core/toast.js?v=20260929135653';
-import { t as tr } from '../core/i18n.js?v=20260929135653';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929135653';
-import { refresh } from './editor/cleanup.js?v=20260929135653';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929135653';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929135653';
+import { state } from '../core/store.js?v=20260929140908';
+import { touch } from './note-model.js?v=20260929140908';
+import { saveSoon } from './editor/cleanup.js?v=20260929140908';
+import { openPop, closeAll } from './menus/pop.js?v=20260929140908';
+import { esc } from '../core/dom.js?v=20260929140908';
+import { toast } from '../core/toast.js?v=20260929140908';
+import { t as tr } from '../core/i18n.js?v=20260929140908';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929140908';
+import { refresh } from './editor/cleanup.js?v=20260929140908';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929140908';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929140908';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
 const STORAGE_COLOR_KEY = 'hara.hamoji.color';
 
-/* ── Pustaka Kaomoji Kustom Bawaan (Otentik dari Referensi Gambar Pinterest) ── */
-export const HAMOJI_CUSTOM_PRESETS = [
+/* ── Pustaka Template Moji Kustom Eksklusif Stiker (40 Varian Otentik Sesuai Foto Pinterest) ── */
+export const CUSTOM_MOJI_TEMPLATES = {
   // Baris 1
-  { id: 'c1', text: '(♡ v ♡)', name: 'Cinta Berbinar', cat: 'custom', tags: 'love hati cinta mata berbinar' },
-  { id: 'c2', text: '(≥ ∇ ≤)', name: 'Sangat Riang', cat: 'custom', tags: 'senang riang tawa' },
-  { id: 'c3', text: '( ‾́ 3 ‾́ )', name: 'Bersiul Manis', cat: 'custom', tags: 'siul santai bibir manis' },
-  { id: 'c4', text: '(> ω <)', name: 'Gemas Riang', cat: 'custom', tags: 'gemas senang imut ceria' },
-  { id: 'c5', text: '( ° ᗜ ° )', name: 'Senyum Lebar', cat: 'custom', tags: 'senyum tawa riang' },
+  c1: {
+    id: 'c1',
+    name: 'Cinta Berbinar Pink Hati',
+    tags: 'love hati cinta mata pink berbinar',
+    text: '(♡ v ♡)',
+    html: `(<span class="h-heart">♡</span> v <span class="h-heart">♡</span>)`,
+  },
+  c2: {
+    id: 'c2',
+    name: 'Sangat Riang',
+    tags: 'senang riang tawa delta',
+    text: '(≥ ∇ ≤)',
+    html: `(≥ ∇ ≤)`,
+  },
+  c3: {
+    id: 'c3',
+    name: 'Bersiul Pipi Hati',
+    tags: 'siul santai bibir manis pink hati',
+    text: '(♡ ‾́ 3 ‾́ ♡)',
+    html: `(<span class="h-heart">♡</span> ‾́ 3 ‾́ <span class="h-heart">♡</span>)`,
+  },
+  c4: {
+    id: 'c4',
+    name: 'Gemas Riang',
+    tags: 'gemas senang imut ceria w',
+    text: '(> ω <)',
+    html: `(> ω <)`,
+  },
+  c5: {
+    id: 'c5',
+    name: 'Senyum Lebar Blush',
+    tags: 'senyum tawa riang pipi merah blush',
+    text: '(˚ ▱ ˚)',
+    html: `(<span class="h-blush"></span> ˚ ▱ ˚ <span class="h-blush"></span>)`,
+  },
 
   // Baris 2
-  { id: 'c6', text: '( ˆ ᗜ ˆ )', name: 'Tertawa Lepas', cat: 'custom', tags: 'tawa tertawa gembira' },
-  { id: 'c7', text: '( ˆ ◡ ˆ )', name: 'Senyum Lembut', cat: 'custom', tags: 'senyum manis damai lembut' },
-  { id: 'c8', text: '( ˆ --- ˆ )', name: 'Mata Garis Tenang', cat: 'custom', tags: 'tenang santai damai' },
-  { id: 'c9', text: '(♡ ₃ ♡)', name: 'Penuh Kasih', cat: 'custom', tags: 'cinta love hati manis' },
-  { id: 'c10', text: '(> ᵤ <)', name: 'Gemas Malu', cat: 'custom', tags: 'gemas imut lucu malu' },
+  c6: {
+    id: 'c6',
+    name: 'Tertawa Lepas Blush',
+    tags: 'tawa tertawa gembira blush garis',
+    text: '(ˆ ▽ ˆ)',
+    html: `(<span class="h-blush-lines">//</span> ˆ ▽ ˆ <span class="h-blush-lines">//</span>)`,
+  },
+  c7: {
+    id: 'c7',
+    name: 'Senyum Lembut',
+    tags: 'senyum manis damai lembut',
+    text: '(^ ‿ ^)',
+    html: `(^ ‿ ^)`,
+  },
+  c8: {
+    id: 'c8',
+    name: 'Mata Garis Tenang',
+    tags: 'tenang santai damai strip',
+    text: '(^ --- ^)',
+    html: `(^ --- ^)`,
+  },
+  c9: {
+    id: 'c9',
+    name: 'Penuh Kasih Pink Hati',
+    tags: 'cinta love hati manis pink',
+    text: '(♡ ₃ ♡)',
+    html: `(<span class="h-heart">♡</span> ₃ <span class="h-heart">♡</span>)`,
+  },
+  c10: {
+    id: 'c10',
+    name: 'Gemas Melet Lidah Pink',
+    tags: 'gemas imut lidah melet pink',
+    text: '(> 👅 <)',
+    html: `(> <svg class="h-svg-tongue" viewBox="0 0 24 16" width="1.2em" height="0.8em" style="vertical-align:middle;display:inline-block"><path d="M4,4 Q12,12 20,4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M9,7 Q9,14 12,14 Q15,14 15,7 Z" fill="#ff6b8b" stroke="currentColor" stroke-width="1.5"/></svg> <)`,
+  },
 
   // Baris 3
-  { id: 'c11', text: '( ˃ ᵕ ˂ )', name: 'Malu Senang', cat: 'custom', tags: 'malu senang imut ceria' },
-  { id: 'c12', text: '( ˆ ⍛ ˆ )', name: 'Polos Bengong', cat: 'custom', tags: 'bengong polos imut lucu' },
-  { id: 'c13', text: '(♡ 3 ♡)', name: 'Kecupan Cinta', cat: 'custom', tags: 'cium love cinta manis' },
-  { id: 'c14', text: '( * ˆ ᴗ ˆ * )', name: 'Pipi Berseri', cat: 'custom', tags: 'pipi berseri merah senang' },
-  { id: 'c15', text: '(♡ ᵕ ♡)', name: 'Tatapan Kasih', cat: 'custom', tags: 'hati cinta tatapan' },
+  c11: {
+    id: 'c11',
+    name: 'Malu Senang Blush',
+    tags: 'malu senang imut ceria blush',
+    text: '(> ‿ <)',
+    html: `(<span class="h-blush"></span> > ‿ < <span class="h-blush"></span>)`,
+  },
+  c12: {
+    id: 'c12',
+    name: 'Polos Bengong',
+    tags: 'bengong polos imut lucu o',
+    text: '(^ ӧ ^)',
+    html: `(^ ӧ ^)`,
+  },
+  c13: {
+    id: 'c13',
+    name: 'Kecupan Manis Tetes',
+    tags: 'cium love cinta manis tetes',
+    text: '(♡„ 3 ♡)',
+    html: `(<span class="h-heart">♡</span><span class="h-sweat-tick">„</span> 3 <span class="h-heart">♡</span>)`,
+  },
+  c14: {
+    id: 'c14',
+    name: 'Pipi Bintang Berseri',
+    tags: 'pipi berseri bintang senang sparkle',
+    text: '(* ^ ᴗ ^ *)',
+    html: `(<svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg> ^ ᴗ ^ <svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg>)`,
+  },
+  c15: {
+    id: 'c15',
+    name: 'Tatapan Kasih Segitiga',
+    tags: 'hati cinta tatapan pink delta',
+    text: '(♡ ∇ ♡)',
+    html: `(<span class="h-heart">♡</span> ∇ <span class="h-heart">♡</span>)`,
+  },
 
   // Baris 4
-  { id: 'c16', text: '(= ˆ ◡ ˆ =)', name: 'Kucing Ceria', cat: 'custom', tags: 'kucing cat meow kumis' },
-  { id: 'c17', text: '( ˆ(oo)ˆ )', name: 'Babi Imut', cat: 'custom', tags: 'babi pig lucu imut' },
-  { id: 'c18', text: '( ; ˆ - ˆ ; )', name: 'Canggung Keringat', cat: 'custom', tags: 'canggung keringat degdegan' },
-  { id: 'c19', text: '( ˘ ▱ ˘ )', name: 'Tidur Nyenyak', cat: 'custom', tags: 'tidur lelap tenang santai' },
-  { id: 'c20', text: '( - _ - ; )', name: 'Lelah Pasrah', cat: 'custom', tags: 'capek lelah pasrah keringat' },
+  c16: {
+    id: 'c16',
+    name: 'Kucing Ceria Kumis',
+    tags: 'kucing cat meow kumis senyum',
+    text: '(= ^ ‿ ^ =)',
+    html: `(= ^ ‿ ^ =)`,
+  },
+  c17: {
+    id: 'c17',
+    name: 'Babi Imut Hidung',
+    tags: 'babi pig lucu imut hidung',
+    text: '( ˆ(oo)ˆ )',
+    html: `( ˆ(oo)ˆ )`,
+  },
+  c18: {
+    id: 'c18',
+    name: 'Canggung Keringat Ganda',
+    tags: 'canggung keringat degdegan tetes',
+    text: '(;; - . -)',
+    html: `(<svg class="h-svg-drops" viewBox="0 0 16 20" width="0.8em" height="1em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin:0 2px"><path d="M5,7 Q2,12 5,14 Q8,12 5,7 Z M11,3 Q8,8 11,10 Q14,8 11,3 Z" fill="currentColor"/></svg> - . - )`,
+  },
+  c19: {
+    id: 'c19',
+    name: 'Tidur Nyenyak',
+    tags: 'tidur lelap tenang santai kotak',
+    text: '(˘ ▱ ˘)',
+    html: `(˘ ▱ ˘)`,
+  },
+  c20: {
+    id: 'c20',
+    name: 'Lelah Pasrah Keringat',
+    tags: 'capek lelah pasrah keringat tetes',
+    text: '(- _ - ;)',
+    html: `(- _ - <svg class="h-svg-tear" viewBox="0 0 12 18" width="0.65em" height="0.95em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin-left:2px"><path d="M6,2 Q1,10 6,15 Q11,10 6,2 Z" fill="currentColor"/></svg> )`,
+  },
 
   // Baris 5
-  { id: 'c21', text: '( ˘ ᵤ ˘ )', name: 'Damai Imut', cat: 'custom', tags: 'damai tenang imut kalem' },
-  { id: 'c22', text: '( ˘ ㅂ ˘ )', name: 'Puas Santai', cat: 'custom', tags: 'puas santai tenang nikmat' },
-  { id: 'c23', text: '( - . - )', name: 'Mengantuk', cat: 'custom', tags: 'kantuk ngantuk tidur diam' },
-  { id: 'c24', text: '( ´ ꒳ ` )', name: 'Nyaman Tenang', cat: 'custom', tags: 'nyaman damai santai' },
-  { id: 'c25', text: '( ˆ ‸ ˆ )', name: 'Cemberut Halus', cat: 'custom', tags: 'cemberut ngambek halus imut' },
+  c21: {
+    id: 'c21',
+    name: 'Lega Menghela Napas',
+    tags: 'lega napas hembus santai angin puff',
+    text: '(˘ ▽ ˘) 💨',
+    html: `(<svg class="h-svg-puff" viewBox="0 0 20 20" width="0.9em" height="0.9em" style="vertical-align:middle;display:inline-block;color:#94a3b8;margin-right:2px"><path d="M14,14 Q10,12 8,15 Q5,15 5,12 Q5,9 9,9 Q10,6 14,7 Q17,7 17,10 Q19,11 18,13 Q17,15 14,14 Z" fill="currentColor" opacity="0.8"/><circle cx="4" cy="16" r="1.5" fill="currentColor" opacity="0.6"/></svg> ˘ ▽ ˘ )`,
+  },
+  c22: {
+    id: 'c22',
+    name: 'Malu Merona Garis',
+    tags: 'malu merona blush garis kotak',
+    text: '(// ㅂ //)',
+    html: `(<span class="h-blush-lines">//</span> ㅂ <span class="h-blush-lines">//</span>)`,
+  },
+  c23: {
+    id: 'c23',
+    name: 'Mengantuk Datar',
+    tags: 'kantuk ngantuk tidur diam datar',
+    text: '(- . -)',
+    html: `(- . -)`,
+  },
+  c24: {
+    id: 'c24',
+    name: 'Damai Imut Blush',
+    tags: 'damai tenang imut kalem blush w',
+    text: '(˘ ω ˘)',
+    html: `(<span class="h-blush"></span> ˘ ω ˘ <span class="h-blush"></span>)`,
+  },
+  c25: {
+    id: 'c25',
+    name: 'Cemberut Khawatir',
+    tags: 'cemberut ngambek halus cemas sedih',
+    text: '(˚ ‸ ˚)',
+    html: `(˚ ‸ ˚)`,
+  },
 
   // Baris 6
-  { id: 'c26', text: '( ˆ ▽ ˆ )', name: 'Tawa Ceria', cat: 'custom', tags: 'kaget senang terkejut riang' },
-  { id: 'c27', text: '( - ‿ - ; )', name: 'Senyum Pasrah', cat: 'custom', tags: 'senyum pasrah ikhlas keringat' },
-  { id: 'c28', text: '( - _ - # )', name: 'Kesal Menahan Diri', cat: 'custom', tags: 'kesal marah urat emosi' },
-  { id: 'c29', text: '( - ᵤ - )', name: 'Senyum Tipis', cat: 'custom', tags: 'senyum tipis misterius' },
-  { id: 'c30', text: '( ˘ ᗜ ˘ )', name: 'Lega Bahagia', cat: 'custom', tags: 'lega puas senang damai' },
+  c26: {
+    id: 'c26',
+    name: 'Terkejut Riang Blush',
+    tags: 'kaget senang terkejut riang blush',
+    text: '(˚ ▱ ˚)',
+    html: `(<span class="h-blush"></span> ˚ ▱ ˚ <span class="h-blush"></span>)`,
+  },
+  c27: {
+    id: 'c27',
+    name: 'Senyum Pasrah Keringat',
+    tags: 'senyum pasrah ikhlas keringat tetes',
+    text: '(- ‿ - ;;)',
+    html: `(- ‿ - <svg class="h-svg-drops" viewBox="0 0 16 20" width="0.8em" height="1em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin:0 2px"><path d="M5,7 Q2,12 5,14 Q8,12 5,7 Z M11,3 Q8,8 11,10 Q14,8 11,3 Z" fill="currentColor"/></svg> )`,
+  },
+  c28: {
+    id: 'c28',
+    name: 'Kesal Menahan Diri',
+    tags: 'kesal marah urat emosi pagar tag',
+    text: '(- _ - #)',
+    html: `(- _ - <span class="h-anger-mark">#</span> )`,
+  },
+  c29: {
+    id: 'c29',
+    name: 'Senyum Santai Smug',
+    tags: 'senyum santai kalem manis',
+    text: '(- ‿ -)',
+    html: `(- ‿ -)`,
+  },
+  c30: {
+    id: 'c30',
+    name: 'Puas Bahagia Blush',
+    tags: 'puas senang bahagia tawa blush',
+    text: '(˘ ▽ ˘)',
+    html: `(<span class="h-blush"></span> ˘ ▽ ˘ <span class="h-blush"></span>)`,
+  },
 
   // Baris 7
-  { id: 'c31', text: '( ˃ ᵤ ˂ 💢 )', name: 'Kesal Gemas', cat: 'custom', tags: 'kesal marah gemas urat' },
-  { id: 'c32', text: '( •̀ ᵤ •́ )', name: 'Bertekad Serius', cat: 'custom', tags: 'serius tekad fokus yakin' },
-  { id: 'c33', text: '( * ¯ ㅂ ¯ * )', name: 'Mabuk Kepayang', cat: 'custom', tags: 'senang santai melayang mabuk' },
-  { id: 'c34', text: '( > ▱ < )', name: 'Menjerit Frustrasi', cat: 'custom', tags: 'teriak jerit panik pusing' },
-  { id: 'c35', text: '( T ᴖ T )', name: 'Menangis Pilu', cat: 'custom', tags: 'sedih nangis airmata sedih' },
+  c31: {
+    id: 'c31',
+    name: 'Kesal Gemas Urat Marah',
+    tags: 'kesal marah gemas urat merah',
+    text: '( ˃ ᵤ ˂ 💢 )',
+    html: `( ˘ ‸ ˘ <svg class="h-svg-anger" viewBox="0 0 24 24" width="0.9em" height="0.9em" style="vertical-align:middle;display:inline-block;color:#ef4444;margin-left:2px"><path d="M4,10 L10,10 L10,4 M14,4 L14,10 L20,10 M20,14 L14,14 L14,20 M10,20 L10,14 L4,14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg> )`,
+  },
+  c32: {
+    id: 'c32',
+    name: 'Bulat Imut Kucing',
+    tags: 'bulat imut mata titik w kucing',
+    text: '(˚ ω ˚)',
+    html: `(˚ ω ˚)`,
+  },
+  c33: {
+    id: 'c33',
+    name: 'Mabuk Kepayang Bintang',
+    tags: 'senang santai melayang bintang sparkle',
+    text: '(* ¯ ㅂ ¯ *)',
+    html: `(<svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg> ¯ ㅂ ¯ <svg class="h-svg-star" viewBox="0 0 20 20" width="0.8em" height="0.8em" style="vertical-align:middle;display:inline-block;color:#f59e0b;margin:0 2px"><path d="M10,1 L12.5,7.5 L19,10 L12.5,12.5 L10,19 L7.5,12.5 L1,10 L7.5,7.5 Z" fill="currentColor"/></svg>)`,
+  },
+  c34: {
+    id: 'c34',
+    name: 'Menjerit Panik',
+    tags: 'teriak jerit panik pusing kotak',
+    text: '(> ▱ <)',
+    html: `(> ▱ <)`,
+  },
+  c35: {
+    id: 'c35',
+    name: 'Menangis Pilu',
+    tags: 'sedih nangis airmata sedih t',
+    text: '(T ^ T)',
+    html: `(T ^ T)`,
+  },
 
   // Baris 8
-  { id: 'c36', text: '( ‾́ ▱ ‾́ )', name: 'Menyerah Pasrah', cat: 'custom', tags: 'lemas menyerah pasrah cape' },
-  { id: 'c37', text: '( •̀ ᵤ •́ )', name: 'Fokus Tajam', cat: 'custom', tags: 'fokus tekad tajam' },
-  { id: 'c38', text: '( ´ ‸ ` ; )', name: 'Cemas Keringat', cat: 'custom', tags: 'cemas gugup keringat waswas' },
-  { id: 'c39', text: '( T ^ T )', name: 'Menangis Tersedu', cat: 'custom', tags: 'sedih nangis nangis patah' },
-  { id: 'c40', text: '( / ¯ ㅂ ¯ / )', name: 'Menari Gembira', cat: 'custom', tags: 'joget nari gembira santai riang' },
-];
+  c36: {
+    id: 'c36',
+    name: 'Menyerah Menetes Air Mata',
+    tags: 'lemas menyerah pasrah nangis tetes',
+    text: '(‾́ ▱ T)',
+    html: `(‾́ ▱ <span class="h-tear-stream">T</span>)`,
+  },
+  c37: {
+    id: 'c37',
+    name: 'Bertekad Alis Tajam',
+    tags: 'fokus tekad tajam alis serius w',
+    text: '(•̀ ω •́)',
+    html: `(•̀ ω •́)`,
+  },
+  c38: {
+    id: 'c38',
+    name: 'Cemas Tetes Air Mata',
+    tags: 'cemas gugup keringat airmata tetes sedih',
+    text: '(˘ ︵ ˘ 💧)',
+    html: `(˘ ︵ ˘ <svg class="h-svg-tear" viewBox="0 0 12 18" width="0.65em" height="0.95em" style="vertical-align:middle;display:inline-block;color:#38bdf8;margin-left:2px"><path d="M6,2 Q1,10 6,15 Q11,10 6,2 Z" fill="currentColor"/></svg> )`,
+  },
+  c39: {
+    id: 'c39',
+    name: 'Menangis Tersedu Lebar',
+    tags: 'sedih nangis nangis patah t',
+    text: '(T ⁔ T)',
+    html: `(T ⁔ T)`,
+  },
+  c40: {
+    id: 'c40',
+    name: 'Menari Gembira Bahagia',
+    tags: 'joget nari gembira santai riang tangan',
+    text: '( / ¯ ㅂ ¯ / )',
+    html: `( / ¯ ㅂ ¯ / )`,
+  },
+};
+
+/* ── Pustaka Kaomoji Kustom Bawaan (Otentik dari Referensi Gambar Pinterest) ── */
+export const HAMOJI_CUSTOM_PRESETS = Object.keys(CUSTOM_MOJI_TEMPLATES).map(id => {
+  const item = CUSTOM_MOJI_TEMPLATES[id];
+  return {
+    id: item.id,
+    text: item.text,
+    name: item.name,
+    cat: 'custom',
+    tags: item.tags,
+    html: item.html,
+    isCustom: true,
+  };
+});
 
 /* ── Pustaka Kaomoji Bawaan ── */
 export const HAMOJI_LIBRARY = [
@@ -295,6 +549,23 @@ export function getFilteredHamojiList(cat = _currentCategory, query = _searchQue
   return all;
 }
 
+/* ── Renderer Visual Moji Kustom & Stiker ── */
+export function renderCustomMojiHtml(idOrText, textFallback = '', color = '') {
+  let template = CUSTOM_MOJI_TEMPLATES[idOrText];
+  if (!template) {
+    const foundId = Object.keys(CUSTOM_MOJI_TEMPLATES).find(
+      k => CUSTOM_MOJI_TEMPLATES[k].text === idOrText || CUSTOM_MOJI_TEMPLATES[k].text === textFallback
+    );
+    if (foundId) template = CUSTOM_MOJI_TEMPLATES[foundId];
+  }
+
+  const colorStyle = color ? `color:${esc(color)};` : '';
+  if (template && template.html) {
+    return `<span class="hamoji-custom-graphic" style="${colorStyle}">${template.html}</span>`;
+  }
+  return `<span class="hamoji-stk-text" style="${colorStyle}">${esc(textFallback || idOrText || '')}</span>`;
+}
+
 /* ── Mode 1: Sisipkan sebagai Teks Biasa ── */
 export function sisipkanHamojiTeks(text, color = _currentColor) {
   const currentNote = state.notes.find(n => n.id === state.openId);
@@ -345,12 +616,17 @@ export function sisipkanHamojiTeks(text, color = _currentColor) {
 }
 
 /* ── Mode 2: Tempelkan sebagai Stiker Interaktif (Tanpa Background) ── */
-export function tambahStikerHamoji(text, color = _currentColor) {
+export function tambahStikerHamoji(text, color = _currentColor, customId = '') {
   const note = state.notes.find(n => n.id === state.openId);
   if (!note) return;
 
   if (!Array.isArray(note.stickers)) {
     note.stickers = [];
+  }
+
+  if (!customId) {
+    const found = HAMOJI_CUSTOM_PRESETS.find(p => p.text === text.trim() || p.id === text.trim());
+    if (found) customId = found.id;
   }
 
   const scrollWrap = document.getElementById('wrap') || document.documentElement;
@@ -368,9 +644,10 @@ export function tambahStikerHamoji(text, color = _currentColor) {
   const newSticker = {
     id: 'stk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     text: text.trim(),
+    customId: customId || '',
     x: startX,
     y: startY,
-    size: 24,
+    size: 26,
     color: color || '',
     rot: 0,
   };
@@ -415,11 +692,11 @@ export function ubahWarnaStiker(id, color) {
 export function renderStickersHtml(stickers) {
   if (!Array.isArray(stickers) || stickers.length === 0) return '';
   return stickers.map(s => {
-    const textStyle = s.color ? `color:${esc(s.color)};` : '';
+    const content = renderCustomMojiHtml(s.customId || s.text, s.text, s.color);
     return `
-      <div class="hamoji-sticker" data-stk-id="${esc(s.id)}" style="left:${s.x || 0}px;top:${s.y || 0}px;--stk-size:${s.size || 24}px">
+      <div class="hamoji-sticker" data-stk-id="${esc(s.id)}" data-custom-id="${esc(s.customId || '')}" style="left:${s.x || 0}px;top:${s.y || 0}px;--stk-size:${s.size || 26}px">
         <div class="hamoji-stk-body">
-          <span class="hamoji-stk-text" style="${textStyle}">${esc(s.text)}</span>
+          ${content}
         </div>
         <div class="hamoji-stk-ctrls">
           <button type="button" class="hamoji-stk-del" data-stk-act="del" aria-label="${tr('Hapus Stiker')}">✕</button>
@@ -592,7 +869,7 @@ function terapkanWarnaHamoji(hex) {
   });
 
   // Update preview di kartu
-  document.querySelectorAll('.hamoji-item-text').forEach(el => {
+  document.querySelectorAll('.hamoji-item-text, .hamoji-custom-graphic').forEach(el => {
     el.style.color = hex || 'inherit';
   });
 
@@ -716,11 +993,17 @@ export function panelHamojiHtml() {
           </div>
         ` : list.map(item => {
           const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
-          const isCustom = item.cat === 'custom' || isCustomTab;
-          const itemColorStyle = _currentColor ? `color:${esc(_currentColor)};` : '';
+          const isCustom = item.cat === 'custom' || item.isCustom || isCustomTab;
+          const customId = item.id || '';
+          const previewHtml = (isCustom || item.html)
+            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor)
+            : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
+
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-is-custom="${isCustom ? '1' : '0'}">
-              <div class="hamoji-item-text" style="${itemColorStyle}">${esc(item.text)}</div>
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}">
+              <div class="hamoji-item-preview-box">
+                ${previewHtml}
+              </div>
               <div class="hamoji-item-name">${esc(item.name || '')}</div>
             </button>
           `;
@@ -818,13 +1101,17 @@ export function bindHamoji() {
     const itemCard = e.target.closest('[data-hamoji-insert]');
     if (itemCard) {
       const text = itemCard.dataset.hamojiInsert;
+      const customId = itemCard.dataset.customId || '';
       const isCustom = itemCard.dataset.isCustom === '1';
       const mode = getHamojiMode();
       closeAll();
 
-      // Custom moji selalu otomatis ditempelkan sebagai stiker agar simbol tidak rusak
+      // Custom moji selalu otomatis ditempelkan sebagai stiker stiker transparan (eksklusif mode stiker)
       if (mode === 'sticker' || isCustom) {
-        tambahStikerHamoji(text, _currentColor);
+        tambahStikerHamoji(text, _currentColor, customId);
+        if (isCustom && mode === 'text') {
+          toast(tr('Moji kustom ditempelkan sebagai stiker'));
+        }
       } else {
         sisipkanHamojiTeks(text, _currentColor);
       }
@@ -890,11 +1177,17 @@ export function bindHamoji() {
           </div>
         ` : list.map(item => {
           const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
-          const isCustom = item.cat === 'custom' || _currentCategory === 'custom';
-          const itemColorStyle = _currentColor ? `color:${esc(_currentColor)};` : '';
+          const isCustom = item.cat === 'custom' || item.isCustom || _currentCategory === 'custom';
+          const customId = item.id || '';
+          const previewHtml = (isCustom || item.html)
+            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor)
+            : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
+
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-is-custom="${isCustom ? '1' : '0'}">
-              <div class="hamoji-item-text" style="${itemColorStyle}">${esc(item.text)}</div>
+            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}">
+              <div class="hamoji-item-preview-box">
+                ${previewHtml}
+              </div>
               <div class="hamoji-item-name">${esc(item.name || '')}</div>
             </button>
           `;

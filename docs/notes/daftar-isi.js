@@ -4,11 +4,11 @@
    menjadi blok). Satu ketukan melompat ke heading itu; blok tujuan
    berkedip memakai animasi .blk-lompat yang sudah ada. */
 
-import { esc } from '../core/dom.js?v=20260929135653';
-import { toast } from '../core/toast.js?v=20260929135653';
-import { docEl } from './editor/caret.js?v=20260929135653';
-import { openPop, closeAll } from './menus/pop.js?v=20260929135653';
-import { t as tr } from '../core/i18n.js?v=20260929135653';
+import { esc } from '../core/dom.js?v=20260929140908';
+import { toast } from '../core/toast.js?v=20260929140908';
+import { docEl } from './editor/caret.js?v=20260929140908';
+import { openPop, closeAll } from './menus/pop.js?v=20260929140908';
+import { t as tr } from '../core/i18n.js?v=20260929140908';
 
 /* Snapshot elemen heading saat menu dibuka — isi catatan yang berubah
    setelahnya tidak membuat menu salah arah. */

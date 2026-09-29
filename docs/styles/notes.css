@@ -1581,6 +1581,84 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   max-width: 100%;
 }
 
+/* ════════════ PREVIEW & ELEMEN GRAFIS MOJI KUSTOM ════════════ */
+.hamoji-item-preview-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  max-width: 100%;
+}
+.hamoji-item-preview-box .hamoji-custom-graphic {
+  font-size: 14.5px;
+}
+.hamoji-custom-graphic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  line-height: 1.15;
+  white-space: nowrap;
+  user-select: none;
+  font-weight: 500;
+  color: inherit;
+}
+.h-blush {
+  display: inline-block;
+  width: 0.52em;
+  height: 0.32em;
+  background: radial-gradient(ellipse at center, rgba(255, 95, 162, 0.8) 0%, rgba(255, 182, 193, 0.45) 60%, transparent 85%);
+  border-radius: 50%;
+  vertical-align: middle;
+  margin: 0 0.12em;
+}
+.h-blush-lines {
+  display: inline-block;
+  color: #f472b6 !important;
+  font-weight: 700;
+  font-size: 0.85em;
+  letter-spacing: -0.1em;
+  margin: 0 0.08em;
+  vertical-align: middle;
+}
+.h-heart {
+  display: inline-block;
+  color: #f43f5e !important;
+  font-weight: 700;
+  vertical-align: middle;
+  transform: scale(1.08);
+}
+.h-sweat-tick {
+  display: inline-block;
+  color: #38bdf8 !important;
+  font-weight: 800;
+  font-size: 0.85em;
+  margin-left: -0.1em;
+  margin-right: 0.05em;
+  vertical-align: 0.2em;
+}
+.h-anger-mark {
+  display: inline-block;
+  color: #ef4444 !important;
+  font-weight: 800;
+  font-size: 0.9em;
+  vertical-align: 0.1em;
+  margin-left: 0.05em;
+}
+.h-tear-stream {
+  display: inline-block;
+  color: #38bdf8 !important;
+  font-weight: 700;
+}
+.h-svg-tongue {
+  vertical-align: middle;
+  display: inline-block;
+}
+.h-svg-puff, .h-svg-drops, .h-svg-anger, .h-svg-tear, .h-svg-star {
+  vertical-align: middle;
+  display: inline-block;
+}
+
 /* Custom Input Row */
 .hamoji-custom-add-box {
   display: flex;
