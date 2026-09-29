@@ -12,17 +12,17 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929153707';
-import { touch } from './note-model.js?v=20260929153707';
-import { saveSoon } from './editor/cleanup.js?v=20260929153707';
-import { openPop, closeAll } from './menus/pop.js?v=20260929153707';
-import { esc } from '../core/dom.js?v=20260929153707';
-import { toast } from '../core/toast.js?v=20260929153707';
-import { t as tr } from '../core/i18n.js?v=20260929153707';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929153707';
-import { refresh } from './editor/cleanup.js?v=20260929153707';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929153707';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929153707';
+import { state } from '../core/store.js?v=20260929154724';
+import { touch } from './note-model.js?v=20260929154724';
+import { saveSoon } from './editor/cleanup.js?v=20260929154724';
+import { openPop, closeAll } from './menus/pop.js?v=20260929154724';
+import { esc } from '../core/dom.js?v=20260929154724';
+import { toast } from '../core/toast.js?v=20260929154724';
+import { t as tr } from '../core/i18n.js?v=20260929154724';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929154724';
+import { refresh } from './editor/cleanup.js?v=20260929154724';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929154724';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929154724';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -157,6 +157,9 @@ export const HAMOJI_STICKER_SVGS = {
 
   // 40. ( / ¯ ㅂ ¯ / )
   c40: `<svg viewBox="0 0 108 32" class="hamoji-svg-stk"><path d="M 7 24 L 17 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><text x="25" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">(</text><path d="M 32 13 L 44 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 48 11 L 48 22 L 60 22 L 60 11 M 48 16.5 L 60 16.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 64 13 L 76 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><text x="83" y="17" text-anchor="middle" dominant-baseline="central" font-size="21" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-weight="400" fill="currentColor">)</text><path d="M 91 24 L 101 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+
+  // 41. Kelinci Meniup Hati
+  c41: `<svg viewBox="0 0 72 88" class="hamoji-svg-stk hamoji-svg-bunny"><circle cx="34" cy="11" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M 48 15 C 44 11 42 7.5 45 5.5 C 47 4 48.5 5.5 48.5 6 C 48.5 5.5 50 4 52 5.5 C 55 7.5 53 11 48.5 15 Z" fill="currentColor"/><circle cx="36" cy="19" r="1.3" fill="currentColor"/><circle cx="45" cy="24" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="38" cy="30" r="1.3" fill="currentColor"/><path d="M 46 41 C 41 36 39 32 42.5 30 C 44.5 28.5 46.5 30 46.5 30.5 C 46.5 30 48.5 28.5 50.5 30 C 54 32 52 36 46.5 41 Z" fill="currentColor"/><path d="M 32 46.5 L 17 46.5 C 13.5 46.5 13.5 51 17 51 L 33 51" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 32 51.5 L 17 51.5 C 13.5 51.5 13.5 56 17 56 L 33 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 32 46.5 L 43 46.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="41.5" cy="51" r="1.9" fill="currentColor"/><path d="M 43 46.5 C 48 49 48 54 45.5 57" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 35 60 L 30 71" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 45 59 L 45 71" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 28 73.5 L 19 73.5 C 15.5 73.5 15.5 78.5 19 78.5 L 26 78.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 26 78.5 L 45 78.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M 45 72.5 L 45 76.5 C 45 79 49 79 49 76.5 L 49 72.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
 };
 
 export const CUSTOM_MOJI_TEMPLATES = {
@@ -215,6 +218,9 @@ export const CUSTOM_MOJI_TEMPLATES = {
   c38: { id: 'c38', name: 'Cemas Tetes Air Mata', cat: 'custom', subCat: 'ekspresi', tags: 'cemas gugup keringat airmata tetes sedih', text: '(˘ ︵ ˘ 💧)', svg: HAMOJI_STICKER_SVGS.c38 },
   c39: { id: 'c39', name: 'Menangis Tersedu Lebar', cat: 'custom', subCat: 'ekspresi', tags: 'sedih nangis nangis patah t', text: '(T ⁔ T)', svg: HAMOJI_STICKER_SVGS.c39 },
   c40: { id: 'c40', name: 'Menari Gembira Bahagia', cat: 'custom', subCat: 'senang', tags: 'joget nari gembira santai riang tangan', text: '( / ¯ ㅂ ¯ / )', svg: HAMOJI_STICKER_SVGS.c40 },
+
+  // Baris 9
+  c41: { id: 'c41', name: 'Kelinci Meniup Hati', cat: 'custom', subCat: 'hewan', tags: 'kelinci bunny kelinci cinta love hati hembus balon hewan pet cute art ascii', text: '       °  ♥\n      ·\n        °\n      ·\n       ♥\n   ⊂⊂ __•)\n      /   |\n   ⊂___u', svg: HAMOJI_STICKER_SVGS.c41 },
 };
 
 /* ── Pustaka Kaomoji Kustom Bawaan (Otentik dari Referensi Gambar Pinterest) ── */
@@ -232,11 +238,11 @@ export const HAMOJI_CUSTOM_PRESETS = Object.keys(CUSTOM_MOJI_TEMPLATES).map(id =
   };
 });
 
-/* ── Pustaka Utama Hamoji (Eksklusif 40 Stiker Gambar Referensi) ── */
+/* ── Pustaka Utama Hamoji ── */
 export const HAMOJI_LIBRARY = HAMOJI_CUSTOM_PRESETS;
 
 export const HAMOJI_CATEGORIES = [
-  { id: 'semua', label: 'Semua (40)' },
+  { id: 'semua', label: 'Semua' },
   { id: 'cinta', label: 'Cinta & Hati' },
   { id: 'senang', label: 'Senang & Ceria' },
   { id: 'imut', label: 'Imut & Gemas' },
