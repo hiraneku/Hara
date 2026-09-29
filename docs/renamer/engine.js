@@ -12,7 +12,7 @@ import {
   ILLEGAL_CHARS_REGEX,
   sanitizeFileName,
   formatFileSize,
-} from './model.js?v=20260929102205';
+} from './model.js?v=20260929103335';
 
 /**
  * Daftar nama terlarang yang diproteksi sistem operasi (Windows, DOS, FAT32):
@@ -85,10 +85,45 @@ export function formatCase(text = '', format = 'lower') {
 }
 
 /**
+ * Mengurutkan daftar berkas sebelum rantai aturan diterapkan (Pre-sorting).
+ * Menggunakan Natural Sort (memahami urutan angka seperti file1, file2, file10).
+ *
+ * @param {Array<RenamerFileItem>} files
+ * @param {string} sortBy - 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc' | 'size-asc' | 'size-desc'
+ * @returns {Array<RenamerFileItem>}
+ */
+export function sortFiles(files = [], sortBy = 'name-asc') {
+  const cloned = [...files];
+  switch (sortBy) {
+    case 'name-asc':
+      return cloned.sort((a, b) =>
+        a.originalName.localeCompare(b.originalName, undefined, { numeric: true, sensitivity: 'base' })
+      );
+    case 'name-desc':
+      return cloned.sort((a, b) =>
+        b.originalName.localeCompare(a.originalName, undefined, { numeric: true, sensitivity: 'base' })
+      );
+    case 'date-asc':
+      return cloned.sort((a, b) => (a.lastModified || 0) - (b.lastModified || 0));
+    case 'date-desc':
+      return cloned.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+    case 'size-asc':
+      return cloned.sort((a, b) => (a.size || 0) - (b.size || 0));
+    case 'size-desc':
+      return cloned.sort((a, b) => (b.size || 0) - (a.size || 0));
+    default:
+      return cloned;
+  }
+}
+
+/**
  * Mengganti token dinamis ({name}, {num}, {date}, {time}, {ext}, {size}, {parent}, dll.) dalam pola.
  */
-export function parseTokens(pattern, { name, ext, index, count, lastModified, size = 0, path, digits = 2, startNum = 1 }) {
-  const d = new Date(lastModified || Date.now());
+export function parseTokens(pattern, { name, ext, index, count, lastModified, size = 0, path, meta = {}, digits = 2, startNum = 1 }) {
+  // Gunakan tanggal asli EXIF kamera jika tersedia, fallback ke lastModified
+  const exifDate = meta && meta.exif && meta.exif.date ? meta.exif.date : null;
+  const d = exifDate instanceof Date ? exifDate : new Date(lastModified || Date.now());
+
   const yyyy = String(d.getFullYear());
   const yy = yyyy.slice(-2);
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -105,6 +140,10 @@ export function parseTokens(pattern, { name, ext, index, count, lastModified, si
   const cleanExt = (ext || '').replace(/^\./, '');
   const sizeStr = formatFileSize(size);
 
+  const cameraStr = meta && meta.exif && (meta.exif.model || meta.exif.make)
+    ? `${meta.exif.make || ''} ${meta.exif.model || ''}`.trim().replace(/\s+/g, '_')
+    : 'Camera';
+
   return pattern
     .replace(/\{name\}/gi, name || '')
     .replace(/\{ext\}/gi, cleanExt)
@@ -119,6 +158,7 @@ export function parseTokens(pattern, { name, ext, index, count, lastModified, si
     .replace(/\{hour\}/gi, hh)
     .replace(/\{min\}/gi, min)
     .replace(/\{size\}/gi, sizeStr)
+    .replace(/\{camera\}/gi, cameraStr)
     .replace(/\{parent\}/gi, path || '')
     .replace(/\{total\}/gi, String(count || 1));
 }
@@ -289,6 +329,7 @@ export function applyRule(state, rule, index, totalCount, meta = {}) {
         lastModified: meta.lastModified,
         size: meta.size,
         path: meta.path,
+        meta,
         digits,
         startNum,
       });
@@ -334,6 +375,7 @@ export function runPipeline(fileItems = [], rules = [], options = {}) {
         lastModified: item.lastModified,
         size: item.size,
         path: item.path,
+        exif: item.meta ? item.meta.exif : null,
       });
     }
 

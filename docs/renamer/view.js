@@ -2,14 +2,14 @@
  * Tampilan & Antarmuka Pengguna Modul Bulk Renamer — Hara
  */
 
-import { esc } from '../core/dom.js?v=20260929102205';
-import { t as tr } from '../core/i18n.js?v=20260929102205';
+import { esc } from '../core/dom.js?v=20260929103335';
+import { t as tr } from '../core/i18n.js?v=20260929103335';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20260929102205';
+} from './model.js?v=20260929103335';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -281,6 +281,17 @@ export function renamerView(state, pipelineResult) {
             </div>
           </div>
           <div class="rn-actions-top">
+            <div class="rn-input-group">
+              <label style="font-size:12px;color:var(--muted)">${tr('Urutkan:')}</label>
+              <select class="rn-select" id="rn-sort-select" style="height:32px;font-size:12px">
+                <option value="name-asc" ${state.sortBy === 'name-asc' ? 'selected' : ''}>Nama Asli (A–Z)</option>
+                <option value="name-desc" ${state.sortBy === 'name-desc' ? 'selected' : ''}>Nama Asli (Z–A)</option>
+                <option value="date-asc" ${state.sortBy === 'date-asc' ? 'selected' : ''}>Tanggal (Lama ➔ Baru)</option>
+                <option value="date-desc" ${state.sortBy === 'date-desc' ? 'selected' : ''}>Tanggal (Baru ➔ Lama)</option>
+                <option value="size-asc" ${state.sortBy === 'size-asc' ? 'selected' : ''}>Ukuran (Kecil ➔ Besar)</option>
+                <option value="size-desc" ${state.sortBy === 'size-desc' ? 'selected' : ''}>Ukuran (Besar ➔ Kecil)</option>
+              </select>
+            </div>
             <button class="btn btn-sec" data-rn-act="pick-files" style="height:32px;font-size:12px">
               <svg class="ico"><use href="#i-plus"/></svg> ${tr('Tambah')}
             </button>

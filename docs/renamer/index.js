@@ -1,17 +1,17 @@
 /**
- * Modul Bulk Renamer — Hara
+ * Modul Bulk Renamer — Hara (Fase 5)
  *
  * Mengikuti kontrak modul Hara:
  * - registerViews ke router
  * - state management independen
- * - integrasi UI, preset, file picker, ZIP export, dan engine
+ * - integrasi UI, preset, file picker, ZIP export, EXIF parser, dan engine
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929102205';
-import { toast } from '../core/toast.js?v=20260929102205';
-import { t as tr } from '../core/i18n.js?v=20260929102205';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929102205';
-import { unduh } from '../notes/data-io.js?v=20260929102205';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20260929103335';
+import { toast } from '../core/toast.js?v=20260929103335';
+import { t as tr } from '../core/i18n.js?v=20260929103335';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20260929103335';
+import { unduh } from '../notes/data-io.js?v=20260929103335';
 import {
   createRenamerItem,
   createRule,
@@ -20,10 +20,11 @@ import {
   RULE_METADATA,
   DEFAULT_PRESETS,
   FILE_STATUS,
-} from './model.js?v=20260929102205';
-import { runPipeline } from './engine.js?v=20260929102205';
-import { renamerView } from './view.js?v=20260929102205';
-import { createZipBlob } from './zip.js?v=20260929102205';
+} from './model.js?v=20260929103335';
+import { runPipeline, sortFiles } from './engine.js?v=20260929103335';
+import { renamerView } from './view.js?v=20260929103335';
+import { createZipBlob } from './zip.js?v=20260929103335';
+import { parseExif } from './exif.js?v=20260929103335';
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -52,31 +53,36 @@ export const renamerState = {
   ],
   filter: 'all',
   searchQuery: '',
+  sortBy: 'name-asc',
   collisionStrategy: 'warn',
   undoStack: [],
   directoryHandle: null,
 };
 
-// Data contoh untuk demo instan
+// Data contoh untuk demo instan (termasuk simulasi EXIF kamera)
 const SAMPLE_DEMO_FILES = [
-  'IMG_2026_09_29%20(1).JPG',
-  'IMG_2026_09_29%20(2).JPG',
-  'Draft%20Laporan%20Keuangan%20[FINAL].docx',
-  'Foto_Liburan_Keluarga_Bali (01).PNG',
-  'Podcast_Episode_01_Audio.mp3',
-  'DATA_KARYAWAN_2026_V1.XLSX',
+  { name: 'IMG_2026_09_29%20(1).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:15:00') },
+  { name: 'IMG_2026_09_29%20(2).JPG', camera: 'Sony A7IV', date: new Date('2026-09-29T10:16:30') },
+  { name: 'Draft%20Laporan%20Keuangan%20[FINAL].docx', camera: null, date: null },
+  { name: 'Foto_Liburan_Keluarga_Bali (01).PNG', camera: 'iPhone 15 Pro', date: new Date('2026-08-14T15:20:00') },
+  { name: 'Podcast_Episode_01_Audio.mp3', camera: null, date: null },
+  { name: 'DATA_KARYAWAN_2026_V1.XLSX', camera: null, date: null },
 ];
 
 export function muatBerkasDemo() {
-  renamerState.files = SAMPLE_DEMO_FILES.map((name, idx) =>
+  renamerState.files = SAMPLE_DEMO_FILES.map((item, idx) =>
     createRenamerItem({
-      originalName: name,
+      originalName: item.name,
       size: (idx + 1) * 1024 * 350,
       path: 'Contoh_Demo',
-      lastModified: Date.now() - idx * 86400000,
-      file: new Blob([`Contoh isi dummy berkas ${name}`], { type: 'text/plain' }),
+      lastModified: item.date ? item.date.getTime() : Date.now() - idx * 86400000,
+      file: new Blob([`Contoh isi dummy berkas ${item.name}`], { type: 'text/plain' }),
+      meta: {
+        exif: item.camera ? { model: item.camera, date: item.date } : null,
+      },
     })
   );
+  renamerState.files = sortFiles(renamerState.files, renamerState.sortBy);
   toast(tr('6 berkas contoh demo berhasil dimuat'));
   renderRenamerScreen();
 }
@@ -99,12 +105,30 @@ export function renderRenamerScreen() {
       rules: renamerState.rules,
       filter: renamerState.filter,
       searchQuery: renamerState.searchQuery,
+      sortBy: renamerState.sortBy,
       collisionStrategy: renamerState.collisionStrategy,
       hasUndo: renamerState.undoStack.length > 0,
     },
     pipelineRes
   );
   wrap.scrollTop = scrollY;
+}
+
+/**
+ * Membaca EXIF dari berkas secara async
+ */
+async function ekstrakExifItem(file) {
+  if (!file || !(file instanceof Blob)) return null;
+  const name = file.name || '';
+  if (!/\.(jpe?g)$/i.test(name)) return null;
+
+  try {
+    const slice = file.slice(0, 65536); // Baca header 64KB pertama
+    const buf = await slice.arrayBuffer();
+    return parseExif(buf);
+  } catch (e) {
+    return null;
+  }
 }
 
 /**
@@ -119,6 +143,7 @@ async function pilihFolderWeb() {
       for await (const entry of dirHandle.values()) {
         if (entry.kind === 'file') {
           const file = await entry.getFile();
+          const exif = await ekstrakExifItem(file);
           loaded.push(
             createRenamerItem({
               originalName: file.name,
@@ -127,6 +152,7 @@ async function pilihFolderWeb() {
               path: dirHandle.name,
               handle: entry,
               file,
+              meta: { exif },
             })
           );
         }
@@ -134,7 +160,7 @@ async function pilihFolderWeb() {
       if (loaded.length === 0) {
         toast(tr('Folder kosong, tidak ada berkas'));
       } else {
-        renamerState.files = loaded;
+        renamerState.files = sortFiles(loaded, renamerState.sortBy);
         toast(tr('{n} berkas berhasil dimuat dari folder', { n: loaded.length }));
       }
       renderRenamerScreen();
@@ -160,18 +186,23 @@ function pilihBerkasBiasa() {
 /**
  * Menangani pemilihan file dari input
  */
-function prosesInputFiles(fileList) {
+async function prosesInputFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
-  const loaded = Array.from(fileList).map(file =>
-    createRenamerItem({
-      originalName: file.name,
-      size: file.size,
-      lastModified: file.lastModified,
-      path: file.webkitRelativePath ? file.webkitRelativePath.split('/')[0] : '',
-      file,
-    })
-  );
-  renamerState.files = [...renamerState.files, ...loaded];
+  const loaded = [];
+  for (const file of Array.from(fileList)) {
+    const exif = await ekstrakExifItem(file);
+    loaded.push(
+      createRenamerItem({
+        originalName: file.name,
+        size: file.size,
+        lastModified: file.lastModified,
+        path: file.webkitRelativePath ? file.webkitRelativePath.split('/')[0] : '',
+        file,
+        meta: { exif },
+      })
+    );
+  }
+  renamerState.files = sortFiles([...renamerState.files, ...loaded], renamerState.sortBy);
   toast(tr('{n} berkas ditambahkan', { n: loaded.length }));
   renderRenamerScreen();
 }
@@ -262,16 +293,45 @@ async function eksporZipRenamed() {
 }
 
 /**
- * Batalkan / Undo Ganti Nama Terakhir
+ * Dialog Riwayat & Pembatalan (Undo Inspector)
  */
-async function batalkanGantiNama() {
-  const lastOp = renamerState.undoStack.pop();
-  if (!lastOp) {
-    toast(tr('Tidak ada riwayat ganti nama untuk dibatalkan'));
+function bukaDialogUndo(anchorEl) {
+  if (renamerState.undoStack.length === 0) {
+    toast(tr('Tidak ada riwayat ganti nama'));
     return;
   }
 
-  // Jika di disk native
+  const lastOp = renamerState.undoStack[renamerState.undoStack.length - 1];
+  const time = new Date(lastOp.timestamp).toLocaleTimeString();
+
+  const html = `
+    <div class="rn-modal-box">
+      <h3 class="rn-modal-title">${tr('Batalkan Ganti Nama')}</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0">
+        ${tr('Sesi ganti nama pukul {time} ({n} berkas):', { time, n: lastOp.mappings.length })}
+      </p>
+      <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px;background:var(--bg);font-family:var(--mono);font-size:12px;display:flex;flex-direction:column;gap:4px">
+        ${lastOp.mappings.slice(0, 15).map(m => `
+          <div><span style="color:var(--muted)">${esc(m.from)}</span> ➔ <b>${esc(m.to)}</b></div>
+        `).join('')}
+        ${lastOp.mappings.length > 15 ? `<div style="color:var(--faint)">…dan ${lastOp.mappings.length - 15} berkas lainnya</div>` : ''}
+      </div>
+      <div class="rn-actions-top" style="justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-sec" data-pop-close>${tr('Tutup')}</button>
+        <button class="btn btn-pri" id="rn-undo-confirm" style="background:var(--danger)">${tr('Kembalikan ke Nama Semula')}</button>
+      </div>
+    </div>
+  `;
+  openPop(html, anchorEl || document.body);
+}
+
+/**
+ * Eksekusi Undo / Rollback
+ */
+async function batalkanGantiNamaKonfirmasi() {
+  const lastOp = renamerState.undoStack.pop();
+  if (!lastOp) return;
+
   if (lastOp.mappings.some(m => m.handle)) {
     try {
       toast(tr('Mengembalikan nama berkas di disk…'));
@@ -292,7 +352,8 @@ async function batalkanGantiNama() {
     }
   });
 
-  toast(tr('Ganti nama sebelumnya berhasil diurungkan!'));
+  closeAll();
+  toast(tr('Ganti nama berhasil diurungkan!'));
   renderRenamerScreen();
 }
 
@@ -393,6 +454,7 @@ export const renamerModule = {
               rules: renamerState.rules,
               filter: renamerState.filter,
               searchQuery: renamerState.searchQuery,
+              sortBy: renamerState.sortBy,
               collisionStrategy: renamerState.collisionStrategy,
               hasUndo: renamerState.undoStack.length > 0,
             },
@@ -426,7 +488,7 @@ export const renamerModule = {
         if (act === 'save-preset') return bukaDialogSimpanPreset(actBtn);
         if (act === 'apply-rename') return eksekusiGantiNama();
         if (act === 'export-zip') return eksporZipRenamed();
-        if (act === 'undo') return batalkanGantiNama();
+        if (act === 'undo') return bukaDialogUndo(actBtn);
 
         // Operasi per aturan
         if (act === 'del-rule' && id) {
@@ -451,6 +513,11 @@ export const renamerModule = {
             return renderRenamerScreen();
           }
         }
+      }
+
+      // Konfirmasi Undo
+      if (e.target && e.target.id === 'rn-undo-confirm') {
+        return batalkanGantiNamaKonfirmasi();
       }
 
       // Konfirmasi Simpan Preset
@@ -578,6 +645,13 @@ export const renamerModule = {
           rule.params[paramName] = boolInp.checked;
           renderRenamerScreen();
         }
+      }
+
+      // Pre-sorting select
+      if (e.target && e.target.id === 'rn-sort-select') {
+        renamerState.sortBy = e.target.value;
+        renamerState.files = sortFiles(renamerState.files, renamerState.sortBy);
+        renderRenamerScreen();
       }
 
       // Toggle collision strategy selector
