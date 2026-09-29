@@ -12,17 +12,17 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20260929123058';
-import { touch } from './note-model.js?v=20260929123058';
-import { saveSoon } from './editor/cleanup.js?v=20260929123058';
-import { openPop, closeAll } from './menus/pop.js?v=20260929123058';
-import { esc } from '../core/dom.js?v=20260929123058';
-import { toast } from '../core/toast.js?v=20260929123058';
-import { t as tr } from '../core/i18n.js?v=20260929123058';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929123058';
-import { refresh } from './editor/cleanup.js?v=20260929123058';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929123058';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929123058';
+import { state } from '../core/store.js?v=20260929135653';
+import { touch } from './note-model.js?v=20260929135653';
+import { saveSoon } from './editor/cleanup.js?v=20260929135653';
+import { openPop, closeAll } from './menus/pop.js?v=20260929135653';
+import { esc } from '../core/dom.js?v=20260929135653';
+import { toast } from '../core/toast.js?v=20260929135653';
+import { t as tr } from '../core/i18n.js?v=20260929135653';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20260929135653';
+import { refresh } from './editor/cleanup.js?v=20260929135653';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20260929135653';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20260929135653';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -35,7 +35,7 @@ export const HAMOJI_CUSTOM_PRESETS = [
   { id: 'c2', text: '(≥ ∇ ≤)', name: 'Sangat Riang', cat: 'custom', tags: 'senang riang tawa' },
   { id: 'c3', text: '( ‾́ 3 ‾́ )', name: 'Bersiul Manis', cat: 'custom', tags: 'siul santai bibir manis' },
   { id: 'c4', text: '(> ω <)', name: 'Gemas Riang', cat: 'custom', tags: 'gemas senang imut ceria' },
-  { id: 'c5', text: '( ﾟ ᗜ ﾟ)', name: 'Senyum Lebar', cat: 'custom', tags: 'senyum tawa riang' },
+  { id: 'c5', text: '( ° ᗜ ° )', name: 'Senyum Lebar', cat: 'custom', tags: 'senyum tawa riang' },
 
   // Baris 2
   { id: 'c6', text: '( ˆ ᗜ ˆ )', name: 'Tertawa Lepas', cat: 'custom', tags: 'tawa tertawa gembira' },
@@ -66,7 +66,7 @@ export const HAMOJI_CUSTOM_PRESETS = [
   { id: 'c25', text: '( ˆ ‸ ˆ )', name: 'Cemberut Halus', cat: 'custom', tags: 'cemberut ngambek halus imut' },
 
   // Baris 6
-  { id: 'c26', text: '( ° ᗜ ° )', name: 'Mulut Terbuka', cat: 'custom', tags: 'kaget senang terkejut riang' },
+  { id: 'c26', text: '( ˆ ▽ ˆ )', name: 'Tawa Ceria', cat: 'custom', tags: 'kaget senang terkejut riang' },
   { id: 'c27', text: '( - ‿ - ; )', name: 'Senyum Pasrah', cat: 'custom', tags: 'senyum pasrah ikhlas keringat' },
   { id: 'c28', text: '( - _ - # )', name: 'Kesal Menahan Diri', cat: 'custom', tags: 'kesal marah urat emosi' },
   { id: 'c29', text: '( - ᵤ - )', name: 'Senyum Tipis', cat: 'custom', tags: 'senyum tipis misterius' },

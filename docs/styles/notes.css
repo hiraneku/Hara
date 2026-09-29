@@ -1236,15 +1236,16 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-xl, 16px);
-  padding: 18px 20px;
+  padding: 14px 16px;
   width: 100%;
   max-width: 520px;
-  max-height: min(86vh, 680px);
+  max-height: min(88vh, 680px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   box-sizing: border-box;
   box-shadow: var(--shadow-modal);
+  overflow: hidden;
 }
 
 /* Modal Header */
@@ -1253,6 +1254,7 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex: 0 0 auto;
 }
 .hamoji-title-box {
   display: flex;
@@ -1295,15 +1297,16 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   gap: 4px;
+  flex: 0 0 auto;
 }
 .hamoji-seg-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 32px;
+  height: 30px;
   border-radius: var(--r-sm);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
   background: transparent;
@@ -1331,35 +1334,37 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 }
 
 .hamoji-hint-row {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--muted);
-  line-height: 1.4;
-  margin: -4px 0 0;
+  line-height: 1.35;
+  margin: -2px 0 0;
+  flex: 0 0 auto;
 }
 
 /* Color Palette Section (Persis Menu Warna Catatan) */
 .hamoji-color-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   background: var(--sunken);
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 .hamoji-color-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .hamoji-color-title {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text);
 }
 .hamoji-color-preview-chip {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 999px;
   border: 1px solid var(--border);
   display: inline-block;
@@ -1368,19 +1373,19 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--muted);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  padding: 2px 8px;
+  padding: 2px 7px;
   margin-left: auto;
   cursor: pointer;
   transition: all .12s var(--ease);
 }
 .hamoji-toggle-wheel-btn .ico {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
 }
 .hamoji-toggle-wheel-btn:hover,
 .hamoji-toggle-wheel-btn.active {
@@ -1389,7 +1394,7 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   background: var(--accent-weak);
 }
 .hamoji-clear-color-btn {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--danger);
   background: transparent;
   border: none;
@@ -1397,13 +1402,13 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   padding: 2px 4px;
 }
 .hamoji-wpal {
-  padding: 4px 0 2px !important;
-  gap: 6px !important;
+  padding: 2px 0 !important;
+  gap: 5px !important;
 }
 .hamoji-wheel-box {
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--border);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Modern Search Box */
@@ -1412,24 +1417,25 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   display: flex;
   align-items: center;
   width: 100%;
+  flex: 0 0 auto;
 }
 .hamoji-search-box .hamoji-search-ico {
   position: absolute;
   left: 10px;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   color: var(--muted);
   pointer-events: none;
 }
 .hamoji-search-input {
   width: 100%;
-  height: 34px;
-  padding: 0 10px 0 32px;
+  height: 32px;
+  padding: 0 10px 0 30px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: 12px;
   outline: none;
   box-sizing: border-box;
   transition: border-color .12s var(--ease), background .12s var(--ease);
@@ -1443,9 +1449,16 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .hamoji-cats-row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  overflow-y: hidden;
+  flex: 0 0 36px !important;
+  flex-shrink: 0 !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 4px 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -1453,7 +1466,9 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   display: none;
 }
 .hamoji-cat-chip {
-  padding: 4px 10px;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 12px !important;
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 500;
@@ -1463,7 +1478,11 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   cursor: pointer;
   white-space: nowrap;
   transition: all .12s var(--ease);
-  flex: none;
+  flex: 0 0 auto !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .hamoji-cat-chip:hover {
   color: var(--text);
@@ -1483,30 +1502,31 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 
 /* Art Grid Layout */
 .hamoji-grid-wrap {
-  min-height: 180px;
-  max-height: 300px;
+  flex: 1 1 0 !important;
+  min-height: 100px;
+  max-height: 260px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--bg);
-  padding: 8px;
+  padding: 6px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
   box-sizing: border-box;
   align-content: start;
+  -webkit-overflow-scrolling: touch;
 }
 @media (max-width: 480px) {
   .hamoji-grid-wrap {
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    gap: 6px;
-    max-height: 260px;
+    gap: 5px;
   }
 }
 
 .hamoji-item-card {
-  padding: 10px 6px;
-  min-height: 60px;
+  padding: 8px 4px;
+  min-height: 54px;
   border-radius: var(--r-md);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1514,7 +1534,7 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   cursor: pointer;
   transition: border-color .12s var(--ease), background .12s var(--ease), transform .1s var(--ease);
   text-align: center;
@@ -1531,7 +1551,7 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 
 .hamoji-item-card.is-wide {
   grid-column: span 2;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 @media (max-width: 480px) {
   .hamoji-item-card.is-wide {
@@ -1550,10 +1570,10 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   line-height: 1.25;
 }
 .hamoji-item-card.is-wide .hamoji-item-text {
-  font-size: 14px;
+  font-size: 13.5px;
 }
 .hamoji-item-name {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1567,6 +1587,7 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
   align-items: center;
   gap: 6px;
   padding-top: 2px;
+  flex: 0 0 auto;
 }
 .hamoji-custom-input {
   flex: 1;
