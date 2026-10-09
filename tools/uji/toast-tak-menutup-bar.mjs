@@ -30,8 +30,10 @@ const angkaBottom = aturan => {
   return m ? +m[1] : null;
 };
 
-/* blok media sempit (yang terakhir di berkas) */
-const blok = [...css.matchAll(/@media\(max-width:\s*768px\)\s*\{([\s\S]*?)\n\}/g)].pop();
+/* blok media sempit yang memuat aturan .toast (bukan sekadar yang terakhir di berkas —
+   blok sempit lain di bawahnya, mis. .pilih-bar, sering ditambahkan satu baris) */
+const blok = [...css.matchAll(/@media\(max-width:\s*768px\)\s*\{([\s\S]*?)\n\}/g)]
+  .filter(m => /(?:^|\n)\s*\.toast\{/.test(m[1])).pop();
 cek('blok @media(max-width:768px) ditemukan', !!blok && !!blok[1]);
 
 if (blok) {
