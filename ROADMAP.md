@@ -92,3 +92,59 @@
       • Full Undo / Rollback ganti nama;
       • Suite uji otomatis 78/78 hijau (`tools/uji/renamer-*.mjs`).
 
+
+## Bagian K — ronde 11 (BERJALAN, bertahap)
+> Dikerjakan per tahap; tiap tahap punya suite uji sendiri. Butir yang butuh
+> keputusan pengguna DITAHAN (lihat paling bawah) dan tidak dikerjakan sendiri.
+
+### K · Tahap 1 — Tugas & Reminder (SELESAI)
+- [x] K2. Tata bahasa tenggat diperkaya: `lusa`, `minggu depan`, `N hari lagi`,
+      jam sesudah tanggal (`besok jam 14:00 …`, `09.30` juga diterima).
+- [x] K2. To-do BERULANG: `setiap hari`, `setiap <nama hari>`, `setiap tanggal N`.
+      Dicentang → tenggat bergeser ke kejadian berikutnya setelah hari ini (yang
+      terlewat dilompati) dan kotak kembali kosong. Disimpan sebagai `data-ulang`.
+      Tanggal bulan 29–31 dibatasi akhir bulan (31 Jan → 28/29 Feb).
+- [x] K5. Prioritas `!` / `!!` / `!!!` (di mana pun sebagai kata tersendiri);
+      tampil di chip dan jadi urutan kedua setelah tenggat.
+- [x] Perbaikan uji `toast-tak-menutup-bar.mjs` yang salah memilih blok @media.
+- Uji: `tools/uji/tugas-lanjut.mjs` (33) · `tools/uji/ulang-tugas.mjs` (14).
+
+### K · Tahap berikutnya (BELUM)
+- [ ] K1. Command palette (Ctrl/⌘+K)
+- [ ] K3. Token metadata EXIF/ID3 di renamer
+- [ ] K4. Rencana hari ini: tugas belum selesai pindah otomatis ke besok
+- [ ] K6. Snooze (tunda 10 menit / besok / nanti)
+- [ ] K7. Matriks prioritas (mendesak × penting)
+- [ ] K8. Ekspor/impor ICS (tenggat ke kalender)
+- [ ] K9. Tampilan kalender di layar Tugas
+- [ ] K10. Transclusion blok `![[catatan#^id]]`
+- [ ] K11. Sebutan tanpa tautan (unlinked mentions) + graf lokal + catatan yatim
+- [ ] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker)
+- [ ] K13. Tangkap cepat dari share sheet (Web Share Target)
+- [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari
+- [ ] K15. Baca keras (SpeechSynthesis) dan dikte suara (Web Speech API)
+- [ ] K16. Templat dengan variabel `{tanggal}`, `{judul}`, dan isian saat dibuat
+- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — setelah audit PIN
+- [ ] K18. Cadangan terenkripsi (frasa sandi)
+- [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti)
+- [ ] K20. Statistik & heatmap jurnal / to-do selesai per minggu
+- [ ] K21. Belajar dari contoh (flash fill) di renamer
+- [ ] K22. Deteksi duplikat (SHA-256 + dHash gambar)
+- [ ] K23. Aturan bersyarat & grup aturan di renamer
+- [ ] K24. Regex dengan penjelasan + pustaka pola
+- [ ] K25. Ekspor/impor resep renamer (JSON, QR)
+- [ ] K26. Riwayat undo lintas sesi (IndexedDB) + ekspor log CSV
+- [ ] K27. Normalisasi Unicode & hapus diakritik di renamer
+- [ ] K28. Pindah ke subfolder (tanggal/jenis) lewat File System Access
+- [ ] K29. Web Worker untuk batch besar di renamer
+- [ ] K30. Satu indeks pencarian lintas modul
+- [ ] K31. Aksi lintas modul: catatan → Reminder/tugas sekali langkah
+- [ ] K32. Penyimpanan OPFS untuk berkas besar
+- [ ] K33. Pembaruan PWA eksplisit ("versi baru tersedia")
+- [ ] K34. Virtualisasi daftar catatan
+- [ ] K35. Aksesibilitas & navigasi keyboard penuh
+
+### Ditahan — menunggu keputusan pengguna
+- D18 riwayat versi · E22 sync (CRDT) · E23 tabel · E24 widget (butir lama)
+- Fitur AI (ringkas / tanya-jawab catatan) — bertentangan dengan non-goal v1 di PLAN
+- Notifikasi terjadwal (web terbatas saat aplikasi tertutup; APK lewat Capacitor)

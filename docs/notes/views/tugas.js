@@ -4,11 +4,11 @@
    struktur data baru — tenggat hidup di dalam isi catatan, sehingga
    layar ini tidak pernah bisa berbeda dari catatan aslinya. */
 
-import { state } from '../../core/store.js?v=20260929154724';
-import { esc } from '../../core/dom.js?v=20260929154724';
-import { tugasMendatang, tenggatHariIni, sisaWaktu, labelTenggat } from '../pengingat.js?v=20260929154724';
-import { rowFor } from './row.js?v=20260929154724';
-import { t as tr } from '../../core/i18n.js?v=20260929154724';
+import { state } from '../../core/store.js?v=20261009161031';
+import { esc } from '../../core/dom.js?v=20261009161031';
+import { tugasMendatang, tenggatHariIni, sisaWaktu, chipTenggat } from '../pengingat.js?v=20261009161031';
+import { rowFor } from './row.js?v=20261009161031';
+import { t as tr } from '../../core/i18n.js?v=20261009161031';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
 
@@ -19,9 +19,9 @@ const kartuTenggat = (x, penanda) => `
     title="${tr('Buka di catatan')} «${esc(x.n.title || tr('Tanpa judul'))}»">
     <div class="row-b">
       <div class="row-t" style="display:flex;align-items:center;gap:8px;min-width:0">
-        <span class="tdg-chip">${esc(labelTenggat(x.teks))}</span>
+        <span class="tdg-chip">${x.prioritas ? '<b class="tdg-prio" aria-label="' + tr('prioritas') + '">' + '!'.repeat(x.prioritas) + '</b> ' : ''}${x.berulang ? '↻ ' : ''}${esc(chipTenggat(x))}</span>
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(
-          (x.blok.content || '').replace(/<[^>]*>/g, ' ').replace(/^\S+\s*/, '').trim()
+          x.sisa || (x.blok.content || '').replace(/<[^>]*>/g, ' ').trim()
             || tr('Tanpa isi'))}</span></div>
       <div class="row-s">${esc(x.n.title || tr('Tanpa judul'))} · ${esc(penanda)}</div>
     </div>

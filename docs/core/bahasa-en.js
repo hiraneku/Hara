@@ -676,4 +676,5 @@ export const EN = {
   'Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.':
     'Applies to images you add from now on; images already in your notes are untouched. GIFs are always kept as is so their animation survives.',
   'Mutu gambar': 'Image quality',
+  'prioritas': 'priority',
 };

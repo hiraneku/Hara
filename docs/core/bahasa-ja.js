@@ -673,4 +673,5 @@ export const JA = {
   'Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.':
     'これから挿入する画像に適用されます。ノートにある既存の画像は変更しません。GIF はアニメーションを保つため常にそのまま保存します。',
   'Mutu gambar': '画像の品質',
+  'prioritas': '優先度',
 };

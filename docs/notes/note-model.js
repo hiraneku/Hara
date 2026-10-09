@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20260929154724';
+import { t as tr } from '../core/i18n.js?v=20261009161031';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -226,7 +226,8 @@ export function blockToHtml(b) {
   if (b.type === 'todo') {
     const on = meta.checked ? ' on' : '';
     const done = meta.checked ? ' done' : '';
-    const dn = meta.checked && meta.done ? ` data-done="${meta.done}"` : '';
+    const dn = (meta.checked && meta.done ? ` data-done="${meta.done}"` : '')
+      + (meta.ulangKe ? ` data-ulang="${meta.ulangKe}"` : '');
     const kotak = `<button class="cbx${on}" contenteditable="false" type="button" ` +
       `role="checkbox" aria-checked="${meta.checked ? 'true' : 'false'}">` +
       `<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
@@ -348,6 +349,12 @@ export function elToBlock(el) {
     if (dn) {
       const v = Number(dn);
       if (!isNaN(v) && v > 0) meta.done = v;
+    }
+    /* tenggat berulang yang sudah bergeser (K2) */
+    const ul = el.getAttribute && el.getAttribute('data-ulang');
+    if (ul) {
+      const v = Number(ul);
+      if (!isNaN(v) && v > 0) meta.ulangKe = v;
     }
     content = isiTanpa(el, ':scope > .cbx');
   } else if (type === 'heading') {
