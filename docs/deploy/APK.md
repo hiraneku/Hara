@@ -27,19 +27,23 @@ di-push langsung. Pasang lewat web GitHub:
 2. Nama: `.github/workflows/apk.yml`. Isi: salin dari `docs/deploy/apk-workflow.yml`.
 3. Commit ke branch `arena/c3f71ef0-hara`.
 
-## Secret yang dibutuhkan (Settings → Secrets and variables → Actions)
+## Secret yang dibutuhkan
+
+Cukup **satu** secret: Settings → Secrets and variables → Actions → New repository secret.
 
 | Nama | Isi |
 |---|---|
-| `HARA_KS_B64` | keystore PKCS12 dalam base64 |
-| `HARA_KS_PASS` | password keystore |
-| `HARA_KEY_ALIAS` | alias kunci (`hara`) |
-| `HARA_KEY_PASS` | password kunci (sama dengan password keystore) |
+| `HARA_SEED` | Kata sandi acak panjang (minimal 16 karakter), misalnya 24 huruf dan angka acak. Buat sendiri, lalu simpan di catatan pribadi. |
 
-Tanpa secret, workflow tetap membangun APK tetapi ditandatangani debug. APK
-seperti itu **tidak bisa** memperbarui instalasi sebelumnya; pasang ulang
-berarti data lokal hilang. Simpan cadangan keystore di tempat aman. Jika
-keystore hilang, semua pengguna harus pasang ulang.
+Dari `HARA_SEED`, workflow membuat keystore yang selalu sama di setiap build
+(`android/scripts/buat-kunci.cjs`). Jadi tanda tangan APK tidak berubah dan
+pembaruan bisa dipasang di atas instalasi lama.
+
+**Jangan ganti atau hilangkan `HARA_SEED`** setelah APK terpasang. Kalau berubah,
+kuncinya berbeda dan pembaruan tidak bisa dipasang di atas APK lama.
+
+Tanpa secret, workflow tetap membangun APK tetapi ditandatangani debug, dan
+APK seperti itu tidak bisa memperbarui instalasi sebelumnya.
 
 ## Build lokal (opsional)
 
