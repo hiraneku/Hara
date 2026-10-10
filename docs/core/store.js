@@ -4,13 +4,16 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261010042150';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261010042150';
-import { sinkronTag } from '../notes/tags.js?v=20261010042150';
-import { bahasaSekarang } from './i18n.js?v=20261010042150';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261010050549';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261010050549';
+import { sinkronTag } from '../notes/tags.js?v=20261010050549';
+import { bahasaSekarang, t as tr } from './i18n.js?v=20261010050549';
+import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261010050549';
+import { toast } from './toast.js?v=20261010050549';
 
-const KEY = 'hara.v1';        /* kunci dipertahankan agar data lama terbaca */
 const SCHEMA = 2;
+/* Penyimpanan utama: IndexedDB (lihat db-catatan.js). Kunci localStorage
+   `hara.v1` tetap dibaca untuk migrasi dan TIDAK dihapus di rilis ini. */
 
 /* Catatan bawaan. Isinya dibangun dari HTML sambutan (bahasa antarmuka
    aktif — bawaan Indonesia) lalu langsung dinormalkan jadi blocks — jadi
@@ -62,22 +65,42 @@ export const state = {
   /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
      untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
   dataRusak: false,
+  /* penulisan terakhir gagal — ditampilkan dan dicoba lagi oleh autosave */
+  dataGagal: false,
 };
 
+function snapshot() {
+  return JSON.stringify({
+    schema: SCHEMA,
+    seq: state.seq,
+    openId: state.openId,
+    notes: state.notes,
+  });
+}
+
+/* Tulis ke penyimpanan utama TANPA menunggu selesai (fire-and-forget).
+   Mengembalikan false hanya bila data tidak bisa diserialkan. Kegagalan
+   tulis yang terjadi kemudian dilaporkan lewat state.dataGagal dan toast.
+   Pemanggil yang perlu tahu hasil sebenarnya pakai simpanTahan(). */
 export function save() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({
-      schema: SCHEMA,
-      seq: state.seq,
-      openId: state.openId,
-      notes: state.notes,
-    }));
-    return true;
-  } catch (e) {
-    /* penyimpanan penuh / mode privat — dilaporkan supaya autosave bisa
-       menampilkan status error dan MEMPERTAHANKAN draf recovery */
-    return false;
-  }
+  let s;
+  try { s = snapshot(); } catch (e) { return false; }
+  tulisAntre(s).then(ok => {
+    state.dataGagal = !ok;
+    if (!ok) toast(tr('Penyimpanan gagal — perubahan terakhir mungkin belum tersimpan'));
+  });
+  return true;
+}
+
+/* Tulis dan TUNGGU sampai benar-benar tersimpan. Resolve true/false.
+   Dipakai autosave supaya status "tersimpan" hanya muncul setelah berhasil. */
+export function simpanTahan() {
+  let s;
+  try { s = snapshot(); } catch (e) { return Promise.resolve(false); }
+  return tulisAntre(s).then(ok => {
+    state.dataGagal = !ok;
+    return ok;
+  });
 }
 
 /* Data tersimpan ada tapi tidak bisa dibaca (JSON rusak / bentuk tak
@@ -85,26 +108,24 @@ export function save() {
    kunci cadangan dan kunci utama dibersihkan — kalau tidak, pemuatan
    berikutnya akan menemukan data rusak yang sama lagi. Aplikasi mulai
    dari catatan bawaan, dan pengguna diberi tahu lewat state.dataRusak. */
-function cadangkanDataRusak(raw) {
+async function cadangkanDataRusak(raw) {
   /* tidak ada data mentah sama sekali (mis. storage diblokir total) —
      bukan berarti data rusak, jangan menyalakan bendera */
   if (!raw) return;
   state.dataRusak = true;
-  try {
-    localStorage.setItem(KEY + '.rusak-' + Date.now(), raw);
-    localStorage.removeItem(KEY);
-  } catch (e) { /* penyimpanan penuh: biarkan data lama utuh di tempatnya */ }
+  await cadangkanRusak(raw, Date.now());   /* gagal → data utama dibiarkan */
 }
 
-export function load() {
+export async function load() {
+  let raw = '';
+  try { raw = (await muatMentah()) || ''; } catch (e) { raw = ''; }
   try {
-    const raw = localStorage.getItem(KEY);
     if (!raw) return;
 
     let data = null;
     try { data = JSON.parse(raw); } catch (e) { data = null; }
     if (!data || !Array.isArray(data.notes)) {
-      cadangkanDataRusak(raw);
+      await cadangkanDataRusak(raw);
       return;
     }
 
@@ -127,9 +148,7 @@ export function load() {
   } catch (e) {
     /* jaring pengaman terakhir: mulai dari bawaan, jangan sampai
        aplikasi mati hanya karena satu data bermasalah */
-    let mentah = '';
-    try { mentah = localStorage.getItem(KEY) || ''; } catch (e2) {}
-    cadangkanDataRusak(mentah);
+    await cadangkanDataRusak(raw);
     state.notes = DEFAULT_NOTES();
   }
 }

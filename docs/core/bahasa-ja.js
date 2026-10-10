@@ -237,7 +237,6 @@ export const JA = {
   "Daftar bernomor": "番号付きリスト",
   "To-do": "チェックリスト",
   "Tautan catatan": "ノートリンク",
-  "Gambar": "画像",
   "Tandai blok": "ブロックをマーク",
   "Pembatas": "区切り線",
   "Tanggal": "日付",

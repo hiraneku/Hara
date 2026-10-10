@@ -237,7 +237,6 @@ export const EN = {
   "Daftar bernomor": "Numbered list",
   "To-do": "To-do",
   "Tautan catatan": "Note link",
-  "Gambar": "Image",
   "Tandai blok": "Block marker",
   "Pembatas": "Divider",
   "Tanggal": "Date",

@@ -4,6 +4,7 @@
    Jalankan: node tools/uji/welcome-bahasa.mjs */
 import {JSDOM} from 'jsdom';
 import fs from 'fs';
+import { bacaCatatanIdb, tulisCatatanIdb } from './lib/catatan-idb.mjs';
 import { indexedDB as fakeIDB } from 'fake-indexeddb';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -77,14 +78,14 @@ ok('W19 pindah ja: catatan pengguna TIDAK berubah',
    field welcomeLang) langsung dinaikkan ke versi & bahasa aktif */
 store.save();
 i18n.setBahasa('id');
-const lama=JSON.parse(w.localStorage.getItem('hara.v1'));
+const lama=JSON.parse(await bacaCatatanIdb(w));
 const wLama=lama.notes.find(n=>n.id==='w');
 delete wLama.welcomeLang; wLama.welcomeV=3;      /* bentuk lama */
 wLama.title='Selamat datang di Hara';
 const pLama=wLama.blocks[0];                     /* contoh isi Indonesia lama */
 lama.notes.forEach(n=>{ if(n.id!=='w'&&n.id!=='u1'){} });
-w.localStorage.setItem('hara.v1',JSON.stringify(lama));
-store.load();
+await tulisCatatanIdb(w,JSON.stringify(lama));
+await store.load();
 const wBaru=state.notes.find(n=>n.id==='w');
 ok('W20 muat ulang (bahasa id): sambutan v4 & welcomeLang=id',
   wBaru && wBaru.welcomeV===WELCOME_V && wBaru.welcomeLang==='id', wBaru&&`${wBaru.welcomeV}/${wBaru.welcomeLang}`);
@@ -94,9 +95,9 @@ ok('W22 muat ulang: catatan pengguna tetap utuh',
 
 /* bahasa Inggris tersimpan → muat ulang langsung menghasilkan sambutan Inggris */
 i18n.setBahasa('en');
-const dataEn=JSON.parse(w.localStorage.getItem('hara.v1'));
-w.localStorage.setItem('hara.v1',JSON.stringify(dataEn));
-store.load();
+const dataEn=JSON.parse(await bacaCatatanIdb(w));
+await tulisCatatanIdb(w,JSON.stringify(dataEn));
+await store.load();
 ok('W23 muat ulang saat bahasa en: welcomeLang=en & isi Inggris',
   wl() && wl().welcomeLang==='en' && /Welcome to Hara/.test(wl().title) &&
   /Just type/.test(isiCat(wl())), wl()&&`${wl().welcomeLang}:${wl().title}`);

@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261010042150';
-import { refresh } from './cleanup.js?v=20261010042150';
+import { docEl, sel, curBlock } from './caret.js?v=20261010050549';
+import { refresh } from './cleanup.js?v=20261010050549';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },

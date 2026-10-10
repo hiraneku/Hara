@@ -5,6 +5,7 @@
 
 import { JSDOM } from 'jsdom';
 import fs from 'fs';
+import { bacaCatatanIdb } from './lib/catatan-idb.mjs';
 import { indexedDB as fakeIDB } from 'fake-indexeddb';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -282,14 +283,15 @@ oke('D20c tombol memakai gaya utama (bukan sekunder)',
   !!btnUnduh && btnUnduh.classList.contains('btn-pri'));
 /* klik tombol: cadangan dibuat (blob diunduh); di jsdom cukup tidak error
    dan nama berkas cadangan benar via cadanganJson langsung */
-const sebelum = w.localStorage.getItem('hara.v1') || '';
+const sebelum = (await bacaCatatanIdb(w)) || '';
+oke('D20d0 data penyimpanan tidak kosong sebelum cadangan', sebelum.length > 0);
 const cad2 = await io.cadanganJson();
 oke('D20d cadangan menyertakan semua catatan + gambar & format dikenal',
   cad2.nama.startsWith('hara-cadangan-') && cad2.teks.includes('"format":"hara-cadangan"') &&
   cad2.teks.includes('Daftar belanja') && !!cad2.teks.includes('"blobs"'));
 /* tidak ada data yang hilang/berubah oleh alur */
 oke('D20e data penyimpanan tidak berubah oleh pembuatan cadangan',
-  (w.localStorage.getItem('hara.v1') || '') === sebelum);
+  ((await bacaCatatanIdb(w)) || '') === sebelum);
 
 /* ════════════ D21 — sapuan baris daftar ════════════ */
 router.go('notes'); await sleep(30);

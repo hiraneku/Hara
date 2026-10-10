@@ -11,14 +11,18 @@
    1. DEBOUNCE — ketikan beruntun digabung jadi satu penulisan.
    2. TANPA RACE — tiap permintaan simpan diberi nomor urut; hasil yang
       datang terlambat dari urutan lebih lama diabaikan, jadi data lama
-      tidak pernah menimpa data baru.
+      tidak pernah menimpa data baru. Draf hanya dibuang oleh simpan yang
+      PALING BARU. Penerapan isi ke memori selalu SINKRON (tulisData
+      dipanggil seketika); hanya penulisan ke penyimpanan yang asinkron,
+      dan penulisan itu diantre serta digabung di db-catatan.js. Dengan
+      begitu perubahan yang datang saat penulisan berjalan tidak tertahan.
    3. RECOVERY — draf ditulis saat menganggur singkat, dibuang begitu
       penyimpanan utama berhasil.
    4. FLUSH — perubahan tertunda dipaksa tersimpan saat meninggalkan
       editor, berpindah catatan, atau menutup aplikasi.
 */
 
-import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20261010042150';
+import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20261010050549';
 
 /* Jeda cukup panjang untuk menggabungkan ketikan, cukup pendek supaya
    kehilangan terasa sepele kalau aplikasi mati mendadak. */
@@ -62,14 +66,18 @@ let timerDraf = null;
 let seqMinta = 0;        /* nomor urut permintaan simpan  */
 let seqSelesai = 0;      /* urutan terakhir yang sudah rampung */
 let adaTertunda = false; /* ada perubahan yang belum tersimpan */
-let sedangSimpan = false;
-let mintaLagi = false;   /* perubahan datang saat simpan berjalan */
+/* Penghitung perubahan. Penulisan yang selesai hanya boleh menghapus
+   status "tertunda" bila TIDAK ada perubahan sejak penulisan itu dimulai.
+   Tanpa ini, penulisan lama yang selesai terlambat akan menghapus tanda
+   perubahan baru, dan perubahan itu tidak pernah diterapkan. */
+let versiEdit = 0;
 
 export const adaPerubahanTertunda = () => adaTertunda;
 
 /* Dipanggil editor setiap kali isi berubah. Murah — hanya menjadwalkan. */
 export function tandaiBerubah() {
   if (!ambilData) return;
+  versiEdit++;
   adaTertunda = true;
   setStatus(STATUS.DIRTY);
 
@@ -98,15 +106,11 @@ export function simpan(paksa = false) {
   if (!ambilData || !tulisData) return false;
   if (!adaTertunda && !paksa) return true;
 
-  /* Sudah ada penulisan berjalan: catat bahwa masih ada yang lebih baru,
-     lalu biarkan penulisan itu memicu ulang setelah selesai. */
-  if (sedangSimpan) { mintaLagi = true; return false; }
-
   const data = ambilData();
   if (!data || !data.noteId) return false;
 
   const urutan = ++seqMinta;
-  sedangSimpan = true;
+  const versi = versiEdit;      /* perubahan yang tercakup penulisan ini */
   setStatus(STATUS.SAVING);
 
   let hasil;
@@ -116,9 +120,14 @@ export function simpan(paksa = false) {
     hasil = false;
   }
 
-  const selesaikan = sukses => {
-    sedangSimpan = false;
+  /* Isi SUDAH diterapkan ke memori (bagian sinkron tulisData). Jadi
+     "tertunda" harus turun sekarang, bukan menunggu penyimpanan selesai.
+     Kalau ditunda, flush() kedua — mis. saat openNote() berpindah catatan
+     — akan menerapkan DOM catatan lama ke catatan baru. Ketahanan data
+     tetap dijaga oleh draf: draf hanya dibuang setelah penulisan berhasil. */
+  if (versi === versiEdit) adaTertunda = false;
 
+  const selesaikan = sukses => {
     /* ── kunci anti-race ──
        Hasil yang datang lebih lambat dari urutan yang sudah rampung
        diabaikan. Tanpa ini, "Save A" yang selesai setelah "Save B"
@@ -127,9 +136,10 @@ export function simpan(paksa = false) {
     seqSelesai = urutan;
 
     if (sukses) {
-      /* hanya bersih kalau tidak ada perubahan baru selama menyimpan */
-      if (!mintaLagi) {
-        adaTertunda = false;
+      /* bersih HANYA bila ini simpan yang paling baru DAN tidak ada
+         perubahan sejak penulisan dimulai. Kalau ada, tanda tertunda dan
+         draf dibiarkan — timer yang sudah terpasang akan menyimpannya. */
+      if (urutan === seqMinta && versi === versiEdit) {
         hapusDrafMilik(data.noteId);   /* jaring pengaman tak diperlukan lagi */
         setStatus(STATUS.SAVED);
       }
@@ -138,8 +148,6 @@ export function simpan(paksa = false) {
       tulisDraf(data.noteId, data);
       setStatus(STATUS.ERROR);
     }
-
-    if (mintaLagi) { mintaLagi = false; simpan(true); }
   };
 
   if (hasil && typeof hasil.then === 'function') {
@@ -171,8 +179,6 @@ export function reset() {
   clearTimeout(timerSimpan); timerSimpan = null;
   clearTimeout(timerDraf);   timerDraf = null;
   adaTertunda = false;
-  mintaLagi = false;
-  sedangSimpan = false;
   seqSelesai = ++seqMinta;
   setStatus(STATUS.IDLE);
 }

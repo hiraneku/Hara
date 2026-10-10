@@ -150,6 +150,18 @@
       panel "Catatan yatim".
 - Uji: `matriks-kalender-ics.mjs` (45) · `transklusi-yatim.mjs` (29).
 
+### Inti (sebelum APK)
+- [x] Command palette (K1) sudah terpasang di `app.js` dengan sumber perintah
+      untuk layar dan catatan. Catatan lama yang menyebut "belum dipasang" sudah usang.
+- [x] Penyimpanan utama pindah dari localStorage ke IndexedDB (`core/db-catatan.js`).
+      Data dimigrasi tanpa destruktif: kunci `hara.v1` di localStorage TIDAK dihapus.
+      Bila IndexedDB tidak tersedia, mode localStorage dipakai. `save()` tetap
+      fire-and-forget, dan `simpanTahan()` menunggu sampai benar-benar tersimpan.
+      Autosave menerapkan isi ke memori secara sinkron; penulisan diantre dan digabung.
+      Uji: `migrasi-idb.mjs` (4) · `penyimpanan-idb.mjs` (9).
+      Belum diuji: kegagalan tulis IndexedDB sungguhan (kuota penuh) dan mode fallback.
+      Keduanya perlu uji di perangkat.
+
 ### K · Tahap berikutnya (BELUM)
 - [x] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker). Indeks
       (judul, tag, isi polos) dikirim ke Worker hanya bila daftar catatan terlihat

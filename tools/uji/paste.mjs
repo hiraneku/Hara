@@ -1,6 +1,7 @@
 /* Paste & input handling: keamanan, blok, ID, caret, undo, autosave. */
 import {JSDOM} from 'jsdom';
 import fs from 'fs';
+import { bacaCatatanIdb } from './lib/catatan-idb.mjs';
 import { indexedDB as fakeIDB } from 'fake-indexeddb';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -188,7 +189,7 @@ siap('<div class="b-p">Mulai</div>');
 taruhCaret(0,5);
 tempel('satu\ndua');
 await sleep(900);
-const raw=w.localStorage.getItem('hara.v1')||'';
+const raw=(await bacaCatatanIdb(w))||'';
 ok('tersimpan otomatis', /Mulaisatu/.test(raw), raw.slice(0,80));
 ok('tersimpan sebagai blocks', /"blocks"/.test(raw));
 ok('tanpa field html', !/"html":/.test(raw));
