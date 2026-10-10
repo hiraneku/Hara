@@ -173,6 +173,20 @@ export function renderRuleInputs(rule) {
         </div>
       `;
 
+    case RULE_TYPES.NORMALIZE:
+      return `
+        <div class="rn-form-grid">
+          <div class="rn-field" style="grid-column: 1 / -1">
+            <label>${tr('Bentuk normalisasi:')}</label>
+            <select class="rn-select-clean" data-rn-param="form" data-rn-id="${rule.id}">
+              <option value="nfc" ${p.form === 'nfc' || !p.form ? 'selected' : ''}>${tr('NFC (gabungkan karakter, standar umum)')}</option>
+              <option value="nfkc" ${p.form === 'nfkc' ? 'selected' : ''}>${tr('NFKC (ubah lebar penuh/ligatur ke bentuk biasa)')}</option>
+              <option value="strip" ${p.form === 'strip' ? 'selected' : ''}>${tr('Hapus diakritik (é → e, ñ → n)')}</option>
+            </select>
+          </div>
+        </div>
+      `;
+
     case RULE_TYPES.TOKEN:
       return `
         <div class="rn-form-grid">

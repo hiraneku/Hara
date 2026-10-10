@@ -131,6 +131,7 @@ export const RULE_TYPES = {
   EXTENSION: 'extension',   // Ubah format ekstensi (lowercase, ganti ekstensi)
   CLEAN: 'clean',           // Pembersihan instan (karakter ilegal, spam web %20, bracket)
   TOKEN: 'token',           // Pola kustom dengan token pintar ({date}, {name}, {num}, dll.)
+  NORMALIZE: 'normalize',   // Normalisasi Unicode & hapus diakritik (K27)
 };
 
 /**
@@ -222,6 +223,14 @@ export const RULE_METADATA = {
       dateFormat: 'YYYY-MM-DD',
       startNum: 1,
       digits: 2,
+    },
+  },
+  [RULE_TYPES.NORMALIZE]: {
+    label: 'Normalisasi Unicode',
+    desc: 'Samakan bentuk Unicode (NFC/NFKC) atau hapus diakritik (é → e)',
+    icon: 'i-cog',
+    defaultParams: {
+      form: 'nfc', // 'nfc' | 'nfkc' | 'strip' (hapus diakritik)
     },
   },
 };

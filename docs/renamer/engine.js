@@ -6,6 +6,7 @@
  * memvalidasi integritas sistem berkas OS, dan menyelesaikan tabrakan nama.
  */
 
+import { cocokGrupDanKondisi } from './lanjutan.js?v=20261010050549';
 import {
   RULE_TYPES,
   FILE_STATUS,
@@ -350,6 +351,18 @@ export function applyRule(state, rule, index, totalCount, meta = {}) {
       break;
     }
 
+    case RULE_TYPES.NORMALIZE: {
+      const { form = 'nfc' } = p;
+      if (form === 'strip') {
+        baseName = baseName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
+      } else if (form === 'nfkc') {
+        baseName = baseName.normalize('NFKC');
+      } else {
+        baseName = baseName.normalize('NFC');
+      }
+      break;
+    }
+
     case RULE_TYPES.TOKEN: {
       const { pattern = '{name}_{num}', startNum = 1, digits = 2 } = p;
       baseName = parseTokens(pattern, {
@@ -381,7 +394,7 @@ export function applyRule(state, rule, index, totalCount, meta = {}) {
  * @returns {PipelineResult}
  */
 export function runPipeline(fileItems = [], rules = [], options = {}) {
-  const { collisionStrategy = 'warn' } = options;
+  const { collisionStrategy = 'warn', groups = {} } = options;
 
   if (!Array.isArray(fileItems) || fileItems.length === 0) {
     return {
@@ -401,7 +414,15 @@ export function runPipeline(fileItems = [], rules = [], options = {}) {
   const evaluatedItems = fileItems.map((item, index) => {
     let state = { baseName: item.baseName, ext: item.ext };
 
+    const ctx = {
+      name: item.baseName + item.ext,
+      ext: item.ext,
+      size: item.size || 0,
+      mtime: item.lastModified || 0,
+    };
     for (const rule of activeRules) {
+      // K23: grup aturan dan kondisi per-aturan (lihat lanjutan.js)
+      if (!cocokGrupDanKondisi(rule, ctx, groups)) continue;
       state = applyRule(state, rule, index, totalCount, {
         lastModified: item.lastModified,
         size: item.size,
