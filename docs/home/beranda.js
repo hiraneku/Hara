@@ -126,11 +126,11 @@ export function berandaView() {
       <div class="bh-musik-info">
         <div class="bh-judul">Snowfall</div>
         <div class="bh-artis">Lofi Girl</div>
+        <div class="bh-eq" aria-hidden="true"><span style="--t:45%"></span><span style="--t:80%"></span><span style="--t:60%"></span><span style="--t:100%"></span><span style="--t:35%"></span></div>
+        <div class="bh-bar"><div class="bh-bar-isi" style="width:43%"></div></div>
+        <div class="bh-waktu"><span>1:42</span><span>3:56</span></div>
       </div>
-      <div class="bh-eq" aria-hidden="true"><span style="--t:45%"></span><span style="--t:80%"></span><span style="--t:60%"></span><span style="--t:100%"></span><span style="--t:35%"></span></div>
     </div>
-    <div class="bh-bar"><div class="bh-bar-isi" style="width:43%"></div></div>
-    <div class="bh-waktu"><span>1:42</span><span>3:56</span></div>
     <div class="bh-kontrol">
       <button type="button" class="bh-btn-kecil${musik.acak ? ' on' : ''}" data-bh="acak" aria-label="${tr('Acak')}">${ikon('shuffle')}</button>
       <button type="button" class="bh-btn-kecil" data-bh="prev" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
