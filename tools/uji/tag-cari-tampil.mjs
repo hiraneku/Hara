@@ -55,7 +55,7 @@ d.querySelector('[data-tag-x]')?.dispatchEvent(new w.MouseEvent('click',{bubbles
 
 /* 3. cari "#liburan" dari isi (cache kosong) */
 go('search'); await sleep(40);
-renderHasilCari('#liburan');
+renderHasilCari('#liburan'); await sleep(40); /* K12: hasil cari kini asinkron */
 ok('C3 cari "#nama" menemukan catatan dari isi walau cache kosong',
   (d.getElementById('cari-hasil').textContent||'').includes('Catatan saya'),
   d.getElementById('cari-hasil').textContent.slice(0,120));

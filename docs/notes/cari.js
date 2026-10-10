@@ -23,9 +23,10 @@
    sorotan tidak pernah salah tempat karena entitas (&amp;) dihitung
    sebagai teks biasa. */
 
-import { esc } from '../core/dom.js?v=20261010024457';
-import { tagUntukTampil } from './tags.js?v=20261010024457';
-import { plainText } from './note-model.js?v=20261010024457';
+import { esc } from '../core/dom.js?v=20261010041323';
+import { tagUntukTampil } from './tags.js?v=20261010041323';
+import { plainText } from './note-model.js?v=20261010041323';
+import { peringkat } from './cari-inti.js?v=20261010041323';
 
 const KEY = 'hara.cari.v1';
 const MAKS_RIWAYAT = 6;
@@ -158,4 +159,78 @@ export function simpanRiwayat(q) {
 
 export function hapusRiwayat() {
   try { localStorage.removeItem(KEY); } catch (e) {}
+}
+
+/* ── K12 · pencarian terindeks di Web Worker ──
+   Indeks (judul, tag, isi polos) disiapkan di thread utama dan dikirim ke
+   Worker hanya bila daftar catatan yang TERLIHAT berubah. Kueri dikirim
+   sebagai pesan biasa. Bila Worker tidak tersedia atau gagal, hasil dihitung
+   langsung di thread utama dengan kode yang sama (cari-inti.js).
+   Hanya catatan yang terlihat yang pernah dikirim (D19). */
+
+let pekerja = null;
+let pekerjaGagal = false;
+let kunciIndeks = null;
+let seqKirim = 0;
+const menunggu = new Map();
+
+function ambilPekerja() {
+  if (pekerjaGagal) return null;
+  if (pekerja) return pekerja;
+  if (typeof Worker === 'undefined') { pekerjaGagal = true; return null; }
+  try {
+    const v = new URL(import.meta.url).search;
+    pekerja = new Worker(new URL('./cari-worker.js' + v, import.meta.url), { type: 'module' });
+    pekerja.onmessage = e => {
+      const p = menunggu.get(e.data && e.data.seq);
+      if (!p) return;
+      menunggu.delete(e.data.seq);
+      if (e.data.jenis === 'hasil') p.resolve(e.data); else p.reject(new Error(e.data.pesan || 'galat'));
+    };
+    pekerja.onerror = () => matikanPekerja();
+  } catch (err) {
+    pekerjaGagal = true;
+    pekerja = null;
+  }
+  return pekerja;
+}
+
+function matikanPekerja() {
+  try { if (pekerja) pekerja.terminate(); } catch (e) {}
+  pekerja = null;
+  pekerjaGagal = true;
+  kunciIndeks = null;
+  menunggu.forEach(p => p.reject(new Error('worker mati')));
+  menunggu.clear();
+}
+
+/* Peringkat untuk daftar catatan (yang sudah disaring terlihat) dan kueri k.
+   Mengembalikan Promise<{ ids, mirip }>. */
+const entriIndeks = notes => notes.map(n => ({
+  id: n.id,
+  judul: String(n.title || ''),
+  tag: tagUntukTampil(n),
+  teks: plainText(n),
+  updatedAt: n.updatedAt || 0,
+}));
+
+export async function cariPeringkat(notes, k) {
+  const w = ambilPekerja();
+  if (!w) return peringkat(entriIndeks(notes), k);
+  /* sidik murah: id + waktu ubah + panjang isi (menangkap ubahan yang lupa touch) */
+  const kunci = notes.map(n => `${n.id}:${n.updatedAt || 0}:${(n.blocks || []).reduce((a, b) => a + ((b && b.content) || '').length, 0)}:${(n.title || '').length}`).join('|');
+  try {
+    if (kunci !== kunciIndeks) {
+      w.postMessage({ jenis: 'indeks', indeks: entriIndeks(notes), seq: ++seqKirim });
+      kunciIndeks = kunci;
+    }
+    const seq = ++seqKirim;
+    const balasan = new Promise((resolve, reject) => menunggu.set(seq, { resolve, reject }));
+    w.postMessage({ jenis: 'cari', k, seq });
+    const hasil = await balasan;
+    return { ids: hasil.ids, mirip: hasil.mirip };
+  } catch (err) {
+    matikanPekerja();
+    return peringkat(entriIndeks(notes), k);
+  }
 }

@@ -7,17 +7,17 @@
    menghapus permanen atau lewat 30 hari (disapu otomatis saat aplikasi
    dibuka). Pola ini sesuai DESIGN.md §3.9 & NOTES.md ("tempat sampah
    30 hari") — tanpa dialog konfirmasi untuk aksi yang bisa diurungkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20261010024457';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20261010024457';
-import { toast } from '../core/toast.js?v=20261010024457';
-import { go } from '../core/router.js?v=20261010024457';
-import { saveSoon } from './editor/cleanup.js?v=20261010024457';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20261010024457';
-import { hapusDrafMilik } from '../core/recovery.js?v=20261010024457';
-import { bersihkanBlobYatim } from './editor/image.js?v=20261010024457';
-import { terkunciAktif, lepasKunci } from './kunci.js?v=20261010024457';
-import { tagUntukTampil } from './tags.js?v=20261010024457';
-import { t as tr } from '../core/i18n.js?v=20261010024457';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20261010041323';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20261010041323';
+import { toast } from '../core/toast.js?v=20261010041323';
+import { go } from '../core/router.js?v=20261010041323';
+import { saveSoon } from './editor/cleanup.js?v=20261010041323';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20261010041323';
+import { hapusDrafMilik } from '../core/recovery.js?v=20261010041323';
+import { bersihkanBlobYatim } from './editor/image.js?v=20261010041323';
+import { terkunciAktif, lepasKunci } from './kunci.js?v=20261010041323';
+import { tagUntukTampil } from './tags.js?v=20261010041323';
+import { t as tr } from '../core/i18n.js?v=20261010041323';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);

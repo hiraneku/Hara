@@ -302,6 +302,7 @@ export const JA = {
   "Belum ada catatan lain yang menaut ke sini. Tulis [[…]] di catatan lain dengan judul ini, dan tautannya muncul di sini.": "ほかのノートからここへのリンクはまだありません。別のノートに同じタイトルで [[…]] と書くと、ここに表示されます。",
   "tautan": "リンク",
   "Unlinked mention": "未リンクのメンション",
+  "Tidak ada yang cocok persis. Mungkin maksudnya:": "完全一致はありません。もしかして:",
   "Rujukan blok": "ブロック参照",
   "Tidak ada rujukan. Tulis ![[Judul#^id]] sebagai satu baris untuk menampilkan blok catatan lain di sini.": "参照はありません。他のノートのブロックをここに表示するには、![[タイトル#^id]] を単独の行に書いてください。",
   "Catatan sumber terkunci — buka dulu untuk melihat isinya.": "参照元のノートはロックされています。内容を見るには先に開いてください。",

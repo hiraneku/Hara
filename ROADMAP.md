@@ -151,7 +151,14 @@
 - Uji: `matriks-kalender-ics.mjs` (45) · `transklusi-yatim.mjs` (29).
 
 ### K · Tahap berikutnya (BELUM)
-- [ ] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker)
+- [x] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker). Indeks
+      (judul, tag, isi polos) dikirim ke Worker hanya bila daftar catatan terlihat
+      berubah. Urutan: skor relevansi (judul diawali > kata judul > judul > tag >
+      isi), lalu terbaru. Bila hasil persis kosong, kata biasa boleh beda 1 huruf
+      (≥4 huruf) atau 2 huruf (≥8 huruf) dan diberi label "Mungkin maksudnya".
+      Operator tag:/judul: tetap persis. Cadangan sinkron bila Worker tidak ada.
+      Modul `notes/cari-inti.js`, `notes/cari-worker.js`.
+      Uji: `cari-peringkat.mjs` (27). `tag-cari-tampil.mjs` disesuaikan (hasil kini asinkron).
 - [ ] K13. Tangkap cepat dari share sheet (Web Share Target)
 - [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari
 - [ ] K15. Baca keras (SpeechSynthesis) dan dikte suara (Web Speech API)

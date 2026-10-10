@@ -1,16 +1,16 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261010024457';
-import { esc, stamp } from '../../core/dom.js?v=20261010024457';
-import { rowFor } from './row.js?v=20261010024457';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261010024457';
-import { AK, akSekarang } from '../../core/theme.js?v=20261010024457';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261010024457';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261010024457';
-import { terlihat } from '../kunci.js?v=20261010024457';
-import { pecahKueri, catatanCocok, kataSorot, riwayatCari } from '../cari.js?v=20261010024457';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261010024457';
+import { state } from '../../core/store.js?v=20261010041323';
+import { esc, stamp } from '../../core/dom.js?v=20261010041323';
+import { rowFor } from './row.js?v=20261010041323';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261010041323';
+import { AK, akSekarang } from '../../core/theme.js?v=20261010041323';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261010041323';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261010041323';
+import { terlihat } from '../kunci.js?v=20261010041323';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261010041323';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261010041323';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -73,9 +73,14 @@ export function riwayatHtml() {
       `<button type="button" class="rx-chip" data-cari-riwayat="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
 }
 
+/* Kueri yang sedang ditunggu. Hasil kueri lama dibuang bila sudah ada
+   kueri yang lebih baru (mencegah hasil lama menimpa hasil baru). */
+let gilirCari = 0;
+
 export function renderHasilCari(q) {
   const w = document.getElementById('cari-hasil');
   if (!w) return;
+  const gilir = ++gilirCari;
   const mentah = (q || '').trim();
   if (!mentah) {
     w.innerHTML = riwayatHtml() +
@@ -86,20 +91,32 @@ export function renderHasilCari(q) {
   const k = pecahKueri(mentah);
   /* D19: catatan terkunci yang belum dibuka tidak ikut hasil cari sama
      sekali — kalau tidak, barisnya bisa membocorkan bahwa catatan
-     tertentu mengandung kata kunci itu. */
-  const daftar = state.notes
-    .filter(n => !n.deletedAt && terlihat(n) && catatanCocok(n, k));
-  daftar.sort((a, b) => b.updatedAt - a.updatedAt);
-  const hasil = daftar.slice(0, 40);
-  if (!hasil.length) {
+     tertentu mengandung kata kunci itu. Hanya yang terlihat dikirim ke
+     indeks/Worker. */
+  const terlihatSaja = state.notes.filter(n => !n.deletedAt && terlihat(n));
+  cariPeringkat(terlihatSaja, k).then(r => {
+    if (gilir !== gilirCari) return;
+    const wadah = document.getElementById('cari-hasil');
+    if (wadah) tampilkanHasil(wadah, mentah, k, terlihatSaja, r);
+  });
+}
+
+function tampilkanHasil(w, mentah, k, daftar, r) {
+  const byId = new Map(daftar.map(n => [n.id, n]));
+  const semua = r.ids.map(id => byId.get(id)).filter(Boolean);
+  if (!semua.length) {
     w.innerHTML = `<p class="dm-kosong" style="padding:6px 2px">${tr('Tidak ada yang cocok dengan “{q}”.', { q: esc(mentah) })}</p>`;
     return;
   }
+  const hasil = semua.slice(0, 40);
   const sorot = kataSorot(k);
-  w.innerHTML = `<div class="overline" style="margin:2px 2px 8px">${hasil.length === daftar.length
+  const mirip = r.mirip
+    ? `<p class="dm-kosong" style="padding:6px 2px">${tr('Tidak ada yang cocok persis. Mungkin maksudnya:')}</p>`
+    : '';
+  w.innerHTML = `<div class="overline" style="margin:2px 2px 8px">${hasil.length === semua.length
       ? tr('{n} hasil', { n: hasil.length })
-      : tr('{n} hasil dari {m}', { n: hasil.length, m: daftar.length })}</div>
-    ${chipOperator(k)}
+      : tr('{n} hasil dari {m}', { n: hasil.length, m: semua.length })}</div>
+    ${chipOperator(k)}${mirip}
     <div class="card">${hasil.map(n => rowFor(n, null, { sorot })).join('')}</div>`;
 }
 

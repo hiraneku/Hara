@@ -302,6 +302,7 @@ export const EN = {
   "Belum ada catatan lain yang menaut ke sini. Tulis [[…]] di catatan lain dengan judul ini, dan tautannya muncul di sini.": "No other note links here yet. Type [[…]] in another note with this title and the link will appear.",
   "tautan": "links",
   "Unlinked mention": "Unlinked mentions",
+  "Tidak ada yang cocok persis. Mungkin maksudnya:": "No exact matches. Did you mean:",
   "Rujukan blok": "Block references",
   "Tidak ada rujukan. Tulis ![[Judul#^id]] sebagai satu baris untuk menampilkan blok catatan lain di sini.": "No references. Write ![[Title#^id]] as its own line to show another note's block here.",
   "Catatan sumber terkunci — buka dulu untuk melihat isinya.": "Source note is locked — open it first to see its content.",
