@@ -34,8 +34,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
-
+      # Android SDK sudah terpasang di runner ubuntu-latest (ANDROID_HOME).
       - name: Pasang dependency
         run: npm ci
 
