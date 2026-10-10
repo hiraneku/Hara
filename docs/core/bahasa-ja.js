@@ -327,6 +327,7 @@ export const JA = {
   "Data tersimpan tidak terbaca — dicadangkan, aplikasi dimulai kosong": "保存データを読み込めませんでした — 退避して、空の状態で起動します",
   "Modul Reminder menyusul": "リマインダーモジュールは近日公開",
   "Modul Tugas menyusul": "タスクモジュールは近日公開",
+  "Segera hadir": "近日公開",
   "Catatan apa pun bisa dijadikan templat dari menu \"···\" di editor.": "どのノートも、エディタの「···」メニューからテンプレートとして保存できます。",
   "Catatan di sini dibuang otomatis setelah 30 hari. \"Hapus\" butuh dua ketukan supaya tidak ada yang terhapus permanen tanpa sengaja.": "ここにあるノートは30日後に自動で破棄されます。「削除」は2回タップしないと実行されないので、うっかり完全削除することはありません。",
   "Geser baris ke kiri untuk mengembalikan atau menghapus. Buka catatan lalu pilih \"Kembalikan dari arsip\" (menu ···) juga bisa.": "行を左にスワイプすると復元または削除できます。ノートを開いて「アーカイブから戻す」（···メニュー）からでも可能です。",

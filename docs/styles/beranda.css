@@ -28,8 +28,8 @@ body.layar-beranda .head { display: none; }
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgba(10, 10, 12, .35) 0%, rgba(10, 10, 12, .15) 40%, rgba(10, 10, 12, .75) 100%),
-    url('../home/aset/wallpaper.jpg') center top / cover no-repeat;
+    linear-gradient(180deg, rgba(10, 10, 12, .2) 0%, rgba(10, 10, 12, .1) 45%, rgba(10, 10, 12, .55) 100%),
+    url('../home/aset/wallpaper-kucing.jpg') center top / cover no-repeat;
 }
 
 .bh-ico { width: 20px; height: 20px; flex: none; }
@@ -39,10 +39,10 @@ body.layar-beranda .head { display: none; }
   position: relative;
   border: 1px solid var(--bh-garis);
   border-radius: 28px;
-  background: rgba(16, 18, 17, .42);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  backdrop-filter: blur(16px) saturate(120%);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, .3);
+  background: rgba(12, 14, 13, .3);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  backdrop-filter: blur(12px) saturate(120%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .25);
 }
 
 /* ── atas: sapaan kiri, cuaca kanan ── */
@@ -80,8 +80,8 @@ body.layar-beranda .head { display: none; }
 /* Widget cuaca: kartu kecil kanan atas, lokasi di bawah garis pemisah. */
 .bh-cuaca {
   flex: none;
-  width: 132px;
-  padding: 12px 14px 10px;
+  width: 124px;
+  padding: 10px 12px 8px;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -94,19 +94,19 @@ body.layar-beranda .head { display: none; }
   border: 1px solid var(--bh-garis);
 }
 .bh-cuaca-utama { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.bh-cuaca-ikon { width: 30px !important; height: 30px !important; color: #F6C453; }
-.bh-suhu { font-size: 26px; font-weight: 400; letter-spacing: -.5px; }
-.bh-cuaca-label { margin-top: 2px; font-size: 11px; color: var(--bh-redup); line-height: 1.3; }
-.bh-cuaca-garis { height: 1px; background: var(--bh-garis); margin: 10px -14px 8px; }
+.bh-cuaca-ikon { width: 28px !important; height: 28px !important; color: #F6C453; }
+.bh-suhu { font-size: 24px; font-weight: 400; letter-spacing: -.5px; }
+.bh-cuaca-label { margin-top: 0; text-align: right; font-size: 11px; color: var(--bh-redup); line-height: 1.3; }
+.bh-cuaca-garis { height: 1px; background: var(--bh-garis); margin: 8px -12px 6px; }
 .bh-lokasi { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--bh-redup); }
 .bh-lokasi .bh-ico { width: 12px; height: 12px; }
 
 /* ── musik ── */
-.bh-musik { margin-top: 18px; padding: 18px 18px 16px; }
+.bh-musik { margin-top: 18px; padding: 16px 16px 14px; }
 .bh-musik-atas { display: flex; align-items: center; gap: 16px; }
 .bh-sampul {
   position: relative;
-  width: 92px; height: 92px; flex: none;
+  width: 78px; height: 78px; flex: none;
   border-radius: 18px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, .4);
 }
@@ -114,8 +114,8 @@ body.layar-beranda .head { display: none; }
 .bh-sampul::before {
   content: '';
   position: absolute;
-  top: 50%; right: -18px;
-  width: 84px; height: 84px;
+  top: 50%; right: -16px;
+  width: 72px; height: 72px;
   transform: translateY(-50%);
   border-radius: 50%;
   background: radial-gradient(circle, #1b1b1b 0 14%, #0c0c0c 15% 100%);
@@ -124,7 +124,7 @@ body.layar-beranda .head { display: none; }
 }
 .bh-sampul img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 18px; }
 .bh-musik-info { min-width: 0; flex: 1; }
-.bh-judul { font-size: 24px; font-family: var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bh-judul { font-size: 22px; font-family: var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bh-artis { font-size: 14px; color: var(--bh-redup); margin-top: 4px; }
 .bh-eq { width: 26px; height: 22px; flex: none; display: flex; align-items: flex-end; gap: 3px; color: var(--bh-aksen); }
 .bh-eq span { width: 3px; border-radius: 2px; background: currentColor; height: var(--t, 50%); }
@@ -166,12 +166,13 @@ body.layar-beranda .head { display: none; }
 /* ── bilah alat: hanya Catatan & Pengingat yang aktif; slot lain dikosongkan ── */
 .bh-alat {
   margin-top: 18px;
-  padding: 14px 10px 12px;
-  display: flex;
-  justify-content: space-between;
+  padding: 14px 8px 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
 }
 .bh-alat-item {
-  width: 62px;
+  min-width: 0;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   font-size: 13px;
   color: var(--bh-teks);
@@ -182,14 +183,14 @@ body.layar-beranda .head { display: none; }
   width: 60px; height: 60px;
   display: grid; place-items: center;
   background: rgba(255, 255, 255, .08);
-  border-radius: 20px;
-  color: var(--bh-aksen);
+  border-radius: 18px;
+  color: var(--bh-teks);
 }
+.bh-alat-item.aktif .bh-alat-ikon { background: rgba(169, 207, 166, .18); color: var(--bh-aksen); }
 .bh-alat-ikon .bh-ico { width: 24px; height: 24px; }
-.bh-alat-item.kosong { visibility: hidden; }
 
 @media (max-width: 380px) {
   .bh-sapa { font-size: 32px; }
-  .bh-cuaca { width: 118px; }
+  .bh-cuaca { width: 112px; }
   .bh-sampul { width: 82px; height: 82px; }
 }

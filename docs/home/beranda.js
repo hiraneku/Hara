@@ -49,6 +49,9 @@ const IKON = {
   storm: `<path d="${AWAN}"/><path d="M12 15l-2 4h3l-2 4"/>`,
   note: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  task: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M8 12l3 3 5-6"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
   play: '<path d="M7 5v14l12-7z"/>',
   pause: '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>',
   prev: '<path d="M6 5v14M19 5l-9 7 9 7z"/>',
@@ -62,10 +65,10 @@ const ikon = (nama, kelas = '') =>
   `<svg class="bh-ico ${kelas}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IKON[nama] || ''}</svg>`;
 
 /* ── keadaan ── */
-let quoteIdx = Math.floor(Math.random() * QUOTE.length);
+let quoteIdx = 0; // awal: 'Hal-hal baik datang...' seperti referensi; ketuk untuk acak
 let cuaca = null;      // { suhu, kode, siang, waktu }
 let cuacaGagal = false;
-let musik = { putar: false, suka: false, acak: false };
+let musik = { putar: true, suka: false, acak: false };
 
 try { cuaca = JSON.parse(localStorage.getItem(KUNCI_CUACA) || 'null'); } catch { cuaca = null; }
 
@@ -138,13 +141,16 @@ export function berandaView() {
   </section>
 
   <nav class="bh-kartu bh-alat" aria-label="${tr('Alat')}">
-    <button type="button" class="bh-alat-item" data-go="notes">
+    <button type="button" class="bh-alat-item aktif" data-go="notes">
       <span class="bh-alat-ikon">${ikon('note')}</span><span>${tr('Catatan')}</span></button>
-    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
-    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
-    <button type="button" class="bh-alat-item" data-go="rem">
+    <button type="button" class="bh-alat-item" data-bh="belum">
+      <span class="bh-alat-ikon">${ikon('cal')}</span><span>${tr('Kalender')}</span></button>
+    <button type="button" class="bh-alat-item" data-bh="belum">
+      <span class="bh-alat-ikon">${ikon('task')}</span><span>${tr('Tugas')}</span></button>
+    <button type="button" class="bh-alat-item aktif" data-go="rem">
       <span class="bh-alat-ikon">${ikon('bell')}</span><span>${tr('Pengingat')}</span></button>
-    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
+    <button type="button" class="bh-alat-item" data-bh="belum">
+      <span class="bh-alat-ikon">${ikon('grid')}</span><span>${tr('Lainnya')}</span></button>
   </nav>
 </div>`;
 }
@@ -227,6 +233,7 @@ export function mulaiBeranda() {
     const a = b.dataset.bh;
     if (a === 'quote') gantiQuote();
     else if (a === 'cuaca') ambilCuaca(true);
+    else if (a === 'belum') toast(tr('Segera hadir'));
     else aksiMusik(a);
   });
 
