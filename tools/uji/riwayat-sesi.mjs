@@ -11,7 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { indexedDB as fakeIDB } from 'fake-indexeddb';
 process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
-const V = '20261010050549';
+const V = fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 
 const dom = new JSDOM('<!doctype html><body><div class="ed-doc" contenteditable="true"><p>A</p></div></body>', { url: 'https://x.test/', pretendToBeVisual: true });
 const { window: w } = dom;

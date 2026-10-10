@@ -41,6 +41,8 @@ for f in tools/uji/*.mjs; do node $f; done
 | `statistik.mjs` | K20: heatmap aktivitas, tugas per minggu, rentetan jurnal |
 | `riwayat-sesi.mjs` | K26: undo catatan lintas sesi (IDB), catatan terkunci tidak ditulis, log CSV |
 | `enkripsi-suara.mjs` | K17 enkripsi AES-GCM + PBKDF2, K18 cadangan frasa sandi, K15 baca keras & dikte |
+| `alat-renamer.mjs` | dialog renamer K21–K25 & K22–K23 lewat klik sungguhan (jsdom): regex, contoh, syarat, resep, duplikat |
+| `fitur-catatan-ui.mjs` | K31 tenggat→tugas, K19 tabel properti, K30 sumber palette tugas (memuat app.js) |
 | `lib/catatan-idb.mjs` | pembantu bersama: baca/tulis record catatan di IndexedDB untuk uji |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 | `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |

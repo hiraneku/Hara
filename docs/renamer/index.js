@@ -7,13 +7,13 @@
  * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261010052725';
-import { toast } from '../core/toast.js?v=20261010052725';
-import { t as tr } from '../core/i18n.js?v=20261010052725';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20261010052725';
-import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261010052725';
-import { state as haraStoreState } from '../core/store.js?v=20261010052725';
-import { esc } from '../core/dom.js?v=20261010052725';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261010054709';
+import { toast } from '../core/toast.js?v=20261010054709';
+import { t as tr } from '../core/i18n.js?v=20261010054709';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20261010054709';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261010054709';
+import { state as haraStoreState } from '../core/store.js?v=20261010054709';
+import { esc } from '../core/dom.js?v=20261010054709';
 import {
   createRenamerItem,
   createRule,
@@ -24,21 +24,21 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20261010052725';
-import { runPipeline, sortFiles } from './engine.js?v=20261010052725';
+} from './model.js?v=20261010054709';
+import { runPipeline, sortFiles } from './engine.js?v=20261010054709';
 import {
   renamerView,
   filterAndSearchItems,
   renderFilterTabsContent,
   renderTableContainerContent,
   renderFooterBar,
-} from './view.js?v=20261010052725';
-import { createZipBlob } from './zip.js?v=20261010052725';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261010052725';
-import { parseExif } from './exif.js?v=20261010052725';
-import { parseId3 } from './id3.js?v=20261010052725';
-import { simpanKvSoon, muatKv } from '../core/riwayat-sesi.js?v=20261010052725';
-import { buatCsvLog, MAKS_LOG } from './log.js?v=20261010052725';
+} from './view.js?v=20261010054709';
+import { createZipBlob } from './zip.js?v=20261010054709';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261010054709';
+import { parseExif } from './exif.js?v=20261010054709';
+import { parseId3 } from './id3.js?v=20261010054709';
+import { simpanKvSoon, muatKv } from '../core/riwayat-sesi.js?v=20261010054709';
+import { buatCsvLog, MAKS_LOG } from './log.js?v=20261010054709';
 
 /* ── K26 · log ganti nama lintas sesi (IndexedDB) ──
    Riwayat UNDO renamer tetap di memori: undo memulihkan objek berkas yang
@@ -49,6 +49,9 @@ function simpanLogSoon() {
   simpanKvSoon(KUNCI_LOG, () => renamerState.log.slice(-MAKS_LOG));
 }
 
+/** Konteks untuk dialog alat lanjutan (alat.js). */
+export const renamerAlatCtx = () => ({ state: renamerState, render: renderRenamerScreen });
+
 /** Unduh log ganti nama sebagai CSV (dipanggil dari palette). */
 export function unduhLogRenamerCsv() {
   if (renamerState.log.length === 0) {
@@ -56,7 +59,7 @@ export function unduhLogRenamerCsv() {
     return;
   }
   const blob = new Blob([buatCsvLog(renamerState.log)], { type: 'text/csv;charset=utf-8' });
-  unduh(blob, 'log-ganti-nama.csv');
+  unduh('log-ganti-nama.csv', blob, 'text/csv;charset=utf-8');
 }
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
@@ -546,7 +549,7 @@ async function terapkanGantiNama() {
     const targetZipName = (renamerState.exportZipName || 'Arsip_Terganti_Nama.zip').trim();
     const finalZipName = targetZipName.toLowerCase().endsWith('.zip') ? targetZipName : `${targetZipName}.zip`;
 
-    unduh(zipBlob, finalZipName);
+    unduh(finalZipName, zipBlob, 'application/zip');
 
     // Simpan history untuk Undo
     renamerState.undoStack.push({
@@ -617,7 +620,7 @@ async function unduhArsipZip() {
     const targetZipName = (renamerState.exportZipName || 'Arsip_Terganti_Nama.zip').trim();
     const finalZipName = targetZipName.toLowerCase().endsWith('.zip') ? targetZipName : `${targetZipName}.zip`;
 
-    unduh(zipBlob, finalZipName);
+    unduh(finalZipName, zipBlob, 'application/zip');
     toast(tr('Arsip "{name}" berhasil diunduh!', { name: finalZipName }));
   } catch (e) {
     console.error(e);

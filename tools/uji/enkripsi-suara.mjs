@@ -1,9 +1,10 @@
 /* Uji Ronde 12 · K17 enkripsi nyata, K18 cadangan terenkripsi, K15 baca keras & dikte.
    Jalankan: node tools/uji/enkripsi-suara.mjs */
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
-const V = '20261010050549';
+const V = fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 const en = await import(`${process.cwd()}/docs/core/enkripsi.js?v=${V}`);
 const su = await import(`${process.cwd()}/docs/core/suara.js?v=${V}`);
 

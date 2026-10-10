@@ -7,10 +7,11 @@
    - K22 SHA-256 (WebCrypto), dHash, jarak Hamming, pengelompokan duplikat;
    - K29 jalur sinkron jalankanPipeline (worker dipakai ≥ BATAS_WORKER).
    Jalankan: node tools/uji/renamer-lanjutan.mjs */
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
-const V = '20261010050549';
+const V = fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 const R = p => import(`${process.cwd()}/docs/renamer/${p}?v=${V}`);
 const model = await R('model.js');
 const engine = await R('engine.js');

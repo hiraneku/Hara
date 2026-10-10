@@ -1,9 +1,10 @@
 /* Uji Ronde 12 · K20 statistik & heatmap — murni (statistik.js).
    Jalankan: node tools/uji/statistik.mjs */
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
-const V = '20261010050549';
+const V = fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
 const S = await import(`${process.cwd()}/docs/notes/statistik.js?v=${V}`);
 
 let no = 0, gagal = 0;

@@ -1,21 +1,23 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261010052725';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010052725';
-import { toast } from './core/toast.js?v=20261010052725';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010052725';
-import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010052725';
-import { bukaStatistik } from './notes/statistik-ui.js?v=20261010052725';
-import { notesModule } from './notes/index.js?v=20261010052725';
-import { renamerModule, unduhLogRenamerCsv } from './renamer/index.js?v=20261010052725';
+import { load, state } from './core/store.js?v=20261010054709';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010054709';
+import { toast } from './core/toast.js?v=20261010054709';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010054709';
+import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010054709';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261010054709';
+import { notesModule } from './notes/index.js?v=20261010054709';
+import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261010054709';
+import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261010054709';
+import { bacaCatatanKeras, hentikanBaca, dikteCatatanBaru, bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih, jadikanBarisTenggatTugas, bukaTabelProperti, sumberTugasTerbuka } from './notes/fitur-lanjutan-ui.js?v=20261010054709';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261010052725';
-import { bagikanCatatan } from './notes/share.js?v=20261010052725';
-import { bukaJurnalHari } from './notes/harian.js?v=20261010052725';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261010052725';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261010052725';
-import { simpanTemplatNote } from './notes/templat.js?v=20261010052725';
-import { panelKunciCatatan } from './notes/kunci.js?v=20261010052725';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261010052725';
+  from './notes/model.js?v=20261010054709';
+import { bagikanCatatan } from './notes/share.js?v=20261010054709';
+import { bukaJurnalHari } from './notes/harian.js?v=20261010054709';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261010054709';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261010054709';
+import { simpanTemplatNote } from './notes/templat.js?v=20261010054709';
+import { panelKunciCatatan } from './notes/kunci.js?v=20261010054709';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261010054709';
 
 const MODULES = [notesModule, renamerModule];
 
@@ -43,6 +45,19 @@ daftarkanSumber(() => [
   { id: 'go-renamer', label: tr('Ganti Nama Massal'), hint: tr('Alat'), cari: 'rename berkas', jalan: () => go('renamer') },
   { id: 'new-note', label: tr('Catatan baru'), hint: tr('Aksi'), cari: 'tulis buat', jalan: () => newNote() },
   { id: 'new-jurnal', label: tr('Jurnal hari ini'), hint: tr('Aksi'), cari: 'harian diary', jalan: () => bukaJurnalHari() },
+  { id: 'alat-regex', label: tr('Renamer: regex & pustaka pola'), hint: tr('Alat'), cari: 'regex pola pustaka', jalan: () => { go('renamer'); bukaRegex(renamerAlatCtx()); } },
+  { id: 'alat-contoh', label: tr('Renamer: belajar dari contoh'), hint: tr('Alat'), cari: 'flash fill contoh pola', jalan: () => { go('renamer'); bukaBelajarContoh(renamerAlatCtx()); } },
+  { id: 'alat-syarat', label: tr('Renamer: syarat & grup aturan'), hint: tr('Alat'), cari: 'kondisi bersyarat grup when', jalan: () => { go('renamer'); bukaSyaratAturan(renamerAlatCtx()); } },
+  { id: 'alat-dup', label: tr('Renamer: cari berkas duplikat'), hint: tr('Alat'), cari: 'duplikat hash sha gambar mirip', jalan: () => { go('renamer'); bukaDuplikat(renamerAlatCtx()); } },
+  { id: 'resep-ekspor', label: tr('Renamer: ekspor resep'), hint: tr('Alat'), cari: 'resep preset simpan json', jalan: () => { go('renamer'); eksporResep(renamerAlatCtx()); } },
+  { id: 'resep-impor', label: tr('Renamer: impor resep'), hint: tr('Alat'), cari: 'resep preset muat json', jalan: () => { go('renamer'); pilihResepUntukImpor(renamerAlatCtx()); } },
+  { id: 'baca-keras', label: tr('Baca catatan ini keras'), hint: tr('Aksi'), cari: 'baca keras suara tts dengarkan', jalan: () => { bacaCatatanKeras(); } },
+  { id: 'baca-stop', label: tr('Hentikan baca keras'), hint: tr('Aksi'), cari: 'hentikan diam suara', jalan: () => { hentikanBaca(); } },
+  { id: 'dikte', label: tr('Dikte: catatan baru'), hint: tr('Aksi'), cari: 'dikte suara stt bicara ketik', jalan: () => { dikteCatatanBaru(); } },
+  { id: 'cad-unduh', label: tr('Cadangan terenkripsi: unduh'), hint: tr('Aksi'), cari: 'cadangan backup sandi enkripsi frasa', jalan: () => { bukaCadanganTerenkripsiDialog(); } },
+  { id: 'cad-pulih', label: tr('Cadangan terenkripsi: pulihkan'), hint: tr('Aksi'), cari: 'cadangan backup pulihkan sandi frasa', jalan: () => { pilihCadanganTerenkripsiUntukPulih(); } },
+  { id: 'tenggat-tugas', label: tr('Ubah baris bertenggat jadi tugas'), hint: tr('Aksi'), cari: 'tenggat reminder tugas jadikan', jalan: () => { jadikanBarisTenggatTugas(); } },
+  { id: 'tabel-props', label: tr('Tabel properti'), hint: tr('Aksi'), cari: 'tabel properti database tabel kolom', jalan: () => { bukaTabelProperti(); } },
   { id: 'log-csv', label: tr('Unduh log ganti nama (CSV)'), hint: tr('Alat'), cari: 'riwayat rename export excel', jalan: () => unduhLogRenamerCsv() },
   { id: 'stat', label: tr('Statistik & heatmap'), hint: tr('Alat'), cari: 'heatmap jurnal tugas grafik', jalan: () => bukaStatistik() },
   { id: 'theme', label: tr('Ganti tema terang / gelap'), hint: tr('Aksi'), cari: 'dark light mode', jalan: () => toggleTema() },
@@ -56,6 +71,15 @@ daftarkanSumber(() => state.notes
     cari: (n.tags || []).join(' '),
     jalan: () => openNote(n.id),
   })));
+
+/* K30: pencarian lintas modul — tugas yang belum selesai dan berkas renamer ikut dalam palette. */
+daftarkanSumber(() => sumberTugasTerbuka());
+daftarkanSumber(() => renamerAlatCtx().state.files.map(f => ({
+  id: 'rn-' + f.id,
+  label: f.originalName,
+  hint: tr('Renamer'),
+  jalan: () => go('renamer'),
+})));
 
 /* Data lama yang tidak terbaca: beri tahu, bukan sembunyikan. */
 if (state.dataRusak) {
