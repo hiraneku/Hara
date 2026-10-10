@@ -727,4 +727,12 @@ export const EN = {
   'Diimpor': 'Imported',
   'Kalender diunduh': 'Calendar downloaded',
   'Impor kalender': 'Imported calendar',
+  'Statistik & heatmap': 'Statistics & heatmap',
+  'tugas selesai': 'tasks done',
+  'jurnal': 'journal',
+  'hari jurnal berturut-turut': 'journal days in a row',
+  'tugas selesai (26 minggu)': 'tasks done (26 weeks)',
+  'entri jurnal (26 minggu)': 'journal entries (26 weeks)',
+  'Aktivitas harian': 'Daily activity',
+  'Tugas selesai per minggu (12 minggu)': 'Tasks done per week (12 weeks)',
 };

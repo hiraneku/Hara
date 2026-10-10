@@ -724,4 +724,12 @@ export const JA = {
   'Diimpor': '読み込み済み',
   'Kalender diunduh': 'カレンダーをダウンロードしました',
   'Impor kalender': '読み込んだカレンダー',
+  'Statistik & heatmap': '統計とヒートマップ',
+  'tugas selesai': '完了したタスク',
+  'jurnal': 'ジャーナル',
+  'hari jurnal berturut-turut': '連続したジャーナルの日数',
+  'tugas selesai (26 minggu)': '完了したタスク（26週）',
+  'entri jurnal (26 minggu)': 'ジャーナルの記録（26週）',
+  'Aktivitas harian': '日々のアクティビティ',
+  'Tugas selesai per minggu (12 minggu)': '週ごとの完了タスク（12週）',
 };

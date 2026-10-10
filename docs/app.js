@@ -4,6 +4,7 @@ import { go, onAfterRender, kembali, cur } from './core/router.js?v=202610100505
 import { toast } from './core/toast.js?v=20261010050549';
 import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010050549';
 import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010050549';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261010050549';
 import { notesModule } from './notes/index.js?v=20261010050549';
 import { renamerModule } from './renamer/index.js?v=20261010050549';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
@@ -42,6 +43,7 @@ daftarkanSumber(() => [
   { id: 'go-renamer', label: tr('Ganti Nama Massal'), hint: tr('Alat'), cari: 'rename berkas', jalan: () => go('renamer') },
   { id: 'new-note', label: tr('Catatan baru'), hint: tr('Aksi'), cari: 'tulis buat', jalan: () => newNote() },
   { id: 'new-jurnal', label: tr('Jurnal hari ini'), hint: tr('Aksi'), cari: 'harian diary', jalan: () => bukaJurnalHari() },
+  { id: 'stat', label: tr('Statistik & heatmap'), hint: tr('Alat'), cari: 'heatmap jurnal tugas grafik', jalan: () => bukaStatistik() },
   { id: 'theme', label: tr('Ganti tema terang / gelap'), hint: tr('Aksi'), cari: 'dark light mode', jalan: () => toggleTema() },
 ]);
 daftarkanSumber(() => state.notes
