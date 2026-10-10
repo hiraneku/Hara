@@ -100,10 +100,11 @@ function isiCuaca() {
 export function berandaView() {
   const c = isiCuaca();
   const d = new Date();
+  const putarIkon = musik.putar ? 'pause' : 'play';
   return `<div class="beranda">
-  <section class="bh-kartu bh-atas">
+  <header class="bh-atas">
     <div class="bh-kiri">
-      <div class="bh-tgl">${ikon('spark', 'bh-kecil')}<span id="bh-tgl">${tanggal(d)}</span></div>
+      <div class="bh-tgl">${ikon('spark')}<span id="bh-tgl">${tanggal(d)}</span></div>
       <h1 class="bh-sapa"><span id="bh-sapa">${sapaan(d)},</span><br>${tr('Beranda')}</h1>
       <button type="button" class="bh-quote" data-bh="quote" title="${tr('Ketuk untuk quote lain')}">
         <span id="bh-quote">${QUOTE[quoteIdx]}</span></button>
@@ -111,24 +112,26 @@ export function berandaView() {
     <button type="button" class="bh-cuaca" data-bh="cuaca" title="${tr('Muat ulang cuaca')}">
       <div class="bh-cuaca-utama">${ikon(c.ikon, 'bh-cuaca-ikon')}<span class="bh-suhu" id="bh-suhu">${c.suhu}</span></div>
       <div class="bh-cuaca-label" id="bh-cuaca-label">${c.label}</div>
+      <div class="bh-cuaca-garis"></div>
       <div class="bh-lokasi">${ikon('pin')}<span>${LOKASI.nama}</span></div>
     </button>
-  </section>
+  </header>
 
   <section class="bh-kartu bh-musik" aria-label="${tr('Musik')}">
     <div class="bh-musik-atas">
       <div class="bh-sampul"><img src="./home/aset/cover.jpg" alt="" draggable="false"></div>
       <div class="bh-musik-info">
-        <div class="bh-judul">${tr('Contoh lagu')}</div>
-        <div class="bh-artis">${tr('Pemutar musik')}</div>
+        <div class="bh-judul">Snowfall</div>
+        <div class="bh-artis">Lofi Girl</div>
       </div>
+      <div class="bh-eq" aria-hidden="true"><span style="--t:45%"></span><span style="--t:80%"></span><span style="--t:60%"></span><span style="--t:100%"></span><span style="--t:35%"></span></div>
     </div>
     <div class="bh-bar"><div class="bh-bar-isi" style="width:43%"></div></div>
     <div class="bh-waktu"><span>1:42</span><span>3:56</span></div>
     <div class="bh-kontrol">
       <button type="button" class="bh-btn-kecil${musik.acak ? ' on' : ''}" data-bh="acak" aria-label="${tr('Acak')}">${ikon('shuffle')}</button>
       <button type="button" class="bh-btn-kecil" data-bh="prev" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
-      <button type="button" class="bh-putar" data-bh="putar" aria-label="${tr('Putar')}" id="bh-putar">${ikon(musik.putar ? 'pause' : 'play')}</button>
+      <button type="button" class="bh-putar" data-bh="putar" aria-label="${tr('Putar')}" id="bh-putar">${ikon(putarIkon)}</button>
       <button type="button" class="bh-btn-kecil" data-bh="next" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
       <button type="button" class="bh-btn-kecil${musik.suka ? ' on suka' : ''}" data-bh="suka" aria-label="${tr('Suka')}">${ikon('heart')}</button>
     </div>
@@ -137,8 +140,11 @@ export function berandaView() {
   <nav class="bh-kartu bh-alat" aria-label="${tr('Alat')}">
     <button type="button" class="bh-alat-item" data-go="notes">
       <span class="bh-alat-ikon">${ikon('note')}</span><span>${tr('Catatan')}</span></button>
+    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
+    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
     <button type="button" class="bh-alat-item" data-go="rem">
       <span class="bh-alat-ikon">${ikon('bell')}</span><span>${tr('Pengingat')}</span></button>
+    <div class="bh-alat-item kosong" aria-hidden="true"><span class="bh-alat-ikon"></span><span>&nbsp;</span></div>
   </nav>
 </div>`;
 }
