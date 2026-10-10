@@ -1,10 +1,7 @@
 # SALIN berkas ini ke .github/workflows/apk.yml (lihat docs/deploy/APK.md).
+# Logika build ada di android/scripts/ci-build.sh, jadi berkas ini jarang berubah.
 name: Build APK Hara
 
-# APK dibangun setiap ada perubahan di branch ini. APK memuat
-# https://hiraneku.github.io/Hara/, jadi perubahan di docs/ langsung terlihat di
-# APK saat dibuka ulang, tanpa unduh dan pasang ulang. APK perlu dibangun ulang
-# hanya bila kode native (android/, plugin Capacitor, izin) berubah.
 on:
   push:
     branches: [arena/c3f71ef0-hara, main]
@@ -34,56 +31,24 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Android SDK sudah terpasang di runner ubuntu-latest (ANDROID_HOME).
       - name: Pasang dependency
         run: npm ci
 
       - name: Salin docs/ ke proyek Android
         run: npx cap sync android
 
-      - name: Buat keystore tetap dari HARA_SEED
+      - name: Build APK
         env:
           HARA_SEED: ${{ secrets.HARA_SEED }}
-        run: |
-          if [ -z "$HARA_SEED" ]; then
-            echo "::warning::Secret HARA_SEED belum diisi. APK ditandatangani debug dan TIDAK bisa diperbarui di atas instalasi sebelumnya."
-            exit 0
-          fi
-          mkdir -p "$RUNNER_TEMP/forge"
-          (cd "$RUNNER_TEMP/forge" && npm init -y >/dev/null && npm install --no-audit --no-fund node-forge@1.3.1 >/dev/null)
-          FORGE_DIR="$RUNNER_TEMP/forge" node android/scripts/buat-kunci.cjs "$RUNNER_TEMP/hara.p12"
+          GH_TOKEN: ${{ github.token }}
+        run: bash android/scripts/ci-build.sh
 
-      - name: Set versi
-        run: |
-          echo "HARA_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
-          echo "HARA_VERSION_NAME=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
-
-      - name: Build APK
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          if [ -n "$HARA_KS_PATH" ]; then
-            ./gradlew --no-daemon assembleRelease
-            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Hara.apk"
-          else
-            ./gradlew --no-daemon assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/Hara.apk"
-          fi
-
-      - name: Unggah artifact
+      - name: Unggah APK dan log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Hara-apk-${{ github.run_number }}
-          path: ${{ runner.temp }}/Hara.apk
-
-      - name: Perbarui rilis "apk-latest"
-        if: github.ref == 'refs/heads/arena/c3f71ef0-hara'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG=apk-latest
-          NOTE="APK dibangun dari commit ${GITHUB_SHA::7} (run #${{ github.run_number }}). Pembaruan isi aplikasi terjadi otomatis di dalam APK."
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --title "Hara APK (terbaru)" --notes "$NOTE"
-          gh release edit "$TAG" --notes "$NOTE" --prerelease
-          cp "$RUNNER_TEMP/Hara.apk" "$RUNNER_TEMP/Hara-latest.apk"
-          gh release upload "$TAG" "$RUNNER_TEMP/Hara-latest.apk" --clobber
+          path: |
+            ${{ runner.temp }}/hara-out/Hara.apk
+            ${{ runner.temp }}/hara-out/build-log.txt
+          if-no-files-found: warn
