@@ -127,7 +127,7 @@
       berbasis hari, bukan jam, dan notifikasi terjadwal belum dibuat.
 - Uji: `renamer-k3.mjs` (19) · `tunda-tugas.mjs` (15) · `palette.mjs` (18).
 
-### K · Tahap 3 (SEBAGIAN — K7, K8, K9 selesai)
+### K · Tahap 3 (K7–K11 selesai)
 - [x] K7. Matriks prioritas di layar Tugas: 2×2 dari "mendesak" (tenggat hari
       ini/besok/lewat) × "penting" (prioritas !! atau !!!). Kuadran: Kerjakan
       sekarang · Jadwalkan · Selesaikan cepat · Nanti. Murni (`notes/kalender.js`).
@@ -138,12 +138,19 @@
 - [x] K9. Kalender bulanan di layar Tugas: sel bertitik jumlah tenggat, pilih
       hari untuk melihat daftarnya, navigasi bulan, dan "Hari ini". Berulang ikut
       muncul di hari yang sesuai aturan.
-- Uji: `matriks-kalender-ics.mjs` (45).
-- Belum: K10 transclusion blok, K11 sebutan tanpa tautan + graf lokal.
+- [x] K10. Transklusi blok `![[Judul#^id]]` sebagai panel baca-saja "Rujukan
+      blok" di bawah editor. Isi dibaca langsung dari blok sumber (tidak disalin).
+      Status rusak untuk catatan/blok yang hilang, dan terkunci untuk catatan
+      terkunci yang belum dibuka (isinya tidak dibaca). Rujukan tidak ditandai
+      sebagai tautan mati. Modul `notes/transklusi.js`.
+      Keputusan: transklusi INLINE di editor ditunda karena menyentuh mesin
+      caret. Jika ingin inline, itu keputusan terpisah.
+- [x] K11. Sebutan tanpa tautan, graf lokal, dan catatan yatim. Dua yang pertama
+      sudah ada sebelumnya. Catatan yatim (`catatanYatim`) ditambahkan sebagai
+      panel "Catatan yatim".
+- Uji: `matriks-kalender-ics.mjs` (45) · `transklusi-yatim.mjs` (29).
 
 ### K · Tahap berikutnya (BELUM)
-- [ ] K10. Transclusion blok `![[catatan#^id]]`
-- [ ] K11. Sebutan tanpa tautan (unlinked mentions) + graf lokal + catatan yatim
 - [ ] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker)
 - [ ] K13. Tangkap cepat dari share sheet (Web Share Target)
 - [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari

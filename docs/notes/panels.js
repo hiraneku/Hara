@@ -12,11 +12,12 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20261010022204';
-import { cur } from '../core/router.js?v=20261010022204';
-import { touch } from './note-model.js?v=20261010022204';
-import { terlihat } from './kunci.js?v=20261010022204';
-import { t as tr } from '../core/i18n.js?v=20261010022204';
+import { state, save } from '../core/store.js?v=20261010024457';
+import { cur } from '../core/router.js?v=20261010024457';
+import { touch } from './note-model.js?v=20261010024457';
+import { terlihat } from './kunci.js?v=20261010024457';
+import { t as tr } from '../core/i18n.js?v=20261010024457';
+import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261010024457';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -41,6 +42,8 @@ function wlDariBlok(b) {
   const lihat = s => { if (!hasil.some(x => x.judul === s.judul)) hasil.push(s); };
   w.querySelectorAll('span.wl').forEach(sn => {
     if (sn.parentElement && sn.parentElement.closest('span.wl')) return;   /* bersarang */
+    const prev = sn.previousSibling;
+    if (prev && prev.nodeType === 3 && /!$/.test(prev.data)) return;       /* K10: rujukan blok */
     const m = /^\[\[(.+?)\]\]$/.exec((sn.textContent || '').trim());
     if (!m) return;
     const [judul, alias] = m[1].split('|');
@@ -213,6 +216,47 @@ export function panelRujukan(n) {
     <svg class="ico"><use href="#i-bulb"/></svg >${tr('Unlinked mention')}<span class="n">${baris.length}</span></div>${isi}</section>`;
 }
 
+/* ── K10 · Rujukan blok (transklusi baca-saja) ── */
+export function panelRujukanBlok(n) {
+  const daftar = rujukanCatatan(n);
+  const baris = daftar.map(r => {
+    const h = r.hasil;
+    if (h.status === 'ok') {
+      const sumber = esc(teksJudul(h.n) || tr('(tanpa judul)'));
+      return `
+      <div class="bl-row bl" role="button" tabindex="0" data-dm-buka="${h.n.id}" data-dm-bid="${h.blok.id}">
+        <div class="bl-b">
+          <div class="bl-t">${sumber}</div>
+          <div class="bl-c">${esc(h.teks) || '<i>' + tr('(blok kosong)') + '</i>'}</div>
+        </div>
+      </div>`;
+    }
+    const pesan = h.status === 'terkunci' ? tr('Catatan sumber terkunci — buka dulu untuk melihat isinya.')
+      : h.status === 'blok-hilang' ? tr('Blok sumber sudah tidak ada. Rujukan ini rusak.')
+      : tr('Catatan sumber tidak ditemukan. Rujukan ini rusak.');
+    return `
+      <div class="bl-row bl bl-rusak">
+        <div class="bl-b">
+          <div class="bl-t">![[${esc(r.judul)}#^${esc(r.ref)}]]</div>
+          <div class="bl-c">${pesan}</div>
+        </div>
+      </div>`;
+  }).join('');
+  const isi = daftar.length === 0
+    ? '<p class="dm-kosong">' + tr('Tidak ada rujukan. Tulis ![[Judul#^id]] sebagai satu baris untuk menampilkan blok catatan lain di sini.') + '</p>'
+    : baris;
+  return `<section class="panel"><div class="panel-h">
+    <svg class="ico"><use href="#i-bulb"/></svg>${tr('Rujukan blok')}<span class="n">${daftar.length}</span></div>${isi}</section>`;
+}
+
+/* ── K11 · Catatan yatim ── */
+export function panelYatim(n) {
+  if (!catatanYatim(n)) return '';
+  return `<section class="panel"><div class="panel-h">
+    <svg class="ico"><use href="#i-bulb"/></svg>${tr('Catatan yatim')}<span class="n">1</span></div>
+    <p class="dm-kosong">${tr('Catatan ini tidak menaut ke catatan lain dan tidak ditaut catatan lain. Tambahkan [[Judul]] untuk menghubungkannya.')}</p></section>`;
+}
+
 /* ── 4. Local graph ── */
 export function panelGraf(n) {
   const judul = teksJudul(n);
@@ -315,7 +359,7 @@ export function muatPanels() {
   const dm = document.querySelector('.dm');
   const n = state.notes.find(x => x.id === state.openId);
   if (!dm || !n) return;
-  dm.innerHTML = [panelTautan(n), panelBalik(n), panelRujukan(n), panelGraf(n)].join('');
+  dm.innerHTML = [panelTautan(n), panelBalik(n), panelRujukan(n), panelRujukanBlok(n), panelYatim(n), panelGraf(n)].join('');
 }
 
 /* ── bantu kecil ── */

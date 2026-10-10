@@ -32,6 +32,7 @@ for f in tools/uji/*.mjs; do node $f; done
 | `tunda-tugas.mjs` | K4/K6 jadwal ulang to-do dari kartu Tugas (Hari ini / Besok / Minggu depan); berulang & berformat ditolak |
 | `palette.mjs` | K1 command palette: Ctrl/⌘+K, pencocokan, Enter/Esc, lompat layar & buka catatan |
 | `matriks-kalender-ics.mjs` | K7 matriks prioritas · K9 kalender bulanan (jatuhPada, navigasi, pilih hari) · K8 ICS ekspor/impor pulang-pergi (RFC 5545, escape, lipatan) |
+| `transklusi-yatim.mjs` | K10 rujukan blok `![[Judul#^id]]` (resolusi, rusak, terkunci, escape) · K11 catatan yatim |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 | `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |
 | `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |

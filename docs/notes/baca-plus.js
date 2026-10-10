@@ -8,12 +8,12 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261010022204';
-import { closeAll } from './menus/pop.js?v=20261010022204';
-import { docEl } from './editor/caret.js?v=20261010022204';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261010022204';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261010022204';
-import { t as tr } from '../core/i18n.js?v=20261010022204';
+import { toast } from '../core/toast.js?v=20261010024457';
+import { closeAll } from './menus/pop.js?v=20261010024457';
+import { docEl } from './editor/caret.js?v=20261010024457';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261010024457';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261010024457';
+import { t as tr } from '../core/i18n.js?v=20261010024457';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */

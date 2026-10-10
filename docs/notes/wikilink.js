@@ -6,8 +6,8 @@
    dengan tombol pengubah (Ctrl/⌘/Alt) membuka catatan yang sudah ada —
    klik biasa tetap untuk meletakkan kursor/menyunting teks. */
 
-import { state } from '../core/store.js?v=20261010022204';
-import { tandaiLabelTag } from './label-tag.js?v=20261010022204';
+import { state } from '../core/store.js?v=20261010024457';
+import { tandaiLabelTag } from './label-tag.js?v=20261010024457';
 
 /* Judul sasaran sebuah span wikilink, tanpa [[ ]] dan tanpa alias |… */
 export function judulSpan(span) {
@@ -30,6 +30,9 @@ export function tandaiTautan(root) {
   if (!root) return;
   const list = root.querySelectorAll ? root.querySelectorAll('span.wl') : [];
   for (const span of list) {
+    /* K10: `![[Judul#^id]]` adalah rujukan blok, bukan tautan — jangan ditandai mati. */
+    const prev = span.previousSibling;
+    if (prev && prev.nodeType === 3 && /!$/.test(prev.data)) { span.classList.remove('dead'); continue; }
     const judul = judulSpan(span);
     span.classList.toggle('dead', !(judul && cariJudul(judul)));
   }

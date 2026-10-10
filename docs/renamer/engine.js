@@ -12,7 +12,7 @@ import {
   ILLEGAL_CHARS_REGEX,
   sanitizeFileName,
   formatFileSize,
-} from './model.js?v=20261010022204';
+} from './model.js?v=20261010024457';
 
 /**
  * Daftar nama terlarang yang diproteksi sistem operasi (Windows, DOS, FAT32):
