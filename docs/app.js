@@ -1,20 +1,20 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261010041323';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010041323';
-import { toast } from './core/toast.js?v=20261010041323';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010041323';
-import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010041323';
-import { notesModule } from './notes/index.js?v=20261010041323';
-import { renamerModule } from './renamer/index.js?v=20261010041323';
+import { load, state } from './core/store.js?v=20261010042150';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010042150';
+import { toast } from './core/toast.js?v=20261010042150';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010042150';
+import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010042150';
+import { notesModule } from './notes/index.js?v=20261010042150';
+import { renamerModule } from './renamer/index.js?v=20261010042150';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261010041323';
-import { bagikanCatatan } from './notes/share.js?v=20261010041323';
-import { bukaJurnalHari } from './notes/harian.js?v=20261010041323';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261010041323';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261010041323';
-import { simpanTemplatNote } from './notes/templat.js?v=20261010041323';
-import { panelKunciCatatan } from './notes/kunci.js?v=20261010041323';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261010041323';
+  from './notes/model.js?v=20261010042150';
+import { bagikanCatatan } from './notes/share.js?v=20261010042150';
+import { bukaJurnalHari } from './notes/harian.js?v=20261010042150';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261010042150';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261010042150';
+import { simpanTemplatNote } from './notes/templat.js?v=20261010042150';
+import { panelKunciCatatan } from './notes/kunci.js?v=20261010042150';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261010042150';
 
 const MODULES = [notesModule, renamerModule];
 

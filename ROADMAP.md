@@ -162,7 +162,12 @@
 - [ ] K13. Tangkap cepat dari share sheet (Web Share Target)
 - [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari
 - [ ] K15. Baca keras (SpeechSynthesis) dan dikte suara (Web Speech API)
-- [ ] K16. Templat dengan variabel `{tanggal}`, `{judul}`, dan isian saat dibuat
+- [x] K16. Templat dengan variabel `{tanggal}` `{hari}` `{bulan}` `{tahun}` `{judul}`
+      (diisi otomatis) dan isian `{nama}` lain yang diminta lewat formulir saat
+      catatan dibuat. Nilai di-escape di isi HTML; variabel yang tak diisi tetap
+      apa adanya. Catatan: kurung kurawal di templat tersimpan lama juga kini
+      dibaca sebagai variabel. Modul `notes/templat-var.js`.
+      Uji: `templat-variabel.mjs` (23).
 - [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — setelah audit PIN
 - [ ] K18. Cadangan terenkripsi (frasa sandi)
 - [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti)

@@ -34,6 +34,7 @@ for f in tools/uji/*.mjs; do node $f; done
 | `matriks-kalender-ics.mjs` | K7 matriks prioritas · K9 kalender bulanan (jatuhPada, navigasi, pilih hari) · K8 ICS ekspor/impor pulang-pergi (RFC 5545, escape, lipatan) |
 | `transklusi-yatim.mjs` | K10 rujukan blok `![[Judul#^id]]` (resolusi, rusak, terkunci, escape) · K11 catatan yatim |
 | `cari-peringkat.mjs` | K12 pencarian terindeks: paritas dengan catatanCocok, peringkat relevansi, toleransi salah ketik (Levenshtein), alur Worker, D19 di layar Cari |
+| `templat-variabel.mjs` | K16 variabel templat: bawaan `{tanggal}`/`{judul}` dll., isian lewat formulir, escape HTML, alur klik |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 | `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |
 | `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |

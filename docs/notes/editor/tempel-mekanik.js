@@ -39,7 +39,7 @@
    Semua teks di-escape lewat esc() dan tautan disaring tautanAman(),
    jadi clipboard berisi <script> atau javascript: tidak bisa lolos. */
 
-import { esc } from '../../core/dom.js?v=20261010041323';
+import { esc } from '../../core/dom.js?v=20261010042150';
 
 /* Karakter penutup kata tag — sama dengan TUTUP_CHAR di markdown.js. */
 const TUTUP_TAG = new Set([' ', '\u00a0', '\t', ',', ';', ':', '!', '?',

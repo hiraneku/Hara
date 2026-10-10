@@ -16,15 +16,20 @@
    yang DIBUAT baru mengikuti bahasa aktif — templat yang dipakai
    menciptakan catatan baru, jadi isinya lahir dalam bahasa itu
    (sama seperti tombol "Catatan hari ini"). Templat tersimpan
-   pengguna adalah data: nama & isinya tidak diterjemahkan. */
+   pengguna adalah data: nama & isinya tidak diterjemahkan.
 
-import { state } from '../core/store.js?v=20261010041323';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261010041323';
-import { go } from '../core/router.js?v=20261010041323';
-import { esc } from '../core/dom.js?v=20261010041323';
-import { toast } from '../core/toast.js?v=20261010041323';
-import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261010041323';
-import { judulJurnalHari } from './harian.js?v=20261010041323';
+   Variabel (K16): {tanggal} {hari} {bulan} {tahun} {judul} diisi
+   otomatis; nama lain ({proyek}, …) meminta isian sebelum catatan
+   dibuat (lihat templat-var.js). Templat tanpa isian langsung dibuat. */
+
+import { state } from '../core/store.js?v=20261010042150';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261010042150';
+import { go } from '../core/router.js?v=20261010042150';
+import { esc } from '../core/dom.js?v=20261010042150';
+import { toast } from '../core/toast.js?v=20261010042150';
+import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261010042150';
+import { judulJurnalHari } from './harian.js?v=20261010042150';
+import { isianDiperlukan, gantiVariabel } from './templat-var.js?v=20261010042150';
 
 const KUNCI = 'hara.v1.tpl';
 
@@ -217,12 +222,59 @@ export function menuTemplat() {
     <p class="pop-note">${tr('Catatan apa pun bisa dijadikan templat dari menu "···" di editor.')}</p>` : ''}`;
 }
 
-/* Buat catatan baru dari templat. */
-export function terapkanTemplat(id) {
+/* Nilai variabel bawaan untuk saat ini, sesuai bahasa aktif. */
+export function nilaiBawaanTemplat(now = new Date()) {
+  const lokale = (() => { try { return LOKALE(); } catch (e) { return undefined; } })();
+  const fmt = o => { try { return now.toLocaleDateString(lokale, o); } catch (e) { return ''; } };
+  return {
+    tanggal: tanggalPanjang(),
+    hari: fmt({ weekday: 'long' }),
+    bulan: fmt({ month: 'long' }),
+    tahun: String(now.getFullYear()),
+  };
+}
+
+/* Templat yang dipilih + isi dasarnya (judul & html, sebelum variabel diganti). */
+function dasarTemplat(id) {
   const tpl = daftarTemplat().find(x => x.id === id);
-  if (!tpl) return;
-  const judul = (typeof tpl.judul === 'function' ? tpl.judul() : tpl.judul) || tpl.nama;
-  const html = typeof tpl.html === 'function' ? tpl.html() : tpl.html;
+  if (!tpl) return null;
+  return {
+    tpl,
+    judul: (typeof tpl.judul === 'function' ? tpl.judul() : tpl.judul) || tpl.nama,
+    html: typeof tpl.html === 'function' ? tpl.html() : tpl.html,
+  };
+}
+
+/* Nama isian yang perlu diminta untuk templat ini ([] bila tidak ada). */
+export function isianTemplat(id) {
+  const d = dasarTemplat(id);
+  return d ? isianDiperlukan(d.judul, d.html) : [];
+}
+
+/* Formulir isian (HTML) untuk templat yang punya variabel isian. */
+export function formIsianTemplat(id) {
+  const d = dasarTemplat(id);
+  const nama = isianTemplat(id);
+  if (!d || !nama.length) return '';
+  const label = x => x.charAt(0).toUpperCase() + x.slice(1);
+  return `<div class="rn-modal-box">
+    <div class="pop-h">${esc(tr('Isi variabel templat'))}</div>
+    <p class="pop-note">${esc(tr('Nilai ini dipakai di judul dan isi catatan baru.'))}</p>
+    ${nama.map(x => `<label class="pop-note" style="display:block;margin:8px 0 2px">${esc(label(x))}
+      <input type="text" class="tx" data-tpl-isi="${esc(x)}" autocomplete="off" style="width:100%"></label>`).join('')}
+    <button type="button" class="btn btn-pri" data-tpl-buat="${esc(id)}" style="margin-top:10px">${esc(tr('Buat catatan'))}</button>
+  </div>`;
+}
+
+/* Buat catatan baru dari templat. `isian` = { nama: nilai } untuk variabel
+   non-bawaan; yang tidak diisi dibiarkan apa adanya. */
+export function terapkanTemplat(id, isian = {}) {
+  const d = dasarTemplat(id);
+  if (!d) return;
+  const { tpl } = d;
+  const bawaan = { ...nilaiBawaanTemplat(), ...isian };
+  const judul = gantiVariabel(d.judul, bawaan);
+  const html = gantiVariabel(d.html, { ...bawaan, judul }, esc);
   const n = makeNote({ title: judul, blocks: htmlToBlocks(html) });
   state.seq++;
   state.notes.unshift(n);

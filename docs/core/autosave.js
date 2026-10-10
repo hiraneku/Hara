@@ -18,7 +18,7 @@
       editor, berpindah catatan, atau menutup aplikasi.
 */
 
-import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20261010041323';
+import { tulisDraf, hapusDrafMilik } from './recovery.js?v=20261010042150';
 
 /* Jeda cukup panjang untuk menggabungkan ketikan, cukup pendek supaya
    kehilangan terasa sepele kalau aplikasi mati mendadak. */
