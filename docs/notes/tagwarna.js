@@ -4,15 +4,15 @@
    BUKAN di isi catatan, sehingga teks #tag tetap bersih. Tanpa
    pilihan manual, warna datang dari hash nama tag (label.js). */
 
-import { state } from '../core/store.js?v=20261009161031';
-import { esc } from '../core/dom.js?v=20261009161031';
-import { toast } from '../core/toast.js?v=20261009161031';
-import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20261009161031';
-import { tagUntukTampil } from './tags.js?v=20261009161031';
-import { openPop, closeAll } from './menus/pop.js?v=20261009161031';
-import { cur, go } from '../core/router.js?v=20261009161031';
-import { saveCatatanBuka } from './editor/cleanup.js?v=20261009161031';
-import { t as tr } from '../core/i18n.js?v=20261009161031';
+import { state } from '../core/store.js?v=20261010020553';
+import { esc } from '../core/dom.js?v=20261010020553';
+import { toast } from '../core/toast.js?v=20261010020553';
+import { WARNA_TAG, tandaUntukCatatan, TANDA_TAG } from './label.js?v=20261010020553';
+import { tagUntukTampil } from './tags.js?v=20261010020553';
+import { openPop, closeAll } from './menus/pop.js?v=20261010020553';
+import { cur, go } from '../core/router.js?v=20261010020553';
+import { saveCatatanBuka } from './editor/cleanup.js?v=20261010020553';
+import { t as tr } from '../core/i18n.js?v=20261010020553';
 
 const catatanBuka = () => state.notes.find(x => x.id === state.openId);
 

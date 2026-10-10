@@ -16,6 +16,13 @@ export function parseExif(buffer) {
     date: null,
     make: null,
     model: null,
+    /* K3 · field foto tambahan dari Exif SubIFD (null bila tidak ada) */
+    iso: null,
+    fnumber: null,      // bukaan, mis. 2.8
+    exposure: null,     // waktu rana (detik), mis. 0.004
+    focal: null,        // panjang fokus (mm), mis. 50
+    width: null,
+    height: null,
   };
 
   try {
@@ -111,9 +118,32 @@ function readIFD(dataView, tiffStart, ifdOffset, isLittleEndian, result) {
         const numValues = dataView.getUint32(entryOffset + 4, isLittleEndian);
         const valueOffset = entryOffset + 8;
 
+        const type = dataView.getUint16(entryOffset + 2, isLittleEndian);
+
         // 0x9003: DateTimeOriginal
         if (tag === 0x9003) {
           result.dateTimeOriginal = readString(dataView, tiffStart, valueOffset, numValues, isLittleEndian);
+        }
+        // 0x8827 ISOSpeedRatings (SHORT, nilai langsung)
+        else if (tag === 0x8827) {
+          result.iso = readNumber(dataView, valueOffset, type, isLittleEndian);
+        }
+        // 0x829D FNumber · 0x829A ExposureTime · 0x920A FocalLength (RATIONAL, selalu lewat offset)
+        else if (tag === 0x829D) {
+          result.fnumber = readRational(dataView, tiffStart, valueOffset, isLittleEndian);
+        }
+        else if (tag === 0x829A) {
+          result.exposure = readRational(dataView, tiffStart, valueOffset, isLittleEndian);
+        }
+        else if (tag === 0x920A) {
+          result.focal = readRational(dataView, tiffStart, valueOffset, isLittleEndian);
+        }
+        // 0xA002 / 0xA003 PixelX/YDimension (SHORT atau LONG)
+        else if (tag === 0xA002) {
+          result.width = readNumber(dataView, valueOffset, type, isLittleEndian);
+        }
+        else if (tag === 0xA003) {
+          result.height = readNumber(dataView, valueOffset, type, isLittleEndian);
         }
       }
     }
@@ -143,4 +173,20 @@ function readString(dataView, tiffStart, valueOffset, numValues, isLittleEndian)
     str += String.fromCharCode(code);
   }
   return str.trim();
+}
+
+/* Angka tunggal: SHORT (type 3) atau LONG (type 4), nilai langsung di entri. */
+function readNumber(dataView, valueOffset, type, isLittleEndian) {
+  if (type === 3) return dataView.getUint16(valueOffset, isLittleEndian);
+  if (type === 4) return dataView.getUint32(valueOffset, isLittleEndian);
+  return null;
+}
+
+/* RATIONAL (type 5): dua uint32 (pembilang/penyebut) di alamat yang ditunjuk entri. */
+function readRational(dataView, tiffStart, valueOffset, isLittleEndian) {
+  const at = tiffStart + dataView.getUint32(valueOffset, isLittleEndian);
+  if (at + 8 > dataView.byteLength) return null;
+  const num = dataView.getUint32(at, isLittleEndian);
+  const den = dataView.getUint32(at + 4, isLittleEndian);
+  return den ? num / den : null;
 }

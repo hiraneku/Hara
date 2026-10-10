@@ -18,12 +18,12 @@
    • hilang saat sorotan menguncup, saat menggulir, pindah layar,
      jendela berubah ukuran, atau Escape. */
 
-import { docEl, sel } from './caret.js?v=20261009161031';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261009161031';
-import { jalankan } from '../bar/render.js?v=20261009161031';
-import { openPop } from '../menus/pop.js?v=20261009161031';
-import { warnaMenu } from '../menus/warna.js?v=20261009161031';
-import { t as tr } from '../../core/i18n.js?v=20261009161031';
+import { docEl, sel } from './caret.js?v=20261010020553';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261010020553';
+import { jalankan } from '../bar/render.js?v=20261010020553';
+import { openPop } from '../menus/pop.js?v=20261010020553';
+import { warnaMenu } from '../menus/warna.js?v=20261010020553';
+import { t as tr } from '../../core/i18n.js?v=20261010020553';
 
 const JEDA = 90;          /* ms — selectionchange datang beruntun */
 const LUANG = 8;          /* px jarak bilah dari sorotan / tepi layar */

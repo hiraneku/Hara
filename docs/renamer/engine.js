@@ -12,7 +12,7 @@ import {
   ILLEGAL_CHARS_REGEX,
   sanitizeFileName,
   formatFileSize,
-} from './model.js?v=20261009161031';
+} from './model.js?v=20261010020553';
 
 /**
  * Daftar nama terlarang yang diproteksi sistem operasi (Windows, DOS, FAT32):
@@ -150,7 +150,28 @@ export function parseTokens(pattern, { name, ext, index, count, lastModified, si
   const albumStr = id3.album || 'Unknown_Album';
   const trackStr = id3.track ? String(id3.track).padStart(2, '0') : numPadded;
 
+  /* K3 · token foto & audio tambahan. Bila data tidak ada → 'unknown'
+     (seperti Unknown_Artist) supaya nama tetap valid dan terlihat jelas. */
+  const ex = meta && meta.exif ? meta.exif : {};
+  const isoStr = ex.iso ? String(ex.iso) : 'unknown';
+  const apertureStr = ex.fnumber ? 'f' + Number(ex.fnumber.toFixed(1)) : 'unknown';
+  const focalStr = ex.focal ? Math.round(ex.focal) + 'mm' : 'unknown';
+  const shutterStr = !ex.exposure ? 'unknown'
+    : ex.exposure < 1 ? `1-${Math.round(1 / ex.exposure)}s` : `${Number(ex.exposure.toFixed(1))}s`;
+  const widthStr = ex.width ? String(ex.width) : 'unknown';
+  const heightStr = ex.height ? String(ex.height) : 'unknown';
+  const resStr = ex.width && ex.height ? `${ex.width}x${ex.height}` : 'unknown';
+  const genreStr = id3.genre ? String(id3.genre).replace(/\s+/g, '_') : 'unknown';
+
   return pattern
+    .replace(/\{iso\}/gi, isoStr)
+    .replace(/\{aperture\}/gi, apertureStr)
+    .replace(/\{shutter\}/gi, shutterStr)
+    .replace(/\{focal\}/gi, focalStr)
+    .replace(/\{res\}/gi, resStr)
+    .replace(/\{width\}/gi, widthStr)
+    .replace(/\{height\}/gi, heightStr)
+    .replace(/\{genre\}/gi, genreStr)
     .replace(/\{name\}/gi, name || '')
     .replace(/\{ext\}/gi, cleanExt)
     .replace(/\{num\}/gi, numPadded)

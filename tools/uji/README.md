@@ -28,6 +28,9 @@ for f in tools/uji/*.mjs; do node $f; done
 | `bagian-b.mjs` | B7 urut/filter · B8 daftar isi · B9 Tugas/Reminder · B10 tag berwarna · B11 templat · B12 jurnal · B13 slash |
 | `tugas-lanjut.mjs` | K2 tata bahasa tenggat (lusa, minggu depan, N hari lagi, jam) · K2 pengulangan (harian/mingguan/bulanan, lompat kejadian terlewat) · K5 prioritas `!`–`!!!` |
 | `ulang-tugas.mjs` | K2 to-do berulang di editor (dicentang → geser, tersimpan `data-ulang`) · penanda ↻ & prioritas di layar Tugas |
+| `renamer-k3.mjs` | K3 token foto & audio: EXIF SubIFD (ISO, bukaan, rana, fokus, dimensi), token `{iso}`…`{genre}`, fallback `unknown` |
+| `tunda-tugas.mjs` | K4/K6 jadwal ulang to-do dari kartu Tugas (Hari ini / Besok / Minggu depan); berulang & berformat ditolak |
+| `palette.mjs` | K1 command palette: Ctrl/⌘+K, pencocokan, Enter/Esc, lompat layar & buka catatan |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 | `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |
 | `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |

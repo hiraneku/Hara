@@ -4,17 +4,25 @@
    struktur data baru — tenggat hidup di dalam isi catatan, sehingga
    layar ini tidak pernah bisa berbeda dari catatan aslinya. */
 
-import { state } from '../../core/store.js?v=20261009161031';
-import { esc } from '../../core/dom.js?v=20261009161031';
-import { tugasMendatang, tenggatHariIni, sisaWaktu, chipTenggat } from '../pengingat.js?v=20261009161031';
-import { rowFor } from './row.js?v=20261009161031';
-import { t as tr } from '../../core/i18n.js?v=20261009161031';
+import { state, save } from '../../core/store.js?v=20261010020553';
+import { esc } from '../../core/dom.js?v=20261010020553';
+import { tugasMendatang, tenggatHariIni, sisaWaktu, chipTenggat, jadwalUlang } from '../pengingat.js?v=20261010020553';
+import { rowFor } from './row.js?v=20261010020553';
+import { t as tr } from '../../core/i18n.js?v=20261010020553';
+import { toast } from '../../core/toast.js?v=20261010020553';
+import { touch } from '../note-model.js?v=20261010020553';
+import { go, cur } from '../../core/router.js?v=20261010020553';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
 
 /* Satu kartu tenggat: chip "besok/hari ini/lewat", teks, judul catatan.
    Ketukan → buka catatan & lompat ke blok to-do-nya. */
-const kartuTenggat = (x, penanda) => `
+/* K4·K6: tunda / jadwal ulang langsung dari kartu (sekali-jalan saja). */
+const PILIHAN_TUNDA = [['hari', 'Hari ini'], ['besok', 'Besok'], ['minggu depan', 'Minggu depan']];
+
+const kartuTenggat = (x, penanda) => {
+  const bisaTunda = !x.berulang && jadwalUlang(x.blok.content, 'besok') !== null;
+  return `<div class="tdg-item">
   <button class="row" data-todo-lompat="${x.n.id}" data-todo-bid="${x.bid}"
     title="${tr('Buka di catatan')} «${esc(x.n.title || tr('Tanpa judul'))}»">
     <div class="row-b">
@@ -25,7 +33,28 @@ const kartuTenggat = (x, penanda) => `
             || tr('Tanpa isi'))}</span></div>
       <div class="row-s">${esc(x.n.title || tr('Tanpa judul'))} · ${esc(penanda)}</div>
     </div>
-  </button>`;
+  </button>
+  ${bisaTunda ? `<div class="tdg-tunda" role="group" aria-label="${tr('Jadwal ulang')}">
+    ${PILIHAN_TUNDA.map(([kode, label]) => `<button class="tdg-btn" type="button"
+      data-tunda="${esc(kode)}" data-note="${esc(x.n.id)}" data-bid="${esc(x.bid)}">${tr(label)}</button>`).join('')}
+  </div>` : ''}
+</div>`;
+};
+
+/* Menjadwalkan ulang satu to-do. Model diubah lalu disimpan; layar
+   Tugas/Reminder digambar ulang supaya daftarnya langsung benar. */
+export function tundaTodo(noteId, bid, pilihan) {
+  const n = state.notes.find(x => x.id === noteId);
+  const b = n && (n.blocks || []).find(x => x.id === bid);
+  if (!b) return toast(tr('To-do tidak ditemukan'));
+  const baru = jadwalUlang(b.content, pilihan);
+  if (baru === null) return toast(tr('Tidak bisa dijadwal ulang'));
+  b.content = baru;
+  touch(n);
+  save();
+  toast(tr('Dijadwal ulang'));
+  if (cur === 'task' || cur === 'rem') go(cur);
+}
 
 export const tugasView = () => {
   /* tugasMendatang() sudah mengecualikan to-do yang dicentang (checked),

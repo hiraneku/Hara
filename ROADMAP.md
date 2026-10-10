@@ -109,11 +109,25 @@
 - [x] Perbaikan uji `toast-tak-menutup-bar.mjs` yang salah memilih blok @media.
 - Uji: `tools/uji/tugas-lanjut.mjs` (33) · `tools/uji/ulang-tugas.mjs` (14).
 
+### K · Tahap 2 (SELESAI, kecuali yang ditandai)
+- [x] K1. Command palette (Ctrl/⌘+K): lompat layar, buka catatan lewat judul,
+      aksi (catatan baru, jurnal, ganti tema). Sumber perintah didaftarkan di
+      `app.js`; mesinnya di `core/palette.js` dan tidak tahu isi modul.
+- [x] K3. Token foto & audio: `{iso}`, `{aperture}`, `{shutter}`, `{focal}`,
+      `{res}`, `{width}`, `{height}`, `{genre}`. Parser EXIF kini juga membaca
+      Exif SubIFD (ISO, bukaan, rana, fokus, dimensi). Data kosong → `unknown`.
+      Catatan: `{camera}`, `{artist}`, `{title}`, `{album}`, `{track}` dan
+      `{date}` (tanggal EXIF) sudah ada sebelumnya.
+- [x] K4 (sebagian). Tenggat yang lewat dan belum selesai sudah tampil di
+      "Perlu perhatian" sejak B9. Tahap ini menambahkan tombol **Hari ini /
+      Besok / Minggu depan** di kartu Tugas untuk memindahkannya. Belum ada
+      layar "Rencana hari ini" terpisah.
+- [x] K6 (sebagian). Tunda/jadwal ulang lewat tombol di kartu (hari, besok,
+      minggu depan). Opsi "10 menit / nanti" belum ada: tenggat di aplikasi ini
+      berbasis hari, bukan jam, dan notifikasi terjadwal belum dibuat.
+- Uji: `renamer-k3.mjs` (19) · `tunda-tugas.mjs` (15) · `palette.mjs` (18).
+
 ### K · Tahap berikutnya (BELUM)
-- [ ] K1. Command palette (Ctrl/⌘+K)
-- [ ] K3. Token metadata EXIF/ID3 di renamer
-- [ ] K4. Rencana hari ini: tugas belum selesai pindah otomatis ke besok
-- [ ] K6. Snooze (tunda 10 menit / besok / nanti)
 - [ ] K7. Matriks prioritas (mendesak × penting)
 - [ ] K8. Ekspor/impor ICS (tenggat ke kalender)
 - [ ] K9. Tampilan kalender di layar Tugas

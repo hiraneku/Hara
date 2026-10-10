@@ -4,14 +4,14 @@
  * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20261009161031';
-import { t as tr } from '../core/i18n.js?v=20261009161031';
+import { esc } from '../core/dom.js?v=20261010020553';
+import { t as tr } from '../core/i18n.js?v=20261010020553';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20261009161031';
+} from './model.js?v=20261010020553';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};
@@ -191,6 +191,12 @@ export function renderRuleInputs(rule) {
             <span class="rn-token-chip" data-rn-insert-token="{title}">{title}</span>
             <span class="rn-token-chip" data-rn-insert-token="{album}">{album}</span>
             <span class="rn-token-chip" data-rn-insert-token="{camera}">{camera}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{genre}">{genre}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{iso}">{iso}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{aperture}">{aperture}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{shutter}">{shutter}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{focal}">{focal}</span>
+            <span class="rn-token-chip" data-rn-insert-token="{res}">{res}</span>
             <span class="rn-token-chip" data-rn-insert-token="{size}">{size}</span>
             <span class="rn-token-chip" data-rn-insert-token="{ext}">{ext}</span>
             <span class="rn-token-chip" data-rn-insert-token="{parent}">{parent}</span>

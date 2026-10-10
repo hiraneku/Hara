@@ -1,19 +1,20 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261009161031';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261009161031';
-import { toast } from './core/toast.js?v=20261009161031';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261009161031';
-import { notesModule } from './notes/index.js?v=20261009161031';
-import { renamerModule } from './renamer/index.js?v=20261009161031';
+import { load, state } from './core/store.js?v=20261010020553';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010020553';
+import { toast } from './core/toast.js?v=20261010020553';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010020553';
+import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010020553';
+import { notesModule } from './notes/index.js?v=20261010020553';
+import { renamerModule } from './renamer/index.js?v=20261010020553';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261009161031';
-import { bagikanCatatan } from './notes/share.js?v=20261009161031';
-import { bukaJurnalHari } from './notes/harian.js?v=20261009161031';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261009161031';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261009161031';
-import { simpanTemplatNote } from './notes/templat.js?v=20261009161031';
-import { panelKunciCatatan } from './notes/kunci.js?v=20261009161031';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261009161031';
+  from './notes/model.js?v=20261010020553';
+import { bagikanCatatan } from './notes/share.js?v=20261010020553';
+import { bukaJurnalHari } from './notes/harian.js?v=20261010020553';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261010020553';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261010020553';
+import { simpanTemplatNote } from './notes/templat.js?v=20261010020553';
+import { panelKunciCatatan } from './notes/kunci.js?v=20261010020553';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261010020553';
 
 const MODULES = [notesModule, renamerModule];
 
@@ -22,6 +23,35 @@ MODULES.forEach(m => m.init());
 terapkanTema();
 /* lang <html> ikut bahasa tersimpan sejak awal (a11y & font). */
 setBahasa(bahasaSekarang());
+
+/* ── Command palette (K1): Ctrl/⌘+K ──
+   Sumber perintah didaftarkan di sini, di satu tempat. Palette sendiri
+   tidak tahu isi modul. Catatan dibaca dari state saat palette dibuka. */
+initPalette();
+daftarkanSumber(() => [
+  { id: 'go-home', label: tr('Beranda'), hint: tr('Layar'), jalan: () => go('home') },
+  { id: 'go-notes', label: tr('Catatan'), hint: tr('Layar'), jalan: () => go('notes') },
+  { id: 'go-task', label: tr('Tugas'), hint: tr('Layar'), cari: 'to-do tenggat', jalan: () => go('task') },
+  { id: 'go-rem', label: tr('Reminder'), hint: tr('Layar'), cari: 'pengingat tenggat', jalan: () => go('rem') },
+  { id: 'go-search', label: tr('Cari'), hint: tr('Layar'), jalan: () => go('search') },
+  { id: 'go-tags', label: tr('Tag'), hint: tr('Layar'), jalan: () => go('tags') },
+  { id: 'go-arsip', label: tr('Arsip'), hint: tr('Layar'), jalan: () => go('arsip') },
+  { id: 'go-trash', label: tr('Sampah'), hint: tr('Layar'), jalan: () => go('trash') },
+  { id: 'go-set', label: tr('Pengaturan'), hint: tr('Layar'), cari: 'setelan opsi', jalan: () => go('set') },
+  { id: 'go-renamer', label: tr('Ganti Nama Massal'), hint: tr('Alat'), cari: 'rename berkas', jalan: () => go('renamer') },
+  { id: 'new-note', label: tr('Catatan baru'), hint: tr('Aksi'), cari: 'tulis buat', jalan: () => newNote() },
+  { id: 'new-jurnal', label: tr('Jurnal hari ini'), hint: tr('Aksi'), cari: 'harian diary', jalan: () => bukaJurnalHari() },
+  { id: 'theme', label: tr('Ganti tema terang / gelap'), hint: tr('Aksi'), cari: 'dark light mode', jalan: () => toggleTema() },
+]);
+daftarkanSumber(() => state.notes
+  .filter(n => !n.archived && !n.deletedAt)
+  .map(n => ({
+    id: 'note-' + n.id,
+    label: n.title || tr('Tanpa judul'),
+    hint: tr('Catatan'),
+    cari: (n.tags || []).join(' '),
+    jalan: () => openNote(n.id),
+  })));
 
 /* Data lama yang tidak terbaca: beri tahu, bukan sembunyikan. */
 if (state.dataRusak) {

@@ -12,7 +12,7 @@
    yang disimpan ke blok adalah `meta.ulangKe` (tenggat berulang yang sudah
    bergeser setelah dicentang), dan itu ditulis lewat atribut data-ulang. */
 
-import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261009161031';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261010020553';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 /* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */
@@ -297,3 +297,29 @@ export const labelTenggat = teks => {
 
 /* Chip tanggal lengkap: label + jam (bila ada). */
 export const chipTenggat = x => labelTenggat(x.teks) + (x.jam ? ' · ' + x.jam : '');
+
+/* K4 · K6 — jadwal ulang (tunda) sebuah to-do sekali-jalan.
+   Mengganti frasa tanggal di awal isi dengan `pilihan` ('hari' | 'besok' |
+   'lusa' | 'minggu depan'), dan menjaga prioritas, jam, serta isi lainnya.
+   Mengembalikan isi baru (string), atau null bila tidak bisa dijadwal ulang:
+   - to-do tanpa tanggal di awal,
+   - to-do berulang (jadwalnya ditentukan aturannya),
+   - isi diawali markup (mis. tebal) — dibiarkan agar format tidak rusak. */
+const FRASA_TUNDA = { hari: 'hari', besok: 'besok', lusa: 'lusa', 'minggu depan': 'minggu depan' };
+export function jadwalUlang(content, pilihan) {
+  const kata = FRASA_TUNDA[pilihan];
+  if (!kata) return null;
+  const s = String(content || '').trim();
+  if (!s || s.startsWith('<')) return null;
+  const u = uraiTugas(s);
+  if (!u || u.aturan) return null;
+  /* pisahkan prioritas di depan (mis. "!! besok rapat") agar tetap di depan */
+  const pre = (s.match(/^(?:!{1,3}\s+)*/) || [''])[0];
+  const tanpaPre = s.slice(pre.length);
+  const tgl = uraiTanggal(tanpaPre);
+  if (!tgl) return null;
+  let rest = tanpaPre.slice(tgl.panjang).trim();
+  const mj = rest.match(/^(?:jam\s+)?(\d{1,2})[:.](\d{2})(?=\s|$)/i);
+  if (mj) rest = rest.slice(mj[0].length).trim();
+  return (pre + kata + (rest ? ' ' + rest : '')).trim();
+}
