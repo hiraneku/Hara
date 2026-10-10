@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// Versi dihitung di luar blok android {} (CI mengisi dari nomor run).
+def haraVersionCode = Integer.parseInt(System.getenv("HARA_VERSION_CODE") ?: "1")
+def haraVersionName = System.getenv("HARA_VERSION_NAME") ?: "1.0"
+
 android {
     namespace = "id.hara.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,9 +11,8 @@ android {
         applicationId "id.hara.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // CI mengisi versi dari nomor run GitHub Actions; lokal jatuh ke 1 / 1.0.
-        versionCode (System.getenv("HARA_VERSION_CODE") ?: "1").toInteger()
-        versionName System.getenv("HARA_VERSION_NAME") ?: "1.0"
+        versionCode haraVersionCode
+        versionName haraVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -24,7 +27,7 @@ android {
         release {
             def ksPath = System.getenv("HARA_KS_PATH")
             if (ksPath) {
-                storeFile file(ksPath)
+                storeFile new File(ksPath)
                 storePassword System.getenv("HARA_KS_PASS")
                 keyAlias System.getenv("HARA_KEY_ALIAS")
                 keyPassword System.getenv("HARA_KEY_PASS")
