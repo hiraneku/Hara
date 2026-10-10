@@ -5,6 +5,9 @@
 import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261010054709';
 import { cur, onAfterRender } from '../core/router.js?v=20261010054709';
 import { toast } from '../core/toast.js?v=20261010054709';
+import { namaSekarang, setNama } from './nama.js?v=20261010054709';
+
+const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /* Balikpapan dipakai sebagai lokasi awal. */
 const LOKASI = { nama: 'Balikpapan', lat: -1.2379, lon: 116.8529 };
@@ -108,7 +111,7 @@ export function berandaView() {
   <header class="bh-atas">
     <div class="bh-kiri">
       <div class="bh-tgl">${ikon('spark')}<span id="bh-tgl">${tanggal(d)}</span></div>
-      <h1 class="bh-sapa"><span id="bh-sapa">${sapaan(d)},</span><br>${tr('Beranda')}</h1>
+      <h1 class="bh-sapa"><span id="bh-sapa">${sapaan(d)},</span><br><span id="bh-nama">${escHtml(namaSekarang() || tr('Beranda'))}</span></h1>
       <button type="button" class="bh-quote" data-bh="quote" title="${tr('Ketuk untuk quote lain')}">
         <span id="bh-quote">${QUOTE[quoteIdx]}</span></button>
     </div>
@@ -171,6 +174,7 @@ function segarkanCuacaDOM() {
 function segarkanSapaanDOM() {
   const d = new Date();
   if (el('bh-sapa')) el('bh-sapa').textContent = sapaan(d) + ',';
+  if (el('bh-nama')) el('bh-nama').textContent = namaSekarang() || tr('Beranda');
   if (el('bh-tgl')) el('bh-tgl').textContent = tanggal(d);
 }
 
@@ -226,6 +230,13 @@ let sudahPasang = false;
 export function mulaiBeranda() {
   if (sudahPasang) return;
   sudahPasang = true;
+
+  /* Nama di Pengaturan: simpan saat selesai diketik, sapaan langsung ikut berubah. */
+  document.addEventListener('change', e => {
+    if (!e.target.matches || !e.target.matches('[data-nama]')) return;
+    setNama(e.target.value);
+    segarkanSapaanDOM();
+  });
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-bh]');

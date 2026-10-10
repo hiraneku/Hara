@@ -11,6 +11,7 @@ import { tandaTag, WARNA_TAG } from '../label.js?v=20261010054709';
 import { terlihat } from '../kunci.js?v=20261010054709';
 import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261010054709';
 import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261010054709';
+import { namaSekarang } from '../../home/nama.js?v=20261010054709';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -237,6 +238,12 @@ set:()=>{ const akPilih = akSekarang() || '';
       <div class="row-b"><div class="row-t">${tr('Kembali')}</div>
         <div class="row-s">${tr('Ke layar sebelumnya')}</div></div>
     </button>
+  </div>
+  <div class="sec"><h2>${tr('Beranda')}</h2></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Nama di sapaan')}</div>
+      <div class="row-s">${tr('Muncul di layar Beranda')}</div></div>
+      <input type="text" data-nama maxlength="30" value="${namaSekarang().replace(/"/g, '&quot;')}" placeholder="${tr('Nama kamu')}" style="max-width:10rem;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--sunken);color:var(--text);font:inherit"></div>
   </div>
   <div class="sec"><h2>${tr('Tampilan')}</h2></div>
   <div class="card" style="margin-bottom:24px">
