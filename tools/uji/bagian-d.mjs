@@ -348,9 +348,8 @@ oke('D21o Urungkan mengembalikan catatan dari sampah',
   !!d4b && !d4b.deletedAt && state.notes.some(x => x.id === 'd4'));
 /* baris beranda polos (tanpa sapuan) */
 router.go('home'); await sleep(30);
-oke('D21l beranda memakai baris polos tanpa lapisan sapuan',
-  !d.querySelector('.srow[data-srow="d1"]') &&
-  !!d.querySelector('.row[data-open="d1"]'));
+oke('D21l beranda baru tanpa daftar catatan (desain baru)',
+  !d.querySelector('.srow[data-srow="d1"]') && !d.querySelector('.row[data-open="d1"]'));
 /* sampah tidak punya lapisan sapuan */
 router.go('trash'); await sleep(20);
 oke('D21m layar Sampah tidak memakai lapisan sapuan',

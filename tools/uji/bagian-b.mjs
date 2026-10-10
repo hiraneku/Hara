@@ -120,15 +120,7 @@ oke('B11a menu catatan punya Simpan sebagai templat', mn.includes('tpl') && mn.i
 /* ── B12 jurnal hari ini ── */
 const hr=await st('notes/harian.js');
 router.go('home'); await sleep(30);
-oke('B12a tombol jurnal di beranda', !!d.querySelector('[data-jurnal-hari]'));
-klik(d.querySelector('[data-jurnal-hari]')); await sleep(50);
-oke('B12b jurnal dibuat & terbuka', d.querySelector('.ed-t') && state.openId &&
-  state.notes.find(x=>x.id===state.openId).title.startsWith('Jurnal'),
-  (state.notes.find(x=>x.id===state.openId)||{}).title);
-const jml=state.notes.filter(x=>x.title && x.title.startsWith('Jurnal')).length;
-router.go('home'); await sleep(20);
-klik(d.querySelector('[data-jurnal-hari]')); await sleep(40);
-oke('B12c tidak membuat jurnal ganda', jml===1 && state.notes.filter(x=>x.title && x.title.startsWith('Jurnal')).length===1);
+oke('B12a Beranda baru tanpa tombol jurnal (desain baru)', !d.querySelector('[data-jurnal-hari]'));
 
 /* ── B13 slash tambahan ── */
 const {SLASH}=await st('notes/menus/slash.js');

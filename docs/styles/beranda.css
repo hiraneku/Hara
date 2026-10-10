@@ -1,0 +1,164 @@
+/* ── Beranda baru (gaya kaca di atas wallpaper) ── */
+
+/* Di beranda, judul bar atas disembunyikan; sapaan jadi judul. */
+body.layar-beranda .head { display: none; }
+
+.beranda {
+  --bh-teks: #F3F2EC;
+  --bh-redup: rgba(243, 242, 236, .68);
+  --bh-kaca: rgba(16, 19, 17, .52);
+  --bh-garis: rgba(255, 255, 255, .11);
+  --bh-aksen: #A9CFA6;
+  position: relative;
+  min-height: 100vh;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 26px) 18px 140px;
+  color: var(--bh-teks);
+  background:
+    linear-gradient(180deg, rgba(8, 10, 9, .25) 0%, rgba(12, 14, 13, .55) 42%, #121411 78%),
+    url('../home/aset/wallpaper.jpg') center top / cover no-repeat;
+  background-color: #121411;
+}
+
+.bh-ico { width: 20px; height: 20px; flex: none; }
+.bh-kecil { width: 14px !important; height: 14px !important; }
+
+/* ── atas: tanggal, sapaan, quote, cuaca ── */
+.bh-atas { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bh-kiri { min-width: 0; flex: 1; }
+.bh-tgl { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--bh-redup); }
+.bh-sapa {
+  margin: 12px 0 12px;
+  font-family: var(--serif);
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -.3px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .35);
+}
+.bh-quote {
+  display: block;
+  padding: 0;
+  max-width: 250px;
+  text-align: left;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--bh-redup);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.bh-cuaca {
+  width: 150px;
+  flex: none;
+  padding: 14px 14px 12px;
+  text-align: left;
+  color: var(--bh-teks);
+  background: var(--bh-kaca);
+  border: 1px solid var(--bh-garis);
+  border-radius: 20px;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  cursor: pointer;
+}
+.bh-cuaca-utama { display: flex; align-items: center; justify-content: space-between; }
+.bh-cuaca-ikon { width: 34px !important; height: 34px !important; color: #F6C453; }
+.bh-suhu { font-size: 26px; font-weight: 500; letter-spacing: -.5px; }
+.bh-cuaca-label { margin-top: 4px; font-size: 12px; color: var(--bh-redup); }
+.bh-lokasi {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--bh-garis);
+  font-size: 12px; color: var(--bh-redup);
+}
+.bh-lokasi .bh-ico { width: 13px; height: 13px; }
+
+/* ── kartu kaca umum ── */
+.bh-musik,
+.bh-alat {
+  background: var(--bh-kaca);
+  border: 1px solid var(--bh-garis);
+  border-radius: 24px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .25);
+}
+
+/* ── musik ── */
+.bh-musik { margin-top: 26px; padding: 14px; }
+.bh-sampul {
+  float: left;
+  width: 96px; height: 96px;
+  margin-right: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+}
+.bh-sampul img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bh-musik-isi { overflow: hidden; }
+.bh-musik-info { display: flex; align-items: center; justify-content: space-between; min-height: 96px; }
+.bh-judul { font-size: 20px; font-weight: 500; font-family: var(--serif); }
+.bh-artis { font-size: 13px; color: var(--bh-redup); margin-top: 2px; }
+.bh-bar {
+  height: 4px; margin: 14px 2px 0;
+  background: rgba(255, 255, 255, .16);
+  border-radius: 4px; overflow: hidden;
+}
+.bh-bar-isi { height: 100%; background: var(--bh-aksen); border-radius: 4px; }
+.bh-waktu { display: flex; justify-content: space-between; font-size: 11px; color: var(--bh-redup); margin: 6px 2px 10px; }
+.bh-kontrol { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; clear: both; }
+.bh-btn-kecil {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: rgba(243, 242, 236, .85);
+  background: none; border: 0; border-radius: 50%;
+  cursor: pointer;
+}
+.bh-btn-kecil.on { color: var(--bh-aksen); }
+.bh-btn-kecil.suka.on { color: #F08A94; }
+.bh-putar {
+  width: 58px; height: 58px;
+  display: grid; place-items: center;
+  color: #13201A;
+  background: var(--bh-aksen);
+  border: 0; border-radius: 50%;
+  box-shadow: 0 8px 22px rgba(169, 207, 166, .35);
+  cursor: pointer;
+}
+.bh-putar .bh-ico { width: 24px; height: 24px; }
+.bh-btn-kecil:active, .bh-putar:active, .bh-cuaca:active, .bh-quote:active, .bh-alat-item:active { transform: scale(.96); }
+
+/* ── bilah alat ── */
+.bh-alat {
+  margin-top: 18px;
+  padding: 14px 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.bh-alat-item {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 10px 6px;
+  font-size: 13px;
+  color: var(--bh-teks);
+  background: none; border: 0; border-radius: 18px;
+  cursor: pointer;
+}
+.bh-alat-item:hover { background: rgba(255, 255, 255, .06); }
+.bh-alat-ikon {
+  width: 58px; height: 58px;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .09);
+  border-radius: 18px;
+  color: var(--bh-aksen);
+}
+.bh-alat-ikon .bh-ico { width: 24px; height: 24px; }
+
+@media (max-width: 380px) {
+  .bh-sapa { font-size: 36px; }
+  .bh-cuaca { width: 128px; }
+}

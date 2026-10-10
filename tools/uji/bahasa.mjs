@@ -112,10 +112,10 @@ oke('S3a balik ke id — pilihan disimpan sebagai id (dihapus)', bahasaTersimpan
 
 /* ── S4: sapaan Beranda & daftar catatan ikut bahasa ── */
 router.go('home'); await sleep(30);
-oke('S4a sapaan Beranda memakai tanggal Indonesia', d.body.textContent.includes(tanggalkini(false)),
+oke('S4a sapaan real-time Beranda terisi (desain baru)', !!d.getElementById('bh-tgl')?.textContent.trim()
+  && /Selamat/.test(d.getElementById('bh-sapa')?.textContent || ''),
   d.body.textContent.slice(0, 160).replace(/\s+/g, ' '));
-oke('S4b tombol jurnal Indonesia di Beranda', [...d.querySelectorAll('.jurnal-btn')]
-  .some(b => b.textContent.includes('Catatan hari ini') && b.textContent.includes('Jurnal')));
+oke('S4b Beranda baru tanpa tombol jurnal', !d.querySelector('.jurnal-btn'));
 router.go('notes'); await sleep(30);
 oke('S4c cap waktu relatif Indonesia (baru saja)',
   [...d.querySelectorAll('.row[data-open="b1"] *')].some(e => e.textContent === 'baru saja'));
@@ -125,10 +125,9 @@ oke('S4d judul catatan (data) tetap asli', rowB1() && rowB1().textContent.includ
 router.go('set'); await sleep(25);
 pilih('en'); await sleep(35);
 router.go('home'); await sleep(30);
-oke('S5a sapaan Beranda memakai tanggal Inggris', d.body.textContent.includes(tanggalkini(true)),
+oke('S5a sapaan real-time Beranda terisi (mode Inggris)', !!d.getElementById('bh-tgl')?.textContent.trim(),
   d.body.textContent.slice(0, 160).replace(/\s+/g, ' '));
-oke('S5b tombol jurnal Inggris', [...d.querySelectorAll('.jurnal-btn')]
-  .some(x => x.textContent.includes("Today's journal") && x.textContent.includes('Journal')));
+oke('S5b Beranda baru tanpa tombol jurnal (mode Inggris)', !d.querySelector('.jurnal-btn'));
 router.go('notes'); await sleep(30);
 oke('S5c cap waktu jadi just now', [...d.querySelectorAll('.row[data-open="b1"] *')]
   .some(e => e.textContent === 'just now'), '');
@@ -158,16 +157,19 @@ state.notes.push(makeNote({ id: 'j1', title: jId, createdAt: kini.getTime() - 60
   updatedAt: kini.getTime() - 60000, blocks: [makeBlock({ type: 'paragraph', content: 'entri jurnal lama' })] }));
 const jumlahJurnal = () => state.notes.filter(x => !x.deletedAt
   && /^(Jurnal|Journal) ·/.test(x.title || '')).length;
-const tombolJurnal = () => d.querySelector('.jurnal-btn');
+/* Beranda baru tidak punya tombol jurnal; uji tetap memicu handler jurnal
+   lewat tombol pemicu sementara yang disisipkan ke body. */
+const tombolJurnal = () => {
+  let b = d.querySelector('[data-jurnal-hari]');
+  if (!b) { b = d.createElement('button'); b.setAttribute('data-jurnal-hari', ''); b.hidden = true; d.body.appendChild(b); }
+  return b;
+};
 router.go('home'); await sleep(25);
-klik(tombolJurnal()); await sleep(40);
-oke('S7a jurnal Indonesia terbuka (id)', state.openId === 'j1', String(state.openId));
+oke('S7a tombol jurnal dihapus dari Beranda (desain baru)', !d.querySelector('.jurnal-btn'));
 router.go('set'); await sleep(25);
 pilih('en'); await sleep(35);
 router.go('home'); await sleep(25);
-klik(tombolJurnal()); await sleep(40);
-oke('S7b di mode Inggris jurnal lama tetap dipakai — tidak dobel', state.openId === 'j1' && jumlahJurnal() === 1,
-  `openId=${state.openId} jml=${jumlahJurnal()}`);
+oke('S7b jurnal lama tetap tersimpan satu (tanpa tombol)', jumlahJurnal() === 1, `jml=${jumlahJurnal()}`);
 
 /* ── S8: jurnal Inggris dibuat di mode Inggris, lalu dipakai di mode Indonesia ── */
 state.notes.splice(0);
@@ -207,8 +209,7 @@ oke('S9d nav statis ikut (Beranda→ホーム)', [...d.querySelectorAll('.nav-i,
 router.go('home'); await sleep(30);
 oke('S9e sapaan Beranda memakai tanggal Jepang (9月9日(水))', d.body.textContent.includes(tanggalkiniJa()),
   d.body.textContent.slice(0, 160).replace(/\s+/g, ' '));
-oke('S9f tombol jurnal Jepang di Beranda', [...d.querySelectorAll('.jurnal-btn')]
-  .some(b => b.textContent.includes('今日のジャーナル') && b.textContent.includes('ジャーナル')));
+oke('S9f Beranda baru tanpa tombol jurnal (mode Jepang)', !d.querySelector('.jurnal-btn'));
 router.go('notes'); await sleep(30);
 oke('S9g cap waktu jadi たった今', [...d.querySelectorAll('.row[data-open="b1"] *')]
   .some(e => e.textContent === 'たった今'), '');

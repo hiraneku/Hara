@@ -1,7 +1,8 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
 import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20261010054709';
-import { homeView, notesView } from './views/list.js?v=20261010054709';
+import { notesView } from './views/list.js?v=20261010054709';
+import { berandaView } from '../home/beranda.js?v=20261010054709';
 import { editorView } from './views/editor.js?v=20261010054709';
 import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar,
          setKueriCari } from './views/misc.js?v=20261010054709';
@@ -369,7 +370,7 @@ export const notesModule = {
 
   init() {
     registerViews(
-      { home: homeView, notes: notesView, editor: editorView, kunci: layarKunciView,
+      { home: berandaView, notes: notesView, editor: editorView, kunci: layarKunciView,
         ...miscViews, task: tugasView, rem: reminderView },   /* timpa placeholder asli */
       { home: 'Beranda', notes: 'Catatan', editor: '', kunci: 'Terkunci',
         rem: 'Reminder', task: 'Tugas', search: 'Cari', tags: 'Tag',
