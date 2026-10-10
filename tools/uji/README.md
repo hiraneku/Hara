@@ -37,6 +37,10 @@ for f in tools/uji/*.mjs; do node $f; done
 | `templat-variabel.mjs` | K16 variabel templat: bawaan `{tanggal}`/`{judul}` dll., isian lewat formulir, escape HTML, alur klik |
 | `migrasi-idb.mjs` | penyimpanan: migrasi localStorage → IndexedDB (tidak destruktif, proses sendiri) |
 | `penyimpanan-idb.mjs` | penyimpanan: simpanTahan, save() beruntun (keadaan terbaru), data rusak → kunci rusak-<ts> |
+| `renamer-lanjutan.mjs` | renamer K21–K25, K27, K29: kondisi/grup, penjelas regex, belajar dari contoh, resep, duplikat (SHA/dHash), batch |
+| `statistik.mjs` | K20: heatmap aktivitas, tugas per minggu, rentetan jurnal |
+| `riwayat-sesi.mjs` | K26: undo catatan lintas sesi (IDB), catatan terkunci tidak ditulis, log CSV |
+| `enkripsi-suara.mjs` | K17 enkripsi AES-GCM + PBKDF2, K18 cadangan frasa sandi, K15 baca keras & dikte |
 | `lib/catatan-idb.mjs` | pembantu bersama: baca/tulis record catatan di IndexedDB untuk uji |
 | `bagian-c.mjs` | C14 ganti gambar (tata letak tetap) · C15 galeri · C16 thumbnail daftar |
 | `pilih-banyak.mjs` | F25 tahan-lama di baris · bilah mini · semat/arsip/hapus sekaligus · Urungkan |

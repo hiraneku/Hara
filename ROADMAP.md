@@ -171,34 +171,34 @@
       Operator tag:/judul: tetap persis. Cadangan sinkron bila Worker tidak ada.
       Modul `notes/cari-inti.js`, `notes/cari-worker.js`.
       Uji: `cari-peringkat.mjs` (27). `tag-cari-tampil.mjs` disesuaikan (hasil kini asinkron).
-- [ ] K13. Tangkap cepat dari share sheet (Web Share Target)
-- [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari
-- [ ] K15. Baca keras (SpeechSynthesis) dan dikte suara (Web Speech API)
+- [ ] K13. Tangkap cepat dari share sheet (Web Share Target) — BELUM. Butuh intent Android (native); menunggu Capacitor.
+- [ ] K14. OCR gambar (offline) agar teks di foto bisa dicari — BELUM. OCR offline: rencana @capacitor-mlkit/text-recognition (Apache-2.0), butuh native & Capacitor.
+- [ ] K15. Baca keras (SpeechSynthesis) dan dikte suara (Web Speech API) — SEBAGIAN. `core/suara.js`: adapter Web Speech + plugin Capacitor (TTS/STT). Tes `enkripsi-suara.mjs` 24/24 (bersama K17 & K18). Tombol UI belum dipasang.
 - [x] K16. Templat dengan variabel `{tanggal}` `{hari}` `{bulan}` `{tahun}` `{judul}`
       (diisi otomatis) dan isian `{nama}` lain yang diminta lewat formulir saat
       catatan dibuat. Nilai di-escape di isi HTML; variabel yang tak diisi tetap
       apa adanya. Catatan: kurung kurawal di templat tersimpan lama juga kini
       dibaca sebagai variabel. Modul `notes/templat-var.js`.
       Uji: `templat-variabel.mjs` (23).
-- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — setelah audit PIN
-- [ ] K18. Cadangan terenkripsi (frasa sandi)
-- [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti)
-- [ ] K20. Statistik & heatmap jurnal / to-do selesai per minggu
-- [ ] K21. Belajar dari contoh (flash fill) di renamer
-- [ ] K22. Deteksi duplikat (SHA-256 + dHash gambar)
-- [ ] K23. Aturan bersyarat & grup aturan di renamer
-- [ ] K24. Regex dengan penjelasan + pustaka pola
-- [ ] K25. Ekspor/impor resep renamer (JSON, QR)
-- [ ] K26. Riwayat undo lintas sesi (IndexedDB) + ekspor log CSV
-- [ ] K27. Normalisasi Unicode & hapus diakritik di renamer
-- [ ] K28. Pindah ke subfolder (tanggal/jenis) lewat File System Access
-- [ ] K29. Web Worker untuk batch besar di renamer
-- [ ] K30. Satu indeks pencarian lintas modul
-- [ ] K31. Aksi lintas modul: catatan → Reminder/tugas sekali langkah
-- [ ] K32. Penyimpanan OPFS untuk berkas besar
-- [ ] K33. Pembaruan PWA eksplisit ("versi baru tersedia")
-- [ ] K34. Virtualisasi daftar catatan
-- [ ] K35. Aksesibilitas & navigasi keyboard penuh
+- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — setelah audit PIN — SEBAGIAN. `core/enkripsi.js`: PBKDF2-SHA256 310.000 + AES-GCM-256, uji tamper & sandi salah. Belum disambungkan ke penyimpanan catatan terkunci (perlu keputusan dari audit PIN).
+- [ ] K18. Cadangan terenkripsi (frasa sandi) — SEBAGIAN. Format `hara-cadangan-terenkripsi` + frasa ≥ 8 karakter sudah diuji. UI ekspor/impor belum.
+- [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti) — BELUM. Properti catatan (`props`) sudah ada sebagai dasar; tampilan tabel/Kanban/kalender belum dibuat.
+- [x] K20. Statistik & heatmap jurnal / to-do selesai per minggu — `notes/statistik.js` (heatmap 26 minggu, tugas per minggu, rentetan jurnal), dialog dari palette. Uji `statistik.mjs` 19/19.
+- [ ] K21. Belajar dari contoh (flash fill) di renamer — LOGIKA SELESAI. `renamer/lanjutan.js` belajarDariContoh: pola token, awalan, penggantian, huruf. Uji 41/41 di `renamer-lanjutan.mjs`. UI belum dipasang.
+- [ ] K22. Deteksi duplikat (SHA-256 + dHash gambar) — LOGIKA SELESAI. SHA-256 (WebCrypto), dHash 9×8, jarak Hamming, pengelompokan persis/mirip. Uji di `renamer-lanjutan.mjs`. UI belum dipasang.
+- [ ] K23. Aturan bersyarat & grup aturan di renamer — LOGIKA SELESAI. Kondisi `when` (all/any; name/ext/size/mtime) dan grup aturan (enabled + when). Uji di `renamer-lanjutan.mjs`. Editor UI belum dipasang.
+- [ ] K24. Regex dengan penjelasan + pustaka pola — LOGIKA SELESAI. Penjelas regex per token (bahasa Indonesia) & 7 pola pustaka. Uji di `renamer-lanjutan.mjs`. UI belum dipasang.
+- [ ] K25. Ekspor/impor resep renamer (JSON, QR) — LOGIKA SELESAI. Resep JSON round-trip & validasi. QR belum dibuat. UI impor/ekspor belum dipasang.
+- [x] K26. Riwayat undo lintas sesi (IndexedDB) + ekspor log CSV — Riwayat undo CATATAN disimpan ke IndexedDB dan dipulihkan lintas sesi (`editor/history.js`, `core/riwayat-sesi.js`); catatan terkunci tidak pernah ditulis. Log ganti nama ke CSV (perintah palette, ada BOM dan proteksi rumus). BATASAN: undo renamer tetap di memori karena objek berkas tidak bisa dipulihkan setelah reload. Uji `riwayat-sesi.mjs` 15/15.
+- [x] K27. Normalisasi Unicode & hapus diakritik di renamer — Aturan NORMALIZE (NFC, NFKC, hapus diakritik) di mesin dan editor. Uji `renamer-lanjutan.mjs`.
+- [ ] K28. Pindah ke subfolder (tanggal/jenis) lewat File System Access — BELUM. Butuh filesystem native (Capacitor Filesystem) untuk pindah ke subfolder; File System Access tidak tersedia di WebView.
+- [x] K29. Web Worker untuk batch besar di renamer — `renamer/pekerja.js` + `pekerja-worker.js`: batch ≥ 500 berkas dikirim ke Web Worker, dengan jatuh balik ke sinkron. Worker belum diuji di browser sungguhan.
+- [ ] K30. Satu indeks pencarian lintas modul — BELUM. Indeks lintas modul belum dibuat.
+- [ ] K31. Aksi lintas modul: catatan → Reminder/tugas sekali langkah — BELUM.
+- [ ] K32. Penyimpanan OPFS untuk berkas besar — BELUM. OPFS bukan pilihan untuk WebView Android; rencana: Capacitor Filesystem.
+- [ ] K33. Pembaruan PWA eksplisit ("versi baru tersedia") — TIDAK BERLAKU. Target produk APK, bukan PWA.
+- [ ] K34. Virtualisasi daftar catatan — BELUM.
+- [ ] K35. Aksesibilitas & navigasi keyboard penuh — BELUM. Command palette (K1) sudah ada, tetapi navigasi keyboard penuh belum.
 
 ### Ditahan — menunggu keputusan pengguna
 - D18 riwayat versi · E22 sync (CRDT) · E23 tabel · E24 widget (butir lama)

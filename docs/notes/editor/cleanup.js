@@ -1,20 +1,20 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20261010050549';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261010050549';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261010050549';
-import { MARKSEL, markActive, pending } from './marks.js?v=20261010050549';
-import { state, save, simpanTahan } from '../../core/store.js?v=20261010050549';
-import { findNote } from '../model.js?v=20261010050549';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261010050549';
-import { sinkronTag } from '../tags.js?v=20261010050549';
-import { tandaiTautan } from '../wikilink.js?v=20261010050549';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261010050549';
-import { cur } from '../../core/router.js?v=20261010050549';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261010050549';
-import { GROUPS } from '../bar/config.js?v=20261010050549';
-import { warnaSekarang, warnaPending } from './warna.js?v=20261010050549';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20261010050549';
-import { t as tr, LOKALE } from '../../core/i18n.js?v=20261010050549';
+import { docEl, sel, curBlock } from './caret.js?v=20261010052725';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261010052725';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261010052725';
+import { MARKSEL, markActive, pending } from './marks.js?v=20261010052725';
+import { state, save, simpanTahan } from '../../core/store.js?v=20261010052725';
+import { findNote } from '../model.js?v=20261010052725';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261010052725';
+import { sinkronTag } from '../tags.js?v=20261010052725';
+import { tandaiTautan } from '../wikilink.js?v=20261010052725';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261010052725';
+import { cur } from '../../core/router.js?v=20261010052725';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261010052725';
+import { GROUPS } from '../bar/config.js?v=20261010052725';
+import { warnaSekarang, warnaPending } from './warna.js?v=20261010052725';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20261010052725';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20261010052725';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

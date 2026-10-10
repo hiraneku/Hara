@@ -14,10 +14,10 @@
    "menunggu" didahulukan. */
 
 import { normalizeWarna, hslKeRgb, warnaSekarang, warnaPending, warnaLekat }
-  from '../editor/warna.js?v=20261010050549';
+  from '../editor/warna.js?v=20261010052725';
 import { sorotSekarang, sorotPending, sorotLekat }
-  from '../editor/sorotan.js?v=20261010050549';
-import { t as tr } from '../../core/i18n.js?v=20261010050549';
+  from '../editor/sorotan.js?v=20261010052725';
+import { t as tr } from '../../core/i18n.js?v=20261010052725';
 
 /* Warna umum — HITAM → PUTIH dulu (rambatan abu), baru warna-warna umum.
    Dipakai sebagai satu strip geser. */

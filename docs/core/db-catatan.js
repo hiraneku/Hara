@@ -64,6 +64,12 @@ async function tulisIdb(str, kunci = KUNCI_REC) {
   });
 }
 
+/* Akses kv umum untuk riwayat sesi (K26). Nilai disimpan lewat structured clone
+   (objek biasa, bukan JSON). Tanpa IndexedDB, baca mengembalikan null dan tulis
+   gagal diam-diam — riwayat tetap ada di memori selama sesi. */
+export const bacaKv = kunci => bacaIdb(kunci).catch(() => null);
+export const tulisKv = (kunci, nilai) => tulisIdb(nilai, kunci).then(() => true, () => false);
+
 function lsBaca() {
   try { return localStorage.getItem(KEY_LS); } catch (e) { return null; }
 }

@@ -732,4 +732,6 @@ export const JA = {
   'entri jurnal (26 minggu)': 'ジャーナルの記録（26週）',
   'Aktivitas harian': '日々のアクティビティ',
   'Tugas selesai per minggu (12 minggu)': '週ごとの完了タスク（12週）',
+  'Unduh log ganti nama (CSV)': '名前変更ログをダウンロード（CSV）',
+  'Belum ada log ganti nama': '名前変更のログはまだありません',
 };

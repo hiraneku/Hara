@@ -7,13 +7,13 @@
  * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261010050549';
-import { toast } from '../core/toast.js?v=20261010050549';
-import { t as tr } from '../core/i18n.js?v=20261010050549';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20261010050549';
-import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261010050549';
-import { state as haraStoreState } from '../core/store.js?v=20261010050549';
-import { esc } from '../core/dom.js?v=20261010050549';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261010052725';
+import { toast } from '../core/toast.js?v=20261010052725';
+import { t as tr } from '../core/i18n.js?v=20261010052725';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20261010052725';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261010052725';
+import { state as haraStoreState } from '../core/store.js?v=20261010052725';
+import { esc } from '../core/dom.js?v=20261010052725';
 import {
   createRenamerItem,
   createRule,
@@ -24,19 +24,40 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20261010050549';
-import { runPipeline, sortFiles } from './engine.js?v=20261010050549';
+} from './model.js?v=20261010052725';
+import { runPipeline, sortFiles } from './engine.js?v=20261010052725';
 import {
   renamerView,
   filterAndSearchItems,
   renderFilterTabsContent,
   renderTableContainerContent,
   renderFooterBar,
-} from './view.js?v=20261010050549';
-import { createZipBlob } from './zip.js?v=20261010050549';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261010050549';
-import { parseExif } from './exif.js?v=20261010050549';
-import { parseId3 } from './id3.js?v=20261010050549';
+} from './view.js?v=20261010052725';
+import { createZipBlob } from './zip.js?v=20261010052725';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261010052725';
+import { parseExif } from './exif.js?v=20261010052725';
+import { parseId3 } from './id3.js?v=20261010052725';
+import { simpanKvSoon, muatKv } from '../core/riwayat-sesi.js?v=20261010052725';
+import { buatCsvLog, MAKS_LOG } from './log.js?v=20261010052725';
+
+/* ── K26 · log ganti nama lintas sesi (IndexedDB) ──
+   Riwayat UNDO renamer tetap di memori: undo memulihkan objek berkas yang
+   hanya hidup selama sesi (ID berkas dibuat ulang saat dijatuhkan), jadi
+   tidak bermakna setelah reload. Log, yang hanya teks, boleh disimpan. */
+const KUNCI_LOG = 'log:renamer';
+function simpanLogSoon() {
+  simpanKvSoon(KUNCI_LOG, () => renamerState.log.slice(-MAKS_LOG));
+}
+
+/** Unduh log ganti nama sebagai CSV (dipanggil dari palette). */
+export function unduhLogRenamerCsv() {
+  if (renamerState.log.length === 0) {
+    toast(tr('Belum ada log ganti nama'));
+    return;
+  }
+  const blob = new Blob([buatCsvLog(renamerState.log)], { type: 'text/csv;charset=utf-8' });
+  unduh(blob, 'log-ganti-nama.csv');
+}
 
 const CUSTOM_PRESETS_KEY = 'hara.renamer.custom_presets';
 
@@ -69,6 +90,7 @@ export const renamerState = {
   collisionStrategy: 'warn',
   exportZipName: 'Arsip_Terganti_Nama.zip',
   undoStack: [],
+  log: [],
   directoryHandle: null,
 };
 
@@ -533,6 +555,17 @@ async function terapkanGantiNama() {
       timestamp: Date.now(),
     });
 
+    // K26: catat setiap berkas yang namanya berubah untuk log CSV
+    const waktuLog = new Date().toISOString();
+    const jumlahAturan = renamerState.rules.filter(r => r.enabled).length;
+    for (const it of pipelineRes.items) {
+      if (it.newName !== it.originalName) {
+        renamerState.log.push({ waktu: waktuLog, dari: it.originalName, ke: it.newName, aturan: jumlahAturan });
+      }
+    }
+    renamerState.log = renamerState.log.slice(-MAKS_LOG);
+    simpanLogSoon();
+
     // Update in-memory state nama berkas
     pipelineRes.items.forEach(it => {
       const target = renamerState.files.find(f => f.id === it.id);
@@ -763,6 +796,9 @@ export const renamerModule = {
   label: 'Bulk Renamer',
   icon: 'i-edit',
   init() {
+    muatKv(KUNCI_LOG).then(v => {
+      if (Array.isArray(v) && renamerState.log.length === 0) renamerState.log = v.slice(-MAKS_LOG);
+    });
     registerViews({
       renamer: () => {
         const pipelineRes = runPipeline(renamerState.files, renamerState.rules, {

@@ -735,4 +735,6 @@ export const EN = {
   'entri jurnal (26 minggu)': 'journal entries (26 weeks)',
   'Aktivitas harian': 'Daily activity',
   'Tugas selesai per minggu (12 minggu)': 'Tasks done per week (12 weeks)',
+  'Unduh log ganti nama (CSV)': 'Download rename log (CSV)',
+  'Belum ada log ganti nama': 'No rename log yet',
 };
