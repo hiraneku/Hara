@@ -1,0 +1,19 @@
+{
+  "name": "hara",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hara — aplikasi catatan & alat renamer. Dibungkus Capacitor untuk APK Android.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "cap:sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "fake-indexeddb": "6.2.5",
+    "jsdom": "30.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

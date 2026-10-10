@@ -1,0 +1,12 @@
+{
+  "appId": "id.hara.app",
+  "appName": "Hara",
+  "webDir": "docs",
+  "server": {
+    "url": "https://hiraneku.github.io/Hara/",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

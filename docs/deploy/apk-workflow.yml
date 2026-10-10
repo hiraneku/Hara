@@ -1,0 +1,95 @@
+name: Build APK Hara
+
+# APK dibangun setiap ada perubahan di branch ini. Isi web (docs/) tidak ikut
+# dibundel sebagai sumber utama: APK memuat https://hiraneku.github.io/Hara/,
+# jadi perubahan di docs/ langsung terlihat di APK saat dibuka lagi, tanpa
+# unduh dan pasang ulang. APK hanya perlu dibangun ulang bila kode native
+# (android/, plugin Capacitor, izin) berubah.
+# SALIN berkas ini ke .github/workflows/apk.yml (lihat docs/deploy/APK.md).
+on:
+  push:
+    branches: [arena/c3f71ef0-hara, main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Pasang dependency
+        run: npm ci
+
+      - name: Salin docs/ ke proyek Android
+        run: npx cap sync android
+
+      - name: Siapkan keystore tetap
+        id: ks
+        env:
+          KS_B64: ${{ secrets.HARA_KS_B64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/hara.p12"
+            echo "HARA_KS_PATH=$RUNNER_TEMP/hara.p12" >> "$GITHUB_ENV"
+            echo "Signing: keystore tetap (release)"
+          else
+            echo "::warning::Secret HARA_KS_B64 belum diisi. APK ditandatangani debug dan TIDAK bisa diperbarui di atas instalasi sebelumnya."
+          fi
+
+      - name: Set versi
+        run: |
+          echo "HARA_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "HARA_VERSION_NAME=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "HARA_KS_PASS=${{ secrets.HARA_KS_PASS }}" >> "$GITHUB_ENV"
+          echo "HARA_KEY_PASS=${{ secrets.HARA_KEY_PASS }}" >> "$GITHUB_ENV"
+          echo "HARA_KEY_ALIAS=${{ secrets.HARA_KEY_ALIAS }}" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          if [ -n "$HARA_KS_PATH" ]; then
+            ./gradlew --no-daemon assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Hara.apk"
+          else
+            ./gradlew --no-daemon assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/Hara.apk"
+          fi
+
+      - name: Unggah artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hara-apk-${{ github.run_number }}
+          path: ${{ runner.temp }}/Hara.apk
+
+      - name: Perbarui rilis "apk-latest"
+        if: github.ref == 'refs/heads/arena/c3f71ef0-hara'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=apk-latest
+          NOTE="APK dibangun dari commit ${GITHUB_SHA::7} (run #${{ github.run_number }}). Pembaruan isi aplikasi terjadi otomatis di dalam APK."
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --title "Hara APK (terbaru)" --notes "$NOTE"
+          gh release edit "$TAG" --notes "$NOTE" --prerelease
+          cp "$RUNNER_TEMP/Hara.apk" "$RUNNER_TEMP/Hara-latest.apk"
+          gh release upload "$TAG" "$RUNNER_TEMP/Hara-latest.apk" --clobber
