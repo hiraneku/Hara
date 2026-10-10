@@ -100,29 +100,49 @@ function tampilkanDialog(versi, id, up) {
   };
 }
 
+/* Mengembalikan status singkat. Dipakai juga oleh tombol "Cek sekarang". */
 async function cekDanUnduh(up) {
+  const lokal = await versiLokal();
+  const remote = await ambilJson(URL_VERSI);
+  if (!remote || !remote.versi || !remote.url) throw new Error('Data pembaruan tidak terbaca');
+  if (remote.versi === lokal) return { status: 'terbaru', versi: lokal };
+  // Sudah pernah dipasang tapi dikembalikan oleh plugin (gagal) — jangan ulangi terus.
+  if (localStorage.getItem(KUNCI_DICOBA) === remote.versi) return { status: 'gagal-sebelumnya', versi: remote.versi };
+
+  // Sudah diunduh pada pembukaan sebelumnya: langsung tawarkan.
+  const siap = bacaSiap();
+  if (siap && siap.versi === remote.versi && siap.id) {
+    tampilkanDialog(remote.versi, siap.id, up);
+    return { status: 'siap', versi: remote.versi };
+  }
+
+  const info = await up.download({ version: remote.versi, url: remote.url });
+  localStorage.setItem(KUNCI_SIAP, JSON.stringify({ versi: remote.versi, id: info.id }));
+  tampilkanDialog(remote.versi, info.id, up);
+  return { status: 'diunduh', versi: remote.versi };
+}
+
+/* Tombol "Cek sekarang" di Pengaturan. */
+async function cekManual() {
+  const up = plugin('CapacitorUpdater');
+  if (!up) { toast('Pembaruan hanya ada di aplikasi Android'); return; }
   try {
-    const lokal = await versiLokal();
-    const remote = await ambilJson(URL_VERSI);
-    if (!remote || !remote.versi || !remote.url) return;
-    if (remote.versi === lokal) return;
-    // Sudah pernah dipasang tapi dikembalikan oleh plugin (gagal) — jangan ulangi terus.
-    if (localStorage.getItem(KUNCI_DICOBA) === remote.versi) return;
-
-    // Sudah diunduh pada pembukaan sebelumnya: langsung tawarkan.
-    const siap = bacaSiap();
-    if (siap && siap.versi === remote.versi && siap.id) {
-      tampilkanDialog(remote.versi, siap.id, up);
-      return;
-    }
-
-    const info = await up.download({ version: remote.versi, url: remote.url });
-    localStorage.setItem(KUNCI_SIAP, JSON.stringify({ versi: remote.versi, id: info.id }));
-    tampilkanDialog(remote.versi, info.id, up);
-  } catch {
-    // Offline atau gagal unduh: dicoba lagi saat aplikasi dibuka berikutnya.
+    const hasil = await cekDanUnduh(up);
+    const pesan = {
+      terbaru: 'Hara sudah versi terbaru (' + hasil.versi + ')',
+      siap: 'Pembaruan ' + hasil.versi + ' siap dipasang',
+      diunduh: 'Pembaruan ' + hasil.versi + ' sudah diunduh',
+      'gagal-sebelumnya': 'Pembaruan ' + hasil.versi + ' sebelumnya gagal dipasang',
+    }[hasil.status];
+    toast(pesan);
+  } catch (e) {
+    toast('Cek pembaruan gagal: ' + (e && e.message ? e.message : 'jaringan bermasalah'));
   }
 }
+
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('[data-cek-pembaruan]')) cekManual();
+});
 
 export function mulaiPembaruan() {
   const up = plugin('CapacitorUpdater');
@@ -140,5 +160,5 @@ export function mulaiPembaruan() {
     if (terakhir && terakhir !== v) toast('Hara diperbarui ke versi ' + v);
   });
 
-  setTimeout(() => cekDanUnduh(up), 3000);
+  setTimeout(() => { cekDanUnduh(up).catch(() => {}); }, 3000);
 }

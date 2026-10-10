@@ -24,21 +24,22 @@ body.layar-beranda .page { padding: 0; max-width: none; }
 
 /* Area atas saja yang memakai wallpaper. Tepinya dipudarkan ke gelap
    supaya tidak ada garis potong di bawah. */
-/* Satu widget besar: wallpaper menempel di dalam kotak ini dan tidak keluar ke bawah. */
+/* Area atas: wallpaper penuh lebar, memudar ke warna latar di bagian bawah. */
 .bh-hero {
   position: relative;
   isolation: isolate;
-  margin: 0 3.4vw;
-  padding: calc(env(safe-area-inset-top) + 4.9vw) 4.5vw 4.6vw;
-  border: 1px solid var(--bh-garis);
-  border-top: 0;
-  border-radius: 0 0 7vw 7vw;
+  padding: calc(env(safe-area-inset-top) + 2vw) 4.9vw 6vw;
   overflow: hidden;
+}
+.bh-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background:
-    linear-gradient(180deg, rgba(10, 10, 12, .2) 0%, rgba(10, 10, 12, .1) 55%, rgba(10, 10, 12, .45) 100%),
+    linear-gradient(180deg, rgba(10, 10, 12, .2) 0%, rgba(10, 10, 12, .05) 55%, rgba(10, 10, 12, .35) 80%, var(--bg) 100%),
     url('../home/aset/wallpaper-hero.jpg') -40vw -31vw / 140vw auto no-repeat;
-  background-color: #14130f;
-  box-shadow: 0 2vw 6vw rgba(0, 0, 0, .3);
+  background-color: var(--bg);
 }
 
 .bh-ico { width: 4.6vw; height: 4.6vw; flex: none; }

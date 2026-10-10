@@ -245,6 +245,12 @@ set:()=>{ const akPilih = akSekarang() || '';
       <div class="row-s">${tr('Muncul di layar Beranda')}</div></div>
       <input type="text" data-nama maxlength="30" value="${namaSekarang().replace(/"/g, '&quot;')}" placeholder="${tr('Nama kamu')}" style="max-width:10rem;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--sunken);color:var(--text);font:inherit"></div>
   </div>
+  <div class="sec"><h2>${tr('Aplikasi')}</h2></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Pembaruan aplikasi')}</div>
+      <div class="row-s">${tr('Cek versi terbaru dari GitHub')}</div></div>
+      <button type="button" class="btn btn-sec" data-cek-pembaruan>${tr('Cek sekarang')}</button></div>
+  </div>
   <div class="sec"><h2>${tr('Tampilan')}</h2></div>
   <div class="card" style="margin-bottom:24px">
     <div class="row"><div class="row-b"><div class="row-t">${tr('Tema')}</div><div class="row-s">${tr('Sekarang')} <span id="tema-st">…</span></div></div>
