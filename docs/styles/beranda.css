@@ -12,17 +12,20 @@ body.layar-beranda .head { display: none; }
   --bh-redup: rgba(243, 242, 236, .72);
   --bh-garis: rgba(255, 255, 255, .14);
   --bh-aksen: #A9CFA6;
-  position: relative;
-  isolation: isolate;
-  min-height: 100vh;
   max-width: 560px;
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + 44px) 18px 170px;
+  padding: 0 0 170px;
   color: var(--bh-teks);
+}
+/* Area atas saja (sapaan, cuaca, musik, bilah alat) yang memakai wallpaper.
+   Di bawahnya kosong. */
+.bh-hero {
+  position: relative;
+  isolation: isolate;
+  padding: calc(env(safe-area-inset-top) + 44px) 18px 26px;
   overflow: hidden;
 }
-/* Wallpaper + lapisan gelap tipis, memenuhi seluruh layar beranda. */
-.beranda::before {
+.bh-hero::before {
   content: '';
   position: absolute;
   inset: 0;

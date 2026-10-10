@@ -104,7 +104,7 @@ export function berandaView() {
   const c = isiCuaca();
   const d = new Date();
   const putarIkon = musik.putar ? 'pause' : 'play';
-  return `<div class="beranda">
+  return `<div class="beranda"><div class="bh-hero">
   <header class="bh-atas">
     <div class="bh-kiri">
       <div class="bh-tgl">${ikon('spark')}<span id="bh-tgl">${tanggal(d)}</span></div>
@@ -152,7 +152,7 @@ export function berandaView() {
     <button type="button" class="bh-alat-item" data-bh="belum">
       <span class="bh-alat-ikon">${ikon('grid')}</span><span>${tr('Lainnya')}</span></button>
   </nav>
-</div>`;
+</div></div>`;
 }
 
 /* ── pembaruan elemen tanpa render ulang ── */
