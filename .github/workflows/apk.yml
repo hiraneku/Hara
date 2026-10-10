@@ -1,11 +1,10 @@
+# SALIN berkas ini ke .github/workflows/apk.yml (lihat docs/deploy/APK.md).
 name: Build APK Hara
 
-# APK dibangun setiap ada perubahan di branch ini. Isi web (docs/) tidak ikut
-# dibundel sebagai sumber utama: APK memuat https://hiraneku.github.io/Hara/,
-# jadi perubahan di docs/ langsung terlihat di APK saat dibuka lagi, tanpa
-# unduh dan pasang ulang. APK hanya perlu dibangun ulang bila kode native
-# (android/, plugin Capacitor, izin) berubah.
-# SALIN berkas ini ke .github/workflows/apk.yml (lihat docs/deploy/APK.md).
+# APK dibangun setiap ada perubahan di branch ini. APK memuat
+# https://hiraneku.github.io/Hara/, jadi perubahan di docs/ langsung terlihat di
+# APK saat dibuka ulang, tanpa unduh dan pasang ulang. APK perlu dibangun ulang
+# hanya bila kode native (android/, plugin Capacitor, izin) berubah.
 on:
   push:
     branches: [arena/c3f71ef0-hara, main]
@@ -43,26 +42,22 @@ jobs:
       - name: Salin docs/ ke proyek Android
         run: npx cap sync android
 
-      - name: Siapkan keystore tetap
-        id: ks
+      - name: Buat keystore tetap dari HARA_SEED
         env:
-          KS_B64: ${{ secrets.HARA_KS_B64 }}
+          HARA_SEED: ${{ secrets.HARA_SEED }}
         run: |
-          if [ -n "$KS_B64" ]; then
-            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/hara.p12"
-            echo "HARA_KS_PATH=$RUNNER_TEMP/hara.p12" >> "$GITHUB_ENV"
-            echo "Signing: keystore tetap (release)"
-          else
-            echo "::warning::Secret HARA_KS_B64 belum diisi. APK ditandatangani debug dan TIDAK bisa diperbarui di atas instalasi sebelumnya."
+          if [ -z "$HARA_SEED" ]; then
+            echo "::warning::Secret HARA_SEED belum diisi. APK ditandatangani debug dan TIDAK bisa diperbarui di atas instalasi sebelumnya."
+            exit 0
           fi
+          mkdir -p "$RUNNER_TEMP/forge"
+          (cd "$RUNNER_TEMP/forge" && npm init -y >/dev/null && npm install --no-audit --no-fund node-forge@1.3.1 >/dev/null)
+          FORGE_DIR="$RUNNER_TEMP/forge" node android/scripts/buat-kunci.cjs "$RUNNER_TEMP/hara.p12"
 
       - name: Set versi
         run: |
           echo "HARA_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
           echo "HARA_VERSION_NAME=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
-          echo "HARA_KS_PASS=${{ secrets.HARA_KS_PASS }}" >> "$GITHUB_ENV"
-          echo "HARA_KEY_PASS=${{ secrets.HARA_KEY_PASS }}" >> "$GITHUB_ENV"
-          echo "HARA_KEY_ALIAS=${{ secrets.HARA_KEY_ALIAS }}" >> "$GITHUB_ENV"
 
       - name: Build APK
         working-directory: android
