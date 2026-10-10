@@ -2,6 +2,7 @@
 import { load, state } from './core/store.js?v=20261010054709';
 import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261010054709';
 import { toast } from './core/toast.js?v=20261010054709';
+import { mulaiPembaruan } from './core/pembaruan.js?v=20261010054709';
 import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261010054709';
 import { initPalette, daftarkanSumber } from './core/palette.js?v=20261010054709';
 import { bukaStatistik } from './notes/statistik-ui.js?v=20261010054709';
@@ -176,5 +177,8 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
 
 /* ── tema terang / gelap — tersimpan; awal mengikuti sistem ── */
 document.getElementById('theme').onclick = () => { toggleTema(); };
+
+/* ── pembaruan isi di dalam APK (hanya aktif di APK) ── */
+mulaiPembaruan();
 
 go('home');

@@ -9,6 +9,16 @@ mkdir -p "$OUT"
 LOG="$OUT/build-log.txt"
 : > "$LOG"
 
+RILIS_URL="https://github.com/hiraneku/Hara/releases/download/web-latest"
+
+echo "== Versi isi ==" | tee -a "$LOG"
+VERSI="$(echo "${GITHUB_SHA:-local}" | cut -c1-7)-${GITHUB_RUN_NUMBER:-0}"
+printf '{"versi":"%s","dibuat":"%s","url":"%s/hara-web.zip"}\n' \
+  "$VERSI" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$RILIS_URL" > "$ROOT/docs/version.json"
+echo "versi: $VERSI" | tee -a "$LOG"
+# Salin ulang docs/ (termasuk version.json) ke proyek Android.
+npx cap sync android 2>&1 | tee -a "$LOG"
+
 echo "== Keystore ==" | tee -a "$LOG"
 if [ -n "${HARA_SEED:-}" ]; then
   FORGE="${RUNNER_TEMP:-/tmp}/forge"
@@ -49,13 +59,35 @@ fi
 cp "$APK" "$OUT/Hara.apk"
 echo "APK: $OUT/Hara.apk" | tee -a "$LOG"
 
-# Rilis "apk-latest" hanya untuk branch sesi.
+# Paket isi web untuk pembaruan di dalam APK (hara-web.zip, index.html di akar).
+python3 - "$ROOT/docs" "$OUT/hara-web.zip" <<'PY'
+import os, sys, zipfile
+src, dst = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
+    for d, _, fs in os.walk(src):
+        for f in fs:
+            p = os.path.join(d, f)
+            z.write(p, os.path.relpath(p, src))
+PY
+cp "$ROOT/docs/version.json" "$OUT/version.json"
+echo "web bundle: $(du -h "$OUT/hara-web.zip" | cut -f1)" | tee -a "$LOG"
+
+# Rilis hanya untuk branch sesi.
 if [ "${GITHUB_REF:-}" = "refs/heads/arena/c3f71ef0-hara" ] && [ -n "${GH_TOKEN:-}" ]; then
+  NOTE="Dibangun dari commit ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}). Dipakai APK untuk pembaruan isi di dalam aplikasi."
+
   TAG=apk-latest
-  NOTE="APK dibangun dari commit ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}). Pembaruan isi aplikasi terjadi otomatis di dalam APK."
+  APK_NOTE="APK dibangun dari commit ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}). Pembaruan isi aplikasi terjadi otomatis di dalam APK."
   cp "$OUT/Hara.apk" "$OUT/Hara-latest.apk"
-  gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --title "Hara APK (terbaru)" --notes "$NOTE"
-  gh release edit "$TAG" --notes "$NOTE" --prerelease
+  gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --title "Hara APK (terbaru)" --notes "$APK_NOTE"
+  gh release edit "$TAG" --notes "$APK_NOTE" --prerelease
   gh release upload "$TAG" "$OUT/Hara-latest.apk" --clobber
+
+  # Isi web: zip dulu, baru version.json (supaya versi baru tidak muncul sebelum zip-nya ada).
+  TAG=web-latest
+  gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --title "Isi web Hara (pembaruan APK)" --notes "$NOTE"
+  gh release edit "$TAG" --notes "$NOTE" --prerelease
+  gh release upload "$TAG" "$OUT/hara-web.zip" --clobber
+  gh release upload "$TAG" "$OUT/version.json" --clobber
 fi
 echo "Selesai." | tee -a "$LOG"

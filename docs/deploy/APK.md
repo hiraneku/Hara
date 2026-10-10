@@ -3,29 +3,21 @@
 Hara dibungkus dengan **Capacitor 8** dan dibangun lewat **GitHub Actions**
 (templat ada di `docs/deploy/apk-workflow.yml`).
 
-## Cara kerja pembaruan
+## Cara kerja (mode bundel + pembaruan OTA)
 
-APK **memuat** `https://hiraneku.github.io/Hara/` (lihat `capacitor.config.json`
-→ `server.url`). Pages sudah aktif dari branch `arena/c3f71ef0-hara` folder
-`/docs`, jadi setiap push ke branch itu langsung terlihat di dalam APK saat
-aplikasi dibuka ulang. Tidak perlu unduh dan pasang ulang APK untuk pembaruan
-isi aplikasi.
+- Isi aplikasi (`docs/`) **dibundel di dalam APK** dan bisa dipakai offline.
+- Plugin `@capgo/capacitor-updater` (MPL-2.0, gratis, mode "No Cloud") mengecek
+  `version.json` di rilis GitHub **`web-latest`**. Jika versinya beda, zip
+  `hara-web.zip` diunduh di latar belakang dan muncul tombol **Pasang sekarang**.
+- Pembaruan isi **tidak butuh pasang ulang APK**. APK baru hanya perlu dipasang
+  saat kode native berubah (`android/`, plugin, izin, ikon).
+- Pembaruan yang gagal dibuka dikembalikan otomatis oleh plugin.
+- Statistik Capgo dimatikan (`statsUrl: ""`). Tidak ada data yang dikirim ke Capgo.
 
-APK perlu dibangun ulang hanya bila kode native berubah (`android/`, plugin
-Capacitor, izin, ikon). Workflow sudah membangun setiap push, dan hasilnya
-ada di rilis **`apk-latest`** (pre-release) dan artifact run.
-
-Syarat agar pembaruan bisa dipasang di atas APK lama: tanda tangan harus sama
-di setiap build. Itu sebabnya dipakai keystore tetap dari secret GitHub.
-
-## Memasang workflow (satu kali)
-
-Token sandbox tidak punya izin `workflows`, jadi berkas workflow tidak bisa
-di-push langsung. Pasang lewat web GitHub:
-
-1. Buka repo → **Add file → Create new file**.
-2. Nama: `.github/workflows/apk.yml`. Isi: salin dari `docs/deploy/apk-workflow.yml`.
-3. Commit ke branch `arena/c3f71ef0-hara`.
+Origin WebView diset ke `hiraneku.github.io` (`server.hostname`), sama dengan
+Pages, supaya catatan di penyimpanan lokal (localStorage/IndexedDB) tetap terbaca.
+Ini belum diverifikasi di perangkat. **Sebelum pasang APK pertama kali ini,
+ekspor cadangan JSON dulu** (Pengaturan → Data → Ekspor, termasuk gambar) sebagai pengaman.
 
 ## Secret yang dibutuhkan
 
@@ -56,7 +48,7 @@ cd android && ./gradlew assembleDebug   # butuh JDK 21 dan Android SDK
 ## Catatan platform
 
 - Font: Android tidak punya Arial/Georgia/Verdana. Deteksi font sudah ada.
-- Font Google dimuat dari internet, jadi pembukaan pertama butuh koneksi.
+- Font Google dimuat dari internet. Tanpa koneksi, font sistem dipakai.
 - `localStorage` bisa dibersihkan sistem. Penyimpanan catatan dipindahkan ke IndexedDB.
 - Fitur yang hanya ada di browser desktop (File System Access, Web Share Target,
   pembaruan service worker) tidak dipakai.

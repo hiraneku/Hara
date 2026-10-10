@@ -3,8 +3,15 @@
   "appName": "Hara",
   "webDir": "docs",
   "server": {
-    "url": "https://hiraneku.github.io/Hara/",
+    "hostname": "hiraneku.github.io",
+    "androidScheme": "https",
     "cleartext": false
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "statsUrl": ""
+    }
   },
   "android": {
     "allowMixedContent": false
