@@ -12,7 +12,7 @@
    yang disimpan ke blok adalah `meta.ulangKe` (tenggat berulang yang sudah
    bergeser setelah dicentang), dan itu ditulis lewat atribut data-ulang. */
 
-import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261010020553';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261010022204';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 /* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */
@@ -197,7 +197,7 @@ export const tenggatTodo = n => {
     const t = tenggatBlok(b);
     if (!t) return;
     hasil.push({ bid: b.id, blok: b, waktu: t.waktu, teks: t.teks, jam: t.jam,
-      prioritas: t.prioritas, berulang: t.berulang, sisa: t.sisa });
+      prioritas: t.prioritas, berulang: t.berulang, aturan: t.aturan, sisa: t.sisa });
   });
   return hasil;
 };

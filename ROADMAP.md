@@ -127,10 +127,21 @@
       berbasis hari, bukan jam, dan notifikasi terjadwal belum dibuat.
 - Uji: `renamer-k3.mjs` (19) · `tunda-tugas.mjs` (15) · `palette.mjs` (18).
 
+### K · Tahap 3 (SEBAGIAN — K7, K8, K9 selesai)
+- [x] K7. Matriks prioritas di layar Tugas: 2×2 dari "mendesak" (tenggat hari
+      ini/besok/lewat) × "penting" (prioritas !! atau !!!). Kuadran: Kerjakan
+      sekarang · Jadwalkan · Selesaikan cepat · Nanti. Murni (`notes/kalender.js`).
+- [x] K8. Kalender terbuka .ics (RFC 5545): ekspor semua to-do bertenggat
+      (seharian / 1 jam, RRULE untuk berulang, PRIORITY, UID stabil, lipatan 75
+      karakter) dan impor → catatan baru berisi to-do bertanggal. Impor tidak
+      menerjemahkan aturan berulang (hanya kejadian pertama). Modul `notes/ics.js`.
+- [x] K9. Kalender bulanan di layar Tugas: sel bertitik jumlah tenggat, pilih
+      hari untuk melihat daftarnya, navigasi bulan, dan "Hari ini". Berulang ikut
+      muncul di hari yang sesuai aturan.
+- Uji: `matriks-kalender-ics.mjs` (45).
+- Belum: K10 transclusion blok, K11 sebutan tanpa tautan + graf lokal.
+
 ### K · Tahap berikutnya (BELUM)
-- [ ] K7. Matriks prioritas (mendesak × penting)
-- [ ] K8. Ekspor/impor ICS (tenggat ke kalender)
-- [ ] K9. Tampilan kalender di layar Tugas
 - [ ] K10. Transclusion blok `![[catatan#^id]]`
 - [ ] K11. Sebutan tanpa tautan (unlinked mentions) + graf lokal + catatan yatim
 - [ ] K12. Pencarian fuzzy + peringkat relevansi (indeks di Web Worker)
