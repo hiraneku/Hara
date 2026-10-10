@@ -266,8 +266,13 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   .bnav button.on{color:var(--accent)}
   .bnav .ico{width:20px;height:20px}
   .bnav.hide{display:none}
-  .fab{bottom:calc(70px + env(safe-area-inset-bottom));right:16px;width:48px;height:48px}
-  .fab.hide{display:none}
+  .fab{display:none}
+  .bnav-tambah{flex:1;justify-content:flex-start;padding-top:0;overflow:visible}
+  .bnav-tambah .bnav-bulat{width:56px;height:56px;margin-top:-18px;border-radius:50%;display:grid;place-items:center;
+    background:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--bg),0 8px 18px rgba(0,0,0,.28)}
+  [data-theme=dark] .bnav-tambah .bnav-bulat{color:#131711}
+  .bnav-tambah .ico{width:24px;height:24px;stroke-width:2.2}
+  .bnav-tambah:active .bnav-bulat{transform:scale(.94)}
   /* Pesan singkat naik ke atas bar bawah & FAB — sebelumnya di
      bottom:24px ia menimpa separuh atas bar (z-nya lebih tinggi),
      membuat ketukan pada bagian atas tombol bar tidak kena. */

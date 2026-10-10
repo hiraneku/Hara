@@ -47,7 +47,7 @@ export function go(v) {
   if (hamojiBtn) hamojiBtn.style.display = isEd ? 'grid' : 'none';
   document.getElementById('mech').classList.toggle('on', isEd);
   document.getElementById('bnav').classList.toggle('hide', pakaiEd);
-  document.getElementById('fab').classList.toggle('hide', pakaiEd);
+  for (const id of ['fab', 'fab-bnav']) document.getElementById(id)?.classList.toggle('hide', pakaiEd);
   document.querySelectorAll('.nav-i,.bnav button')
     .forEach(b => b.classList.toggle('on', b.dataset.go === v));
 

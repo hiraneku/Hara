@@ -170,7 +170,7 @@ document.getElementById('back').onclick = () => {
   go('notes');
 };
 document.getElementById('scrim').onclick = closeAll;
-document.getElementById('fab').onclick = () => {
+for (const id of ['fab', 'fab-bnav']) document.getElementById(id).onclick = () => {
   document.getElementById('sheet').classList.toggle('on');
   document.getElementById('scrim').classList.toggle('on');
 };
