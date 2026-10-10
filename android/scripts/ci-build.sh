@@ -59,6 +59,37 @@ fi
 cp "$APK" "$OUT/Hara.apk"
 echo "APK: $OUT/Hara.apk" | tee -a "$LOG"
 
+# Verifikasi APK: struktur zip + tanda tangan (apksigner). Penyebab "kesalahan
+# saat mengurai paket" di HP biasanya APK rusak atau tanda tangan tidak valid.
+echo "== Verifikasi APK ==" | tee -a "$LOG"
+python3 - "$OUT/Hara.apk" <<'PY' 2>&1 | tee -a "$LOG"
+import sys, zipfile, os
+p = sys.argv[1]
+print("ukuran:", os.path.getsize(p), "byte")
+z = zipfile.ZipFile(p)
+print("zip rusak:", z.testzip())
+n = z.namelist()
+for need in ["AndroidManifest.xml", "classes.dex", "resources.arsc"]:
+    print(need, "ada" if need in n else "TIDAK ADA")
+print("META-INF:", [x for x in n if x.startswith("META-INF/")])
+PY
+SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+APKSIGNER="$(ls -d "$SDK"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)"
+if [ -n "$APKSIGNER" ]; then
+  "$APKSIGNER" verify --verbose --print-certs "$OUT/Hara.apk" > "$OUT/verifikasi.txt" 2>&1
+  RCV=$?
+  cat "$OUT/verifikasi.txt" | tee -a "$LOG"
+  DET="$(head -30 "$OUT/verifikasi.txt" | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+  if [ "$RCV" -ne 0 ]; then
+    echo "::error title=APK gagal verifikasi::${DET}"
+    exit 1
+  fi
+  echo "::notice title=Verifikasi APK OK::${DET}"
+else
+  echo "::warning::apksigner tidak ditemukan; verifikasi tanda tangan dilewati." | tee -a "$LOG"
+fi
+ls -l "$OUT/Hara.apk" | tee -a "$LOG"
+
 # Paket isi web untuk pembaruan di dalam APK (hara-web.zip, index.html di akar).
 python3 - "$ROOT/docs" "$OUT/hara-web.zip" <<'PY'
 import os, sys, zipfile
