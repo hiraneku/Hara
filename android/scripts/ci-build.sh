@@ -40,6 +40,9 @@ fi
 RC=${PIPESTATUS[0]}
 if [ "$RC" -ne 0 ]; then
   echo "Gradle gagal (exit $RC). Lihat build-log.txt di artifact." | tee -a "$LOG"
+  # Kirim inti error sebagai anotasi supaya bisa dibaca lewat API GitHub.
+  DETAIL="$(grep -n -E -A12 'What went wrong|FAILURE: Build failed|error:|Caused by' "$LOG" | head -60 | tr -d '\r' | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+  echo "::error title=Gradle gagal::${DETAIL:-lihat log}"
   exit "$RC"
 fi
 
