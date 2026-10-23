@@ -47,6 +47,11 @@ docs/
 │   ├── share.js        bagikan / salin catatan
 │   ├── mode-baca.js    mode baca, A−/A+, zen, cari di dalam catatan
 │   ├── baca-plus.js    ukuran teks baca + zen
+│   ├── cari-ganti.js   cari & ganti dalam satu catatan (judul + isi)
+│   ├── saringan.js     saringan pencarian tersimpan (Smart Folder ringan)
+│   ├── kilas-balik.js  "hari ini di tahun-tahun lalu"
+│   ├── lipat-bagian.js lipat bagian per heading (mode baca)
+│   ├── info-catatan.js statistik satu catatan
 │   ├── galeri.js       gambar catatan
 │   ├── tata-gambar.js  lebar/posisi/zona gambar
 │   ├── mutu-gambar.js  pilihan kompresi gambar (C17)

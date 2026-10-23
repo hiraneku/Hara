@@ -1,17 +1,18 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261023162934';
-import { esc, stamp } from '../../core/dom.js?v=20261023162934';
-import { rowFor } from './row.js?v=20261023162934';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023162934';
-import { AK, akSekarang } from '../../core/theme.js?v=20261023162934';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023162934';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261023162934';
-import { terlihat } from '../kunci.js?v=20261023162934';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023162934';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023162934';
-import { namaSekarang } from '../../home/nama.js?v=20261023162934';
+import { state } from '../../core/store.js?v=20261023231757';
+import { esc, stamp } from '../../core/dom.js?v=20261023231757';
+import { rowFor } from './row.js?v=20261023231757';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023231757';
+import { AK, akSekarang } from '../../core/theme.js?v=20261023231757';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023231757';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261023231757';
+import { terlihat } from '../kunci.js?v=20261023231757';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023231757';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023231757';
+import { namaSekarang } from '../../home/nama.js?v=20261023231757';
+import { renderSimpanSaringanHtml } from '../saringan.js?v=20261023231757';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -156,6 +157,7 @@ search:()=>`<div class="page">
     <input id="cari-in" placeholder="${tr('Cari di judul, isi, dan tag')}" autocomplete="off"
       aria-label="${tr('Cari catatan')}" value="${esc(kueriCari)}"
       style="flex:1;border:none;background:none;outline:none;font-size:15px"></div>
+  ${renderSimpanSaringanHtml()}
   <div id="cari-hasil">${riwayatHtml()}<p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
   <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
 

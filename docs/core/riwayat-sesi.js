@@ -3,7 +3,7 @@
    - flush dijalankan saat pagehide agar perubahan 400 ms terakhir tidak hilang.
    Kunci memakai namespace "undo:" dan "log:". */
 
-import { bacaKv, tulisKv } from './db-catatan.js?v=20261023162934';
+import { bacaKv, tulisKv } from './db-catatan.js?v=20261023231757';
 
 const JEDA = 400;
 const antre = new Map();   /* kunci → { timer, ambil } */

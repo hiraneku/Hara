@@ -3,16 +3,18 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20261023162934';
-import { esc, tglHari } from '../../core/dom.js?v=20261023162934';
-import { rowFor } from './row.js?v=20261023162934';
-import { stt } from './data.js?v=20261023162934';
-import { tagDariIsi } from '../tags.js?v=20261023162934';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261023162934';
-import { judulJurnalHari } from '../harian.js?v=20261023162934';
-import { terlihat } from '../kunci.js?v=20261023162934';
-import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261023162934';
-import { t as tr } from '../../core/i18n.js?v=20261023162934';
+import { state } from '../../core/store.js?v=20261023231757';
+import { esc, tglHari } from '../../core/dom.js?v=20261023231757';
+import { rowFor } from './row.js?v=20261023231757';
+import { stt } from './data.js?v=20261023231757';
+import { tagDariIsi } from '../tags.js?v=20261023231757';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261023231757';
+import { judulJurnalHari } from '../harian.js?v=20261023231757';
+import { terlihat } from '../kunci.js?v=20261023231757';
+import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261023231757';
+import { t as tr } from '../../core/i18n.js?v=20261023231757';
+import { renderSaringanBarHtml, saringCatatan, saringanAktif } from '../saringan.js?v=20261023231757';
+import { renderKilasBalikHtml } from '../kilas-balik.js?v=20261023231757';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -106,6 +108,8 @@ export const notesView = () => {
   if (rg) daftar = daftar.filter(n => n.folderId === rg);
   const tag = stt.tag;
   if (tag) daftar = daftar.filter(n => punyaTag(n, tag));
+  daftar = saringCatatan(daftar);
+  const sfAktif = saringanAktif();
   const diSampah = state.notes.filter(n => n.deletedAt).length;
   const ruangList = daftarRuang();
   const isGrid = modeTampilDaftar() === 'grid';
@@ -126,12 +130,13 @@ export const notesView = () => {
     }).join('')}
     <button type="button" class="ruang-pill ruang-add" data-ruang-tambah title="${tr('Buat ruang / folder baru')}">+ ${tr('Ruang')}</button>
   </div>
-  ${!semuaAktif.length && !tag
+  ${renderSaringanBarHtml()}
+  ${!semuaAktif.length && !tag && !sfAktif
     ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Belum ada catatan')}</h3>
         <p>${tr('Catatan yang kamu tulis akan muncul di sini. Mulai dari yang pertama.')}</p>
         <button class="btn btn-pri" data-act2="new">${tr('Tulis catatan')}</button></div>`
     : ''}
-  ${semuaAktif.length > 0 && !daftar.length && rg && !tag
+  ${semuaAktif.length > 0 && !daftar.length && rg && !tag && !sfAktif
     ? `<div class="empty" style="padding:26px 20px"><h3>${tr('Ruang ini masih kosong')}</h3>
         <p>${tr('Buka catatan mana pun lalu pilih menu ··· → Pindahkan ke ruang, atau tulis catatan baru di sini.')}</p>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -145,6 +150,11 @@ export const notesView = () => {
       <span class="chip chip-a" style="flex:none">${daftar.length}</span>
       <button type="button" class="tf-x" data-tag-x aria-label="${tr('Hapus filter tag')}"><svg class="ico"><use href="#i-x"/></svg></button>
     </div>`
+    : ''}
+  ${daftar.length === 0 && sfAktif && !tag
+    ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Tidak ada catatan untuk saringan ini')}</h3>
+        <p>${tr('Coba kata kunci lain, atau hapus saringan supaya semua catatan tampil lagi.')}</p>
+        <button class="btn btn-sec" data-sf-bersih>${tr('Hapus filter saringan')}</button></div>`
     : ''}
   ${daftar.length === 0 && tag
     ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Tidak ada catatan ber-tag ini')}</h3>
@@ -167,6 +177,7 @@ export const notesView = () => {
       title="${tr('Pilih beberapa catatan — bisa juga dengan menahan satu baris')}">
       <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>` : ''}
   </div>
+  ${renderKilasBalikHtml(daftar)}
   ${pin.length ? overline(tr('Disematkan')) + kartu(pin, 'utama') : ''}
   ${lain.length ? (pin.length ? overline(tr('Lainnya')) : '') + kartu(lain, 'utama') : ''}
   <div class="list-foot">

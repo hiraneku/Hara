@@ -126,10 +126,12 @@ if (BAG==='C') {
 /* ══ C. PANEL "BELUM SELESAI" ══ */
 state.notes.splice(0);
 const todoBlok=(isi,cek)=>makeBlock({type:'todo',content:isi,meta:{checked:!!cek}});
-state.notes.push(makeNote({id:'c1',title:'Catatan satu',blocks:[
+/* updatedAt eksplisit: dua makeNote() berurutan bisa jatuh di milidetik yang
+   sama sehingga urutan "terbaru dulu" jadi tidak deterministik di mesin sibuk. */
+state.notes.push(makeNote({id:'c1',title:'Catatan satu',updatedAt:2_000_000_000_000,blocks:[
   makeBlock({type:'paragraph',content:'biasa'}),
   todoBlok('beli <b>susu</b>',false), todoBlok('cuci baju',true) ]}));
-state.notes.push(makeNote({id:'c2',title:'Catatan dua',blocks:[todoBlok('baca bab 3',false)]}));
+state.notes.push(makeNote({id:'c2',title:'Catatan dua',updatedAt:1_000_000_000_000,blocks:[todoBlok('baca bab 3',false)]}));
 state.notes.push(makeNote({id:'c3',title:'Catatan tiga',blocks:[todoBlok('semua beres',true)]}));
 const html=lst.notesView();
 ok('C1 panel Belum selesai muncul',html.includes('Belum selesai')&&html.includes('data-todo-lompat'));

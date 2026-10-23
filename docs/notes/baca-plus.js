@@ -8,13 +8,14 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261023162934';
-import { closeAll } from './menus/pop.js?v=20261023162934';
-import { docEl } from './editor/caret.js?v=20261023162934';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261023162934';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261023162934';
-import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261023162934';
-import { t as tr } from '../core/i18n.js?v=20261023162934';
+import { toast } from '../core/toast.js?v=20261023231757';
+import { closeAll } from './menus/pop.js?v=20261023231757';
+import { docEl } from './editor/caret.js?v=20261023231757';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261023231757';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261023231757';
+import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261023231757';
+import { t as tr } from '../core/i18n.js?v=20261023231757';
+import { bukaCariGanti } from './cari-ganti.js?v=20261023231757';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -252,6 +253,11 @@ export function bindBacaPlus() {
     if (b.dataset.et === 'besar') { aturUkuran(1); return; }
     if (b.dataset.et === 'zen') { toggleZen(); return; }
     if (b.dataset.et === 'cari') { bukaCari(); return; }
+    if (b.dataset.et === 'ganti') {
+      const inp = document.getElementById('cari-note-in');
+      bukaCariGanti(b, inp ? inp.value : '');
+      return;
+    }
     if (b.dataset.et === 'dafis') { bukaDaftarIsi(b); return; }
   });
 

@@ -4,11 +4,13 @@
    menjadi blok). Satu ketukan melompat ke heading itu; blok tujuan
    berkedip memakai animasi .blk-lompat yang sudah ada. */
 
-import { esc } from '../core/dom.js?v=20261023162934';
-import { toast } from '../core/toast.js?v=20261023162934';
-import { docEl } from './editor/caret.js?v=20261023162934';
-import { openPop, closeAll } from './menus/pop.js?v=20261023162934';
-import { t as tr } from '../core/i18n.js?v=20261023162934';
+import { esc } from '../core/dom.js?v=20261023231757';
+import { toast } from '../core/toast.js?v=20261023231757';
+import { docEl } from './editor/caret.js?v=20261023231757';
+import { openPop, closeAll } from './menus/pop.js?v=20261023231757';
+import { t as tr } from '../core/i18n.js?v=20261023231757';
+import { bisaLipat, daftarLipat, toggleLipatHeading, lipatSemua, bukaSemuaLipat, terapkanLipatan }
+  from './lipat-bagian.js?v=20261023231757';
 
 /* Snapshot elemen heading saat menu dibuka — isi catatan yang berubah
    setelahnya tidak membuat menu salah arah. */
@@ -24,7 +26,7 @@ export function ambilHeading() {
     if (!m) return;
     const teks = (el.textContent || '').replace(/\s+/g, ' ').trim();
     if (!teks) return;
-    hasil.push({ el, level: Number(m[1]), teks });
+    hasil.push({ el, level: Number(m[1]), teks, bid: el.getAttribute('data-bid') || '' });
   });
   return hasil;
 }
@@ -35,17 +37,71 @@ export function bukaDaftarIsi(anchor) {
     toast(tr('Catatan ini belum punya heading — pakai # di depan baris'));
     return;
   }
-  openPop(`<div class="pop-h">${tr('Daftar isi')}</div>` +
-    daftarSaat.map((h, i) =>
-      `<button type="button" class="pop-i daf-i daf-lv${h.level}" data-daf-i="${i}">
+  terapkanLipatan();
+  const lipatAktif = bisaLipat();
+  const terlipat = new Set(daftarLipat());
+  const baris = daftarSaat.map((h, i) => {
+    const on = !!(h.bid && terlipat.has(h.bid));
+    return `<div class="daf-row">
+      <button type="button" class="pop-i daf-i daf-lv${h.level}" data-daf-i="${i}">
         <span class="daf-n">${h.level === 1 ? 'H1' : h.level === 2 ? 'H2' : 'H3'}</span>
-        <span class="daf-t">${esc(h.teks)}</span></button>`).join(''),
-    anchor);
+        <span class="daf-t">${esc(h.teks)}</span></button>
+      ${lipatAktif && h.bid ? `<button type="button" class="daf-lipat${on ? ' on' : ''}"
+        data-daf-lipat="${i}" aria-pressed="${on}" aria-expanded="${!on}"
+        title="${on ? tr('Buka bagian') : tr('Lipat bagian')}"
+        aria-label="${on ? tr('Buka bagian') : tr('Lipat bagian')}">
+        <svg class="ico"><use href="#i-chev"/></svg></button>` : ''}
+    </div>`;
+  }).join('');
+  const alat = lipatAktif
+    ? `<div class="daf-alat">
+        <button type="button" class="daf-a" data-daf-lipat-semua>${tr('Lipat semua')}</button>
+        <button type="button" class="daf-a" data-daf-buka-semua>${tr('Buka semua')}</button>
+      </div>`
+    : '';
+  openPop(`<div class="pop-h">${tr('Daftar isi')}</div>${alat}${baris}`, anchor);
+}
+
+function sinkronLipat() {
+  const ids = new Set(daftarLipat());
+  document.querySelectorAll('[data-daf-lipat]').forEach(b => {
+    const h = daftarSaat[Number(b.dataset.dafLipat)];
+    const on = !!(h && h.bid && ids.has(h.bid));
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-expanded', String(!on));
+    const label = on ? tr('Buka bagian') : tr('Lipat bagian');
+    b.title = label;
+    b.setAttribute('aria-label', label);
+  });
 }
 
 export function bindDaftarIsi() {
   document.addEventListener('click', e => {
-    const b = e.target.closest ? e.target.closest('[data-daf-i]') : null;
+    if (!e.target.closest) return;
+
+    const lipat = e.target.closest('[data-daf-lipat]');
+    if (lipat) {
+      const h = daftarSaat[Number(lipat.dataset.dafLipat)];
+      if (!h || !h.el || !h.el.isConnected) return;
+      toggleLipatHeading(h.el);
+      sinkronLipat();
+      return;
+    }
+    if (e.target.closest('[data-daf-lipat-semua]')) {
+      lipatSemua();
+      sinkronLipat();
+      toast(tr('Semua bagian dilipat'));
+      return;
+    }
+    if (e.target.closest('[data-daf-buka-semua]')) {
+      bukaSemuaLipat();
+      sinkronLipat();
+      toast(tr('Semua bagian dibuka'));
+      return;
+    }
+
+    const b = e.target.closest('[data-daf-i]');
     if (!b) return;
     const h = daftarSaat[Number(b.dataset.dafI)];
     closeAll();
