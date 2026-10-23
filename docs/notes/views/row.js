@@ -19,13 +19,14 @@
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20261010054709';
-import { excerptOf } from '../note-model.js?v=20261010054709';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20261010054709';
-import { tagUntukTampil } from '../tags.js?v=20261010054709';
-import { terlihat } from '../kunci.js?v=20261010054709';
-import { sorotHtml } from '../cari.js?v=20261010054709';
-import { t as tr } from '../../core/i18n.js?v=20261010054709';
+import { esc, stamp } from '../../core/dom.js?v=20261023155617';
+import { excerptOf } from '../note-model.js?v=20261023155617';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20261023155617';
+import { tagUntukTampil } from '../tags.js?v=20261023155617';
+import { terlihat } from '../kunci.js?v=20261023155617';
+import { sorotHtml } from '../cari.js?v=20261023155617';
+import { namaRuangUntuk } from '../ruang.js?v=20261023155617';
+import { t as tr } from '../../core/i18n.js?v=20261023155617';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {
@@ -49,8 +50,10 @@ function barisIsi(n, boleh, sorot) {
   const tg = boleh ? tagUntukTampil(n) : [];
   /* baris di Arsip tidak diberi chip: memfilternya mengarah ke daftar
      utama yang tidak memuat catatan terarsip — membingungkan */
-  const chips = (!n.archived && tg.length)
-    ? `<div class="row-tg">${tg.slice(0, 3).map(t => {
+  const nmRuang = boleh && n.folderId ? namaRuangUntuk(n.folderId) : '';
+  const ruangBadge = nmRuang ? `<span class="tg-ruang">${esc(nmRuang)}</span>` : '';
+  const chips = (!n.archived && (tg.length || nmRuang))
+    ? `<div class="row-tg">${ruangBadge}${tg.slice(0, 3).map(t => {
         const tanda = tandaUntukCatatan(n, t);
         return chipTag(tanda, t);
       }).join('')}

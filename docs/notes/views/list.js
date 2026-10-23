@@ -3,15 +3,16 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20261010054709';
-import { esc, tglHari } from '../../core/dom.js?v=20261010054709';
-import { rowFor } from './row.js?v=20261010054709';
-import { stt } from './data.js?v=20261010054709';
-import { tagDariIsi } from '../tags.js?v=20261010054709';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261010054709';
-import { judulJurnalHari } from '../harian.js?v=20261010054709';
-import { terlihat } from '../kunci.js?v=20261010054709';
-import { t as tr } from '../../core/i18n.js?v=20261010054709';
+import { state } from '../../core/store.js?v=20261023155617';
+import { esc, tglHari } from '../../core/dom.js?v=20261023155617';
+import { rowFor } from './row.js?v=20261023155617';
+import { stt } from './data.js?v=20261023155617';
+import { tagDariIsi } from '../tags.js?v=20261023155617';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261023155617';
+import { judulJurnalHari } from '../harian.js?v=20261023155617';
+import { terlihat } from '../kunci.js?v=20261023155617';
+import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261023155617';
+import { t as tr } from '../../core/i18n.js?v=20261023155617';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -41,14 +42,19 @@ export const belumSelesai = daftar =>
 const kartuTodo = daftar =>
   `<div class="sec" style="margin-top:6px"><h2>${tr('Belum selesai')}</h2></div>
   <div class="card">${daftar.map(i => `
-    <button class="row trowe" data-todo-lompat="${i.n.id}" data-todo-bid="${i.bid}"
-      title="${tr('Buka di catatan')} «${esc(i.n.title || tr('Tanpa judul'))}»">
-      <span class="tobox" aria-hidden="true"></span>
-      <div class="row-b">
-        <div class="row-t">${esc(i.teks)}</div>
-        <div class="row-s">${esc(i.n.title || tr('Tanpa judul'))}</div>
-      </div>
-    </button>`).join('')}
+    <div class="trowe-wrap">
+      <button type="button" class="tobox-btn" data-todo-cek="${esc(i.n.id)}" data-todo-bid="${esc(i.bid)}"
+        title="${tr('Tandai selesai')}" aria-label="${tr('Tandai selesai')}">
+        <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>
+      </button>
+      <button class="row trowe" data-todo-lompat="${i.n.id}" data-todo-bid="${i.bid}"
+        title="${tr('Buka di catatan')} «${esc(i.n.title || tr('Tanpa judul'))}»">
+        <div class="row-b">
+          <div class="row-t">${esc(i.teks)}</div>
+          <div class="row-s">${esc(i.n.title || tr('Tanpa judul'))}</div>
+        </div>
+      </button>
+    </div>`).join('')}
   </div>`;
 
 /* Catatan yang muncul di daftar utama: belum diarsip & belum dihapus. */
@@ -69,8 +75,10 @@ const overline = teks => `<div class="overline" style="margin:0 0 8px">${teks}</
 
 /* `geser`: baris di daftar penuh (catatan / arsip) mendapat aksi sapuan
    D21; beranda & hasil cari memakai baris polos. */
-const kartu = (daftar, geser) =>
-  `<div class="card">${daftar.map(n => rowFor(n, geser)).join('')}</div>`;
+const kartu = (daftar, geser) => {
+  const isGrid = geser === 'utama' && modeTampilDaftar() === 'grid';
+  return `<div class="card${isGrid ? ' card-grid' : ''}">${daftar.map(n => rowFor(n, isGrid ? null : geser)).join('')}</div>`;
+};
 
 export const homeView = () => {
   const daftar = aktif();
@@ -92,19 +100,44 @@ export const homeView = () => {
 };
 
 export const notesView = () => {
-  let daftar = aktif();
+  const semuaAktif = aktif();
+  let daftar = semuaAktif;
+  const rg = ruangAktif();
+  if (rg) daftar = daftar.filter(n => n.folderId === rg);
   const tag = stt.tag;
   if (tag) daftar = daftar.filter(n => punyaTag(n, tag));
   const diSampah = state.notes.filter(n => n.deletedAt).length;
+  const ruangList = daftarRuang();
+  const isGrid = modeTampilDaftar() === 'grid';
 
   const pin = urutkanCatatan(daftar.filter(n => n.pinned));
   const lain = urutkanCatatan(daftar.filter(n => !n.pinned));
 
   return `<div class="page">
-  ${!daftar.length && !tag
+  <div class="ruang-bar" role="tablist" aria-label="${tr('Ruang catatan')}">
+    <button type="button" class="ruang-pill${!rg ? ' on' : ''}" data-ruang-pilih="">
+      <span>${tr('Semua')}</span><span class="ruang-n">${semuaAktif.length}</span>
+    </button>
+    ${ruangList.map(r => {
+      const jml = semuaAktif.filter(n => n.folderId === r.id).length;
+      return `<button type="button" class="ruang-pill${rg === r.id ? ' on' : ''}" data-ruang-pilih="${esc(r.id)}">
+        <span>${esc(r.nama)}</span><span class="ruang-n">${jml}</span>
+      </button>`;
+    }).join('')}
+    <button type="button" class="ruang-pill ruang-add" data-ruang-tambah title="${tr('Buat ruang / folder baru')}">+ ${tr('Ruang')}</button>
+  </div>
+  ${!semuaAktif.length && !tag
     ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Belum ada catatan')}</h3>
         <p>${tr('Catatan yang kamu tulis akan muncul di sini. Mulai dari yang pertama.')}</p>
         <button class="btn btn-pri" data-act2="new">${tr('Tulis catatan')}</button></div>`
+    : ''}
+  ${semuaAktif.length > 0 && !daftar.length && rg && !tag
+    ? `<div class="empty" style="padding:26px 20px"><h3>${tr('Ruang ini masih kosong')}</h3>
+        <p>${tr('Buka catatan mana pun lalu pilih menu ··· → Pindahkan ke ruang, atau tulis catatan baru di sini.')}</p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-pri" data-act2="new">${tr('Tulis catatan')}</button>
+          <button class="btn btn-sec" data-ruang-hapus="${esc(rg)}">${tr('Hapus ruang')}</button>
+        </div></div>`
     : ''}
   ${tag ? `<div class="tf-bar">
       <svg class="ico" style="color:var(--accent);width:15px;height:15px;flex:none"><use href="#i-tag"/></svg>
@@ -123,7 +156,12 @@ export const notesView = () => {
     <button type="button" class="urut-chip" data-urut-buka aria-haspopup="menu"
       title="${tr('Urutkan daftar catatan')}"><svg class="ico"><use href="#i-sort"/></svg>${tr('Urut:')}
       <b>${esc(namaUrut(urutSekarang()))}</b></button>
-    ${daftar.length ? `<button type="button" class="urut-chip" data-pilih-buka
+    <button type="button" class="urut-chip${isGrid ? ' on' : ''}" data-tampil-toggle
+      title="${tr('Ganti tampilan Daftar / Kartu Grid')}">
+      <svg class="ico"><use href="#i-list"/></svg>${isGrid ? tr('Grid') : tr('Daftar')}</button>
+    <button type="button" class="urut-chip" data-buka-db title="${tr('Tabel properti & papan Kanban')}">
+      <svg class="ico"><use href="#i-tpl"/></svg>${tr('Properti')}</button>
+    ${daftar.length && !isGrid ? `<button type="button" class="urut-chip" data-pilih-buka
       title="${tr('Pilih beberapa catatan — bisa juga dengan menahan satu baris')}">
       <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>` : ''}
   </div>
@@ -131,6 +169,9 @@ export const notesView = () => {
   ${lain.length ? (pin.length ? overline(tr('Lainnya')) : '') + kartu(lain, 'utama') : ''}
   <div class="list-foot">
     <span class="chip">${tr('semua {n}', { n: daftar.length })}</span>
+    <span class="sep"></span>
+    <button type="button" class="ft-btn" data-buka-stat title="${tr('Statistik menulis & heatmap aktivitas')}">
+      <svg class="ico"><use href="#i-graph"/></svg>${tr('Statistik')}</button>
     <span class="sep"></span>
     <button type="button" class="ft-btn" data-go="trash" title="${tr('Catatan yang dihapus — otomatis dibuang setelah 30 hari')}">
       <svg class="ico"><use href="#i-trash"/></svg>${tr('Sampah')}${diSampah ? ' ' + diSampah : ''}</button>

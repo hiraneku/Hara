@@ -8,12 +8,13 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261010054709';
-import { closeAll } from './menus/pop.js?v=20261010054709';
-import { docEl } from './editor/caret.js?v=20261010054709';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261010054709';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261010054709';
-import { t as tr } from '../core/i18n.js?v=20261010054709';
+import { toast } from '../core/toast.js?v=20261023155617';
+import { closeAll } from './menus/pop.js?v=20261023155617';
+import { docEl } from './editor/caret.js?v=20261023155617';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261023155617';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261023155617';
+import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261023155617';
+import { t as tr } from '../core/i18n.js?v=20261023155617';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -71,6 +72,29 @@ export function toggleZen() {
 let hasil = [];   /* elemen span.cari yang cocok */
 let kini = -1;
 let panel = null;
+
+export function cariTerbuka() {
+  return !!(panel && panel.isConnected && panel.classList.contains('on'));
+}
+
+export function sinkronTombolCariMengambang() {
+  let btn = document.getElementById('cari-float');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'cari-float';
+    btn.className = 'cari-float-btn';
+    btn.setAttribute('data-et', 'cari');
+    btn.setAttribute('title', tr('Cari di dalam catatan'));
+    btn.setAttribute('aria-label', tr('Cari di dalam catatan'));
+    btn.innerHTML = `<svg class="ico"><use href="#i-search"/></svg><span>${tr('Cari')}</span>`;
+    document.body.appendChild(btn);
+  }
+  const d = docEl();
+  const tampil = cur === 'editor' && !!d && d.isConnected && modeBacaBerlaku() && !cariTerbuka();
+  btn.hidden = !tampil;
+  btn.classList.toggle('on', tampil);
+}
 
 const kataAman = q => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -172,10 +196,19 @@ function cariDalamCatatan(q) {
   }
   if (hasil.length) {
     kini = 0;
-    hasil.forEach((s, i) => s.classList.toggle('cari-kini', i === 0));
+    /* Mulai dari hasil pertama yang tampak di area baca saat ini supaya tidak mental balik ke awal catatan */
+    for (let i = 0; i < hasil.length; i++) {
+      try {
+        if (hasil[i].getBoundingClientRect().top >= 0) {
+          kini = i;
+          break;
+        }
+      } catch (e) { break; }
+    }
+    hasil.forEach((s, i) => s.classList.toggle('cari-kini', i === kini));
   }
   perbaruiHasilLbl();
-  const s = hasil[0];
+  const s = hasil[kini];
   if (s && s.scrollIntoView) {
     try { s.scrollIntoView({ block: 'center' }); } catch (e) { /* tua */ }
   }
@@ -188,6 +221,7 @@ export function bukaCari() {
   }
   const el = buatPanel();
   el.classList.add('on');
+  sinkronTombolCariMengambang();
   const inp = el.querySelector('#cari-note-in');
   inp.value = '';
   lepasSorotan();
@@ -202,13 +236,14 @@ export function tutupCari() {
       document.activeElement.blur();
   }
   lepasSorotan();
+  sinkronTombolCariMengambang();
 }
 
 /* ── ikat kejadian ── */
 export function bindBacaPlus() {
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
-    const diEd = e.target.closest('.ed');
+    const diEd = e.target.closest('.ed') || e.target.closest('#cari-float');
     const d = docEl();
     if (!diEd || !d || !d.isConnected) return;
     const b = e.target.closest('[data-et]');
@@ -239,5 +274,13 @@ export function bindBacaPlus() {
     if (p && p.classList.contains('on')) { tutupCari(); return; }
     if (zenAktif() && !document.querySelector('.pop.on') &&
         !document.querySelector('.sheet.on')) matikanZen();
+  });
+
+  onBeforeLeave(() => {
+    if (cariTerbuka()) tutupCari();
+    sinkronTombolCariMengambang();
+  });
+  onAfterRender(() => {
+    sinkronTombolCariMengambang();
   });
 }

@@ -7,13 +7,14 @@
  * - integrasi UI, preset, file picker, auto ZIP extractor, audio ID3 metadata parser, EXIF parser, manual reordering, dan ekspor catatan Hara
  */
 
-import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261010054709';
-import { toast } from '../core/toast.js?v=20261010054709';
-import { t as tr } from '../core/i18n.js?v=20261010054709';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20261010054709';
-import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261010054709';
-import { state as haraStoreState } from '../core/store.js?v=20261010054709';
-import { esc } from '../core/dom.js?v=20261010054709';
+import { registerViews, onAfterRender, cur, go } from '../core/router.js?v=20261023155617';
+import { toast } from '../core/toast.js?v=20261023155617';
+import { t as tr } from '../core/i18n.js?v=20261023155617';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20261023155617';
+import { unduh, markdownDariCatatan, namaBerkasAman } from '../notes/data-io.js?v=20261023155617';
+import { terlihat } from '../notes/kunci.js?v=20261023155617';
+import { state as haraStoreState } from '../core/store.js?v=20261023155617';
+import { esc } from '../core/dom.js?v=20261023155617';
 import {
   createRenamerItem,
   createRule,
@@ -24,21 +25,21 @@ import {
   FILE_STATUS,
   formatFileSize,
   sanitizeFileName,
-} from './model.js?v=20261010054709';
-import { runPipeline, sortFiles } from './engine.js?v=20261010054709';
+} from './model.js?v=20261023155617';
+import { runPipeline, sortFiles } from './engine.js?v=20261023155617';
 import {
   renamerView,
   filterAndSearchItems,
   renderFilterTabsContent,
   renderTableContainerContent,
   renderFooterBar,
-} from './view.js?v=20261010054709';
-import { createZipBlob } from './zip.js?v=20261010054709';
-import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261010054709';
-import { parseExif } from './exif.js?v=20261010054709';
-import { parseId3 } from './id3.js?v=20261010054709';
-import { simpanKvSoon, muatKv } from '../core/riwayat-sesi.js?v=20261010054709';
-import { buatCsvLog, MAKS_LOG } from './log.js?v=20261010054709';
+} from './view.js?v=20261023155617';
+import { createZipBlob } from './zip.js?v=20261023155617';
+import { extractZip, CATEGORY_LABELS } from './unzip.js?v=20261023155617';
+import { parseExif } from './exif.js?v=20261023155617';
+import { parseId3 } from './id3.js?v=20261023155617';
+import { simpanKvSoon, muatKv } from '../core/riwayat-sesi.js?v=20261023155617';
+import { buatCsvLog, MAKS_LOG } from './log.js?v=20261023155617';
 
 /* ── K26 · log ganti nama lintas sesi (IndexedDB) ──
    Riwayat UNDO renamer tetap di memori: undo memulihkan objek berkas yang
@@ -133,7 +134,7 @@ export function muatBerkasDemo() {
  * Memuat seluruh catatan dari Hara ke antrean Renamer
  */
 export function imporCatatanHara() {
-  const activeNotes = (haraStoreState.notes || []).filter(n => !n.deletedAt);
+  const activeNotes = (haraStoreState.notes || []).filter(n => !n.deletedAt && terlihat(n));
   if (activeNotes.length === 0) {
     toast(tr('Belum ada catatan di Hara untuk dimuat'));
     return;

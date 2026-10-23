@@ -1,17 +1,17 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261010054709';
-import { esc, stamp } from '../../core/dom.js?v=20261010054709';
-import { rowFor } from './row.js?v=20261010054709';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261010054709';
-import { AK, akSekarang } from '../../core/theme.js?v=20261010054709';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261010054709';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261010054709';
-import { terlihat } from '../kunci.js?v=20261010054709';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261010054709';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261010054709';
-import { namaSekarang } from '../../home/nama.js?v=20261010054709';
+import { state } from '../../core/store.js?v=20261023155617';
+import { esc, stamp } from '../../core/dom.js?v=20261023155617';
+import { rowFor } from './row.js?v=20261023155617';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023155617';
+import { AK, akSekarang } from '../../core/theme.js?v=20261023155617';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023155617';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261023155617';
+import { terlihat } from '../kunci.js?v=20261023155617';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023155617';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023155617';
+import { namaSekarang } from '../../home/nama.js?v=20261023155617';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -292,6 +292,12 @@ set:()=>{ const akPilih = akSekarang() || '';
     <div class="row"><div class="row-b"><div class="row-t">${tr('Ekspor Markdown')}</div>
       <div class="row-s">${tr('Satu berkas .md per catatan (frontmatter + wikilink utuh) dalam .zip — siap dibaca Obsidian')}</div></div>
       <button type="button" class="btn btn-sec" data-ekspor="md">${tr('Markdown')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Cadangan terenkripsi')}</div>
+      <div class="row-s">${tr('Enkripsi AES-GCM-256 dengan frasa sandi pilihanmu untuk penyimpanan awan yang aman')}</div></div>
+      <div style="display:flex;gap:6px;flex:none;flex-wrap:wrap">
+        <button type="button" class="btn btn-sec" data-cad-enkrip>${tr('Enkripsi')}</button>
+        <button type="button" class="btn btn-sec" data-cad-pulih>${tr('Pulihkan')}</button>
+      </div></div>
     <div class="row"><div class="row-b"><div class="row-t">${tr('Penyimpanan')}</div>
       <div class="row-s" id="ruang">${tr('menghitung…')}</div></div></div>
   </div>

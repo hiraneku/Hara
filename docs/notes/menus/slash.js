@@ -3,8 +3,8 @@
    Hanya blok dasar; command lanjutan sengaja tidak dimasukkan.
    Bisa difilter dengan mengetik, dipilih lewat sentuh maupun papan ketik. */
 
-import { esc } from '../../core/dom.js?v=20261010054709';
-import { t as tr } from '../../core/i18n.js?v=20261010054709';
+import { esc } from '../../core/dom.js?v=20261023155617';
+import { t as tr } from '../../core/i18n.js?v=20261023155617';
 
 /* [ikon, nama, pintasan markdown, aksi, kata kunci pencarian] */
 export const SLASH = [
@@ -19,6 +19,9 @@ export const SLASH = [
   ['i-code',   'Kode',             '```',     'b-code',  'kode code blok program block'],
   ['i-minus',  'Pembatas',         '---',     'hr',      'pembatas divider garis pemisah line'],
   ['i-img',    'Gambar',           '',        'img',     'gambar image foto sisip photo picture'],
+  ['i-chev',   'Bagian lipat',     '',        'toggle',  'toggle lipat accordion buka tutup details'],
+  ['i-tpl',    'Tabel',            '| |',     'table',   'tabel table kolom baris grid data'],
+  ['i-bell',   'Memo suara',       '',        'audio',   'suara audio rekam voice memo mikrofon'],
   /* aksi cepat tambahan (B13) — bukan blok, tapi jalan pintas yang
      dipakai tanpa keluar dari alur ketikan */
   ['i-cal',    'Tanggal hari ini', '',        'date',    'tanggal hari ini now date waktu today'],

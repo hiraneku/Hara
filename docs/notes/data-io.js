@@ -18,12 +18,14 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261010054709';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261010054709';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261010054709';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261010054709';
-import { terlihat } from './kunci.js?v=20261010054709';
-import { t as tr } from '../core/i18n.js?v=20261010054709';
+import { state, save, SCHEMA } from '../core/store.js?v=20261023155617';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023155617';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023155617';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261023155617';
+import { terlihat } from './kunci.js?v=20261023155617';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023155617';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261023155617';
+import { t as tr } from '../core/i18n.js?v=20261023155617';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -102,10 +104,14 @@ export async function kumpulBlob() {
 
 export async function cadanganJson() {
   const blobs = await kumpulBlob();
+  const hamojiCustom = muatCustomHamoji();
+  const ruang = daftarRuang();
   const teks = JSON.stringify({
     format: 'hara-cadangan', versi: 1, schema: SCHEMA,
     diekspor: new Date().toISOString(), seq: state.seq,
     catatan: state.notes, blobs,
+    ...(hamojiCustom.length ? { hamojiCustom } : {}),
+    ...(ruang.length ? { ruang } : {}),
   });
   return { nama: `hara-cadangan-${namaHariIni()}.json`, teks };
 }
@@ -121,6 +127,8 @@ export async function siapImporJson(teks) {
   return {
     jenis: 'json',
     catatan, blobs: data.blobs || {},
+    hamojiCustom: Array.isArray(data.hamojiCustom) ? data.hamojiCustom : [],
+    ruang: Array.isArray(data.ruang) ? data.ruang : [],
     jumlahBlob: Object.keys(data.blobs || {}).length,
     seq: data.seq || 1,
   };
@@ -141,6 +149,13 @@ export async function terapkanImporJson(r, mode) {
     state.notes = daftar.length ? daftar : state.notes;
   }
   state.seq = Math.max(state.seq || 1, r.seq || 1);
+
+  if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) {
+    setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');
+  }
+  if (Array.isArray(r.ruang) && r.ruang.length) {
+    r.ruang.forEach(rg => { if (rg && rg.nama) tambahRuang(rg.nama); });
+  }
 
   /* pulihkan gambar dulu, baru simpan — supaya catatan yang dirender
      setelah impor langsung menemukan blobnya */
@@ -207,7 +222,19 @@ function blokMd(b, noOl) {
     case 'callout':
       return `> [!${escT(meta.variant || 'info')}]` +
         (isi ? '\n' + isi.split('\n').map(x => `> ${x}`).join('\n') : '');
-    case 'code': return '```\n' + isi + '\n```';
+    case 'code': return '```' + (meta.lang || '') + '\n' + isi + '\n```';
+    case 'toggle':
+      return `<details><summary>${escT(meta.summary || '')}</summary>\n\n${isi}\n</details>`;
+    case 'table': {
+      const rows = Array.isArray(meta.rows) && meta.rows.length ? meta.rows : [['', '']];
+      const escPipe = c => String(c ?? '').replace(/\|/g, '\\|');
+      const head = '| ' + rows[0].map(escPipe).join(' | ') + ' |';
+      const sep  = '| ' + rows[0].map(() => '---').join(' | ') + ' |';
+      const body = rows.slice(1).map(r => '| ' + rows[0].map((_, i) => escPipe(r[i])).join(' | ') + ' |');
+      return [head, sep, ...body].join('\n');
+    }
+    case 'audio':
+      return `> 🎙️ ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
     case 'divider': return '---';
     case 'image':
       return `![${meta.alt || 'gambar'} ${meta.blobId || ''}](data:image/simpan-dalam-cadangan-json;id=${meta.blobId || ''})`;
@@ -428,6 +455,12 @@ function inlineHtml(teks) {
    `noOl` diisi pemanggil untuk daftar bernomor. */
 function blokDariTeks(baris, noOl) {
   const gabung = baris.join('\n');
+  /* tabel markdown */
+  if (baris.length >= 2 && /^\|.*\|\s*$/.test(baris[0]) && /^\|\s*[-:]+/.test(baris[1])) {
+    const pecah = ln => ln.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+    const rows = [pecah(baris[0]), ...baris.slice(2).filter(ln => /^\|/.test(ln.trim())).map(pecah)];
+    return makeBlock({ type: 'table', meta: { rows }, content: '' });
+  }
   /* callout */
   const cal = gabung.match(/^>\s*\[!([\w-]+)\]\s*(.*)$/i);
   if (cal) {
@@ -483,6 +516,7 @@ export function catatanDariMarkdown(nama, teks) {
   const blocks = [];
   let kumpul = [];     /* baris paragraf/kutipan/daftar yang belum ditutup */
   let diKode = false;  /* sedang di dalam ``` */
+  let bahasaKode = '';
   let kode = [];
   let noOl = 0;
 
@@ -499,12 +533,17 @@ export function catatanDariMarkdown(nama, teks) {
   baris.forEach(b => {
     if (diKode) {
       if (/^\s*(```|~~~)\s*$/.test(b)) {
-        blocks.push(makeBlock({ type: 'code', content: kode.join('<br>') }));
-        kode = []; diKode = false;
+        blocks.push(makeBlock({
+          type: 'code',
+          content: kode.join('<br>'),
+          meta: bahasaKode ? { lang: bahasaKode } : {},
+        }));
+        kode = []; diKode = false; bahasaKode = '';
       } else kode.push(b.replace(/\t/g, '  '));
       return;
     }
-    if (/^\s*(```|~~~)/.test(b)) { serap(); diKode = true; return; }
+    const bukaKode = b.match(/^\s*(?:```|~~~)\s*([A-Za-z0-9_+-]*)\s*$/);
+    if (bukaKode) { serap(); diKode = true; bahasaKode = bukaKode[1] || ''; return; }
     if (/^\s*$/.test(b)) { serap(); noOl = 0; return; }
     kumpul.push(b);
   });

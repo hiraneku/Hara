@@ -5,20 +5,21 @@
    layar ini tidak pernah bisa berbeda dari catatan aslinya. Matriks dan
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
-import { state, save } from '../../core/store.js?v=20261010054709';
-import { esc } from '../../core/dom.js?v=20261010054709';
-import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang } from '../pengingat.js?v=20261010054709';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261010054709';
-import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261010054709';
-import { rowFor } from './row.js?v=20261010054709';
-import { t as tr } from '../../core/i18n.js?v=20261010054709';
-import { toast } from '../../core/toast.js?v=20261010054709';
-import { touch, makeNote } from '../note-model.js?v=20261010054709';
-import { go, cur } from '../../core/router.js?v=20261010054709';
-import { flush } from '../../core/autosave.js?v=20261010054709';
-import { openNote } from '../model.js?v=20261010054709';
+import { state, save } from '../../core/store.js?v=20261023155617';
+import { esc } from '../../core/dom.js?v=20261023155617';
+import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261023155617';
+import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261023155617';
+import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261023155617';
+import { rowFor } from './row.js?v=20261023155617';
+import { terlihat } from '../kunci.js?v=20261023155617';
+import { t as tr } from '../../core/i18n.js?v=20261023155617';
+import { toast } from '../../core/toast.js?v=20261023155617';
+import { touch, makeNote } from '../note-model.js?v=20261023155617';
+import { go, cur } from '../../core/router.js?v=20261023155617';
+import { flush } from '../../core/autosave.js?v=20261023155617';
+import { openNote } from '../model.js?v=20261023155617';
 
-const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt);
+const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
 const SEHARI = 86400000;
 const awalHari = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
@@ -34,24 +35,78 @@ const PILIHAN_TUNDA = [['hari', 'Hari ini'], ['besok', 'Besok'], ['minggu depan'
 
 const kartuTenggat = (x, penanda) => {
   const bisaTunda = !x.berulang && jadwalUlang(x.blok.content, 'besok') !== null;
+  const sudahSelesai = !!(x.blok.meta && x.blok.meta.checked);
   return `<div class="tdg-item">
-  <button class="row" data-todo-lompat="${x.n.id}" data-todo-bid="${x.bid}"
-    title="${tr('Buka di catatan')} «${esc(x.n.title || tr('Tanpa judul'))}»">
-    <div class="row-b">
-      <div class="row-t" style="display:flex;align-items:center;gap:8px;min-width:0">
-        <span class="tdg-chip">${x.prioritas ? '<b class="tdg-prio" aria-label="' + tr('prioritas') + '">' + '!'.repeat(x.prioritas) + '</b> ' : ''}${x.berulang ? '↻ ' : ''}${esc(chipTenggat(x))}</span>
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(
-          x.sisa || (x.blok.content || '').replace(/<[^>]*>/g, ' ').trim()
-            || tr('Tanpa isi'))}</span></div>
-      <div class="row-s">${esc(x.n.title || tr('Tanpa judul'))} · ${esc(penanda)}</div>
-    </div>
-  </button>
+  <div class="tdg-main-row">
+    <button type="button" class="tobox-btn${sudahSelesai ? ' on' : ''}"
+      data-todo-cek="${esc(x.n.id)}" data-todo-bid="${esc(x.bid)}"
+      aria-label="${sudahSelesai ? tr('Tandai belum selesai') : tr('Tandai selesai')}">
+      <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>
+    </button>
+    <button class="row" data-todo-lompat="${x.n.id}" data-todo-bid="${x.bid}"
+      title="${tr('Buka di catatan')} «${esc(x.n.title || tr('Tanpa judul'))}»">
+      <div class="row-b">
+        <div class="row-t" style="display:flex;align-items:center;gap:8px;min-width:0">
+          <span class="tdg-chip">${x.prioritas ? '<b class="tdg-prio" aria-label="' + tr('prioritas') + '">' + '!'.repeat(x.prioritas) + '</b> ' : ''}${x.berulang ? '↻ ' : ''}${esc(chipTenggat(x))}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${sudahSelesai ? 'text-decoration:line-through;opacity:.65' : ''}">${esc(
+            x.sisa || (x.blok.content || '').replace(/<[^>]*>/g, ' ').trim()
+              || tr('Tanpa isi'))}</span></div>
+        <div class="row-s">${esc(x.n.title || tr('Tanpa judul'))} · ${esc(penanda)}</div>
+      </div>
+    </button>
+  </div>
   ${bisaTunda ? `<div class="tdg-tunda" role="group" aria-label="${tr('Jadwal ulang')}">
     ${PILIHAN_TUNDA.map(([kode, label]) => `<button class="tdg-btn" type="button"
       data-tunda="${esc(kode)}" data-note="${esc(x.n.id)}" data-bid="${esc(x.bid)}">${tr(label)}</button>`).join('')}
   </div>` : ''}
 </div>`;
 };
+
+/**
+ * Centang / batalkan centang to-do langsung dari daftar (Catatan / Tugas / Reminder)
+ * tanpa perlu membuka editor catatan. Mendukung tugas berulang & Urungkan.
+ */
+export function toggleTodoDariDaftar(noteId, bid) {
+  const n = state.notes.find(x => x.id === noteId);
+  const b = n && (n.blocks || []).find(x => x.id === bid && x.type === 'todo');
+  if (!n || !b) return false;
+  const sblm = JSON.parse(JSON.stringify(b.meta || {}));
+  b.meta = { ...(b.meta || {}) };
+  const akanCentang = !b.meta.checked;
+
+  if (akanCentang) {
+    const nx = ulangSetelahCentang(b.content || '', Number(b.meta.ulangKe) || 0);
+    if (nx) {
+      b.meta.ulangKe = nx;
+      b.meta.checked = false;
+      delete b.meta.done;
+      touch(n);
+      save();
+      if (cur === 'notes' || cur === 'task' || cur === 'rem') go(cur);
+      toast(tr('Berulang · berikutnya') + ' ' + new Date(nx).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }));
+      return true;
+    }
+    b.meta.checked = true;
+    b.meta.done = Date.now();
+  } else {
+    b.meta.checked = false;
+    delete b.meta.done;
+  }
+
+  touch(n);
+  save();
+  if (cur === 'notes' || cur === 'task' || cur === 'rem') go(cur);
+  toast(akanCentang ? tr('Tugas selesai') : tr('Dikembalikan ke belum selesai'), {
+    label: tr('Urungkan'),
+    fn: () => {
+      b.meta = sblm;
+      touch(n);
+      save();
+      if (cur === 'notes' || cur === 'task' || cur === 'rem') go(cur);
+    },
+  });
+  return true;
+}
 
 /* Menjadwalkan ulang satu to-do. Model diubah lalu disimpan; layar
    Tugas/Reminder digambar ulang supaya daftarnya langsung benar. */
@@ -122,7 +177,7 @@ const kalenderHtml = daftar => {
 
   const terpilih = semua.filter(x => jatuhPada(x, kalPilih));
   const judulPilih = new Date(kalPilih).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-  return `<div class="sec" style="margin-top:22px"><h2>${tr('Kalender')}</h2></div>
+  return `<div class="sec" id="kal-bagian" style="margin-top:22px"><h2>${tr('Kalender')}</h2></div>
   <div class="card kal">
     <div class="kal-head">
       <button type="button" class="kal-nav" data-kal="prev" aria-label="${tr('Bulan sebelumnya')}">‹</button>
@@ -227,7 +282,7 @@ export const reminderView = () => {
          <p>${tr('Tidak ada to-do yang jatuh tempo hari ini. Tenggat lewat pun akan muncul di sini sampai kamu menuntaskannya.')}</p></div>`}
     <div class="sec" style="margin-top:22px"><h2>${tr('Baru selesai')}</h2></div>
     ${tuntas.length
-      ? `<div class="card">${tuntas.slice(0, 8).map(x => kartuTenggat(x, (tr('selesai') + ' ' + sisaWaktu)(x.blok.meta.done))).join('')}</div>`
+      ? `<div class="card">${tuntas.slice(0, 8).map(x => kartuTenggat(x, tr('selesai') + ' ' + sisaWaktu(x.blok.meta.done))).join('')}</div>`
       : `<p class="dm-kosong" style="padding:2px 2px 6px">${tr('Belum ada yang selesai hari ini.')}</p>`}
   </div>`;
 };

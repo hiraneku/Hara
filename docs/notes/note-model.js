@@ -28,7 +28,7 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261010054709';
+import { t as tr } from '../core/i18n.js?v=20261023155617';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -41,6 +41,9 @@ export const BLOCK_TYPES = [
   'divider',
   'image',
   'callout',      /* di luar daftar minimum, tapi sudah dipakai aplikasi */
+  'toggle',
+  'table',
+  'audio',
 ];
 
 /* Pemetaan jenis blok <-> kelas CSS yang dipakai editor saat ini. */
@@ -54,6 +57,9 @@ const TYPE_TO_CLASS = {
   divider: 'b-div',
   image: 'b-img',
   callout: 'b-cal',
+  toggle: 'b-toggle',
+  table: 'b-table',
+  audio: 'b-audio',
   /* heading ditangani terpisah karena bergantung meta.level */
 };
 
@@ -70,6 +76,9 @@ const CLASS_TO_TYPE = {
   'b-div': 'divider',
   'b-img': 'image',
   'b-cal': 'callout',
+  'b-toggle': 'toggle',
+  'b-table': 'table',
+  'b-audio': 'audio',
 };
 
 const HEADING_CLASS = { 1: 'b-h1', 2: 'b-h2', 3: 'b-h3' };
@@ -154,7 +163,19 @@ export function makeNote(patch = {}) {
 export function plainText(note) {
   if (!note || !Array.isArray(note.blocks)) return '';
   return note.blocks
-    .map(b => stripTags(b.content))
+    .map(b => {
+      if (b.type === 'toggle') {
+        const s = (b.meta && b.meta.summary) ? b.meta.summary + '\n' : '';
+        return (s + stripTags(b.content)).trim();
+      }
+      if (b.type === 'table' && b.meta && Array.isArray(b.meta.rows)) {
+        return b.meta.rows.map(r => r.join(' ')).join('\n').trim();
+      }
+      if (b.type === 'audio') {
+        return String((b.meta && b.meta.title) || '');
+      }
+      return stripTags(b.content);
+    })
     .filter(Boolean)
     .join('\n');
 }
@@ -187,6 +208,54 @@ export function blockToHtml(b) {
 
   if (b.type === 'divider')
     return `<div class="b-div" contenteditable="false"${bid}></div>`;
+
+  if (b.type === 'toggle') {
+    const buka = meta.open === false ? '0' : '1';
+    const sum = escAttr(meta.summary || '');
+    return `<div class="b-toggle" contenteditable="false" data-open="${buka}"${bid}${ref}>` +
+      `<div class="tgl-head">` +
+      `<button type="button" class="tgl-btn" data-tgl-btn aria-expanded="${buka === '1' ? 'true' : 'false'}" aria-label="Toggle">▸</button>` +
+      `<input type="text" class="tgl-sum" value="${sum}" placeholder="${tr('Judul bagian lipat…')}">` +
+      `<button type="button" class="tgl-del" data-tgl-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}">✕</button>` +
+      `</div>` +
+      `<div class="tgl-isi" contenteditable="true" data-ph="${tr('Isi bagian lipat…')}">${b.content || ''}</div>` +
+      `${pegangan()}</div>`;
+  }
+
+  if (b.type === 'table') {
+    const rawRows = Array.isArray(meta.rows) && meta.rows.length
+      ? meta.rows
+      : [[tr('Kolom 1'), tr('Kolom 2')], ['', '']];
+    const head = rawRows[0] || [''];
+    const body = rawRows.length > 1 ? rawRows.slice(1) : [head.map(() => '')];
+    const escCell = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<div class="b-table" contenteditable="false"${bid}${ref}>` +
+      `<div class="tbl-bar">` +
+      `<button type="button" data-tbl-act="add-row">+ ${tr('Baris')}</button>` +
+      `<button type="button" data-tbl-act="add-col">+ ${tr('Kolom')}</button>` +
+      `<button type="button" data-tbl-act="del-row">− ${tr('Baris')}</button>` +
+      `<button type="button" data-tbl-act="del-col">− ${tr('Kolom')}</button>` +
+      `<button type="button" data-tbl-act="del-table" class="tbl-danger" title="${tr('Hapus')}">✕</button>` +
+      `</div>` +
+      `<div class="tbl-scroll"><table>` +
+      `<thead><tr>${head.map(c => `<th contenteditable="true">${escCell(c)}</th>`).join('')}</tr></thead>` +
+      `<tbody>${body.map(r => `<tr>${head.map((_, idx) => `<td contenteditable="true">${escCell(r[idx])}</td>`).join('')}</tr>`).join('')}</tbody>` +
+      `</table></div>${pegangan()}</div>`;
+  }
+
+  if (b.type === 'audio') {
+    const blobId = escAttr(meta.blobId || '');
+    const judul = escAttr(meta.title || tr('Memo suara'));
+    const dur = Math.max(0, Number(meta.duration) || 0);
+    const labelDur = `${String(Math.floor(dur / 60)).padStart(2, '0')}:${String(dur % 60).padStart(2, '0')}`;
+    return `<figure class="b-audio" contenteditable="false" data-blob="${blobId}" data-dur="${dur}"${bid}${ref}>` +
+      `<button type="button" class="aud-btn" data-aud-play aria-label="${tr('Putar memo suara')}">▶</button>` +
+      `<input type="text" class="aud-title" value="${judul}" aria-label="${tr('Judul memo')}">` +
+      `<span class="aud-dur">${labelDur}</span>` +
+      `<button type="button" class="aud-speed" data-aud-speed>1×</button>` +
+      `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}">✕</button>` +
+      `<audio preload="metadata"></audio>${pegangan()}</figure>`;
+  }
 
   if (b.type === 'image') {
     const alt = escAttr(meta.alt || 'gambar');
@@ -248,7 +317,8 @@ export function blockToHtml(b) {
 
   const cls = (TYPE_TO_CLASS[b.type] || 'b-p') +
     (meta.gslot ? ' g-slot' : '') + (meta.gsisi ? ' sisi' : '');
-  return `<div class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
+  const lang = b.type === 'code' && meta.lang ? ` data-lang="${escAttr(meta.lang)}"` : '';
+  return `<div class="${cls}"${bid}${lang}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
 }
 
 /* Pegangan seret blok (desktop). Elemen asli di DOM, tapi DIBUANG saat
@@ -318,6 +388,22 @@ export function elToBlock(el) {
 
   if (type === 'divider') {
     /* tanpa isi */
+  } else if (type === 'toggle') {
+    const sum = el.querySelector && el.querySelector('.tgl-sum');
+    const isi = el.querySelector && el.querySelector('.tgl-isi');
+    meta.summary = sum ? sum.value : '';
+    meta.open = el.getAttribute('data-open') !== '0';
+    content = isi ? isi.innerHTML || '' : '';
+  } else if (type === 'table') {
+    const trs = el.querySelectorAll ? Array.from(el.querySelectorAll('tr')) : [];
+    meta.rows = trs.map(row =>
+      Array.from(row.querySelectorAll('th,td')).map(c => (c.textContent || '').trim())
+    );
+  } else if (type === 'audio') {
+    const inp = el.querySelector && el.querySelector('.aud-title');
+    meta.blobId = el.getAttribute('data-blob') || '';
+    meta.duration = Number(el.getAttribute('data-dur')) || 0;
+    meta.title = inp ? inp.value : '';
   } else if (type === 'image') {
     const img = el.querySelector && el.querySelector('img[data-blob]');
     if (img) {
@@ -367,6 +453,10 @@ export function elToBlock(el) {
     if (l) meta.label = l;
     content = el.innerHTML || '';
   } else {
+    if (type === 'code') {
+      const lg = el.getAttribute('data-lang');
+      if (lg) meta.lang = lg;
+    }
     content = el.innerHTML || '';
   }
 

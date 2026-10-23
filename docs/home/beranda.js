@@ -2,10 +2,11 @@
    widget musik (UI dulu, pemutar belum dihubungkan), dan bilah alat
    (Catatan & Pengingat). Dipasang sebagai tampilan layar 'home'. */
 
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261010054709';
-import { cur, onAfterRender } from '../core/router.js?v=20261010054709';
-import { toast } from '../core/toast.js?v=20261010054709';
-import { namaSekarang, setNama } from './nama.js?v=20261010054709';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261023155617';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261023155617';
+import { bukaPalette } from '../core/palette.js?v=20261023155617';
+import { toast } from '../core/toast.js?v=20261023155617';
+import { namaSekarang, setNama } from './nama.js?v=20261023155617';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -146,13 +147,13 @@ export function berandaView() {
   <nav class="bh-kartu bh-alat" aria-label="${tr('Alat')}">
     <button type="button" class="bh-alat-item aktif" data-go="notes">
       <span class="bh-alat-ikon">${ikon('note')}</span><span>${tr('Catatan')}</span></button>
-    <button type="button" class="bh-alat-item" data-bh="belum">
+    <button type="button" class="bh-alat-item aktif" data-bh="kalender">
       <span class="bh-alat-ikon">${ikon('cal')}</span><span>${tr('Kalender')}</span></button>
-    <button type="button" class="bh-alat-item" data-bh="belum">
+    <button type="button" class="bh-alat-item aktif" data-go="task">
       <span class="bh-alat-ikon">${ikon('task')}</span><span>${tr('Tugas')}</span></button>
     <button type="button" class="bh-alat-item aktif" data-go="rem">
       <span class="bh-alat-ikon">${ikon('bell')}</span><span>${tr('Pengingat')}</span></button>
-    <button type="button" class="bh-alat-item" data-bh="belum">
+    <button type="button" class="bh-alat-item aktif" data-bh="lainnya">
       <span class="bh-alat-ikon">${ikon('grid')}</span><span>${tr('Lainnya')}</span></button>
   </nav>
 </div></div>`;
@@ -244,6 +245,14 @@ export function mulaiBeranda() {
     const a = b.dataset.bh;
     if (a === 'quote') gantiQuote();
     else if (a === 'cuaca') ambilCuaca(true);
+    else if (a === 'kalender') {
+      go('task');
+      setTimeout(() => {
+        const kb = document.getElementById('kal-bagian');
+        if (kb && kb.scrollIntoView) { try { kb.scrollIntoView({ behavior: 'smooth' }); } catch (err) {} }
+      }, 60);
+    }
+    else if (a === 'lainnya') bukaPalette();
     else if (a === 'belum') toast(tr('Segera hadir'));
     else aksiMusik(a);
   });
@@ -257,6 +266,8 @@ export function mulaiBeranda() {
   /* unref() hanya ada di Node: dipakai uji agar proses tidak menggantung. Di browser tidak berpengaruh. */
   const jam = setInterval(() => { if (cur === 'home') segarkanSapaanDOM(); }, 30 * 1000);
   const segar = setInterval(() => { if (cur === 'home') ambilCuaca(false); }, SEGAR_MS);
+  jam?.unref?.();
+  segar?.unref?.();
   const awal = setTimeout(() => ambilCuaca(false), 1500);
   [jam, segar, awal].forEach(t => t && typeof t.unref === 'function' && t.unref());
 }

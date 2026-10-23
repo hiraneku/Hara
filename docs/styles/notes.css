@@ -174,6 +174,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 
 .fab{position:fixed;right:24px;bottom:24px;width:52px;height:52px;border-radius:999px;
   background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:var(--shadow-pop);z-index:40}
+.fab.hide{display:none}
 [data-theme=dark] .fab{color:#131711}
 .fab .ico{width:22px;height:22px;stroke-width:2}
 .scrim{position:fixed;inset:0;background:rgba(28,27,24,.32);z-index:50;opacity:0;pointer-events:none;transition:.18s}
@@ -676,7 +677,7 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
   body{background:#fff!important}
   body *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .app{display:block!important;padding:0!important;margin:0!important}
-  .side,.head,.bnav,.fab,.scrim,.sheet,.mech,.pop,.toast,#rec-bar{display:none!important}
+  .side,.head,.bnav,.fab,.scrim,.sheet,.mech,.pop,.toast,#rec-bar,#cari-float,#code-bar,#wl-pill{display:none!important}
   .main{max-width:none!important;width:auto!important;margin:0!important;padding:0!important;border:0!important}
   #wrap{overflow:visible!important;height:auto!important}
   .ed{max-width:none!important;margin:0!important;padding:14mm 12mm 0!important}
@@ -1832,3 +1833,204 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .stat-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:8px}
 .stat-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10.5px;color:var(--muted)}
 .stat-bar{width:100%;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px}
+
+/* ── Tombol Mengambang Cari di Dalam Catatan (Mode Baca) ── */
+.cari-float-btn{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:68;
+  display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 16px;border-radius:999px;
+  background:var(--surface);color:var(--text);border:1.5px solid var(--border-strong);
+  box-shadow:var(--shadow-modal);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+  transition:transform .14s var(--ease),border-color .14s var(--ease),background .14s var(--ease)}
+.cari-float-btn[hidden]{display:none!important}
+.cari-float-btn .ico{width:17px;height:17px;color:var(--accent)}
+.cari-float-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cari-float-btn:active{transform:scale(.96)}
+body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:90}
+
+/* ── Studio Gambar Emoji / Stiker Kustom Hamoji ── */
+.hamoji-seg-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hamoji-seg-bar .hamoji-seg{flex:1;min-width:190px}
+.hamoji-draw-trigger{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;
+  border-radius:var(--r-md);background:var(--accent-weak);color:var(--accent);
+  border:1px solid var(--accent);font:inherit;font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:.12s var(--ease)}
+.hamoji-draw-trigger:hover{background:var(--accent);color:#fff}
+[data-theme=dark] .hamoji-draw-trigger:hover{color:#131711}
+.hamoji-draw-trigger .ico{width:14px;height:14px}
+
+.hamoji-card-wrap{position:relative;display:flex}
+.hamoji-card-wrap .hamoji-item-card{width:100%}
+.hamoji-card-tools{position:absolute;top:4px;left:4px;display:flex;gap:3px;z-index:3;opacity:0;transition:opacity .12s var(--ease)}
+.hamoji-card-wrap:hover .hamoji-card-tools,.hamoji-card-wrap:focus-within .hamoji-card-tools{opacity:1}
+@media (hover:none){.hamoji-card-tools{opacity:.92}}
+.hamoji-card-mini{width:20px;height:20px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);font-size:11px;display:grid;place-items:center;
+  cursor:pointer;padding:0;line-height:1}
+.hamoji-card-mini:hover{border-color:var(--accent);color:var(--accent)}
+.hamoji-card-mini.is-del:hover{border-color:var(--danger);color:var(--danger)}
+
+.hamoji-drawn-img{width:42px;height:42px;object-fit:contain;pointer-events:none;user-select:none}
+.hamoji-sticker .hamoji-drawn-img{width:var(--stk-size,64px);height:var(--stk-size,64px);max-width:none;max-height:none}
+
+.hamoji-studio-modal{max-width:430px;gap:10px}
+.hs-canvas-stage{display:flex;align-items:center;justify-content:center;gap:10px}
+.hs-canvas-wrap{width:min(232px,66vw);aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+  border:1.5px solid var(--border-strong);box-shadow:inset 0 1px 4px rgba(0,0,0,.06);
+  background-color:#ffffff;
+  background-image:linear-gradient(45deg,#eceae4 25%,transparent 25%),
+    linear-gradient(-45deg,#eceae4 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#eceae4 75%),
+    linear-gradient(-45deg,transparent 75%,#eceae4 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+[data-theme=dark] .hs-canvas-wrap{
+  background-color:#262522;
+  background-image:linear-gradient(45deg,#33312c 25%,transparent 25%),
+    linear-gradient(-45deg,#33312c 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#33312c 75%),
+    linear-gradient(-45deg,transparent 75%,#33312c 75%)}
+#hs-canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.hs-side-acts{display:flex;flex-direction:column;gap:6px}
+.hs-act-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+  background:var(--sunken);color:var(--text);display:grid;place-items:center;font-size:15px;cursor:pointer}
+.hs-act-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hs-act-btn.hs-danger:hover{border-color:var(--danger);color:var(--danger)}
+.hs-act-btn .ico{width:16px;height:16px}
+.hs-tools-row{display:flex;gap:5px;flex-wrap:wrap}
+.hs-tool{height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--sunken);color:var(--muted);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.hs-tool.active{background:var(--accent-weak);border-color:var(--accent);color:var(--accent);font-weight:600}
+.hs-size-row{display:flex;align-items:center;gap:8px}
+.hs-lbl{font-size:11.5px;color:var(--muted);font-weight:500;flex:none}
+.hs-size-dots{display:flex;gap:4px;flex:none}
+.hs-size-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);
+  background:var(--sunken);display:grid;place-items:center;cursor:pointer;padding:0}
+.hs-size-btn span{display:block;border-radius:999px;background:var(--text)}
+.hs-size-btn.active{border-color:var(--accent);background:var(--accent-weak)}
+.hs-size-btn.active span{background:var(--accent)}
+#hs-size-range{flex:1;min-width:60px;accent-color:var(--accent)}
+.hs-size-val{font-size:11.5px;font-family:var(--mono);color:var(--muted);width:34px;text-align:right;flex:none}
+.hs-palette-row{display:flex;align-items:center;gap:8px}
+.hs-swatches{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.hs-sw{width:24px;height:24px;border-radius:999px;border:1.5px solid rgba(0,0,0,.16);cursor:pointer;padding:0}
+.hs-sw.active{outline:2px solid var(--accent);outline-offset:2px}
+.hs-picker-wrap{width:32px;height:32px;border-radius:9px;overflow:hidden;border:1px solid var(--border-strong);flex:none;cursor:pointer}
+.hs-picker-wrap input{width:44px;height:44px;margin:-6px;border:0;padding:0;cursor:pointer;background:none}
+.hs-save-row{display:flex;flex-direction:column;gap:8px;padding-top:2px}
+.hs-save-btns{display:flex;justify-content:flex-end;gap:8px}
+
+/* ── Centang Langsung di Daftar Catatan, Tugas & Reminder ── */
+.tdg-main-row,.trowe-wrap{display:flex;align-items:center;width:100%}
+.trowe-wrap{border-bottom:1px solid var(--border)}
+.trowe-wrap:last-child{border-bottom:none}
+.trowe-wrap .row,.tdg-main-row .row{flex:1;min-width:0;border-bottom:none}
+.tobox-btn{width:40px;height:44px;flex:none;display:grid;place-items:center;margin-left:6px;
+  cursor:pointer;background:none;border:0;padding:0}
+.tobox-btn svg{width:19px;height:19px;border:1.5px solid var(--border-strong);border-radius:999px;
+  padding:3px;stroke:transparent;stroke-width:2.6;fill:none;transition:.12s var(--ease)}
+.tobox-btn:hover svg{border-color:var(--accent)}
+.tobox-btn.on svg{background:var(--accent);border-color:var(--accent);stroke:#fff}
+[data-theme=dark] .tobox-btn.on svg{stroke:#131711}
+
+/* ── Ruang / Folder, Tampilan Kartu Grid, Kanban & Riwayat Versi ── */
+.ruang-bar{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:0 0 14px;scrollbar-width:none}
+.ruang-bar::-webkit-scrollbar{display:none}
+.ruang-pill{display:inline-flex;align-items:center;gap:6px;height:31px;padding:0 12px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);font:inherit;
+  font-size:12.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:.12s var(--ease)}
+.ruang-pill:hover{border-color:var(--border-strong);color:var(--text)}
+.ruang-pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme=dark] .ruang-pill.on{color:#131711}
+.ruang-n{font-size:11px;opacity:.8}
+.ruang-add{border-style:dashed;color:var(--accent)}
+.tg-ruang{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;
+  background:var(--sunken);color:var(--muted);font-size:11px;font-weight:500}
+.urut-chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-weak)}
+
+.card.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;
+  background:transparent;border:0;overflow:visible}
+.card.card-grid .row{flex-direction:column;align-items:flex-start;gap:8px;padding:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);height:100%}
+.card.card-grid .row:hover{border-color:var(--accent)}
+.card.card-grid .row-s{white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.card.card-grid .row-th{width:100%;height:110px;object-fit:cover;border-radius:8px;margin:0}
+
+.kb-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:8px}
+.kb-col{background:var(--sunken);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.kb-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.kb-list{display:flex;flex-direction:column;gap:6px}
+.kb-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.kb-title{font-size:13px;font-weight:600;color:var(--text);text-decoration:none}
+.kb-title:hover{color:var(--accent)}
+.kb-move{display:flex;gap:4px;flex-wrap:wrap}
+.kb-mv-btn{font-size:10.5px;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:var(--sunken);color:var(--muted);cursor:pointer}
+.kb-mv-btn:hover{border-color:var(--accent);color:var(--accent)}
+.kb-empty{font-size:12px;color:var(--faint)}
+.ver-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.ver-item:last-child{border-bottom:0}
+
+/* ── Blok Modern Editor: Toggle Lipat, Tabel Responsif, Memo Suara, Bilah Kode & Pill Wikilink ── */
+.ed-doc .b-code[data-lang]::before{content:attr(data-lang);display:block;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px;user-select:none}
+.code-float-bar{position:fixed;z-index:62;display:flex;align-items:center;gap:5px;padding:3px 5px;
+  border-radius:8px;background:var(--surface);border:1px solid var(--border-strong);box-shadow:var(--shadow-pop)}
+.code-float-bar[hidden]{display:none!important}
+.code-lang-sel{height:24px;border-radius:5px;border:1px solid var(--border);background:var(--sunken);
+  color:var(--text);font-family:var(--mono);font-size:11px;padding:0 4px}
+.code-copy-btn{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;
+  border-radius:5px;background:var(--accent-weak);color:var(--accent);font-size:11.5px;font-weight:600;cursor:pointer}
+.code-copy-btn:hover{background:var(--accent);color:#fff}
+[data-theme=dark] .code-copy-btn:hover{color:#131711}
+
+.wl-float-pill{position:fixed;z-index:64;display:inline-flex;align-items:center;gap:6px;
+  height:30px;padding:0 12px;border-radius:999px;background:var(--surface);color:var(--accent);
+  border:1px solid var(--accent);box-shadow:var(--shadow-pop);font-size:12.5px;font-weight:600;cursor:pointer}
+.wl-float-pill[hidden]{display:none!important}
+
+.b-toggle{border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);
+  padding:8px 12px;margin:8px 0}
+.tgl-head{display:flex;align-items:center;gap:6px}
+.tgl-btn{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:var(--muted);
+  font-size:13px;cursor:pointer;transition:transform .14s var(--ease)}
+.b-toggle[data-open="1"] .tgl-btn{transform:rotate(90deg);color:var(--accent)}
+.tgl-sum{flex:1;border:0;background:none;font:inherit;font-size:15px;font-weight:600;color:var(--text);outline:none}
+.tgl-del{width:22px;height:22px;border-radius:6px;color:var(--faint);font-size:11px;display:grid;place-items:center;cursor:pointer}
+.tgl-del:hover{color:var(--danger);background:var(--sunken)}
+.tgl-isi{margin-top:6px;padding:6px 4px 2px 30px;border-top:1px dashed var(--border);
+  font-size:15px;line-height:1.65;outline:none;min-height:1.6em}
+.tgl-isi:empty::before{content:attr(data-ph);color:var(--faint)}
+.b-toggle[data-open="0"] .tgl-isi{display:none}
+.ed.baca .tgl-del{display:none}
+
+.b-table{margin:10px 0;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
+.tbl-bar{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:var(--sunken);border-bottom:1px solid var(--border)}
+.tbl-bar button{height:24px;padding:0 8px;border-radius:5px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);font-size:11.5px;font-weight:500;cursor:pointer}
+.tbl-bar button:hover{border-color:var(--accent);color:var(--accent)}
+.tbl-bar .tbl-danger{margin-left:auto}
+.tbl-bar .tbl-danger:hover{border-color:var(--danger);color:var(--danger)}
+.ed.baca .tbl-bar{display:none}
+.tbl-scroll{overflow-x:auto}
+.b-table table{width:100%;border-collapse:collapse;font-size:14px}
+.b-table th,.b-table td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:7px 10px;min-width:84px;text-align:left;outline:none}
+.b-table th:last-child,.b-table td:last-child{border-right:0}
+.b-table tbody tr:last-child td{border-bottom:0}
+.b-table th{background:var(--sunken);font-weight:600;font-size:13px}
+.b-table th:focus,.b-table td:focus{background:var(--accent-weak)}
+
+.b-audio{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:8px 0;
+  border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface)}
+.aud-btn{width:34px;height:34px;border-radius:999px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:13px;flex:none;cursor:pointer}
+[data-theme=dark] .aud-btn{color:#131711}
+.aud-title{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;font-weight:500;color:var(--text);outline:none}
+.aud-dur{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
+.aud-speed{height:24px;padding:0 7px;border-radius:6px;background:var(--sunken);color:var(--muted);
+  font-family:var(--mono);font-size:11.5px;cursor:pointer;flex:none}
+.aud-del{width:24px;height:24px;border-radius:6px;color:var(--faint);font-size:11px;display:grid;place-items:center;cursor:pointer}
+.aud-del:hover{color:var(--danger);background:var(--sunken)}
+.ed.baca .aud-del{display:none}
+.aud-rec-status{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;
+  border-radius:10px;background:var(--sunken);font-family:var(--mono);font-size:20px;font-weight:600}
+.aud-rec-dot{width:11px;height:11px;border-radius:999px;background:var(--faint)}
+.aud-rec-dot.on{background:#e53935;box-shadow:0 0 0 4px rgba(229,57,53,.22)}
+

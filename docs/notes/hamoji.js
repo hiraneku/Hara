@@ -12,17 +12,18 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20261010054709';
-import { touch } from './note-model.js?v=20261010054709';
-import { saveSoon } from './editor/cleanup.js?v=20261010054709';
-import { openPop, closeAll } from './menus/pop.js?v=20261010054709';
-import { esc } from '../core/dom.js?v=20261010054709';
-import { toast } from '../core/toast.js?v=20261010054709';
-import { t as tr } from '../core/i18n.js?v=20261010054709';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261010054709';
-import { refresh } from './editor/cleanup.js?v=20261010054709';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261010054709';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261010054709';
+import { state } from '../core/store.js?v=20261023155617';
+import { touch } from './note-model.js?v=20261023155617';
+import { saveSoon } from './editor/cleanup.js?v=20261023155617';
+import { openPop, closeAll } from './menus/pop.js?v=20261023155617';
+import { esc } from '../core/dom.js?v=20261023155617';
+import { toast } from '../core/toast.js?v=20261023155617';
+import { t as tr } from '../core/i18n.js?v=20261023155617';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261023155617';
+import { refresh } from './editor/cleanup.js?v=20261023155617';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261023155617';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261023155617';
+import { bukaStudioGambar } from './hamoji-gambar.js?v=20261023155617';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -306,18 +307,41 @@ export function muatCustomHamoji() {
 export function simpanCustomHamoji(item) {
   try {
     const list = muatCustomHamoji();
-    list.unshift({
-      id: 'custom-' + Date.now().toString(36),
-      text: item.text,
+    const idBaru = item.id || ((item.dataUrl ? 'drawn-' : 'custom-') + Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
+    const entri = {
+      id: idBaru,
+      text: item.text || `:${(item.name || 'stiker').toLowerCase().replace(/[^a-z0-9]+/g, '-')}:`,
       name: item.name || 'Kustom Baru',
       cat: 'custom',
-      tags: item.tags || 'kustom custom user',
-    });
+      isCustom: true,
+      isDrawn: !!item.dataUrl,
+      ...(item.dataUrl ? { dataUrl: item.dataUrl, warna: item.warna || '' } : {}),
+      tags: item.tags || `${item.name || ''} kustom custom gambar stiker user`.trim(),
+    };
+    const idxLama = list.findIndex(x => x.id === idBaru);
+    if (idxLama >= 0) list[idxLama] = entri;
+    else list.unshift(entri);
     localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify(list));
     return list;
   } catch (e) {
     return [];
   }
+}
+
+export function setDaftarCustomHamoji(daftarBaru, gabung = false) {
+  try {
+    if (!Array.isArray(daftarBaru)) return;
+    if (!gabung) {
+      localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify(daftarBaru));
+      return;
+    }
+    const lama = muatCustomHamoji();
+    const map = new Map(lama.map(x => [x.id, x]));
+    for (const it of daftarBaru) {
+      if (it && it.id) map.set(it.id, it);
+    }
+    localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify([...map.values()]));
+  } catch (e) {}
 }
 
 export function hapusCustomHamoji(id) {
@@ -366,8 +390,17 @@ export function getFilteredHamojiList(cat = _currentCategory, query = _searchQue
   return all;
 }
 
-/* ── Renderer Visual Moji Kustom & Stiker (Vektor SVG Orisinal) ── */
-export function renderCustomMojiHtml(idOrText, textFallback = '', color = '') {
+/* ── Renderer Visual Moji Kustom & Stiker (Vektor SVG + Gambar Tangan Pengguna) ── */
+export function renderCustomMojiHtml(idOrText, textFallback = '', color = '', imgData = '') {
+  if (imgData) {
+    return `<img class="hamoji-drawn-img" src="${esc(imgData)}" alt="${esc(textFallback || 'stiker')}" draggable="false">`;
+  }
+  const userList = muatCustomHamoji();
+  const userItem = userList.find(u => u && (u.id === idOrText || u.text === idOrText));
+  if (userItem && userItem.dataUrl) {
+    return `<img class="hamoji-drawn-img" src="${esc(userItem.dataUrl)}" alt="${esc(userItem.name || textFallback || 'stiker')}" draggable="false">`;
+  }
+
   let template = CUSTOM_MOJI_TEMPLATES[idOrText];
   if (!template) {
     const foundId = Object.keys(CUSTOM_MOJI_TEMPLATES).find(
@@ -461,13 +494,17 @@ export function tambahStikerHamoji(text, color = _currentColor, customId = '') {
     startY += offset;
   }
 
+  const userItem = customId ? muatCustomHamoji().find(u => u.id === customId) : null;
+  const isDrawn = !!(userItem && userItem.dataUrl);
+
   const newSticker = {
     id: 'stk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    text: text.trim(),
+    text: (text || (userItem && userItem.name) || 'stiker').trim(),
     customId: customId || '',
+    ...(isDrawn ? { imgData: userItem.dataUrl } : {}),
     x: startX,
     y: startY,
-    size: 26,
+    size: isDrawn ? 64 : 26,
     color: color || '',
     rot: 0,
   };
@@ -525,10 +562,11 @@ export function ubahRotasiStiker(id, rot) {
 export function renderStickersHtml(stickers) {
   if (!Array.isArray(stickers) || stickers.length === 0) return '';
   return stickers.map(s => {
-    const content = renderCustomMojiHtml(s.customId || s.text, s.text, s.color);
+    const content = renderCustomMojiHtml(s.customId || s.text, s.text, s.color, s.imgData || '');
     const rot = typeof s.rot === 'number' ? s.rot : 0;
+    const pakaiGambar = !!(s.imgData || (s.customId && String(s.customId).startsWith('drawn-')));
     return `
-      <div class="hamoji-sticker" data-stk-id="${esc(s.id)}" data-custom-id="${esc(s.customId || '')}" style="left:${s.x || 0}px;top:${s.y || 0}px;--stk-size:${s.size || 26}px;--stk-rot:${rot}deg;transform:rotate(${rot}deg);transform-origin:center center;">
+      <div class="hamoji-sticker${pakaiGambar ? ' is-drawn-stk' : ''}" data-stk-id="${esc(s.id)}" data-custom-id="${esc(s.customId || '')}" style="left:${s.x || 0}px;top:${s.y || 0}px;--stk-size:${s.size || 26}px;--stk-rot:${rot}deg;transform:rotate(${rot}deg);transform-origin:center center;">
         <div class="hamoji-stk-body">
           ${content}
         </div>
@@ -540,9 +578,10 @@ export function renderStickersHtml(stickers) {
             </svg>
           </button>
           <button type="button" class="hamoji-stk-del" data-stk-act="del" aria-label="${tr('Hapus Stiker')}">✕</button>
+          ${pakaiGambar ? '' : `
           <button type="button" class="hamoji-stk-color-btn" data-stk-act="color" title="${tr('Ganti Warna')}">
             <span class="hamoji-stk-color-dot" style="background:${esc(s.color || 'var(--text)')}"></span>
-          </button>
+          </button>`}
           <div class="hamoji-stk-resize" data-stk-act="resize" title="${tr('Ubah Ukuran')}"></div>
         </div>
       </div>
@@ -743,15 +782,21 @@ export function panelHamojiHtml() {
         </button>
       </div>
 
-      <!-- Segmented Control Mode Toggle -->
-      <div class="hamoji-seg">
-        <button type="button" class="hamoji-seg-btn ${!isSticker ? 'active' : ''}" data-hamoji-set-mode="text">
-          <svg class="ico"><use href="#i-txt"/></svg>
-          <span>${tr('Mode Teks')}</span>
-        </button>
-        <button type="button" class="hamoji-seg-btn ${isSticker ? 'active' : ''}" data-hamoji-set-mode="sticker">
-          <svg class="ico"><use href="#i-sticker"/></svg>
-          <span>${tr('Mode Stiker')}</span>
+      <!-- Segmented Control Mode Toggle + Tombol Studio Gambar -->
+      <div class="hamoji-seg-bar">
+        <div class="hamoji-seg">
+          <button type="button" class="hamoji-seg-btn ${!isSticker ? 'active' : ''}" data-hamoji-set-mode="text">
+            <svg class="ico"><use href="#i-txt"/></svg>
+            <span>${tr('Mode Teks')}</span>
+          </button>
+          <button type="button" class="hamoji-seg-btn ${isSticker ? 'active' : ''}" data-hamoji-set-mode="sticker">
+            <svg class="ico"><use href="#i-sticker"/></svg>
+            <span>${tr('Mode Stiker')}</span>
+          </button>
+        </div>
+        <button type="button" class="hamoji-draw-trigger" id="hamoji-open-studio" title="${tr('Gambar emoji atau stikermu sendiri')}">
+          <svg class="ico"><use href="#i-pen"/></svg>
+          <span>${tr('Gambar Sendiri')}</span>
         </button>
       </div>
 
@@ -834,19 +879,28 @@ export function panelHamojiHtml() {
         ` : list.map(item => {
           const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
           const isCustom = item.cat === 'custom' || item.isCustom || isCustomTab;
+          const isMilikUser = !!(item.id && (String(item.id).startsWith('custom-') || String(item.id).startsWith('drawn-')));
           const customId = item.id || '';
-          const previewHtml = (isCustom || item.html)
-            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor)
+          const previewHtml = (isCustom || item.html || item.dataUrl)
+            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor, item.dataUrl || '')
             : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
 
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
-              <div class="hamoji-item-preview-box">
-                ${previewHtml}
-              </div>
-              <div class="hamoji-item-name">${esc(item.name || '')}</div>
-              ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
-            </button>
+            <div class="hamoji-card-wrap">
+              <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
+                <div class="hamoji-item-preview-box">
+                  ${previewHtml}
+                </div>
+                <div class="hamoji-item-name">${esc(item.name || '')}</div>
+                ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
+              </button>
+              ${isMilikUser ? `
+                <div class="hamoji-card-tools">
+                  ${item.dataUrl ? `<button type="button" class="hamoji-card-mini" data-edit-custom="${esc(customId)}" title="${tr('Edit gambar')}" aria-label="${tr('Edit gambar')}">✎</button>` : ''}
+                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}">✕</button>
+                </div>
+              ` : ''}
+            </div>
           `;
         }).join('')}
       </div>
@@ -927,6 +981,76 @@ export function bindHamoji() {
       } else {
         toast(tr('Format warna tidak valid (gunakan #hex / rgb)'));
       }
+      return;
+    }
+
+    // Buka Studio Gambar Emoji / Stiker Sendiri
+    if (e.target.closest('#hamoji-open-studio')) {
+      const anchor = document.getElementById('hamoji-btn');
+      bukaStudioGambar({
+        anchor,
+        onKembali: () => bukaPanelHamoji(anchor),
+        onSimpan: (item, tempelLangsung) => {
+          const daftar = simpanCustomHamoji(item);
+          const disimpan = daftar.find(x => x.dataUrl === item.dataUrl) || daftar[0];
+          setHamojiMode('sticker');
+          _currentCategory = 'custom';
+          if (tempelLangsung && disimpan) {
+            closeAll();
+            tambahStikerHamoji(disimpan.text, '', disimpan.id);
+          } else {
+            toast(tr('Emoji gambar disimpan ke koleksi!'));
+            bukaPanelHamoji(anchor);
+          }
+        },
+      });
+      return;
+    }
+
+    // Edit Gambar Kustom Milik Pengguna
+    const editBtn = e.target.closest('[data-edit-custom]');
+    if (editBtn) {
+      e.stopPropagation();
+      const cid = editBtn.dataset.editCustom;
+      const item = muatCustomHamoji().find(x => x.id === cid);
+      const anchor = document.getElementById('hamoji-btn');
+      if (item) {
+        bukaStudioGambar({
+          anchor,
+          awal: item,
+          onKembali: () => bukaPanelHamoji(anchor),
+          onSimpan: (baru, tempelLangsung) => {
+            const daftar = simpanCustomHamoji(baru);
+            const disimpan = daftar.find(x => x.id === baru.id) || daftar[0];
+            /* Perbarui juga stiker pada catatan terbuka bila merujuk id yang sama */
+            const note = state.notes.find(n => n.id === state.openId);
+            if (note && Array.isArray(note.stickers)) {
+              let berubah = false;
+              note.stickers.forEach(s => {
+                if (s.customId === baru.id) { s.imgData = baru.dataUrl; berubah = true; }
+              });
+              if (berubah) { touch(note); saveSoon(); sinkronkanStikerLayer(note); }
+            }
+            if (tempelLangsung && disimpan) {
+              closeAll();
+              tambahStikerHamoji(disimpan.text, '', disimpan.id);
+            } else {
+              toast(tr('Emoji gambar diperbarui!'));
+              bukaPanelHamoji(anchor);
+            }
+          },
+        });
+      }
+      return;
+    }
+
+    // Hapus Item Kustom dari Koleksi
+    const delCustomBtn = e.target.closest('[data-del-custom]');
+    if (delCustomBtn) {
+      e.stopPropagation();
+      hapusCustomHamoji(delCustomBtn.dataset.delCustom);
+      toast(tr('Dihapus dari koleksi kustom'));
+      bukaPanelHamoji(document.getElementById('hamoji-btn'));
       return;
     }
 
@@ -1019,19 +1143,28 @@ export function bindHamoji() {
         ` : list.map(item => {
           const isWide = item.cat === 'ascii' || (item.text && item.text.length > 13);
           const isCustom = item.cat === 'custom' || item.isCustom || _currentCategory === 'custom';
+          const isMilikUser = !!(item.id && (String(item.id).startsWith('custom-') || String(item.id).startsWith('drawn-')));
           const customId = item.id || '';
-          const previewHtml = (isCustom || item.html)
-            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor)
+          const previewHtml = (isCustom || item.html || item.dataUrl)
+            ? renderCustomMojiHtml(customId || item.text, item.text, _currentColor, item.dataUrl || '')
             : `<div class="hamoji-item-text" style="${_currentColor ? `color:${esc(_currentColor)};` : ''}">${esc(item.text)}</div>`;
 
           return `
-            <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
-              <div class="hamoji-item-preview-box">
-                ${previewHtml}
-              </div>
-              <div class="hamoji-item-name">${esc(item.name || '')}</div>
-              ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
-            </button>
+            <div class="hamoji-card-wrap">
+              <button type="button" class="hamoji-item-card ${isWide ? 'is-wide' : ''} ${isCustom ? 'is-custom-stk' : ''}" data-hamoji-insert="${esc(item.text)}" data-custom-id="${esc(customId)}" data-is-custom="${isCustom ? '1' : '0'}" title="${isCustom ? tr('Stiker Gambar Kustom (Klik untuk tempel)') : esc(item.name || '')}">
+                <div class="hamoji-item-preview-box">
+                  ${previewHtml}
+                </div>
+                <div class="hamoji-item-name">${esc(item.name || '')}</div>
+                ${isCustom ? `<span class="hamoji-stk-badge">${tr('Stiker')}</span>` : ''}
+              </button>
+              ${isMilikUser ? `
+                <div class="hamoji-card-tools">
+                  ${item.dataUrl ? `<button type="button" class="hamoji-card-mini" data-edit-custom="${esc(customId)}" title="${tr('Edit gambar')}" aria-label="${tr('Edit gambar')}">✎</button>` : ''}
+                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}">✕</button>
+                </div>
+              ` : ''}
+            </div>
           `;
         }).join('');
       }
@@ -1127,7 +1260,7 @@ export function bindHamoji() {
       const dx = e.clientX - _activeDrag.startX;
       const dy = e.clientY - _activeDrag.startY;
       const delta = (dx + dy) / 2;
-      const newSize = Math.max(14, Math.min(84, Math.round(_activeDrag.origSize + delta * 0.4)));
+      const newSize = Math.max(16, Math.min(220, Math.round(_activeDrag.origSize + delta * 0.6)));
 
       _activeDrag.el.style.setProperty('--stk-size', newSize + 'px');
       _activeDrag.currentSize = newSize;

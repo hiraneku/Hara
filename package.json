@@ -4,8 +4,11 @@
   "private": true,
   "description": "Hara — aplikasi catatan & alat renamer. Dibungkus Capacitor untuk APK Android.",
   "license": "UNLICENSED",
+  "type": "module",
   "scripts": {
-    "cap:sync": "cap sync android"
+    "cap:sync": "cap sync android",
+    "preview": "node tools/preview.mjs",
+    "test": "ls tools/uji/*.mjs | xargs -P 4 -I {} bash -c 'node \"{}\" || exit 255'"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

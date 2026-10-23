@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20261010151500">
-<link rel="stylesheet" href="./styles/base.css?v=20261010151500">
-<link rel="stylesheet" href="./styles/shell.css?v=20261010151500">
-<link rel="stylesheet" href="./styles/notes.css?v=20261010151500">
-<link rel="stylesheet" href="./styles/renamer.css?v=20261010151500">
-<link rel="stylesheet" href="./styles/beranda.css?v=20261010160000">
+<link rel="stylesheet" href="./styles/tokens.css?v=20261023155617">
+<link rel="stylesheet" href="./styles/base.css?v=20261023155617">
+<link rel="stylesheet" href="./styles/shell.css?v=20261023155617">
+<link rel="stylesheet" href="./styles/notes.css?v=20261023155617">
+<link rel="stylesheet" href="./styles/renamer.css?v=20261023155617">
+<link rel="stylesheet" href="./styles/beranda.css?v=20261023155617">
 </head>
 <body>
 <svg style="display:none">
@@ -80,6 +80,7 @@
 <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14c1.5 2.5 6.5 2.5 8 0"/><circle cx="9" cy="9.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.2" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-sticker" viewBox="0 0 24 24"><path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></symbol>
 <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/><path d="M14.5 15.5a2 2 0 0 0 2-2v-.5a1 1 0 0 1 1-1h1"/></symbol>
+<symbol id="i-cmd" viewBox="0 0 24 24"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></symbol>
 </svg>
 
 <div class="app">
@@ -100,6 +101,7 @@
   <header class="head">
     <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
     <h1 id="title" data-i18n="Beranda">Beranda</h1><div class="sp"></div>
+    <button class="iconbtn" id="pal-btn" title="Palet perintah (Ctrl+K)" aria-label="Palet perintah" data-i18n-tip="Palet perintah (Ctrl+K)" data-i18n-ar="Palet perintah"><svg class="ico"><use href="#i-cmd"/></svg></button>
     <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
     <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)" data-i18n-tip="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
     <button class="iconbtn" id="hamoji-btn" style="display:none" title="Hamoji" aria-label="Hamoji"><svg class="ico"><use href="#i-smile"/></svg></button>
@@ -140,6 +142,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
 </nav>
 
-<script type="module" src="./app.js?v=20261010151500"></script>
+<script type="module" src="./app.js?v=20261023155617"></script>
 </body>
 </html>

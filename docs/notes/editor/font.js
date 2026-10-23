@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261010054709';
-import { refresh } from './cleanup.js?v=20261010054709';
+import { docEl, sel, curBlock } from './caret.js?v=20261023155617';
+import { refresh } from './cleanup.js?v=20261023155617';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -54,12 +54,12 @@ export const FONT_GRUP = [
    Kalau lebarnya berbeda, berarti font yang diminta benar-benar dipakai. */
 const UJI = ['monospace', 'serif', 'sans-serif'];
 const CONTOH = 'mmmmmmmmmmlliWWWWWWWW0123456789';
-let kanvas = null;
+let kanvas = undefined;
 
 function lebar(stack) {
-  if (!kanvas) {
+  if (kanvas === undefined) {
     const c = document.createElement('canvas');
-    kanvas = c.getContext && c.getContext('2d');
+    kanvas = (c.getContext && c.getContext('2d')) || false;
   }
   if (!kanvas) return null;
   kanvas.font = '72px ' + stack;

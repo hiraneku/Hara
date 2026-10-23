@@ -1,20 +1,21 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20261010054709';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261010054709';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261010054709';
-import { MARKSEL, markActive, pending } from './marks.js?v=20261010054709';
-import { state, save, simpanTahan } from '../../core/store.js?v=20261010054709';
-import { findNote } from '../model.js?v=20261010054709';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261010054709';
-import { sinkronTag } from '../tags.js?v=20261010054709';
-import { tandaiTautan } from '../wikilink.js?v=20261010054709';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261010054709';
-import { cur } from '../../core/router.js?v=20261010054709';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261010054709';
-import { GROUPS } from '../bar/config.js?v=20261010054709';
-import { warnaSekarang, warnaPending } from './warna.js?v=20261010054709';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20261010054709';
-import { t as tr, LOKALE } from '../../core/i18n.js?v=20261010054709';
+import { docEl, sel, curBlock } from './caret.js?v=20261023155617';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261023155617';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261023155617';
+import { MARKSEL, markActive, pending } from './marks.js?v=20261023155617';
+import { state, save, simpanTahan } from '../../core/store.js?v=20261023155617';
+import { findNote } from '../model.js?v=20261023155617';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261023155617';
+import { sinkronTag } from '../tags.js?v=20261023155617';
+import { tandaiTautan } from '../wikilink.js?v=20261023155617';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261023155617';
+import { cur } from '../../core/router.js?v=20261023155617';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261023155617';
+import { GROUPS } from '../bar/config.js?v=20261023155617';
+import { warnaSekarang, warnaPending } from './warna.js?v=20261023155617';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20261023155617';
+import { rekamVersiCatatan } from '../ruang.js?v=20261023155617';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20261023155617';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -79,7 +80,7 @@ export function cleanup(){
     });
   });
   Array.from(d.children).forEach(b=>{
-    if(b.classList.contains('b-div')) return;
+    if(b.classList.contains('b-div')||b.classList.contains('b-toggle')||b.classList.contains('b-table')||b.classList.contains('b-audio')) return;
     /* <br> hasil Shift+Enter adalah baris baru SAH dan dipertahankan —
        hanya blok KOSONG yang tidak boleh menyimpan <br> pengganjal. */
     if(b.textContent.replace(/[\u200b\u00a0]/g,'')!==''){
@@ -119,7 +120,8 @@ export function updateCount(){
             .replace(/[\u200b\u00a0]/g,' ').trim();
   const chars=isi.length;
   const words=isi?isi.split(/\s+/).filter(Boolean).length:0;
-  el.innerHTML=`<b>${chars.toLocaleString(LOKALE())}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(LOKALE())}</b> ${tr('kata')}`;
+  const menit=words>=60 ? `<span class="dot">·</span><span>~${Math.max(1,Math.ceil(words/200))} ${tr('mnt')}</span>` : '';
+  el.innerHTML=`<b>${chars.toLocaleString(LOKALE())}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(LOKALE())}</b> ${tr('kata')}${menit}`;
   /* Cuplikan TIDAK disimpan di sini — ia diturunkan dari blocks lewat
      excerptOf() saat daftar catatan digambar. Menyimpannya di dua tempat
      adalah persis sumber-ganda yang ingin dihindari. */
@@ -197,6 +199,7 @@ export function tulisKeCatatan(data){
   /* tag diikuti isi: cache n.tags dihitung ulang dari span .tg */
   sinkronTag(n);
   touch(n);
+  rekamVersiCatatan(n, true).catch(()=>{});
   return simpanTahan();   /* Promise<boolean>: true hanya setelah benar-benar tersimpan */
 }
 
