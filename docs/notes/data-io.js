@@ -18,14 +18,15 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261023155617';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023155617';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023155617';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261023155617';
-import { terlihat } from './kunci.js?v=20261023155617';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023155617';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261023155617';
-import { t as tr } from '../core/i18n.js?v=20261023155617';
+import { state, save, SCHEMA } from '../core/store.js?v=20261023162934';
+import { flush } from '../core/autosave.js?v=20261023162934';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023162934';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023162934';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261023162934';
+import { terlihat } from './kunci.js?v=20261023162934';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023162934';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261023162934';
+import { t as tr } from '../core/i18n.js?v=20261023162934';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -103,6 +104,7 @@ export async function kumpulBlob() {
 }
 
 export async function cadanganJson() {
+  try { await flush(); } catch {}
   const blobs = await kumpulBlob();
   const hamojiCustom = muatCustomHamoji();
   const ruang = daftarRuang();
@@ -235,6 +237,12 @@ function blokMd(b, noOl) {
     }
     case 'audio':
       return `> 🎙️ ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
+    case 'math':
+      return `$$\n${meta.expr || ''}\n$$`;
+    case 'bookmark':
+      return `[🔖 ${meta.title || meta.url || 'Tautan'}](${meta.url || 'https://'})${meta.desc ? ' — ' + meta.desc : ''}`;
+    case 'file':
+      return `[📎 ${meta.name || 'Lampiran'}](data:application/simpan-dalam-cadangan-json;id=${meta.blobId || ''};size=${meta.size || 0})`;
     case 'divider': return '---';
     case 'image':
       return `![${meta.alt || 'gambar'} ${meta.blobId || ''}](data:image/simpan-dalam-cadangan-json;id=${meta.blobId || ''})`;
@@ -490,6 +498,19 @@ function blokDariTeks(baris, noOl) {
   if (li) return makeBlock({ type: 'bullet', meta: { indent: indentPx(li[1]) }, content: inlineHtml(li[2]) });
   const ol = satu.match(/^(\s*)\d+[.)]\s+(.*)$/);
   if (ol) return makeBlock({ type: 'ordered-list', meta: { indent: indentPx(ol[1]) }, content: inlineHtml(ol[2]) });
+  /* blok rumus matematika $$ ... $$ */
+  if (/^\$\$\s*[\s\S]*?\s*\$\$$/.test(gabung.trim())) {
+    const expr = gabung.trim().replace(/^\$\$\s*/, '').replace(/\s*\$\$$/, '').trim();
+    return makeBlock({ type: 'math', meta: { expr }, content: '' });
+  }
+  const bmk = satu.match(/^\[🔖\s*([^\]]+)\]\((https?:[^\s)]+)\)(?:\s*—\s*(.*))?$/);
+  if (bmk) {
+    return makeBlock({ type: 'bookmark', meta: { title: bmk[1].trim(), url: bmk[2].trim(), desc: (bmk[3] || '').trim() }, content: '' });
+  }
+  const fl = satu.match(/^\[📎\s*([^\]]+)\]\(data:application\/[^)]*;id=([A-Za-z0-9_-]+);size=(\d+)\)\s*$/);
+  if (fl) {
+    return makeBlock({ type: 'file', meta: { name: fl[1].trim(), blobId: fl[2], size: Number(fl[3]) || 0 }, content: '' });
+  }
   const gmbr = satu.match(/^!\[([^\]]*)\]\(data:[^)]*;id=([A-Za-z0-9_-]+)\)\s*$/);
   if (gmbr) return makeBlock({
     type: 'image', meta: { blobId: gmbr[2], alt: gmbr[1].trim() || 'gambar' }, content: '',

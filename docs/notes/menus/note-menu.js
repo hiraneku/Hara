@@ -2,10 +2,10 @@
    Isi mengikuti keadaan catatan (label Sematkan/Lepas, Arsipkan/
    Kembalikan). Aksi dijalankan lewat delegasi klik global di app.js
    dengan atribut data-note-act. */
-import { state } from '../../core/store.js?v=20261023155617';
-import { esc } from '../../core/dom.js?v=20261023155617';
-import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261023155617';
-import { t as tr } from '../../core/i18n.js?v=20261023155617';
+import { state } from '../../core/store.js?v=20261023162934';
+import { esc } from '../../core/dom.js?v=20261023162934';
+import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261023162934';
+import { t as tr } from '../../core/i18n.js?v=20261023162934';
 
 export function menuCatatan() {
   const n = state.notes.find(x => x.id === state.openId);
@@ -17,6 +17,8 @@ export function menuCatatan() {
   <p class="pop-note">${judul}</p>
   <button class="pop-i" data-note-act="pin">
     <svg class="ico"><use href="#i-pin"/></svg>${n.pinned ? tr('Lepas sematan') : tr('Sematkan')}</button>
+  <button class="pop-i" data-note-act="sampul">
+    <svg class="ico"><use href="#i-drop"/></svg>${tr('Sampul catatan…')}</button>
   <button class="pop-i" data-note-act="ruang">
     <svg class="ico"><use href="#i-arch"/></svg>${tr('Pindahkan ke ruang…')}</button>
   <button class="pop-i" data-note-act="arsip">
@@ -31,6 +33,10 @@ export function menuCatatan() {
     <svg class="ico"><use href="#i-dl"/></svg>${tr('Ekspor .md')}</button>
   <button class="pop-i" data-note-act="bagi">
     <svg class="ico"><use href="#i-share"/></svg>${tr('Bagikan / salin…')}</button>
+  <button class="pop-i" data-note-act="kartu-gambar">
+    <svg class="ico"><use href="#i-img"/></svg>${tr('Kartu gambar & HTML…')}</button>
+  <button class="pop-i" data-note-act="reset-todo">
+    <svg class="ico"><use href="#i-check2"/></svg>${tr('Reset semua centang To-do')}</button>
   <button class="pop-i" data-note-act="tts">
     <svg class="ico"><use href="#i-bulb"/></svg>${tr('Baca keras (TTS)')}</button>
   <button class="pop-i" data-note-act="tenggat-tugas">

@@ -3,16 +3,16 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20261023155617';
-import { esc, tglHari } from '../../core/dom.js?v=20261023155617';
-import { rowFor } from './row.js?v=20261023155617';
-import { stt } from './data.js?v=20261023155617';
-import { tagDariIsi } from '../tags.js?v=20261023155617';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261023155617';
-import { judulJurnalHari } from '../harian.js?v=20261023155617';
-import { terlihat } from '../kunci.js?v=20261023155617';
-import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261023155617';
-import { t as tr } from '../../core/i18n.js?v=20261023155617';
+import { state } from '../../core/store.js?v=20261023162934';
+import { esc, tglHari } from '../../core/dom.js?v=20261023162934';
+import { rowFor } from './row.js?v=20261023162934';
+import { stt } from './data.js?v=20261023162934';
+import { tagDariIsi } from '../tags.js?v=20261023162934';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261023162934';
+import { judulJurnalHari } from '../harian.js?v=20261023162934';
+import { terlihat } from '../kunci.js?v=20261023162934';
+import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261023162934';
+import { t as tr } from '../../core/i18n.js?v=20261023162934';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -161,6 +161,8 @@ export const notesView = () => {
       <svg class="ico"><use href="#i-list"/></svg>${isGrid ? tr('Grid') : tr('Daftar')}</button>
     <button type="button" class="urut-chip" data-buka-db title="${tr('Tabel properti & papan Kanban')}">
       <svg class="ico"><use href="#i-tpl"/></svg>${tr('Properti')}</button>
+    <button type="button" class="urut-chip" data-buka-graf title="${tr('Peta jaringan catatan interaktif')}">
+      <svg class="ico"><use href="#i-graph"/></svg>${tr('Graf')}</button>
     ${daftar.length && !isGrid ? `<button type="button" class="urut-chip" data-pilih-buka
       title="${tr('Pilih beberapa catatan — bisa juga dengan menahan satu baris')}">
       <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>` : ''}

@@ -1,22 +1,28 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261023155617';
-import { findNote } from '../model.js?v=20261023155617';
-import { esc } from '../../core/dom.js?v=20261023155617';
-import { blocksToDom } from '../note-model.js?v=20261023155617';
-import { barisProps } from '../meta-ui.js?v=20261023155617';
-import { t as tr } from '../../core/i18n.js?v=20261023155617';
-import { renderStickersHtml } from '../hamoji.js?v=20261023155617';
+import { state } from '../../core/store.js?v=20261023162934';
+import { findNote } from '../model.js?v=20261023162934';
+import { esc } from '../../core/dom.js?v=20261023162934';
+import { blocksToDom } from '../note-model.js?v=20261023162934';
+import { barisProps } from '../meta-ui.js?v=20261023162934';
+import { t as tr } from '../../core/i18n.js?v=20261023162934';
+import { renderStickersHtml } from '../hamoji.js?v=20261023162934';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261023162934';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261023162934';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
  if(!n)return `<div class="empty"><h3>${tr('Catatan tidak ada')}</h3><p>${tr('Mungkin sudah dihapus.')}</p>
    <button class="btn btn-sec" data-go="notes">${tr('Ke daftar catatan')}</button></div>`;
+ catatRiwayatBuka(n.id);
  /* blocks adalah sumber kebenaran; DOM cuma hasil render darinya */
  const inner = blocksToDom(n.blocks);
  const body=`<div class="ed-doc" contenteditable="true" spellcheck="false"
    data-ph="${tr('Mulai menulis. Coba ketik **tebal** atau # judul')}">${inner}</div>`;
+ const bgSampul = n.cover ? cssSampul(n.cover) : '';
  return `<div class="ed">
+  ${renderBarCatatanTerakhirHtml()}
+  <div class="ed-cover" id="ed-cover"${bgSampul ? ` style="background:${bgSampul}"` : ' hidden'}></div>
   <div class="ed-aksi" role="group" aria-label="${tr('Kendali baca')}">
     <button type="button" class="ea-b" data-et="kecil" aria-label="${tr('Perkecil teks bacaan')}" title="${tr('Perkecil teks bacaan')}">A−</button>
     <span class="ea-v" id="ed-ukur" aria-hidden="true">16px</span>
@@ -24,8 +30,10 @@ const n=findNote(state.openId)||state.notes[0];
     <span class="ea-sep" aria-hidden="true"></span>
     <button type="button" class="ea-b ea-ico et-cari" data-et="cari" aria-label="${tr('Cari di dalam catatan')}" title="${tr('Cari di dalam catatan (mode baca)')}"><svg class="ico"><use href="#i-search"/></svg></button>
     <button type="button" class="ea-b ea-ico" data-et="dafis" aria-label="${tr('Daftar isi catatan')}" title="${tr('Daftar isi — lompat ke heading')}"><svg class="ico"><use href="#i-list"/></svg></button>
+    <button type="button" class="ea-b ea-ico" data-et="fokus-tulis" aria-label="${tr('Mode fokus menulis & target kata')}" title="${tr('Mode fokus menulis & target kata')}">🎯</button>
     <button type="button" class="ea-b ea-ico" data-et="zen" aria-label="${tr('Mode fokus')}" aria-pressed="false" title="${tr('Mode fokus — sembunyikan semua kecuali catatan')}"><svg class="ico"><use href="#i-zen"/></svg></button>
   </div>
+  ${renderQuickKeysHtml()}
   <input class="ed-t" value="${esc(n.title)}" placeholder="${tr('Judul')}"
     aria-label="${tr('Judul catatan')}">
   <div class="props" id="props-box">

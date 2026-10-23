@@ -1,21 +1,22 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20261023155617';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261023155617';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261023155617';
-import { MARKSEL, markActive, pending } from './marks.js?v=20261023155617';
-import { state, save, simpanTahan } from '../../core/store.js?v=20261023155617';
-import { findNote } from '../model.js?v=20261023155617';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261023155617';
-import { sinkronTag } from '../tags.js?v=20261023155617';
-import { tandaiTautan } from '../wikilink.js?v=20261023155617';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261023155617';
-import { cur } from '../../core/router.js?v=20261023155617';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261023155617';
-import { GROUPS } from '../bar/config.js?v=20261023155617';
-import { warnaSekarang, warnaPending } from './warna.js?v=20261023155617';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20261023155617';
-import { rekamVersiCatatan } from '../ruang.js?v=20261023155617';
-import { t as tr, LOKALE } from '../../core/i18n.js?v=20261023155617';
+import { docEl, sel, curBlock } from './caret.js?v=20261023162934';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261023162934';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261023162934';
+import { MARKSEL, markActive, pending } from './marks.js?v=20261023162934';
+import { state, save, simpanTahan } from '../../core/store.js?v=20261023162934';
+import { findNote } from '../model.js?v=20261023162934';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261023162934';
+import { sinkronTag } from '../tags.js?v=20261023162934';
+import { tandaiTautan } from '../wikilink.js?v=20261023162934';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261023162934';
+import { cur } from '../../core/router.js?v=20261023162934';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261023162934';
+import { GROUPS } from '../bar/config.js?v=20261023162934';
+import { warnaSekarang, warnaPending } from './warna.js?v=20261023162934';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20261023162934';
+import { rekamVersiCatatan } from '../ruang.js?v=20261023162934';
+import { teksProgresTargetKata } from '../navigasi-fokus.js?v=20261023162934';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20261023162934';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -80,7 +81,7 @@ export function cleanup(){
     });
   });
   Array.from(d.children).forEach(b=>{
-    if(b.classList.contains('b-div')||b.classList.contains('b-toggle')||b.classList.contains('b-table')||b.classList.contains('b-audio')) return;
+    if(b.classList.contains('b-div')||b.classList.contains('b-toggle')||b.classList.contains('b-table')||b.classList.contains('b-audio')||b.classList.contains('b-math')||b.classList.contains('b-bmk')||b.classList.contains('b-file')) return;
     /* <br> hasil Shift+Enter adalah baris baru SAH dan dipertahankan —
        hanya blok KOSONG yang tidak boleh menyimpan <br> pengganjal. */
     if(b.textContent.replace(/[\u200b\u00a0]/g,'')!==''){
@@ -121,7 +122,8 @@ export function updateCount(){
   const chars=isi.length;
   const words=isi?isi.split(/\s+/).filter(Boolean).length:0;
   const menit=words>=60 ? `<span class="dot">·</span><span>~${Math.max(1,Math.ceil(words/200))} ${tr('mnt')}</span>` : '';
-  el.innerHTML=`<b>${chars.toLocaleString(LOKALE())}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(LOKALE())}</b> ${tr('kata')}${menit}`;
+  const targetHtml = teksProgresTargetKata(words);
+  el.innerHTML=`<b>${chars.toLocaleString(LOKALE())}</b> ${tr('huruf')}<span class="dot">·</span><b>${words.toLocaleString(LOKALE())}</b> ${tr('kata')}${menit}${targetHtml}`;
   /* Cuplikan TIDAK disimpan di sini — ia diturunkan dari blocks lewat
      excerptOf() saat daftar catatan digambar. Menyimpannya di dua tempat
      adalah persis sumber-ganda yang ingin dihindari. */

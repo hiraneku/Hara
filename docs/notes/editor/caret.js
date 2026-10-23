@@ -1,6 +1,6 @@
 /* Posisi kursor. Bagian paling rawan — semua bug "aloH" berasal dari sini.
    Aturan: caret HARUS bertumpu pada text node, tidak pernah pada elemen. */
-import { BLOCKCLS } from './blocks.js?v=20261023155617';
+import { BLOCKCLS } from './blocks.js?v=20261023162934';
 
 export const docEl = () => document.querySelector('.ed-doc');
 
@@ -31,7 +31,10 @@ export const editable = el => el && el.classList &&
   !el.classList.contains('b-img') &&
   !el.classList.contains('b-toggle') &&
   !el.classList.contains('b-table') &&
-  !el.classList.contains('b-audio');
+  !el.classList.contains('b-audio') &&
+  !el.classList.contains('b-math') &&
+  !el.classList.contains('b-bmk') &&
+  !el.classList.contains('b-file');
 
 export function nearestEditable(el){
   const d=docEl(); if(!d) return null;

@@ -2034,3 +2034,120 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .aud-rec-dot{width:11px;height:11px;border-radius:999px;background:var(--faint)}
 .aud-rec-dot.on{background:#e53935;box-shadow:0 0 0 4px rgba(229,57,53,.22)}
 
+/* ════════ EDITOR & FITUR CATATAN GENERASI BARU (MOBILE-FIRST ANDROID) ════════ */
+/* #2 Bar Pintas Cepat Keyboard Mobile */
+.qk-strip{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:6px 2px 8px;
+  margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.qk-strip::-webkit-scrollbar{display:none}
+.ed.baca .qk-strip{display:none}
+.qk-btn{flex:none;min-width:40px;height:36px;padding:0 10px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;touch-action:manipulation;user-select:none}
+.qk-btn:active{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+
+/* #1 Menu Aksi Blok & Warna Latar Blok */
+.ba-sheet{padding:8px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.ba-label{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.ba-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ba-pill{min-height:38px;padding:0 8px;border-radius:9px;border:1px solid var(--border);
+  background:var(--sunken);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer}
+.ba-pill.active,.ba-pill:active{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+.ba-swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ba-bg{width:38px;height:38px;border-radius:999px;border:2px solid var(--border);
+  display:grid;place-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+.ba-bg.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-weak)}
+.ed-doc [data-bg]{border-radius:9px;padding-top:4px;padding-bottom:4px;padding-right:8px}
+.ed-doc [data-bg="amber"]{background:rgba(245,158,11,.15)}
+.ed-doc [data-bg="emerald"]{background:rgba(16,185,129,.15)}
+.ed-doc [data-bg="sky"]{background:rgba(14,165,233,.15)}
+.ed-doc [data-bg="violet"]{background:rgba(139,92,246,.15)}
+.ed-doc [data-bg="rose"]{background:rgba(244,63,94,.15)}
+
+/* #4 Blok Rumus Matematika Offline (/math) */
+.b-math{position:relative;margin:10px 0;padding:14px 16px;border-radius:var(--r-md);
+  border:1px solid var(--border);background:var(--surface);text-align:center;
+  font-size:1.12rem;line-height:1.6;cursor:pointer;overflow-x:auto}
+.math-empty{color:var(--faint);font-size:14px}
+.math-frac{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:center;padding:0 5px;line-height:1.2}
+.mf-num{border-bottom:1.4px solid currentColor;padding:0 3px 2px}
+.mf-den{padding:2px 3px 0}
+.math-sqrt{display:inline-flex;align-items:baseline}
+.ms-v{font-size:1.15em;margin-right:1px}
+.ms-b{border-top:1.4px solid currentColor;padding:0 3px}
+.math-mat{display:inline-table;border-left:1.6px solid currentColor;border-right:1.6px solid currentColor;
+  border-radius:4px;padding:0 4px;margin:0 4px;vertical-align:middle}
+.math-mat td{padding:2px 6px}
+.math-kbar{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px}
+.math-kbtn{flex:none;min-width:38px;height:34px;padding:0 8px;border-radius:8px;
+  border:1px solid var(--border);background:var(--sunken);color:var(--text);font-size:13px;cursor:pointer}
+
+/* #5 Kartu Bookmark (/bookmark) & #6 Lampiran Berkas (/file) */
+.b-bmk,.b-file{position:relative;display:flex;align-items:center;gap:10px;padding:11px 13px;
+  margin:9px 0;border-radius:var(--r-md);border:1px solid var(--border);background:var(--surface)}
+.bmk-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.bmk-ico{width:38px;height:38px;border-radius:10px;background:var(--sunken);display:grid;place-items:center;font-size:18px;flex:none}
+.bmk-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bmk-title,.fl-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmk-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmk-host,.fl-size{font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+.bmk-act{width:34px;height:34px;border-radius:8px;color:var(--muted);display:grid;place-items:center;flex:none;cursor:pointer}
+.ed.baca .bmk-act{display:none}
+.fl-ext{min-width:44px;height:40px;padding:0 6px;border-radius:10px;background:var(--accent-weak);
+  color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
+.fl-info{flex:1;min-width:0}
+.fl-btn{flex:none;height:34px;padding:0 12px;font-size:12.5px}
+
+/* #3 Kanvas Sketsa Layar Penuh & #14 Graf Interaktif Sentuh */
+.sketsa-modal{position:fixed;inset:0;z-index:220;background:rgba(0,0,0,.62);
+  display:flex;align-items:center;justify-content:center;padding:8px}
+.sk-box{width:min(760px,100%);max-height:96dvh;background:var(--bg);border:1px solid var(--border);
+  border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.32)}
+.sk-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;
+  border-bottom:1px solid var(--border);background:var(--surface)}
+.sk-judul{font-size:15px;font-weight:600;color:var(--text)}
+.sk-stage{flex:1;min-height:240px;background:var(--sunken);display:grid;place-items:center;padding:8px;overflow:hidden}
+#sk-canvas{width:100%;max-height:54dvh;aspect-ratio:720/460;border-radius:12px;background:#fff;
+  box-shadow:0 2px 12px rgba(0,0,0,.08);touch-action:none}
+.sk-bar{padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:var(--surface);
+  border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.sk-row{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
+.sk-row::-webkit-scrollbar{display:none}
+.sk-tool,.sk-sz{flex:none;min-height:38px;padding:0 11px;border-radius:9px;border:1px solid var(--border);
+  background:var(--sunken);color:var(--text);font-size:12.5px;font-weight:500;cursor:pointer}
+.sk-tool.on,.sk-sz.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent);font-weight:600}
+.sk-swatches{display:flex;gap:7px;flex:none}
+.sk-sw{width:30px;height:30px;border-radius:999px;border:2px solid var(--border);cursor:pointer;flex:none}
+.sk-sw.on{transform:scale(1.12);border-color:var(--accent)}
+.sk-sizes{display:flex;gap:5px;margin-left:auto}
+.sk-spacer{flex:1}
+
+/* #11 Pratinjau Kartu Gambar */
+.kartu-prev{max-height:220px;overflow:hidden;border-radius:12px;border:1px solid var(--border);background:var(--sunken);display:grid;place-items:center}
+.kartu-prev svg{width:100%;height:auto;max-height:220px}
+
+/* #12 Fokus Menulis, #13 Progres Baca & Sampul Catatan, #14 Recent Bar & Graf */
+body.fokus-dim .ed-doc > *{opacity:.35;transition:opacity .18s ease}
+body.fokus-dim .ed-doc > *.fokus-aktif{opacity:1}
+.fok-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;font-size:14px;color:var(--text)}
+.target-pill{color:var(--accent);font-weight:600}
+.target-pill.done{color:#10b981}
+.baca-progres{position:fixed;top:0;left:0;right:0;height:3px;z-index:95;background:transparent;pointer-events:none}
+.baca-progres-isi{height:100%;width:0;background:var(--accent);transition:width .08s linear}
+.ed-cover{height:76px;border-radius:14px;margin:0 0 12px;border:1px solid var(--border)}
+.cover-dot{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);flex:none}
+.recent-bar{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:0 0 8px;margin-bottom:4px;scrollbar-width:none}
+.recent-bar::-webkit-scrollbar{display:none}
+.recent-pill{flex:none;height:32px;padding:0 11px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer}
+.recent-pill.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent);font-weight:600}
+.gf-filter{display:flex;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border)}
+.gf-viewport{flex:1;min-height:300px;position:relative;overflow:hidden;background:var(--sunken);touch-action:none}
+.gf-canvas{position:relative;width:720px;height:480px;transform-origin:center center}
+.gf-node{position:absolute;transform:translate(-50%,-50%);padding:6px 11px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;
+  font-weight:500;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.gf-node.me{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gf-info{font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+

@@ -28,7 +28,8 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261023155617';
+import { t as tr } from '../core/i18n.js?v=20261023162934';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261023162934';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -44,6 +45,9 @@ export const BLOCK_TYPES = [
   'toggle',
   'table',
   'audio',
+  'math',
+  'bookmark',
+  'file',
 ];
 
 /* Pemetaan jenis blok <-> kelas CSS yang dipakai editor saat ini. */
@@ -60,6 +64,9 @@ const TYPE_TO_CLASS = {
   toggle: 'b-toggle',
   table: 'b-table',
   audio: 'b-audio',
+  math: 'b-math',
+  bookmark: 'b-bmk',
+  file: 'b-file',
   /* heading ditangani terpisah karena bergantung meta.level */
 };
 
@@ -79,6 +86,9 @@ const CLASS_TO_TYPE = {
   'b-toggle': 'toggle',
   'b-table': 'table',
   'b-audio': 'audio',
+  'b-math': 'math',
+  'b-bmk': 'bookmark',
+  'b-file': 'file',
 };
 
 const HEADING_CLASS = { 1: 'b-h1', 2: 'b-h2', 3: 'b-h3' };
@@ -135,6 +145,7 @@ export function makeNote(patch = {}) {
     ...(Array.isArray(patch.tagsManual) && patch.tagsManual.length
       ? { tagsManual: patch.tagsManual.slice() } : {}),
     stickers: Array.isArray(patch.stickers) ? patch.stickers.map(s => ({ ...s })) : [],
+    ...(patch.cover ? { cover: String(patch.cover) } : {}),
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,
@@ -174,6 +185,15 @@ export function plainText(note) {
       if (b.type === 'audio') {
         return String((b.meta && b.meta.title) || '');
       }
+      if (b.type === 'math') {
+        return String((b.meta && b.meta.expr) || '');
+      }
+      if (b.type === 'bookmark') {
+        return [b.meta?.title, b.meta?.desc, b.meta?.url].filter(Boolean).join(' ');
+      }
+      if (b.type === 'file') {
+        return String((b.meta && b.meta.name) || '');
+      }
       return stripTags(b.content);
     })
     .filter(Boolean)
@@ -200,14 +220,88 @@ const stripTags = html =>
 
 const escAttr = s => String(s ?? '').replace(/"/g, '&quot;');
 
+const SIMBOL_RUMUS_MODEL = {
+  '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
+  '\\theta': 'θ', '\\lambda': 'λ', '\\mu': 'μ', '\\pi': 'π', '\\sigma': 'σ',
+  '\\tau': 'τ', '\\phi': 'φ', '\\omega': 'ω', '\\Delta': 'Δ', '\\Sigma': '∑',
+  '\\Omega': 'Ω', '\\infty': '∞', '\\pm': '±', '\\mp': '∓', '\\times': '×',
+  '\\cdot': '·', '\\div': '÷', '\\neq': '≠', '\\leq': '≤', '\\geq': '≥',
+  '\\approx': '≈', '\\equiv': '≡', '\\rightarrow': '→', '\\leftarrow': '←',
+  '\\Rightarrow': '⇒', '\\Leftrightarrow': '⇔', '\\sum': '∑', '\\prod': '∏',
+  '\\int': '∫', '\\partial': '∂', '\\nabla': '∇', '\\in': '∈', '\\notin': '∉',
+};
+
+function renderMathHtmlRingan(mentah) {
+  let s = String(mentah || '').trim()
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!s) return `<span class="math-empty">${tr('Ketuk untuk mengisi rumus…')}</span>`;
+  s = s.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>')
+    .replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>')
+    .replace(/\^([a-zA-Z0-9+\-]+)/g, '<sup>$1</sup>')
+    .replace(/_([a-zA-Z0-9+\-]+)/g, '<sub>$1</sub>');
+  for (let i = 0; i < 2; i++) {
+    s = s.replace(/\\sqrt\{([^{}]+)\}/g,
+      '<span class="math-sqrt"><span class="ms-v">√</span><span class="ms-b">$1</span></span>');
+  }
+  for (let i = 0; i < 3; i++) {
+    s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,
+      '<span class="math-frac"><span class="mf-num">$1</span><span class="mf-den">$2</span></span>');
+  }
+  for (const k of Object.keys(SIMBOL_RUMUS_MODEL).sort((a, b) => b.length - a.length)) {
+    s = s.split(k).join(SIMBOL_RUMUS_MODEL[k]);
+  }
+  return s;
+}
+
 export function blockToHtml(b) {
   const meta = b.meta || {};
   const gaya = meta.indent ? ` style="padding-left:${Number(meta.indent) || 0}px"` : '';
   const ref  = meta.ref ? ` data-ref="${escAttr(meta.ref)}"` : '';
+  const bgAttr = meta.bg ? ` data-bg="${escAttr(meta.bg)}"` : '';
   const bid  = ` data-bid="${escAttr(b.id)}"`;
 
   if (b.type === 'divider')
     return `<div class="b-div" contenteditable="false"${bid}></div>`;
+
+  if (b.type === 'math') {
+    const expr = escAttr(meta.expr || '');
+    return `<div class="b-math" contenteditable="false" data-expr="${expr}"${bid}${ref}${bgAttr}>` +
+      `<div class="math-body">${renderMathHtmlRingan(meta.expr || '')}</div>` +
+      `${pegangan()}</div>`;
+  }
+
+  if (b.type === 'bookmark') {
+    const url = escAttr(meta.url || 'https://');
+    let host = 'tautan';
+    try { host = new URL(meta.url || 'https://contoh.id').hostname.replace(/^www\./, ''); } catch {}
+    const jdl = escAttr(meta.title || host);
+    const ket = escAttr(meta.desc || '');
+    return `<div class="b-bmk" contenteditable="false" data-url="${url}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
+      `<a class="bmk-main" href="${url}" target="_blank" rel="noopener noreferrer">` +
+      `<span class="bmk-ico">🔗</span>` +
+      `<span class="bmk-info">` +
+      `<span class="bmk-title">${jdl}</span>` +
+      `${ket ? `<span class="bmk-desc">${ket}</span>` : ''}` +
+      `<span class="bmk-host">${escAttr(host)}</span>` +
+      `</span></a>` +
+      `<button type="button" class="bmk-act" data-bmk-edit title="${tr('Sunting')}">✎</button>` +
+      `<button type="button" class="bmk-act" data-bmk-del title="${tr('Hapus')}">✕</button>` +
+      `${pegangan()}</div>`;
+  }
+
+  if (b.type === 'file') {
+    const blobId = escAttr(meta.blobId || '');
+    const nama = escAttr(meta.name || 'lampiran');
+    const uk = Number(meta.size) || 0;
+    const mime = escAttr(meta.mime || 'application/octet-stream');
+    const ekst = (String(meta.name || '').split('.').pop() || 'FILE').slice(0, 5).toUpperCase();
+    return `<div class="b-file" contenteditable="false" data-blob="${blobId}" data-name="${nama}" data-size="${uk}" data-mime="${mime}"${bid}${ref}${bgAttr}>` +
+      `<span class="fl-ext">${escAttr(ekst)}</span>` +
+      `<div class="fl-info"><div class="fl-name">${nama}</div><div class="fl-size">${ukuranTerbaca(uk)}</div></div>` +
+      `<button type="button" class="btn btn-sec fl-btn" data-file-dl>${tr('Unduh')}</button>` +
+      `<button type="button" class="bmk-act" data-file-del title="${tr('Hapus')}">✕</button>` +
+      `${pegangan()}</div>`;
+  }
 
   if (b.type === 'toggle') {
     const buka = meta.open === false ? '0' : '1';
@@ -286,7 +380,10 @@ export function blockToHtml(b) {
         ` data-gw="${w}" data-gr="${rot}"` +
         (ga ? ` data-ga="${ga}"` : '') + (gb ? ` data-gb="b"` : '');
     }
-    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}>` +
+    const skAttr = meta.sketch ? ' data-sketch="1"' : '';
+    const scanAttr = meta.scan ? ` data-scan="${escAttr(meta.scan)}"` : '';
+    const origAttr = meta.origBlob ? ` data-orig-blob="${escAttr(meta.origBlob)}"` : '';
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${scanAttr}${origAttr}${bgAttr}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
@@ -300,25 +397,25 @@ export function blockToHtml(b) {
     const kotak = `<button class="cbx${on}" contenteditable="false" type="button" ` +
       `role="checkbox" aria-checked="${meta.checked ? 'true' : 'false'}">` +
       `<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></button>`;
-    return `<div class="b-todo${done}"${bid}${dn}${ref}${gaya}>${kotak}${b.content || ''}${pegangan()}</div>`;
+    return `<div class="b-todo${done}"${bid}${dn}${ref}${bgAttr}${gaya}>${kotak}${b.content || ''}${pegangan()}</div>`;
   }
 
   if (b.type === 'heading') {
     const cls = HEADING_CLASS[meta.level] || 'b-h2';
     const tag = 'h' + (meta.level || 2);
-    return `<${tag} class="${cls}"${bid}${ref}${gaya}>${b.content || ''}${pegangan()}</${tag}>`;
+    return `<${tag} class="${cls}"${bid}${ref}${bgAttr}${gaya}>${b.content || ''}${pegangan()}</${tag}>`;
   }
 
   if (b.type === 'callout') {
     const jenis = meta.variant ? ` data-cal="${escAttr(meta.variant)}"` : '';
     const label = meta.label ? ` data-cal-label="${escAttr(meta.label)}"` : '';
-    return `<div class="b-cal"${bid}${jenis}${label}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
+    return `<div class="b-cal"${bid}${jenis}${label}${ref}${bgAttr}${gaya}>${b.content || ''}${pegangan()}</div>`;
   }
 
   const cls = (TYPE_TO_CLASS[b.type] || 'b-p') +
     (meta.gslot ? ' g-slot' : '') + (meta.gsisi ? ' sisi' : '');
   const lang = b.type === 'code' && meta.lang ? ` data-lang="${escAttr(meta.lang)}"` : '';
-  return `<div class="${cls}"${bid}${lang}${ref}${gaya}>${b.content || ''}${pegangan()}</div>`;
+  return `<div class="${cls}"${bid}${lang}${ref}${bgAttr}${gaya}>${b.content || ''}${pegangan()}</div>`;
 }
 
 /* Pegangan seret blok (desktop). Elemen asli di DOM, tapi DIBUANG saat
@@ -377,6 +474,8 @@ export function elToBlock(el) {
   if (indent) meta.indent = indent;
   const ref = el.getAttribute && el.getAttribute('data-ref');
   if (ref) meta.ref = ref;
+  const bg = el.getAttribute && el.getAttribute('data-bg');
+  if (bg) meta.bg = bg;
   /* slot ketik penutup gambar — tanda dibawa lewat meta supaya posisi
      teks (baris penuh di bawah gambar) konsisten setelah simpan/buka */
   if (el.classList && el.classList.contains('g-slot')) meta.gslot = true;
@@ -404,6 +503,17 @@ export function elToBlock(el) {
     meta.blobId = el.getAttribute('data-blob') || '';
     meta.duration = Number(el.getAttribute('data-dur')) || 0;
     meta.title = inp ? inp.value : '';
+  } else if (type === 'math') {
+    meta.expr = el.getAttribute('data-expr') || '';
+  } else if (type === 'bookmark') {
+    meta.url = el.getAttribute('data-url') || '';
+    meta.title = el.getAttribute('data-title') || '';
+    meta.desc = el.getAttribute('data-desc') || '';
+  } else if (type === 'file') {
+    meta.blobId = el.getAttribute('data-blob') || '';
+    meta.name = el.getAttribute('data-name') || 'lampiran';
+    meta.size = Number(el.getAttribute('data-size')) || 0;
+    meta.mime = el.getAttribute('data-mime') || 'application/octet-stream';
   } else if (type === 'image') {
     const img = el.querySelector && el.querySelector('img[data-blob]');
     if (img) {
@@ -411,6 +521,11 @@ export function elToBlock(el) {
       const alt = img.getAttribute('alt');
       if (alt) meta.alt = alt;
     }
+    if (el.getAttribute && el.getAttribute('data-sketch') === '1') meta.sketch = true;
+    const sc = el.getAttribute && el.getAttribute('data-scan');
+    if (sc) meta.scan = sc;
+    const ob = el.getAttribute && el.getAttribute('data-orig-blob');
+    if (ob) meta.origBlob = ob;
     /* tata letak: atribut data-gw/gr/ga/gb pada figur (baca balik dari
        tata-gambar.js). Gambar lama tanpa atribut tidak mendapat meta —
        tetap dirender sebagai gambar 100% lurus seperti sebelumnya. */

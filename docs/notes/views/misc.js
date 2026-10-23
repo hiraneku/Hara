@@ -1,17 +1,17 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261023155617';
-import { esc, stamp } from '../../core/dom.js?v=20261023155617';
-import { rowFor } from './row.js?v=20261023155617';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023155617';
-import { AK, akSekarang } from '../../core/theme.js?v=20261023155617';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023155617';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261023155617';
-import { terlihat } from '../kunci.js?v=20261023155617';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023155617';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023155617';
-import { namaSekarang } from '../../home/nama.js?v=20261023155617';
+import { state } from '../../core/store.js?v=20261023162934';
+import { esc, stamp } from '../../core/dom.js?v=20261023162934';
+import { rowFor } from './row.js?v=20261023162934';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023162934';
+import { AK, akSekarang } from '../../core/theme.js?v=20261023162934';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023162934';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261023162934';
+import { terlihat } from '../kunci.js?v=20261023162934';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023162934';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023162934';
+import { namaSekarang } from '../../home/nama.js?v=20261023162934';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
