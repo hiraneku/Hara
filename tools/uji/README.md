@@ -56,6 +56,8 @@ for f in tools/uji/*.mjs; do node $f; done
 | `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |
 | `bilah-sorot.mjs` | F27 bilah format di atas teks yang disorot |
 | `mutu-gambar.mjs` | C17 pilihan mutu gambar di Pengaturan · keputusan pengecilan |
+| `musik-logika.mjs` | pemutar musik tahap 1: batas tempo/nada, loop A-B, format waktu, puncak gelombang, pengaturan per lagu (murni, <1 detik) |
+| `musik-layar.mjs` | pemutar musik tahap 1: navigasi tanpa navigasi bawah, pustaka & pengaturan dipulihkan, kartu beranda, hapus dua-ketuk (jsdom) |
 | `tempel-mekanik.mjs` | tempel dari luar: batas baris `<br>`/elemen blok, daftar 1/2/3 (termasuk nomor tebal & bersarang), butir, to-do, heading, kutipan, callout, pembatas, pagar kode, tautan (a.lk) |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —

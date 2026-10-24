@@ -41,7 +41,7 @@ export function go(v, opsi = {}) {
   const isEd = v === 'editor';
   /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,
      dengan panah kembali — jalannya cuma dua: buka PIN atau kembali */
-  const pakaiEd = isEd || v === 'kunci';
+  const pakaiEd = isEd || v === 'kunci' || v === 'musik';
   /* panah kembali ikut tampil di halaman yang tidak ada di nav bawah
      (Pengaturan) supaya selalu ada jalan keluar */
   const pakaiBack = pakaiEd || v === 'set';

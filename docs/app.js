@@ -11,6 +11,7 @@ import { buatTinjauan } from './notes/pintar-aksi.js?v=20261024040822';
 import { bukaStatistik } from './notes/statistik-ui.js?v=20261024040822';
 import { notesModule } from './notes/index.js?v=20261024040822';
 import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261024040822';
+import { musikModule } from './musik/index.js?v=20261024040822';
 import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261024040822';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
@@ -33,7 +34,7 @@ import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.j
 import { itemPintar } from './notes/pintar-aksi.js?v=20261024040822';
 import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261024040822';
 
-const MODULES = [notesModule, renamerModule];
+const MODULES = [notesModule, renamerModule, musikModule];
 
 /* Muat data dulu (IndexedDB, asinkron), baru pasang modul. */
 await load();
@@ -130,10 +131,7 @@ daftarkanGrupFitur(() => [
     { id: 'd-tenggat', label: tr('Jadikan tugas'), hint: tr('Ubah baris bertenggat jadi tugas'), ikon: 'i-clock', jalan: () => jadikanBarisTenggatTugas() },
   ] },
   { judul: tr('Musik'), item: [
-    { id: 'u-music', label: tr('Musik'), hint: tr('Pemutar musik · segera hadir'), ikon: 'i-music', utama: true, jalan: () => {
-      go('home');
-      setTimeout(() => document.querySelector('.bh-musik')?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 60);
-    } },
+    { id: 'u-music', label: tr('Musik'), hint: tr('Pemutar musik lokal'), ikon: 'i-music', utama: true, jalan: () => go('musik') },
   ] },
   { judul: tr('Ganti Nama Massal'), item: [
     { id: 'u-renamer', label: tr('Ganti Nama Massal'), hint: tr('Ubah nama banyak berkas'), ikon: 'i-rename', utama: true, jalan: () => go('renamer') },

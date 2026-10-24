@@ -1,0 +1,160 @@
+/* Penyimpanan pustaka musik.
+
+   - Berkas audio: IndexedDB database TERPISAH ('hara-musik'). Sengaja bukan
+     'hara-files': sapuan blob yatim catatan (bersihkanBlobYatim) menghapus
+     blob yang tidak dirujuk catatan, dan lagu tidak boleh ikut terhapus.
+   - Metadata + pengaturan per lagu: localStorage (kecil, teks saja).
+
+   Lagu tetap ada setelah aplikasi ditutup dan dibuka lagi. */
+
+import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261024040822';
+
+const DB = 'hara-musik';
+const TOKO = 'berkas';
+const KUNCI_META = 'hara.v1.musik';
+
+let dbp = null;
+
+function buka() {
+  if (dbp) return dbp;
+  if (!self.indexedDB) return Promise.reject(new Error('IndexedDB tidak ada'));
+  dbp = new Promise((res, rej) => {
+    let req;
+    try { req = indexedDB.open(DB, 1); } catch (e) { dbp = null; rej(e); return; }
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(TOKO)) db.createObjectStore(TOKO);
+    };
+    req.onsuccess = () => res(req.result);
+    const gagal = err => { dbp = null; rej(err); };
+    req.onerror = () => gagal(req.error || new Error('gagal membuka IndexedDB'));
+    req.onblocked = () => gagal(new Error('IndexedDB diblokir'));
+  });
+  return dbp;
+}
+
+async function tx(mode, fn) {
+  const db = await buka();
+  return new Promise((res, rej) => {
+    const t = db.transaction(TOKO, mode);
+    const s = t.objectStore(TOKO);
+    let req;
+    try { req = fn(s); } catch (e) { rej(e); return; }
+    let hasil;
+    if (req && typeof req.onsuccess !== 'undefined') {
+      req.onsuccess = () => { hasil = req.result; };
+      req.onerror = () => rej(req.error);
+    }
+    t.oncomplete = () => res(hasil);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error || new Error('transaksi dibatalkan'));
+  });
+}
+
+/* ── metadata ── */
+
+let meta = muatMeta();
+
+function muatMeta() {
+  try {
+    const s = localStorage.getItem(KUNCI_META);
+    const o = s ? JSON.parse(s) : null;
+    if (o && Array.isArray(o.lagu)) {
+      return {
+        lagu: o.lagu.filter(x => x && typeof x.id === 'string'),
+        terakhirId: typeof o.terakhirId === 'string' ? o.terakhirId : null,
+      };
+    }
+  } catch (e) { /* rusak: mulai dari kosong */ }
+  return { lagu: [], terakhirId: null };
+}
+
+function simpanMeta() {
+  try { localStorage.setItem(KUNCI_META, JSON.stringify(meta)); }
+  catch (e) { /* kuota/privat: keadaan tetap di memori untuk sesi ini */ }
+}
+
+/* Lagu diurutkan menurut urutan impor (urutan putar berikutnya). */
+export function daftarLagu() {
+  return meta.lagu.slice().sort((a, b) => a.ditambahkan - b.ditambahkan);
+}
+
+export function laguById(id) {
+  return meta.lagu.find(x => x.id === id) || null;
+}
+
+export function terakhirId() {
+  return meta.terakhirId && laguById(meta.terakhirId) ? meta.terakhirId : null;
+}
+
+export function tandaiTerakhir(id) {
+  const x = laguById(id);
+  if (!x) return;
+  meta.terakhirId = id;
+  x.terakhirMain = Date.now();
+  simpanMeta();
+}
+
+export function perbaruiLagu(id, patch) {
+  const x = laguById(id);
+  if (!x) return;
+  Object.assign(x, patch);
+  simpanMeta();
+}
+
+/* Pengaturan per lagu, sudah dibersihkan terhadap durasi lagu. */
+export function aturLagu(id) {
+  const x = laguById(id);
+  if (!x) return { ...ATUR_AWAL, loop: { ...ATUR_AWAL.loop } };
+  return normalisasiAtur(x.atur, x.durasi);
+}
+
+export function simpanAtur(id, atur) {
+  const x = laguById(id);
+  if (!x) return;
+  x.atur = {
+    tempo: atur.tempo,
+    pitch: atur.pitch,
+    loop: atur.loop ? { a: atur.loop.a, b: atur.loop.b, aktif: !!atur.loop.aktif } : null,
+    posisi: atur.posisi,
+  };
+  simpanMeta();
+}
+
+/* ── berkas audio ── */
+
+function idBaru() {
+  return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* Simpan berkas + catat metadata. `durasi` harus sudah dibaca dari audionya. */
+export async function tambahLagu(berkas, { nama, durasi }) {
+  const id = idBaru();
+  await tx('readwrite', s => s.put(berkas, id));
+  const rekaman = {
+    id,
+    nama,
+    durasi,
+    ukuran: berkas.size || 0,
+    tipe: berkas.type || '',
+    ditambahkan: Date.now(),
+    terakhirMain: 0,
+    atur: null,
+  };
+  meta.lagu.push(rekaman);
+  simpanMeta();
+  return rekaman;
+}
+
+export async function ambilBerkas(id) {
+  const x = await tx('readonly', s => s.get(id));
+  return x || null;
+}
+
+export async function hapusLagu(id) {
+  await tx('readwrite', s => s.delete(id));
+  meta.lagu = meta.lagu.filter(x => x.id !== id);
+  if (meta.terakhirId === id) meta.terakhirId = null;
+  simpanMeta();
+}
+

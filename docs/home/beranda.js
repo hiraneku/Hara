@@ -1,5 +1,5 @@
 /* Beranda baru: sapaan & tanggal real-time, quote acak, cuaca (Open-Meteo),
-   widget musik (UI dulu, pemutar belum dihubungkan), dan bilah alat
+   kartu musik (lagu terakhir diputar), dan bilah alat
    (Catatan & Pengingat). Dipasang sebagai tampilan layar 'home'. */
 
 import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024040822';
@@ -7,6 +7,8 @@ import { cur, go, onAfterRender } from '../core/router.js?v=20261024040822';
 import { bukaMenuFitur, pasangMenuFitur } from './menu-fitur.js?v=20261024040822';
 import { toast } from '../core/toast.js?v=20261024040822';
 import { namaSekarang, setNama } from './nama.js?v=20261024040822';
+import { kartuMusikHtml } from '../musik/kartu.js?v=20261024040822';
+import { togglePutarMusik } from '../musik/index.js?v=20261024040822';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -72,7 +74,6 @@ const ikon = (nama, kelas = '') =>
 let quoteIdx = 0; // awal: 'Hal-hal baik datang...' seperti referensi; ketuk untuk acak
 let cuaca = null;      // { suhu, kode, siang, waktu }
 let cuacaGagal = false;
-let musik = { putar: true, suka: false, acak: false };
 
 try { cuaca = JSON.parse(localStorage.getItem(KUNCI_CUACA) || 'null'); } catch { cuaca = null; }
 
@@ -107,7 +108,6 @@ function isiCuaca() {
 export function berandaView() {
   const c = isiCuaca();
   const d = new Date();
-  const putarIkon = musik.putar ? 'pause' : 'play';
   return `<div class="beranda"><div class="bh-hero">
   <header class="bh-atas">
     <div class="bh-kiri">
@@ -124,25 +124,7 @@ export function berandaView() {
     </button>
   </header>
 
-  <section class="bh-kartu bh-musik" aria-label="${tr('Musik')}">
-    <div class="bh-musik-atas">
-      <div class="bh-sampul"><img src="./home/aset/cover.jpg" alt="" draggable="false"></div>
-      <div class="bh-musik-info">
-        <div class="bh-judul">Snowfall</div>
-        <div class="bh-artis">Lofi Girl</div>
-        <div class="bh-eq" aria-hidden="true"><span style="--t:45%"></span><span style="--t:80%"></span><span style="--t:60%"></span><span style="--t:100%"></span><span style="--t:35%"></span></div>
-        <div class="bh-bar"><div class="bh-bar-isi" style="width:43%"></div></div>
-        <div class="bh-waktu"><span>1:42</span><span>3:56</span></div>
-      </div>
-    </div>
-    <div class="bh-kontrol">
-      <button type="button" class="bh-btn-kecil${musik.acak ? ' on' : ''}" data-bh="acak" aria-label="${tr('Acak')}">${ikon('shuffle')}</button>
-      <button type="button" class="bh-btn-kecil" data-bh="prev" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
-      <button type="button" class="bh-putar" data-bh="putar" aria-label="${tr('Putar')}" id="bh-putar">${ikon(putarIkon)}</button>
-      <button type="button" class="bh-btn-kecil" data-bh="next" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
-      <button type="button" class="bh-btn-kecil${musik.suka ? ' on suka' : ''}" data-bh="suka" aria-label="${tr('Suka')}">${ikon('heart')}</button>
-    </div>
-  </section>
+  ${kartuMusikHtml()}
 
   <nav class="bh-kartu bh-alat" aria-label="${tr('Alat')}">
     <button type="button" class="bh-alat-item aktif" data-go="notes">
@@ -207,24 +189,6 @@ function gantiQuote() {
   if (q) q.textContent = QUOTE[quoteIdx];
 }
 
-function aksiMusik(a) {
-  const putarEl = el('bh-putar');
-  if (a === 'putar') {
-    musik.putar = !musik.putar;
-    if (putarEl) putarEl.innerHTML = ikon(musik.putar ? 'pause' : 'play');
-    toast(tr('Pemutar musik menyusul'));
-  } else if (a === 'suka') {
-    musik.suka = !musik.suka;
-    document.querySelector('[data-bh="suka"]')?.classList.toggle('suka', musik.suka);
-    document.querySelector('[data-bh="suka"]')?.classList.toggle('on', musik.suka);
-  } else if (a === 'acak') {
-    musik.acak = !musik.acak;
-    document.querySelector('[data-bh="acak"]')?.classList.toggle('on', musik.acak);
-  } else {
-    toast(tr('Pemutar musik menyusul'));
-  }
-}
-
 /* ── pemasangan (sekali, dari app.js) ── */
 let sudahPasang = false;
 
@@ -255,7 +219,8 @@ export function mulaiBeranda() {
     }
     else if (a === 'lainnya') bukaMenuFitur();
     else if (a === 'belum') toast(tr('Segera hadir'));
-    else aksiMusik(a);
+    else if (a === 'musik-buka') go('musik');
+    else if (a === 'musik-putar') togglePutarMusik();
   });
 
   /* Setiap render: sembunyikan judul bar atas di beranda dan segarkan data. */
