@@ -23,10 +23,10 @@
    sorotan tidak pernah salah tempat karena entitas (&amp;) dihitung
    sebagai teks biasa. */
 
-import { esc } from '../core/dom.js?v=20261024033444';
-import { tagUntukTampil } from './tags.js?v=20261024033444';
-import { plainText } from './note-model.js?v=20261024033444';
-import { peringkat } from './cari-inti.js?v=20261024033444';
+import { esc } from '../core/dom.js?v=20261024035417';
+import { tagUntukTampil } from './tags.js?v=20261024035417';
+import { plainText } from './note-model.js?v=20261024035417';
+import { peringkat } from './cari-inti.js?v=20261024035417';
 
 const KEY = 'hara.cari.v1';
 const MAKS_RIWAYAT = 6;

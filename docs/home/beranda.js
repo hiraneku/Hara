@@ -2,11 +2,11 @@
    widget musik (UI dulu, pemutar belum dihubungkan), dan bilah alat
    (Catatan & Pengingat). Dipasang sebagai tampilan layar 'home'. */
 
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024033444';
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024033444';
-import { bukaPalette } from '../core/palette.js?v=20261024033444';
-import { toast } from '../core/toast.js?v=20261024033444';
-import { namaSekarang, setNama } from './nama.js?v=20261024033444';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024035417';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024035417';
+import { bukaMenuFitur, pasangMenuFitur } from './menu-fitur.js?v=20261024035417';
+import { toast } from '../core/toast.js?v=20261024035417';
+import { namaSekarang, setNama } from './nama.js?v=20261024035417';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -231,6 +231,7 @@ let sudahPasang = false;
 export function mulaiBeranda() {
   if (sudahPasang) return;
   sudahPasang = true;
+  pasangMenuFitur();
 
   /* Nama di Pengaturan: simpan saat selesai diketik, sapaan langsung ikut berubah. */
   document.addEventListener('change', e => {
@@ -252,7 +253,7 @@ export function mulaiBeranda() {
         if (kb && kb.scrollIntoView) { try { kb.scrollIntoView({ behavior: 'smooth' }); } catch (err) {} }
       }, 60);
     }
-    else if (a === 'lainnya') bukaPalette();
+    else if (a === 'lainnya') bukaMenuFitur();
     else if (a === 'belum') toast(tr('Segera hadir'));
     else aksiMusik(a);
   });
