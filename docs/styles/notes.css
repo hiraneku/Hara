@@ -2160,8 +2160,8 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .sk-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;
   border-bottom:1px solid var(--border);background:var(--surface)}
 .sk-judul{font-size:15px;font-weight:600;color:var(--text)}
-.sk-stage{flex:1;min-height:240px;background:var(--sunken);display:grid;place-items:center;padding:8px;overflow:hidden}
-#sk-canvas{width:100%;max-height:54dvh;aspect-ratio:720/460;border-radius:12px;background:#fff;
+.sk-stage{flex:1;min-height:240px;background:var(--sunken);display:flex;padding:8px;overflow:auto}
+#sk-canvas{flex:none;margin:auto;width:100%;max-height:54dvh;aspect-ratio:720/460;border-radius:12px;background:#fff;
   box-shadow:0 2px 12px rgba(0,0,0,.08);touch-action:none}
 .sk-bar{padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:var(--surface);
   border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}

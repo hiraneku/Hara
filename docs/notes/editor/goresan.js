@@ -6,17 +6,18 @@
  * (bukan hanya gambar PNG), supaya bisa dibuka ulang dan diedit.
  *
  * Format tersimpan (string JSON, disimpan di atribut data-goresan blok gambar):
- *   { "v": 2, "latar": "putih"|"gelap", "pola": "titik"|"garis"|"polos",
+ *   { "v": 3, "latar": "putih"|"gelap", "pola": "titik"|"garis"|"polos",
+ *     "kanvas":  { "w": 720, "h": 460 },
  *     "goresan": [ { "alat": "pena", "warna": "#111827", "ukuran": 4,
  *                    "pts": [ { "x": 10.5, "y": 20 }, ... ] } ],
  *     "objek":   [ { "id": "o1", "blob": "sk_abc", "x": 40, "y": 60, "w": 200, "h": 120 } ] }
  *
- * v1 (hanya goresan) tetap bisa dibaca. Urutan "objek" adalah urutan tumpukan (akhir = paling atas).
+ * v1 (hanya goresan) dan v2 (tanpa kanvas) tetap bisa dibaca dengan ukuran default. Urutan "objek" adalah urutan tumpukan (akhir = paling atas).
  * Koordinat berada di ruang logis kanvas (LEBAR x TINGGI), sama seperti di sketsa.js.
  */
 
-export const VERSI_GORESAN = 2;
-export const VERSI_DIDUKUNG = [1, 2];
+export const VERSI_GORESAN = 3;
+export const VERSI_DIDUKUNG = [1, 2, 3];
 export const ALAT_GORESAN = ['pena', 'stabilo', 'garis', 'panah', 'kotak', 'hapus'];
 export const LATAR_GORESAN = ['putih', 'gelap'];
 export const POLA_GORESAN = ['polos', 'titik', 'garis'];
@@ -31,6 +32,17 @@ export const BATAS_GORESAN = {
   objek: 50,
   objekLebarMin: 8,
   bytes: 300000,
+};
+
+/* Ukuran kanvas kerja (A7). Default 720×460 seperti sebelumnya. Batas agar memori dan catatan tetap wajar. */
+export const KANVAS_BATAS = {
+  defaultW: 720,
+  defaultH: 460,
+  minW: 360,
+  minH: 240,
+  maxW: 2400,
+  maxH: 2400,
+  langkah: 120,
 };
 
 const RE_WARNA = /^#[0-9a-f]{6}$/i;
@@ -116,15 +128,27 @@ export function bersihkanObjek(list, lebar, tinggi) {
   return hasil;
 }
 
+/** Ukuran kanvas yang aman. Nilai yang tidak valid memakai default. */
+export function bersihkanKanvas(k) {
+  const w = angkaDalamRentang(k && k.w, KANVAS_BATAS.minW, KANVAS_BATAS.maxW);
+  const h = angkaDalamRentang(k && k.h, KANVAS_BATAS.minH, KANVAS_BATAS.maxH);
+  return {
+    w: w === null ? KANVAS_BATAS.defaultW : Math.round(w),
+    h: h === null ? KANVAS_BATAS.defaultH : Math.round(h),
+  };
+}
+
 /**
  * Ubah keadaan sketsa menjadi string JSON untuk disimpan.
- * Mengembalikan '' bila tidak ada goresan maupun objek, atau bila melewati batas.
- * Tidak memotong data diam-diam: bila melewati batas, hasilnya '' (tidak disimpan).
+ * Mengembalikan '' bila tidak ada goresan, objek, maupun perubahan ukuran kanvas,
+ * atau bila melewati batas. Tidak memotong data diam-diam.
  */
 export function serialGoresan({ goresan = [], objek = [], latar = 'putih', pola = 'titik' } = {}, lebar, tinggi) {
+  const kanvas = bersihkanKanvas({ w: lebar, h: tinggi });
   const adaGoresan = Array.isArray(goresan) && goresan.length > 0;
   const adaObjek = Array.isArray(objek) && objek.length > 0;
-  if (!adaGoresan && !adaObjek) return '';
+  const ukuranDefault = kanvas.w === KANVAS_BATAS.defaultW && kanvas.h === KANVAS_BATAS.defaultH;
+  if (!adaGoresan && !adaObjek && ukuranDefault) return '';
   if (adaGoresan) {
     if (goresan.length > BATAS_GORESAN.goresan) return '';
     let total = 0;
@@ -140,29 +164,33 @@ export function serialGoresan({ goresan = [], objek = [], latar = 'putih', pola 
     v: VERSI_GORESAN,
     latar: LATAR_GORESAN.includes(latar) ? latar : 'putih',
     pola: POLA_GORESAN.includes(pola) ? pola : 'titik',
-    goresan: bersihkanGoresan(goresan, lebar, tinggi),
-    objek: bersihkanObjek(objek, lebar, tinggi),
+    kanvas,
+    goresan: bersihkanGoresan(goresan, kanvas.w, kanvas.h),
+    objek: bersihkanObjek(objek, kanvas.w, kanvas.h),
   });
   return teks.length <= BATAS_GORESAN.bytes ? teks : '';
 }
 
-/** Baca string dari atribut data-goresan. Null bila kosong, rusak, atau versi tidak dikenal. */
-export function bacaGoresan(teks, lebar, tinggi) {
+/** Baca string dari atribut data-goresan. Null bila kosong, rusak, atau versi tidak dikenal.
+ *  Data v1 dan v2 tidak punya ukuran kanvas, jadi memakai default. */
+export function bacaGoresan(teks) {
   if (!teks || typeof teks !== 'string' || teks.length > BATAS_GORESAN.bytes) return null;
   let o;
   try { o = JSON.parse(teks); } catch { return null; }
   if (!o || typeof o !== 'object' || !VERSI_DIDUKUNG.includes(o.v)) return null;
+  const kanvas = bersihkanKanvas(o.v >= 3 ? o.kanvas : null);
   return {
     latar: LATAR_GORESAN.includes(o.latar) ? o.latar : 'putih',
     pola: POLA_GORESAN.includes(o.pola) ? o.pola : 'titik',
-    goresan: bersihkanGoresan(o.goresan, lebar, tinggi),
-    objek: bersihkanObjek(o.objek, lebar, tinggi),
+    kanvas,
+    goresan: bersihkanGoresan(o.goresan, kanvas.w, kanvas.h),
+    objek: bersihkanObjek(o.objek, kanvas.w, kanvas.h),
   };
 }
 
 /** Daftar id blob yang dirujuk objek visual di data goresan. Dipakai agar blob tidak dihapus sebagai yatim. */
-export function idBlobDariGoresan(teks, lebar = 720, tinggi = 460) {
-  const b = bacaGoresan(teks, lebar, tinggi);
+export function idBlobDariGoresan(teks) {
+  const b = bacaGoresan(teks);
   if (!b) return [];
   return [...new Set(b.objek.map(o => o.blob))];
 }

@@ -5,7 +5,7 @@
    Catatan: hanya untuk pemutaran. Ekspor tidak memakai modul ini.
    Belum diuji di perangkat: butuh AudioContext sungguhan. */
 
-import { EFEK, IR_RUANG } from './efek-data.js?v=20261024173337';
+import { EFEK, IR_RUANG } from './efek-data.js?v=20261024182343';
 
 const RAMP = 0.05; // detik, untuk perubahan parameter halus
 /* Web Audio menyatakan Q lowpass/highpass dalam dB, bukan angka linear.

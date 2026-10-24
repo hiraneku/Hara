@@ -4,16 +4,16 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024173337';
-import { toast } from '../../core/toast.js?v=20261024173337';
-import { t as tr } from '../../core/i18n.js?v=20261024173337';
-import { ensureCaret, caretEnd } from './caret.js?v=20261024173337';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261024173337';
-import { refresh } from './cleanup.js?v=20261024173337';
-import { snap } from './history.js?v=20261024173337';
-import { pasangGambar } from './image.js?v=20261024173337';
-import { pastikanKolomAkhir } from './blocks.js?v=20261024173337';
-import { bacaGoresan, serialGoresan, hitObjek } from './goresan.js?v=20261024173337';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024182343';
+import { toast } from '../../core/toast.js?v=20261024182343';
+import { t as tr } from '../../core/i18n.js?v=20261024182343';
+import { ensureCaret, caretEnd } from './caret.js?v=20261024182343';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261024182343';
+import { refresh } from './cleanup.js?v=20261024182343';
+import { snap } from './history.js?v=20261024182343';
+import { pasangGambar } from './image.js?v=20261024182343';
+import { pastikanKolomAkhir } from './blocks.js?v=20261024182343';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS } from './goresan.js?v=20261024182343';
 
 const LEBAR = 720;
 const TINGGI = 460;
@@ -36,11 +36,11 @@ function buatIdBlob(awalan = 'sk_') {
   return awalan + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-function svgDariJejak(jejak, latar) {
+function svgDariJejak(jejak, latar, w = LEBAR, h = TINGGI) {
   const bgRect = latar === 'gelap'
-    ? `<rect width="${LEBAR}" height="${TINGGI}" fill="#18181b"/>`
+    ? `<rect width="${w}" height="${h}" fill="#18181b"/>`
     : latar === 'putih'
-      ? `<rect width="${LEBAR}" height="${TINGGI}" fill="#ffffff"/>`
+      ? `<rect width="${w}" height="${h}" fill="#ffffff"/>`
       : '';
   const isi = jejak.map(st => {
     const op = st.alat === 'stabilo' ? 0.36 : 1;
@@ -61,7 +61,7 @@ function svgDariJejak(jejak, latar) {
     const d = st.pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${Math.round(p.x)} ${Math.round(p.y)}`).join(' ');
     return `<path d="${d}" fill="none" stroke="${st.warna}" stroke-width="${st.ukuran}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
   }).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${LEBAR}" height="${TINGGI}" viewBox="0 0 ${LEBAR} ${TINGGI}">${bgRect}${isi}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bgRect}${isi}</svg>`;
 }
 
 /* Objek visual di kanvas: gambar, atau kotak abu-abu bila gambar belum/tidak bisa dimuat. */
@@ -117,24 +117,24 @@ async function eksporKanvasKeBlob(cv, ctx, jejak, latar) {
     });
     if (blob) return blob;
   }
-  const svg = svgDariJejak(jejak, latar);
+  const svg = svgDariJejak(jejak, latar, cv.width || LEBAR, cv.height || TINGGI);
   return new Blob([svg], { type: 'image/svg+xml' });
 }
 
-function gambarKisiLatar(ctx, pola, latar) {
+function gambarKisiLatar(ctx, pola, latar, w = LEBAR, h = TINGGI) {
   if (!ctx) return;
-  ctx.clearRect(0, 0, LEBAR, TINGGI);
+  ctx.clearRect(0, 0, w, h);
   if (latar === 'putih') {
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, LEBAR, TINGGI);
+    ctx.fillRect(0, 0, w, h);
   } else if (latar === 'gelap') {
     ctx.fillStyle = '#18181b';
-    ctx.fillRect(0, 0, LEBAR, TINGGI);
+    ctx.fillRect(0, 0, w, h);
   }
   if (pola === 'titik') {
     ctx.fillStyle = latar === 'gelap' ? 'rgba(255,255,255,0.16)' : 'rgba(15,23,42,0.16)';
-    for (let y = 24; y < TINGGI; y += 24) {
-      for (let x = 24; x < LEBAR; x += 24) {
+    for (let y = 24; y < h; y += 24) {
+      for (let x = 24; x < w; x += 24) {
         ctx.beginPath();
         ctx.arc(x, y, 1.3, 0, Math.PI * 2);
         ctx.fill();
@@ -143,10 +143,10 @@ function gambarKisiLatar(ctx, pola, latar) {
   } else if (pola === 'garis') {
     ctx.strokeStyle = latar === 'gelap' ? 'rgba(255,255,255,0.12)' : 'rgba(37,99,235,0.14)';
     ctx.lineWidth = 1;
-    for (let y = 32; y < TINGGI; y += 32) {
+    for (let y = 32; y < h; y += 32) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(LEBAR, y);
+      ctx.lineTo(w, y);
       ctx.stroke();
     }
   }
@@ -302,6 +302,11 @@ export function bukaStudioSketsa(figEdit = null) {
   let pilihanId = null;
   let seret = null;
   const gambarObjekCache = new Map();
+  /* A7: ukuran kanvas kerja (default 720×460). A6: zoom hanya ukuran tampilan. */
+  let kw = LEBAR;
+  let kh = TINGGI;
+  let zoom = 1;
+  let geser = null;
 
   overlay.innerHTML = `
     <div class="sk-box">
@@ -315,6 +320,7 @@ export function bukaStudioSketsa(figEdit = null) {
       </div>
       <div class="sk-bar">
         <div class="sk-row">
+          <button type="button" class="sk-tool" data-sk-alat="geser" title="${tr('Geser tampilan')}"><svg class="ico"><use href="#i-finger"/></svg>${tr('Geser')}</button>
           <button type="button" class="sk-tool" data-sk-alat="pilih" title="${tr('Pilih & pindahkan')}"><svg class="ico"><use href="#i-move"/></svg>${tr('Pilih')}</button>
           <button type="button" class="sk-tool on" data-sk-alat="pena" title="${tr('Pena')}"><svg class="ico"><use href="#i-pen"/></svg>${tr('Pena')}</button>
           <button type="button" class="sk-tool" data-sk-alat="stabilo" title="${tr('Stabilo')}"><svg class="ico"><use href="#i-marker"/></svg>${tr('Stabilo')}</button>
@@ -330,6 +336,17 @@ export function bukaStudioSketsa(figEdit = null) {
           <div class="sk-sizes">
             ${[2, 4, 8, 14].map(u => `<button type="button" class="sk-sz${u === 4 ? ' on' : ''}" data-sk-uk="${u}">${u}px</button>`).join('')}
           </div>
+        </div>
+        <div class="sk-row">
+          <button type="button" class="sk-tool" id="sk-zoom-kecil" title="${tr('Perkecil tampilan')}">−</button>
+          <button type="button" class="sk-tool" id="sk-zoom-reset" title="${tr('Tampilan pas layar')}">100%</button>
+          <button type="button" class="sk-tool" id="sk-zoom-besar" title="${tr('Perbesar tampilan')}">+</button>
+          <span class="sk-spacer"></span>
+          <button type="button" class="sk-tool" id="sk-lebar-kecil">${tr('Lebar')} −</button>
+          <button type="button" class="sk-tool" id="sk-lebar-besar">${tr('Lebar')} +</button>
+          <button type="button" class="sk-tool" id="sk-tinggi-kecil">${tr('Tinggi')} −</button>
+          <button type="button" class="sk-tool" id="sk-tinggi-besar">${tr('Tinggi')} +</button>
+          <span class="sk-kanvas-info" id="sk-kanvas-info" aria-live="polite"></span>
         </div>
         <div class="sk-row">
           <button type="button" class="sk-tool" id="sk-tambah-gambar"><svg class="ico"><use href="#i-img"/></svg>${tr('Tambah gambar')}</button>
@@ -381,11 +398,11 @@ export function bukaStudioSketsa(figEdit = null) {
     try { await simpanBlob(blobId, berkas); }
     catch { toast(tr('Ruang penyimpanan penuh')); return; }
     const dim = await ukuranGambarBerkas(berkas);
-    const skala = Math.min(1, (LEBAR * 0.5) / dim.w);
+    const skala = Math.min(1, (kw * 0.5) / dim.w);
     const w = dim.w * skala;
     const h = dim.h * skala;
     const id = 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    objek.push({ id, blob: blobId, x: (LEBAR - w) / 2, y: (TINGGI - h) / 2, w, h });
+    objek.push({ id, blob: blobId, x: (kw - w) / 2, y: (kh - h) / 2, w, h });
     pilihanId = id;
     perbaruiBarObjek();
     renderUlang();
@@ -403,11 +420,83 @@ export function bukaStudioSketsa(figEdit = null) {
     renderUlang();
   };
 
+  const stage = overlay.querySelector('.sk-stage');
+
+  const perbaruiInfoKanvas = () => {
+    const info = overlay.querySelector('#sk-kanvas-info');
+    if (info) info.textContent = kw + '×' + kh;
+  };
+
+  /* A6: skala pas layar (sama dengan tampilan awal), dikali zoom */
+  const skalaPasLayar = () => {
+    const lebarTersedia = stage ? stage.clientWidth - 16 : 0;
+    if (lebarTersedia <= 0) return 1;
+    const tinggiTersedia = (window.innerHeight || 800) * 0.54;
+    return Math.min(lebarTersedia / kw, tinggiTersedia / kh);
+  };
+
+  const terapkanZoom = () => {
+    cv.style.aspectRatio = kw + '/' + kh;
+    if (zoom === 1) {
+      cv.style.width = '';
+      cv.style.height = '';
+      cv.style.maxHeight = '';
+    } else {
+      const skala = skalaPasLayar() * zoom;
+      cv.style.width = Math.round(kw * skala) + 'px';
+      cv.style.height = Math.round(kh * skala) + 'px';
+      cv.style.maxHeight = 'none';
+      cv.style.aspectRatio = 'auto';
+    }
+    const tombol = overlay.querySelector('#sk-zoom-reset');
+    if (tombol) tombol.textContent = Math.round(zoom * 100) + '%';
+  };
+
+  const ubahZoom = delta => {
+    zoom = Math.min(4, Math.max(0.5, Math.round((zoom + delta) * 100) / 100));
+    terapkanZoom();
+    if (stage && zoom !== 1) {
+      stage.scrollLeft = Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2);
+      stage.scrollTop = Math.max(0, (stage.scrollHeight - stage.clientHeight) / 2);
+    }
+  };
+
+  /* A7: saat mengecilkan, tidak boleh ada goresan atau objek yang keluar dari sisi kanan/bawah */
+  const muatDalamKanvas = (nw, nh) => {
+    for (const st of jejak) for (const p of st.pts) if (p.x > nw || p.y > nh) return false;
+    for (const o of objek) if (o.x + o.w > nw || o.y + o.h > nh) return false;
+    return true;
+  };
+
+  const ubahKanvas = (dw, dh) => {
+    if (adaLatarFoto) {
+      toast(tr('Sketsa berlatar foto tidak bisa diubah ukuran kanvasnya'));
+      return;
+    }
+    const nw = Math.min(KANVAS_BATAS.maxW, Math.max(KANVAS_BATAS.minW, kw + dw));
+    const nh = Math.min(KANVAS_BATAS.maxH, Math.max(KANVAS_BATAS.minH, kh + dh));
+    if (nw === kw && nh === kh) {
+      toast(tr('Ukuran kanvas sudah mencapai batas'));
+      return;
+    }
+    if ((nw < kw || nh < kh) && !muatDalamKanvas(nw, nh)) {
+      toast(tr('Ada goresan atau objek di luar area baru'));
+      return;
+    }
+    kw = nw;
+    kh = nh;
+    cv.width = kw;
+    cv.height = kh;
+    perbaruiInfoKanvas();
+    terapkanZoom();
+    renderUlang();
+  };
+
   const renderUlang = () => {
     if (!ctx) return;
-    gambarKisiLatar(ctx, pola, latar);
+    gambarKisiLatar(ctx, pola, latar, kw, kh);
     if (gambarDasar) {
-      try { ctx.drawImage(gambarDasar, 0, 0, LEBAR, TINGGI); } catch {}
+      try { ctx.drawImage(gambarDasar, 0, 0, kw, kh); } catch {}
     }
     for (const o of objek) gambarSatuObjek(ctx, o, gambarObjekDiKanvas(o), o.id === pilihanId);
     for (const st of jejak) gambarSatuJejak(ctx, st);
@@ -420,8 +509,13 @@ export function bukaStudioSketsa(figEdit = null) {
        Gambar yang sudah di-scan atau foto biasa tetap memakai jalur PNG lama. */
     const gor = figEdit.hasAttribute('data-scan') || figEdit.hasAttribute('data-orig-blob')
       ? null
-      : bacaGoresan(figEdit.getAttribute('data-goresan') || '', LEBAR, TINGGI);
-    if (gor && (gor.goresan.length || gor.objek.length)) {
+      : bacaGoresan(figEdit.getAttribute('data-goresan') || '');
+    if (gor && (gor.goresan.length || gor.objek.length
+      || gor.kanvas.w !== LEBAR || gor.kanvas.h !== TINGGI)) {
+      kw = gor.kanvas.w;
+      kh = gor.kanvas.h;
+      cv.width = kw;
+      cv.height = kh;
       jejak.push(...gor.goresan);
       objek.push(...gor.objek);
       latar = gor.latar;
@@ -448,13 +542,18 @@ export function bukaStudioSketsa(figEdit = null) {
     const r = cv.getBoundingClientRect();
     if (!r.width || !r.height) return { x: e.clientX || 120, y: e.clientY || 120 };
     return {
-      x: ((e.clientX - r.left) / r.width) * LEBAR,
-      y: ((e.clientY - r.top) / r.height) * TINGGI,
+      x: ((e.clientX - r.left) / r.width) * kw,
+      y: ((e.clientY - r.top) / r.height) * kh,
     };
   };
 
   cv.addEventListener('pointerdown', e => {
     e.preventDefault();
+    if (alat === 'geser') {
+      /* A6: alat Geser menggeser area tampilan yang di-zoom, tidak menggambar */
+      geser = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop };
+      return;
+    }
     const p = titikDariEvent(e);
     if (alat === 'pilih') {
       const i = hitObjek(objek, p.x, p.y);
@@ -475,6 +574,12 @@ export function bukaStudioSketsa(figEdit = null) {
     renderUlang();
   });
   cv.addEventListener('pointermove', e => {
+    if (geser) {
+      e.preventDefault();
+      stage.scrollLeft = geser.l - (e.clientX - geser.x);
+      stage.scrollTop = geser.t - (e.clientY - geser.y);
+      return;
+    }
     if (seret) {
       e.preventDefault();
       const o = objek.find(x => x.id === seret.id);
@@ -492,6 +597,7 @@ export function bukaStudioSketsa(figEdit = null) {
     renderUlang();
   });
   const akhiriGoresan = () => {
+    if (geser) { geser = null; return; }
     if (seret) { seret = null; return; }
     if (!aktif) return;
     jejak.push(aktif);
@@ -532,6 +638,13 @@ export function bukaStudioSketsa(figEdit = null) {
       renderUlang();
       return;
     }
+    if (e.target.closest('#sk-zoom-besar')) { ubahZoom(0.25); return; }
+    if (e.target.closest('#sk-zoom-kecil')) { ubahZoom(-0.25); return; }
+    if (e.target.closest('#sk-zoom-reset')) { zoom = 1; terapkanZoom(); return; }
+    if (e.target.closest('#sk-lebar-besar')) { ubahKanvas(KANVAS_BATAS.langkah, 0); return; }
+    if (e.target.closest('#sk-lebar-kecil')) { ubahKanvas(-KANVAS_BATAS.langkah, 0); return; }
+    if (e.target.closest('#sk-tinggi-besar')) { ubahKanvas(0, KANVAS_BATAS.langkah); return; }
+    if (e.target.closest('#sk-tinggi-kecil')) { ubahKanvas(0, -KANVAS_BATAS.langkah); return; }
     if (e.target.closest('#sk-tambah-gambar')) {
       const inp = document.createElement('input');
       inp.type = 'file';
@@ -576,7 +689,7 @@ export function bukaStudioSketsa(figEdit = null) {
       return;
     }
     if (e.target.closest('#sk-simpan')) {
-      if (!jejak.length && !objek.length && !gambarDasar) {
+      if (!jejak.length && !objek.length && !gambarDasar && kw === LEBAR && kh === TINGGI) {
         toast(tr('Coret sesuatu terlebih dahulu'));
         return;
       }
@@ -585,7 +698,7 @@ export function bukaStudioSketsa(figEdit = null) {
       renderUlang();
       const goresanSimpan = adaLatarFoto
         ? ''
-        : serialGoresan({ goresan: jejak, objek, latar, pola }, LEBAR, TINGGI);
+        : serialGoresan({ goresan: jejak, objek, latar, pola }, kw, kh);
       if (!adaLatarFoto && (jejak.length || objek.length) && !goresanSimpan) {
         toast(tr('Goresan terlalu banyak untuk disimpan sebagai objek; hanya gambar yang disimpan'));
       }
@@ -595,6 +708,8 @@ export function bukaStudioSketsa(figEdit = null) {
     }
   });
 
+  perbaruiInfoKanvas();
+  terapkanZoom();
   renderUlang();
 }
 

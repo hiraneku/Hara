@@ -50,7 +50,31 @@
 - **Status A2 setelah langkah ini:** masih *Partially implemented*. Sudah ada objek bebas di sketsa. Belum ada: objek bebas di halaman catatan biasa, dan latar kertas untuk halaman catatan (ini bagian B7).
 - **Belum diuji:** perlindungan blob dari pembersihan blob yatim belum diuji dengan blob yang sudah berumur lebih dari 24 jam. Saat ini hanya diuji lewat `idBlobDariGoresan`. Belum diuji di perangkat Android.
 
+## Perubahan 3 — A6 Zoomable canvas dan A7 Resizable canvas
+
+- **ID:** A6 dan A7, dikerjakan bersamaan karena berbagi sistem koordinat kanvas (§6.3). Keduanya tetap dipisah secara perilaku.
+- **Alasan urutan:** urutan dokumen §6.1 (A6 lalu A7). Dasar keputusan: §2.2 (zoom tidak mengubah ukuran; kanvas bisa diperluas sampai batas wajar).
+- **Kondisi awal (audit):** kanvas sketsa tetap 720×460, di CSS dan di JavaScript. Tidak ada zoom.
+- **Yang berubah:**
+  - `docs/notes/editor/goresan.js`: format v3 menambah `kanvas` (`w`, `h`). Batas: minimum 360×240, maksimum 2400×2400, langkah 120 px. Data v1 dan v2 tetap terbaca dengan ukuran default 720×460.
+  - `docs/notes/editor/sketsa.js`:
+    - **A6 zoom:** tombol −, 100%, + (langkah 0,25; rentang 50%–400%). Zoom hanya mengubah ukuran tampilan kanvas, bukan koordinat yang tersimpan. Alat **Geser** untuk menggeser tampilan yang di-zoom, karena kanvas memakai `touch-action: none`.
+    - **A7 ukuran kanvas:** tombol Lebar −/+ dan Tinggi −/+, dengan info ukuran (misalnya `960×580`). Ekspansi ke kanan dan bawah, sehingga koordinat lama tidak bergeser. Pengecilan ditolak bila ada goresan atau objek yang keluar dari area baru. Sketsa berlatar gambar lama (PNG) atau foto tidak bisa diubah ukurannya.
+  - `docs/styles/notes.css`: `.sk-stage` bisa digulir (`overflow: auto`) dan kanvas dipusatkan dengan `margin: auto`, sehingga tidak terpotong saat diperbesar.
+  - `tools/uji/sketsa-kanvas.mjs` (baru): 7 uji unit + 15 uji integrasi (jsdom).
+- **Keputusan yang diambil sendiri:**
+  - Ekspansi hanya ke kanan dan bawah. Ekspansi ke kiri/atas akan menggeser semua koordinat dan objek, dan belum diperlukan.
+  - Kanvas tidak bisa diubah saat sketsa masih berlatar gambar lama, karena gambar itu tidak punya data kanvas dan akan terpotong atau melebar.
+  - Pinch-zoom dengan dua jari belum dibuat. Zoom lewat tombol dulu, karena dua jari berbenturan dengan tulisan tangan.
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-kanvas.mjs`: 22/22 lulus.
+  - Uji mutasi 1: pemetaan koordinat saat zoom dirusak. 1 uji gagal, lalu dipulihkan.
+  - Uji mutasi 2: pemeriksaan pengecilan dinonaktifkan. 3 uji gagal, lalu dipulihkan.
+  - Uji A1, A2, dan sketsa lama (`sketsa-goresan`, `sketsa-objek`, `catatan-generasi-baru`): semua lulus.
+- **Belum diuji:** zoom dan geser di HP sungguhan (ukuran layar, lebar stage, dan gerakan jari). Stage di jsdom tidak punya tata letak, jadi `clientWidth` dianggap 0.
+- **Status:** A6 dan A7 masing-masing masih *Partially implemented* di sisi perilaku, karena zoom belum pinch dan ukuran kanvas belum punya batas per halaman catatan. Kedua fitur ini sudah berfungsi di sketsa.
+
 ## Berikutnya
 
-- A6 Zoomable canvas (sesuai urutan §6.1: A2 → A6 → A7). Tetap berikutnya dalam urutan dokumen.
+- A3 Custom pen and brush presets (urutan §6.1 setelah A7).
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.
