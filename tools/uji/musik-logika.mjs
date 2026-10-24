@@ -48,8 +48,8 @@ uji('format ukuran berkas', () => {
 
 uji('pengaturan layar Musik dibersihkan', () => {
   assert.deepEqual(L.normalisasiSet(undefined), L.SET_AWAL);
-  const s = L.normalisasiSet({ setelahSelesai: 'x', lanjutkanPosisi: 'ya', gayaSeek: 'gelombang', tempoAwal: 9 });
-  assert.deepEqual(s, { setelahSelesai: 'berhenti', lanjutkanPosisi: true, gayaSeek: 'gelombang', tempoAwal: 2 });
+  const s = L.normalisasiSet({ setelahSelesai: 'x', lanjutkanPosisi: 'ya', tempoAwal: 9 });
+  assert.deepEqual(s, { setelahSelesai: 'berhenti', lanjutkanPosisi: true, tempoAwal: 2 });
   assert.equal(L.normalisasiSet({ setelahSelesai: 'ulangi' }).setelahSelesai, 'ulangi');
 });
 

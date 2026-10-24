@@ -123,45 +123,42 @@
 }
 .mus-sub { margin: 0; font-size: 13px; color: var(--mus-redup); }
 
-/* seek bar */
+/* seek bar: waveform di atas, bar garis dengan knob di bawah */
 .mus-gel-blok { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 6px; }
 .mus-gel {
-  position: relative; height: 44px; cursor: pointer; touch-action: none; user-select: none;
-  border-radius: 10px; outline: none;
+  position: relative; height: 72px; cursor: pointer; touch-action: none; user-select: none;
+  border-radius: 12px; outline: none;
 }
 .mus-gel:focus-visible { box-shadow: 0 0 0 2px rgba(169, 207, 166, .5); }
+.mus-gel canvas { position: absolute; left: 0; top: 0; width: 100%; height: 52px; display: block; }
 .mus-jalur {
-  position: absolute; left: 0; right: 0; top: 50%; height: 6px; transform: translateY(-50%);
+  position: absolute; left: 0; right: 0; top: 60px; height: 6px;
   border-radius: 6px; background: rgba(255, 255, 255, .16); overflow: hidden;
 }
 .mus-isi { display: block; height: 100%; width: 0; background: var(--mus-aksen); border-radius: 6px; }
-.mus-gel canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .mus-knob {
-  position: absolute; top: 50%; left: 0; width: 16px; height: 16px; margin: 0;
-  transform: translate(-50%, -50%); border-radius: 50%;
-  background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .45);
+  position: absolute; top: 0; left: 0; width: 2px; height: 52px; margin: 0;
+  transform: translateX(-50%); border-radius: 2px; background: #fff; pointer-events: none;
+}
+.mus-knob-bulat {
+  position: absolute; top: 55px; left: 0; width: 16px; height: 16px; margin: 0;
+  transform: translateX(-50%); border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .45); pointer-events: none;
   transition: transform .15s var(--ease);
 }
-.mus-gel:active .mus-knob { transform: translate(-50%, -50%) scale(1.25); }
+.mus-gel:active .mus-knob-bulat { transform: translateX(-50%) scale(1.25); }
 .mus-band {
-  position: absolute; top: 50%; height: 6px; transform: translateY(-50%);
-  background: rgba(169, 207, 166, .38); border-radius: 3px; pointer-events: none;
+  position: absolute; top: 0; height: 66px;
+  background: rgba(169, 207, 166, .14); border-radius: 4px; pointer-events: none;
 }
-.mus-tanda { position: absolute; top: 4px; bottom: 4px; width: 0; border-left: 1.5px solid var(--mus-aksen); pointer-events: none; }
+.mus-band[hidden] { display: none; }
+.mus-tanda { position: absolute; top: 0; height: 66px; width: 0; border-left: 1.5px solid var(--mus-aksen); pointer-events: none; }
 .mus-tanda[hidden] { display: none; }
 .mus-tanda b {
   position: absolute; top: -2px; left: 3px; font-size: 10px; font-weight: 700; line-height: 1;
   color: var(--mus-aksen); letter-spacing: .02em;
 }
-.mus-band[hidden] { display: none; }
 .mus-waktu { display: flex; justify-content: space-between; font-size: 12px; color: var(--mus-redup); }
-
-/* gaya gelombang */
-.mus-gel-gelombang { height: 64px; }
-.mus-gel-gelombang .mus-knob { width: 2px; height: 84%; border-radius: 2px; background: #fff; box-shadow: none; }
-.mus-gel-gelombang .mus-band { top: 0; bottom: 0; height: auto; transform: none; border-radius: 4px; background: rgba(169, 207, 166, .14); }
-.mus-gel-gelombang .mus-tanda { top: 0; bottom: 0; }
-.mus-gel-gelombang .mus-tanda b { top: -2px; }
 
 /* transport */
 .mus-transport { display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -196,7 +193,10 @@
 .mus-chip .mus-ico { width: 16px; height: 16px; }
 .mus-chip.on, .mus-chip[aria-pressed="true"] { background: var(--mus-aksen); border-color: var(--mus-aksen); color: var(--mus-aksen-tua); font-weight: 650; }
 .mus-chip-hantu { background: transparent; color: var(--mus-redup); }
-.mus-chip-kecil { min-width: 52px; min-height: 36px; padding: 0 10px; font-size: 12.5px; }
+.mus-chip-kecil { width: 100%; min-width: 0; min-height: 38px; padding: 0 4px; font-size: 12.5px; }
+.mus-chip-lebar { width: 100%; margin-top: 12px; }
+.mus-preset { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.mus-preset .mus-chip { width: 100%; min-width: 0; padding: 0; min-height: 38px; }
 
 /* ── kartu kanan ── */
 .mus-kartu {
@@ -226,10 +226,9 @@
 .mus-range::-moz-range-progress { height: 6px; border-radius: 6px; background: var(--mus-aksen); }
 .mus-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, .45); }
 .mus-skala { display: flex; justify-content: space-between; font-size: 11px; color: var(--mus-faint); margin-top: 2px; font-variant-numeric: tabular-nums; }
-.mus-baris { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.mus-nada-baris { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mus-nada-baris { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; margin-top: 12px; }
 .mus-angka {
-  width: 112px; height: 40px; border-radius: 12px; text-align: center;
+  width: 100%; min-width: 0; height: 38px; border-radius: 10px; text-align: center;
   border: 1px solid var(--mus-garis); background: rgba(0, 0, 0, .25);
   color: var(--mus-teks); font: 600 16px var(--mono); font-variant-numeric: tabular-nums;
   -moz-appearance: textfield; appearance: textfield;
@@ -398,3 +397,6 @@
 .mk-putar .mus-ico { width: 50%; height: 50%; }
 .mk-putar:active { transform: scale(.94); }
 .mk-kosong .mk-buka { padding: min(4vw, 16px); }
+
+/* ── Pengaturan kosong ── */
+.mus-set-kosong { margin: 28px 4px 0; font-size: 14px; color: var(--mus-redup); }

@@ -122,11 +122,9 @@ export const ATUR_AWAL = Object.freeze({
 
 /* Pengaturan layar Musik (menu Pengaturan Musik). Nilai tak dikenal kembali ke awal. */
 export const PILIHAN_SETELAH_SELESAI = ['berhenti', 'berikutnya', 'ulangi'];
-export const PILIHAN_GAYA_SEEK = ['garis', 'gelombang'];
 export const SET_AWAL = Object.freeze({
   setelahSelesai: 'berhenti',
   lanjutkanPosisi: true,
-  gayaSeek: 'garis',
   tempoAwal: TEMPO_RESET,
 });
 
@@ -137,7 +135,6 @@ export function normalisasiSet(raw) {
       ? r.setelahSelesai : SET_AWAL.setelahSelesai,
     lanjutkanPosisi: typeof r.lanjutkanPosisi === 'boolean'
       ? r.lanjutkanPosisi : SET_AWAL.lanjutkanPosisi,
-    gayaSeek: PILIHAN_GAYA_SEEK.includes(r.gayaSeek) ? r.gayaSeek : SET_AWAL.gayaSeek,
     tempoAwal: klampTempo(r.tempoAwal ?? SET_AWAL.tempoAwal),
   };
 }

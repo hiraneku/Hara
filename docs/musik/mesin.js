@@ -9,11 +9,11 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024143000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024150500';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
-} from './logika.js?v=20261024143000';
+} from './logika.js?v=20261024150500';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */

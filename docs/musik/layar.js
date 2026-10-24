@@ -3,17 +3,16 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024143000';
-import { esc } from '../core/dom.js?v=20261024143000';
-import { t as tr } from '../core/i18n.js?v=20261024143000';
-import { toast } from '../core/toast.js?v=20261024143000';
-import * as M from './mesin.js?v=20261024143000';
-import * as S from './simpan.js?v=20261024143000';
-import * as L from './logika.js?v=20261024143000';
-import * as A from './aksi.js?v=20261024143000';
-import { ambilSet } from './set.js?v=20261024143000';
-import { ikon } from './ikon.js?v=20261024143000';
-import { segarSampul } from './sampul-dom.js?v=20261024143000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024150500';
+import { esc } from '../core/dom.js?v=20261024150500';
+import { t as tr } from '../core/i18n.js?v=20261024150500';
+import { toast } from '../core/toast.js?v=20261024150500';
+import * as M from './mesin.js?v=20261024150500';
+import * as S from './simpan.js?v=20261024150500';
+import * as L from './logika.js?v=20261024150500';
+import * as A from './aksi.js?v=20261024150500';
+import { ikon } from './ikon.js?v=20261024150500';
+import { segarSampul } from './sampul-dom.js?v=20261024150500';
 
 const JUMLAH_BAR = 160;
 const WARNA_MAIN = '#A9CFA6';
@@ -68,20 +67,19 @@ const subLagu = v => (v.status === 'memuat'
 
 /* ── tampilan ── */
 
-/* Seek bar: garis (default) atau gelombang, sesuai pengaturan. */
+/* Seek bar: waveform di atas (seperti pemutar musik pada umumnya) dan bar garis
+   dengan knob di bawahnya. Keduanya bisa diketuk dan digeser. */
 function gelHtml(v) {
-  const gaya = ambilSet().gayaSeek;
-  const isi = gaya === 'gelombang'
-    ? '<canvas aria-hidden="true"></canvas>'
-    : '<span class="mus-jalur" aria-hidden="true"><span class="mus-isi" data-mus-isi></span></span>';
-  return `<div class="mus-gel mus-gel-${gaya}" data-mus-gel role="slider" tabindex="0" aria-label="${tr('Posisi lagu')}"
+  return `<div class="mus-gel" data-mus-gel role="slider" tabindex="0" aria-label="${tr('Posisi lagu')}"
       aria-valuemin="0" aria-valuemax="${Math.round(v.durasi)}" aria-valuenow="${Math.round(v.posisi)}"
       aria-valuetext="${L.formatWaktu(v.posisi)}">
-      ${isi}
+      <canvas aria-hidden="true"></canvas>
       <span class="mus-band" data-mus-band hidden></span>
       <span class="mus-knob" data-mus-knob aria-hidden="true"></span>
       <span class="mus-tanda" data-mus-tanda="a" hidden><b>A</b></span>
       <span class="mus-tanda" data-mus-tanda="b" hidden><b>B</b></span>
+      <span class="mus-jalur" aria-hidden="true"><span class="mus-isi" data-mus-isi></span></span>
+      <span class="mus-knob-bulat" data-mus-knob2 aria-hidden="true"></span>
     </div>`;
 }
 
@@ -143,9 +141,8 @@ function kontrolHtml(v) {
     </header>
     <input type="range" class="mus-range" style="--p:${pTempo}" min="50" max="200" step="1" value="${tp}" data-mus-range="tempo" aria-label="${tr('Tempo')}"${dis}>
     <div class="mus-skala" aria-hidden="true"><span>50%</span><span>100%</span><span>200%</span></div>
-    <div class="mus-baris">${preset}
-      <button type="button" class="mus-chip mus-chip-hantu" data-mus="tempo-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
-    </div>
+    <div class="mus-preset">${preset}</div>
+    <button type="button" class="mus-chip mus-chip-hantu mus-chip-lebar" data-mus="tempo-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
   </section>
   <section class="mus-kartu" aria-labelledby="mus-h-nada">
     <header class="mus-kartu-kepala">
@@ -157,14 +154,12 @@ function kontrolHtml(v) {
     <div class="mus-nada-baris">
       <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="-1"${dis} aria-label="${tr('Turun 1 semitone')}">−1</button>
       <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="-0.01"${dis} aria-label="${tr('Turun 0,01 semitone')}">−0.01</button>
-      <input type="number" class="mus-angka" inputmode="decimal" step="0.01" min="${L.PITCH_MIN}" max="${L.PITCH_MAX}"
+      <input type="text" class="mus-angka" inputmode="decimal" autocomplete="off"
         value="${L.angkaPitch(v.pitch)}" data-mus-num="pitch" aria-label="${tr('Nada (semitone)')}"${dis}>
       <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="0.01"${dis} aria-label="${tr('Naik 0,01 semitone')}">+0.01</button>
       <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="1"${dis} aria-label="${tr('Naik 1 semitone')}">+1</button>
     </div>
-    <div class="mus-baris">
-      <button type="button" class="mus-chip mus-chip-hantu" data-mus="pitch-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
-    </div>
+    <button type="button" class="mus-chip mus-chip-hantu mus-chip-lebar" data-mus="pitch-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
   </section>`;
 }
 
@@ -307,6 +302,8 @@ function gambarGel(v) {
 
   const knob = g.querySelector('[data-mus-knob]');
   if (knob) knob.style.left = pct(kemajuan);
+  const knob2 = g.querySelector('[data-mus-knob2]');
+  if (knob2) knob2.style.left = pct(kemajuan);
   const isi = g.querySelector('[data-mus-isi]');
   if (isi) isi.style.width = pct(kemajuan);
 
@@ -327,14 +324,14 @@ function gambarGel(v) {
   if (tB) { tB.hidden = !adaB; if (adaB) tB.style.left = pct(v.loop.b / d); }
 
   const cv = g.querySelector('canvas');
-  if (cv) gambarWaveform(g, cv, v, kemajuan);
+  if (cv) gambarWaveform(cv, v, kemajuan);
 
   g.setAttribute('aria-valuenow', String(Math.round(v.posisi)));
   g.setAttribute('aria-valuetext', L.formatWaktu(v.posisi));
 }
 
-function gambarWaveform(g, cv, v, kemajuan) {
-  const r = g.getBoundingClientRect();
+function gambarWaveform(cv, v, kemajuan) {
+  const r = cv.getBoundingClientRect();
   const w = Math.max(1, Math.floor(r.width));
   const h = Math.max(1, Math.floor(r.height));
   const dpr = self.devicePixelRatio || 1;

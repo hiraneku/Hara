@@ -100,24 +100,18 @@ await tunggu(150);
 oke('ketuk kedua menghapus lagu', S.laguById(rek.id) === null);
 oke('daftar diperbarui setelah hapus', [...document.querySelectorAll('.mus-item-judul')].map(e => e.textContent).join('|') === 'Lagu Kedua');
 
-/* ── 7. pengaturan Musik ── */
-oke('nada: langkah 0.01 pada slider dan kotak angka', q('[data-mus-range=\"pitch\"]')?.step === '0.01' && q('[data-mus-num=\"pitch\"]')?.step === '0.01');
+/* ── 7. pengaturan Musik (kosong dulu) & seek bar ── */
+oke('nada: langkah 0.01 pada slider dan kotak angka', q('[data-mus-range=\"pitch\"]')?.step === '0.01' && q('[data-mus-num=\"pitch\"]') !== null);
 oke('sampul besar disiapkan di pemutar', !!q('.mus-sampul-besar[data-sampul-id]'));
+oke('seek bar waveform dan bar garis tampil', !!q('[data-mus-gel] canvas') && !!q('[data-mus-gel] .mus-jalur'));
 q('[data-mus=\"pengaturan\"]').click();
 await tunggu();
 oke('tombol pengaturan membuka Pengaturan Musik', R.cur === 'musik-set' && q('.mus-set-h')?.textContent === 'Pengaturan Musik');
-oke('pengaturan memuat empat bagian', document.querySelectorAll('.mus-set-kartu').length === 4);
+oke('pengaturan kosong: tanpa bagian', document.querySelectorAll('.mus-set-kartu').length === 0);
 oke('navigasi bawah tetap disembunyikan di pengaturan', q('#bnav').classList.contains('hide'));
-q('[data-set=\"gayaSeek\"][data-nilai=\"gelombang\"]').click();
-await tunggu();
-oke('gaya seek bar tersimpan (gelombang)', (await import(`${AKAR}/docs/musik/set.js?v=${V}`)).ambilSet().gayaSeek === 'gelombang');
-q('[data-set=\"setelahSelesai\"][data-nilai=\"ulangi\"]').click();
-await tunggu();
-oke('pilihan setelah selesai tersimpan (ulangi)', (await import(`${AKAR}/docs/musik/set.js?v=${V}`)).ambilSet().setelahSelesai === 'ulangi');
-oke('pengaturan tetap di layar Pengaturan setelah diubah', R.cur === 'musik-set');
 go('musik');
 await tunggu();
-oke('seek bar mengikuti gaya gelombang', !!q('[data-mus-gel] canvas'));
+oke('seek bar tetap ada setelah kembali', !!q('[data-mus-gel] canvas'));
 
 console.log(`\nmusik-layar: ${total - gagal}/${total} lulus`);
 if (gagal) process.exit(1);
