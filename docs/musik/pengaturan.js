@@ -3,8 +3,8 @@
    (setelah selesai: berhenti, lanjutkan posisi, tempo awal 100%) tetap berlaku
    lewat SET_AWAL di logika.js. */
 
-import { t as tr } from '../core/i18n.js?v=20261024171500';
-import { ikon } from './ikon.js?v=20261024171500';
+import { t as tr } from '../core/i18n.js?v=20261024183000';
+import { ikon } from './ikon.js?v=20261024183000';
 
 export function pengaturanView() {
   return `<div class="mus mus-set" data-mus-root>

@@ -2,16 +2,17 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024171500';
-import * as M from './mesin.js?v=20261024171500';
-import * as A from './aksi.js?v=20261024171500';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024171500';
-import { pengaturanView } from './pengaturan.js?v=20261024171500';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024171500';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024171500';
-import { segarkanKartuMusik } from './kartu.js?v=20261024171500';
-import { segarSampul } from './sampul-dom.js?v=20261024171500';
-import { ambilSet } from './set.js?v=20261024171500';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024183000';
+import * as M from './mesin.js?v=20261024183000';
+import * as A from './aksi.js?v=20261024183000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024183000';
+import { pengaturanView } from './pengaturan.js?v=20261024183000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024183000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024183000';
+import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261024183000';
+import { segarkanKartuMusik } from './kartu.js?v=20261024183000';
+import { segarSampul } from './sampul-dom.js?v=20261024183000';
+import { ambilSet } from './set.js?v=20261024183000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
@@ -59,13 +60,14 @@ export const musikModule = {
 
   init() {
     registerViews(
-      { musik: musikView, 'musik-set': pengaturanView, 'musik-daftar': daftarView, 'musik-eq': eqView },
-      { musik: 'Musik', 'musik-set': 'Pengaturan Musik', 'musik-daftar': 'Daftar Putar', 'musik-eq': 'Ekualiser' },
-      { 'musik-set': 'musik', 'musik-daftar': 'musik', 'musik-eq': 'musik' },
+      { musik: musikView, 'musik-set': pengaturanView, 'musik-daftar': daftarView, 'musik-eq': eqView, 'musik-ekspor': eksporView },
+      { musik: 'Musik', 'musik-set': 'Pengaturan Musik', 'musik-daftar': 'Daftar Putar', 'musik-eq': 'Ekualiser', 'musik-ekspor': 'Ekspor Lagu' },
+      { 'musik-set': 'musik', 'musik-daftar': 'musik', 'musik-eq': 'musik', 'musik-ekspor': 'musik' },
     );
     pasangLayar();
     pasangDaftar();
     pasangEq();
+    pasangEkspor();
     terapkanEqTersimpan();
     M.dengar(onMesin);
     onAfterRender(() => segarSampul(document));

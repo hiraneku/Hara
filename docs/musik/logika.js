@@ -170,7 +170,7 @@ export function namaDariBerkas(nama) {
   return rapi || 'Tanpa judul';
 }
 
-const EKSTENSI_AUDIO = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac', 'webm', 'mp4'];
+const EKSTENSI_AUDIO = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac', 'webm', 'mp4', 'aif', 'aiff', 'caf', '3gp'];
 
 /* Tebakan awal apakah berkas audio. Keputusan akhir ada di decodeAudioData. */
 export function kemungkinanAudio({ name = '', type = '' } = {}) {

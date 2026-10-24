@@ -109,11 +109,15 @@
   padding: 8px 4px 4px; text-align: center;
 }
 .mus-sampul-besar {
+  position: relative; overflow: hidden;
   width: min(74vw, 300px); aspect-ratio: 1; border-radius: 24px;
   box-shadow: 0 28px 60px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .06);
   transition: transform .45s var(--ease), box-shadow .45s var(--ease);
 }
 .mus-main .mus-sampul-besar { transform: scale(1.03); box-shadow: 0 36px 70px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .08); }
+/* Gambar sampul harus mengisi kotak persegi. Lebar/tinggi 100% tidak andal di dalam
+   kotak yang tingginya dari aspect-ratio (gambar 16:9 jadi tampil sebagai pita tipis). */
+.mus-sampul-besar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .mus-sampul-kosong { display: grid; place-items: center; background: var(--mus-kartu-tebal); color: var(--mus-redup); }
 .mus-sampul-kosong .mus-ico { width: 46%; height: 46%; }
 .mus-judul-blok { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }

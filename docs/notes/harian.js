@@ -4,13 +4,13 @@
    dari catatan aktif; belum ada → dibuat dengan blok kosong siap tulis
    (pola templat bawaan jurnal). */
 
-import { state, save } from '../core/store.js?v=20261024171500';
-import { go } from '../core/router.js?v=20261024171500';
-import { toast } from '../core/toast.js?v=20261024171500';
-import { makeNote, makeBlock } from './note-model.js?v=20261024171500';
-import { openNote } from './model.js?v=20261024171500';
-import { terkunciAktif } from './kunci.js?v=20261024171500';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024171500';
+import { state, save } from '../core/store.js?v=20261024183000';
+import { go } from '../core/router.js?v=20261024183000';
+import { toast } from '../core/toast.js?v=20261024183000';
+import { makeNote, makeBlock } from './note-model.js?v=20261024183000';
+import { openNote } from './model.js?v=20261024183000';
+import { terkunciAktif } from './kunci.js?v=20261024183000';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024183000';
 
 const KODE = ['id', 'en', 'ja'];
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',

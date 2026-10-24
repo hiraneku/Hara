@@ -4,7 +4,8 @@
    - pengaturan per lagu (tempo, nada) dipulihkan saat dibuka;
    - kartu beranda menampilkan lagu terakhir & tombol membuka layar;
    - hapus dua-ketuk;
-   - kontrol gagal dengan rapi tanpa Web Audio (jsdom tidak punya AudioContext).
+   - kontrol gagal dengan rapi tanpa Web Audio (jsdom tidak punya AudioContext);
+   - layar Ekspor Lagu: format, bitrate, saklar efek, dan kembali ke Musik.
    Audio sungguhan tidak bisa diuji di jsdom; itu diverifikasi di perangkat.
    Jalankan: node tools/uji/musik-layar.mjs */
 import {JSDOM} from 'jsdom';
@@ -306,6 +307,42 @@ await tunggu();
 q('[data-mus="daftar"]').click();
 await tunggu();
 oke('tombol Daftar Putar di bar selalu membuka daftar semua', !q('[data-dl-input="nama"]') && !!q('[data-dl="buka"]'));
+
+/* ── 9. ekspor lagu (tahap 3) ── */
+const laguEkspor = await S.tambahLagu(berkas, { nama: 'Lagu Ekspor', durasi: 90 });
+S.tandaiTerakhir(laguEkspor.id);
+go('musik', { segar: true });
+await tunggu();
+oke('tombol Ekspor ada di bar Musik', !!q('[data-mus=\"ekspor\"]'));
+q('[data-mus=\"ekspor\"]').click();
+await tunggu();
+oke('Ekspor Lagu dibuka dari Musik', R.cur === 'musik-ekspor' && !!q('.mus-set'));
+oke('layar ekspor menampilkan lagu terakhir', (q('.mus-set')?.textContent || '').includes(S.laguById(M.keadaan().id ?? S.terakhirId())?.nama ?? '#'));
+oke('format awal WAV dipilih', q('[data-mus-eks=\"format\"][data-nilai=\"wav\"]')?.getAttribute('aria-pressed') === 'true');
+oke('bitrate MP3 tidak tampil saat WAV', !q('[data-mus-eks=\"kbps\"]'));
+oke('kedua saklar efek aktif awal', ['tempo', 'eq'].every(k => q(`[data-mus-eks=\"${k}\"]`)?.getAttribute('aria-checked') === 'true'));
+oke('tombol Ekspor aktif', q('[data-mus-eks=\"mulai\"]') && !q('[data-mus-eks=\"mulai\"]').disabled);
+let unduhan = 0;
+const klikAsli = w.HTMLElement.prototype.click;
+w.HTMLElement.prototype.click = function () { if (this.hasAttribute('download')) unduhan++; return klikAsli.call(this); };
+q('[data-mus-eks=\"format\"][data-nilai=\"mp3\"]').click();
+await tunggu();
+oke('pilih MP3 menampilkan tiga bitrate', document.querySelectorAll('[data-mus-eks=\"kbps\"]').length === 3);
+oke('bitrate awal 192 kbps', q('[data-mus-eks=\"kbps\"][data-nilai=\"192\"]')?.getAttribute('aria-pressed') === 'true');
+q('[data-mus-eks=\"kbps\"][data-nilai=\"320\"]').click();
+await tunggu();
+oke('pilih 320 kbps', q('[data-mus-eks=\"kbps\"][data-nilai=\"320\"]')?.getAttribute('aria-pressed') === 'true');
+q('[data-mus-eks=\"eq\"]').click();
+await tunggu();
+oke('saklar ekualiser bisa dimatikan', q('[data-mus-eks=\"eq\"]')?.getAttribute('aria-checked') === 'false');
+q('[data-mus-eks=\"mulai\"]').click();
+await tunggu(300);
+oke('tanpa Web Audio: ekspor gagal dengan pesan, bukan macet', !!q('[role=\"alert\"]') && R.cur === 'musik-ekspor');
+q('#back').click();
+await tunggu();
+oke('kembali dari Ekspor ke Musik', R.cur === 'musik');
+w.HTMLElement.prototype.click = klikAsli;
+oke('kontrol ekspor tidak memicu unduhan (tidak bentrok dengan ekspor Catatan)', unduhan === 0, `unduhan: ${unduhan}`);
 
 console.log(`\nmusik-layar: ${total - gagal}/${total} lulus`);
 if (gagal) process.exit(1);

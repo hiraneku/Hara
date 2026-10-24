@@ -9,12 +9,12 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024171500';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024183000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261024171500';
+} from './logika.js?v=20261024183000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -62,7 +62,7 @@ export function keadaan() {
 
 /* Volume dinaikkan sedikit dibanding keluaran mentah SoundTouch, lalu dijepit
    kompresor supaya tidak pecah. */
-const VOLUME = 1.6;
+export const VOLUME = 1.6;
 let elemenSistem = null;     /* <audio> tersembunyi: agar Android/Chrome menampilkan kontrol media */
 let kompres = null;
 /* Ekualiser: 10 filter peaking berantai (dibangun saat konteks audio dibuat).
