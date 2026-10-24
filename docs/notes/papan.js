@@ -4,12 +4,12 @@
    hanya membuat HTML dan mengubah properti catatan lewat aturProp; penanganan
    klik ada di pemanggil. Status tampilan (kelompok, bulan, hari terpilih)
    disimpan di sini agar tetap ada saat modal digambar ulang. */
-import { state, save } from '../core/store.js?v=20261024035417';
-import { esc } from '../core/dom.js?v=20261024035417';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024035417';
-import { touch } from './note-model.js?v=20261024035417';
-import { aturProp, KET_PROP, namaProp } from './meta-ui.js?v=20261024035417';
-import * as L from './papan-logika.js?v=20261024035417';
+import { state, save } from '../core/store.js?v=20261024035936';
+import { esc } from '../core/dom.js?v=20261024035936';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024035936';
+import { touch } from './note-model.js?v=20261024035936';
+import { aturProp, KET_PROP, namaProp } from './meta-ui.js?v=20261024035936';
+import * as L from './papan-logika.js?v=20261024035936';
 
 const sekarang = new Date();
 const tampilan = {

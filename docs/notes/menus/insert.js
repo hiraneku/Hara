@@ -1,6 +1,6 @@
 /* Sisipkan elemen inline (tag / wikilink) di posisi kursor. */
-import { ensureCaret, sel } from '../editor/caret.js?v=20261024035417';
-import { refresh } from '../editor/cleanup.js?v=20261024035417';
+import { ensureCaret, sel } from '../editor/caret.js?v=20261024035936';
+import { refresh } from '../editor/cleanup.js?v=20261024035936';
 
 export function insertInline(cls,text){
   const r=ensureCaret(); if(!r) return;

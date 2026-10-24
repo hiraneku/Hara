@@ -2492,7 +2492,6 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
 /* ════════════ Menu "Semua fitur" (tombol Lainnya di Beranda) ════════════
    Lembar bawah berisi kolom cari, lalu grup fitur berupa kartu ikon. */
 .fm-sheet .sh-b{padding-top:2px}
-.fm-cari{margin:4px 0 4px}
 .fm-grup{margin:16px 0 0}
 .fm-judul{font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:var(--faint);margin:0 3px 9px}

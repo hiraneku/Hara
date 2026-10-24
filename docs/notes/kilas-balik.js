@@ -11,11 +11,11 @@
    catatan lahir — bukan updatedAt, supaya hasilnya tidak berpindah
    setiap kali catatan lama disunting. */
 
-import { state } from '../core/store.js?v=20261024035417';
-import { esc } from '../core/dom.js?v=20261024035417';
-import { t as tr } from '../core/i18n.js?v=20261024035417';
-import { terlihat } from './kunci.js?v=20261024035417';
-import { excerptOf } from './note-model.js?v=20261024035417';
+import { state } from '../core/store.js?v=20261024035936';
+import { esc } from '../core/dom.js?v=20261024035936';
+import { t as tr } from '../core/i18n.js?v=20261024035936';
+import { terlihat } from './kunci.js?v=20261024035936';
+import { excerptOf } from './note-model.js?v=20261024035936';
 
 const MAKS = 6;
 

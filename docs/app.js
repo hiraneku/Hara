@@ -1,37 +1,37 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261024035417';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261024035417';
-import { toast } from './core/toast.js?v=20261024035417';
-import { mulaiPembaruan } from './core/pembaruan.js?v=20261024035417';
-import { mulaiBeranda } from './home/beranda.js?v=20261024035417';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261024035417';
-import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261024035417';
-import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261024035417';
-import { buatTinjauan } from './notes/pintar-aksi.js?v=20261024035417';
-import { bukaStatistik } from './notes/statistik-ui.js?v=20261024035417';
-import { notesModule } from './notes/index.js?v=20261024035417';
-import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261024035417';
-import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261024035417';
+import { load, state } from './core/store.js?v=20261024035936';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261024035936';
+import { toast } from './core/toast.js?v=20261024035936';
+import { mulaiPembaruan } from './core/pembaruan.js?v=20261024035936';
+import { mulaiBeranda } from './home/beranda.js?v=20261024035936';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261024035936';
+import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261024035936';
+import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261024035936';
+import { buatTinjauan } from './notes/pintar-aksi.js?v=20261024035936';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261024035936';
+import { notesModule } from './notes/index.js?v=20261024035936';
+import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261024035936';
+import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261024035936';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
   bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih,
   jadikanBarisTenggatTugas, bukaTabelProperti, sumberTugasTerbuka,
   bukaTangkapCepat, bukaPanelRuangCatatan, bukaPanelVersiCatatan,
-} from './notes/fitur-lanjutan-ui.js?v=20261024035417';
+} from './notes/fitur-lanjutan-ui.js?v=20261024035936';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261024035417';
-import { bagikanCatatan } from './notes/share.js?v=20261024035417';
-import { bukaJurnalHari } from './notes/harian.js?v=20261024035417';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261024035417';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261024035417';
-import { simpanTemplatNote } from './notes/templat.js?v=20261024035417';
-import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261024035417';
-import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261024035417';
-import { bukaCariGanti } from './notes/cari-ganti.js?v=20261024035417';
-import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261024035417';
-import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261024035417';
-import { itemPintar } from './notes/pintar-aksi.js?v=20261024035417';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261024035417';
+  from './notes/model.js?v=20261024035936';
+import { bagikanCatatan } from './notes/share.js?v=20261024035936';
+import { bukaJurnalHari } from './notes/harian.js?v=20261024035936';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261024035936';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261024035936';
+import { simpanTemplatNote } from './notes/templat.js?v=20261024035936';
+import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261024035936';
+import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261024035936';
+import { bukaCariGanti } from './notes/cari-ganti.js?v=20261024035936';
+import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261024035936';
+import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261024035936';
+import { itemPintar } from './notes/pintar-aksi.js?v=20261024035936';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261024035936';
 
 const MODULES = [notesModule, renamerModule];
 
@@ -98,50 +98,26 @@ daftarkanSumber(() => renamerAlatCtx().state.files.map(f => ({
   jalan: () => go('renamer'),
 })));
 
-/* Menu "Semua fitur" (tombol Lainnya di Beranda). Isinya sama dengan palette,
-   disusun per grup dan ber-ikon. Label dibuat saat menu dibuka (ikut bahasa). */
+/* Menu "Lainnya" di Beranda: layar utama aplikasi (bukan sub-fitur). */
 daftarkanGrupFitur(() => [
-  { judul: tr('Tulis cepat'), item: [
-    { id: 'f-baru', label: tr('Catatan baru'), hint: tr('Mulai dari halaman kosong'), ikon: 'i-plus', jalan: () => newNote() },
-    { id: 'f-jurnal', label: tr('Jurnal hari ini'), hint: tr('Tulis catatan harian'), ikon: 'i-book', jalan: () => bukaJurnalHari() },
-    { id: 'f-dikte', label: tr('Dikte suara'), hint: tr('Bicara, jadi catatan baru'), ikon: 'i-mic', jalan: () => dikteCatatanBaru() },
-    { id: 'f-tugas', label: tr('Tangkap cepat: tugas'), hint: tr('Tugas dengan tenggat'), ikon: 'i-check2', jalan: () => bukaTangkapCepat('task', false) },
-    { id: 'f-ingat', label: tr('Tangkap cepat: pengingat'), hint: tr('Ingatkan pada waktu tertentu'), ikon: 'i-bell', jalan: () => bukaTangkapCepat('rem', true) },
-  ] },
-  { judul: tr('Layar'), item: [
-    { id: 'l-home', label: tr('Beranda'), ikon: 'i-home', jalan: () => go('home') },
-    { id: 'l-notes', label: tr('Catatan'), ikon: 'i-note', jalan: () => go('notes') },
-    { id: 'l-task', label: tr('Tugas'), ikon: 'i-check2', jalan: () => go('task') },
-    { id: 'l-rem', label: tr('Pengingat'), ikon: 'i-bell', jalan: () => go('rem') },
-    { id: 'l-search', label: tr('Cari'), ikon: 'i-search', jalan: () => go('search') },
-    { id: 'l-tags', label: tr('Tag'), ikon: 'i-tag', jalan: () => go('tags') },
-    { id: 'l-arsip', label: tr('Arsip'), ikon: 'i-arch', jalan: () => go('arsip') },
-    { id: 'l-trash', label: tr('Sampah'), ikon: 'i-trash', jalan: () => go('trash') },
-    { id: 'l-set', label: tr('Pengaturan'), ikon: 'i-cog', jalan: () => go('set') },
-  ] },
-  { judul: tr('Catatan & data'), item: [
-    { id: 'd-stat', label: tr('Statistik & heatmap'), hint: tr('Aktivitas dan tugas'), ikon: 'i-sigma', jalan: () => bukaStatistik() },
-    { id: 'd-graf', label: tr('Peta jaringan'), hint: tr('Hubungan antar catatan'), ikon: 'i-graph', jalan: () => bukaGrafInteraktif() },
-    { id: 'd-tabel', label: tr('Tabel properti'), hint: tr('Papan Kanban & kalender'), ikon: 'i-tpl', jalan: () => bukaTabelProperti() },
-    { id: 'd-tinjau', label: tr('Tinjauan minggu ini'), hint: tr('Ringkasan pekan ini'), ikon: 'i-history', jalan: () => buatTinjauan() },
-    { id: 'd-tenggat', label: tr('Jadikan tugas'), hint: tr('Ubah baris bertenggat jadi tugas'), ikon: 'i-clock', jalan: () => jadikanBarisTenggatTugas() },
-    { id: 'd-baca', label: tr('Baca catatan ini keras'), hint: tr('Dengarkan isi catatan'), ikon: 'i-play', jalan: () => bacaCatatanKeras() },
-    { id: 'd-baca-stop', label: tr('Hentikan baca keras'), ikon: 'i-pause', jalan: () => hentikanBaca() },
-    { id: 'd-cad-unduh', label: tr('Cadangan terenkripsi: unduh'), hint: tr('Lindungi dengan frasa sandi'), ikon: 'i-lock', jalan: () => bukaCadanganTerenkripsiDialog() },
-    { id: 'd-cad-pulih', label: tr('Cadangan terenkripsi: pulihkan'), ikon: 'i-unlock', jalan: () => pilihCadanganTerenkripsiUntukPulih() },
-  ] },
-  { judul: tr('Ganti nama massal'), item: [
-    { id: 'r-buka', label: tr('Ganti Nama Massal'), hint: tr('Ubah nama banyak berkas'), ikon: 'i-rename', jalan: () => go('renamer') },
-    { id: 'r-regex', label: tr('Regex & pustaka pola'), ikon: 'i-sigma', jalan: () => { go('renamer'); bukaRegex(renamerAlatCtx()); } },
-    { id: 'r-contoh', label: tr('Belajar dari contoh'), ikon: 'i-sparkle', jalan: () => { go('renamer'); bukaBelajarContoh(renamerAlatCtx()); } },
-    { id: 'r-syarat', label: tr('Syarat & grup aturan'), ikon: 'i-filter', jalan: () => { go('renamer'); bukaSyaratAturan(renamerAlatCtx()); } },
-    { id: 'r-dup', label: tr('Cari berkas duplikat'), ikon: 'i-copy', jalan: () => { go('renamer'); bukaDuplikat(renamerAlatCtx()); } },
-    { id: 'r-resep-ekspor', label: tr('Ekspor resep'), ikon: 'i-dl', jalan: () => { go('renamer'); eksporResep(renamerAlatCtx()); } },
-    { id: 'r-resep-impor', label: tr('Impor resep'), ikon: 'i-up', jalan: () => { go('renamer'); pilihResepUntukImpor(renamerAlatCtx()); } },
-    { id: 'r-log', label: tr('Unduh log ganti nama'), hint: tr('Berkas CSV'), ikon: 'i-dl', jalan: () => unduhLogRenamerCsv() },
-  ] },
-  { judul: tr('Tampilan'), item: [
-    { id: 't-tema', label: tr('Ganti tema terang / gelap'), ikon: 'i-moon', jalan: () => toggleTema() },
+  { judul: '', item: [
+    { id: 'u-notes', label: tr('Catatan'), hint: tr('Tulis dan atur catatan'), ikon: 'i-note', jalan: () => go('notes') },
+    { id: 'u-kal', label: tr('Kalender'), hint: tr('Jadwal bulanan dari tenggat'), ikon: 'i-cal', jalan: () => {
+      go('task');
+      setTimeout(() => document.getElementById('kal-bagian')?.scrollIntoView?.({ behavior: 'smooth' }), 60);
+    } },
+    { id: 'u-task', label: tr('Tugas'), hint: tr('Daftar to-do dan tenggat'), ikon: 'i-check2', jalan: () => go('task') },
+    { id: 'u-rem', label: tr('Pengingat'), hint: tr('Pengingat pada waktu tertentu'), ikon: 'i-bell', jalan: () => go('rem') },
+    { id: 'u-music', label: tr('Musik'), hint: tr('Pemutar musik · segera hadir'), ikon: 'i-music', jalan: () => {
+      go('home');
+      setTimeout(() => document.querySelector('.bh-musik')?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 60);
+    } },
+    { id: 'u-search', label: tr('Cari'), hint: tr('Cari di semua catatan'), ikon: 'i-search', jalan: () => go('search') },
+    { id: 'u-tags', label: tr('Tag'), hint: tr('Semua tag catatan'), ikon: 'i-tag', jalan: () => go('tags') },
+    { id: 'u-arsip', label: tr('Arsip'), hint: tr('Catatan yang disimpan'), ikon: 'i-arch', jalan: () => go('arsip') },
+    { id: 'u-trash', label: tr('Sampah'), hint: tr('Catatan yang dihapus'), ikon: 'i-trash', jalan: () => go('trash') },
+    { id: 'u-renamer', label: tr('Ganti Nama Massal'), hint: tr('Ubah nama banyak berkas'), ikon: 'i-rename', jalan: () => go('renamer') },
+    { id: 'u-set', label: tr('Pengaturan'), hint: tr('Tampilan, data, dan cadangan'), ikon: 'i-cog', jalan: () => go('set') },
   ] },
 ]);
 

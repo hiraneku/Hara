@@ -5,20 +5,20 @@
  * #14 Bar Pindah Cepat Catatan Terakhir (Recent Notes 1-Jempol) + Peta Jaringan Sentuh Layar Penuh
  */
 
-import { state, save } from '../core/store.js?v=20261024035417';
-import { cur, go } from '../core/router.js?v=20261024035417';
-import { docEl, curBlock } from './editor/caret.js?v=20261024035417';
-import { updateCount } from './editor/cleanup.js?v=20261024035417';
-import { touch } from './note-model.js?v=20261024035417';
-import { openNote } from './model.js?v=20261024035417';
-import { terlihat } from './kunci.js?v=20261024035417';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261024035417';
-import { daftarRuang } from './ruang.js?v=20261024035417';
-import { openPop, closeAll } from './menus/pop.js?v=20261024035417';
-import { flush } from '../core/autosave.js?v=20261024035417';
-import { toast } from '../core/toast.js?v=20261024035417';
-import { esc } from '../core/dom.js?v=20261024035417';
-import { t as tr } from '../core/i18n.js?v=20261024035417';
+import { state, save } from '../core/store.js?v=20261024035936';
+import { cur, go } from '../core/router.js?v=20261024035936';
+import { docEl, curBlock } from './editor/caret.js?v=20261024035936';
+import { updateCount } from './editor/cleanup.js?v=20261024035936';
+import { touch } from './note-model.js?v=20261024035936';
+import { openNote } from './model.js?v=20261024035936';
+import { terlihat } from './kunci.js?v=20261024035936';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261024035936';
+import { daftarRuang } from './ruang.js?v=20261024035936';
+import { openPop, closeAll } from './menus/pop.js?v=20261024035936';
+import { flush } from '../core/autosave.js?v=20261024035936';
+import { toast } from '../core/toast.js?v=20261024035936';
+import { esc } from '../core/dom.js?v=20261024035936';
+import { t as tr } from '../core/i18n.js?v=20261024035936';
 
 const KUNCI_RECENT = 'hara.v1.recentNotes';
 const KUNCI_SCROLL = 'hara.v1.scrollPos';
