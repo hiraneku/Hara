@@ -136,7 +136,9 @@ Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
       `tagsManual`. Tidak ada tampilan penerimaan/penolakan terpisah.
 - [x] S3. Tangkap cepat: parser jam kini mengenali "jam 3 sore", "pukul 7.30",
       "7 malam", dan "12 pagi" (`bacaJam` di `pengingat.js`). Input lewat `prompt()`
-      sederhana. **Belum:** tampilan input khusus.
+      sederhana. **Belum:** tampilan input khusus. Diuji: parser di `pintar.mjs`
+      (jam 3 sore → 15:00, 12 pagi → 00:00, 25.00 ditolak) dan alur palette di
+      `pintar-ui.mjs` (prompt dibatalkan tidak membuat catatan).
 - [x] S4. Tinjauan minggu ini: membuat catatan baru berisi tag paling aktif, jumlah
       catatan dibuat/diedit, tugas selesai, dan daftar terakhir diedit. Catatan
       terkunci dikecualikan.
@@ -146,12 +148,32 @@ Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
       pengguna).
 
 ### MB · Fitur modern (lanjutan dari E22–E24)
-- [ ] MB1. Tampilan Kanban dan kalender dari properti catatan (K19). **Belum dikerjakan.**
-- [ ] MB2. Tabel lanjutan: urut dan saring per kolom, serta rumus sederhana. **Belum
-      dikerjakan.**
-- [ ] MB3. Penyelesaian enkripsi (K17, K18). Keputusan sudah ada: kunci acak dilindungi
-      sidik jari perangkat, migrasi sekali dengan konfirmasi. **Belum dikerjakan.**
-      Catatan: kunci sekarang hanya mengunci akses (`docs/notes/kunci.js`).
+- [x] MB1. Kanban dan kalender dari properti catatan (K19). Kolom mengikuti properti
+      apa pun (default `status`), urutan dari contoh, catatan tanpa nilai di "(kosong)".
+      Kalender mulai Senin, sumbu default `tenggat` lalu `tanggal`. Pindah kartu
+      mengubah satu properti. Hanya catatan terlihat. Diuji `papan.mjs` (35) dan
+      `papan-ui.mjs`. **Belum diuji di perangkat.**
+- [x] MB2. Tabel lanjutan: urut naik/turun per kolom (mengubah urutan baris, tersimpan),
+      saring per kolom (hanya menyembunyikan baris, data utuh), rumus A1 dengan SUM,
+      AVERAGE, MIN, MAX, COUNT, operator + - * /. Hasil rumus tidak ikut tersimpan
+      sebagai teks (`data-hasil`). Galat: `#DIV/0!`, `#REF!`, `#NILAI!`, `#SIKLUS!`.
+      Diuji `tabel-rumus.mjs` (51) dan `tabel-lanjut-ui.mjs`.
+- [~] MB3. Penyelesaian enkripsi (K17, K18). SEBAGIAN:
+      - SELESAI (diuji di Node): `core/kunci-data.js` (kunci data acak 256-bit,
+        bungkus/buka, segel isi catatan; `kunci-data.mjs`, 20 pemeriksaan);
+        `core/kunci-perangkat.js` (WebAuthn PRF sebagai kunci pembungkus, dengan
+        kredensial tiruan; `kunci-data.mjs` bagian A–B); K18 berkas ±10 MB
+        (`cadangan-besar.mjs`, 9 pemeriksaan).
+      - **BELUM:** disambungkan ke penyimpanan catatan terkunci. Catatan terkunci
+        masih polos di IndexedDB, dan kunci hanya gerbang akses (`kunci.js`).
+        Menyambungkannya mengubah bentuk data yang dibaca pencarian, statistik,
+        tugas, ekspor, dan pemulihan cadangan. Itu butuh keputusan (lihat di bawah)
+        dan uji di perangkat.
+      - **BELUM:** migrasi sekali saat update dengan dialog konfirmasi.
+      - **Keputusan yang masih terbuka:** cadangan catatan terkunci pada perangkat lain
+        (kunci data terikat sidik jari perangkat asal); PRF tidak didukung di semua
+        perangkat, dan jalur cadangannya belum ditentukan.
+      - Autentikator asli tidak bisa diuji di sandbox.
 
 ### Tidak diambil pada ronde ini
 - Sinkronisasi antar-perangkat (E22): belum diputuskan.
@@ -254,7 +276,7 @@ Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
       apa adanya. Catatan: kurung kurawal di templat tersimpan lama juga kini
       dibaca sebagai variabel. Modul `notes/templat-var.js`.
       Uji: `templat-variabel.mjs` (23).
-- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — SEBAGIAN. `core/enkripsi.js`: PBKDF2-SHA256 310.000 + AES-GCM-256, uji tamper & sandi salah. BELUM disambungkan ke catatan terkunci: perlu keputusan dari audit PIN.
+- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — SEBAGIAN (lihat MB3). `core/enkripsi.js`: PBKDF2-SHA256 310.000 + AES-GCM-256, uji tamper & sandi salah. BELUM disambungkan ke catatan terkunci: perlu keputusan dari audit PIN.
 - [ ] K18. Cadangan terenkripsi (frasa sandi) — SEBAGIAN. Perintah palette unduh & pulihkan cadangan terenkripsi (frasa ≥ 8 karakter), format diuji. Belum diuji dengan berkas besar atau di perangkat.
 - [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti) — SEBAGIAN. Tabel properti (perintah palette) membaca `props` dari semua catatan. Tampilan Kanban dan kalender BELUM dibuat.
 - [x] K20. Statistik & heatmap jurnal / to-do selesai per minggu — `notes/statistik.js` (heatmap 26 minggu, tugas per minggu, rentetan jurnal), dialog dari palette. Uji `statistik.mjs` 19/19.

@@ -10,19 +10,19 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261024031304';
-import { refresh } from './cleanup.js?v=20261024031304';
-import { snap } from './history.js?v=20261024031304';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261024031304';
-import { cariJudul, judulSpan } from '../wikilink.js?v=20261024031304';
-import { openNote } from '../model.js?v=20261024031304';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261024031304';
-import { newBlockId, blockToHtml } from '../note-model.js?v=20261024031304';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261024031304';
-import { esc } from '../../core/dom.js?v=20261024031304';
-import { toast } from '../../core/toast.js?v=20261024031304';
-import { t as tr } from '../../core/i18n.js?v=20261024031304';
-import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261024031304';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261024032151';
+import { refresh } from './cleanup.js?v=20261024032151';
+import { snap } from './history.js?v=20261024032151';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261024032151';
+import { cariJudul, judulSpan } from '../wikilink.js?v=20261024032151';
+import { openNote } from '../model.js?v=20261024032151';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261024032151';
+import { newBlockId, blockToHtml } from '../note-model.js?v=20261024032151';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261024032151';
+import { esc } from '../../core/dom.js?v=20261024032151';
+import { toast } from '../../core/toast.js?v=20261024032151';
+import { t as tr } from '../../core/i18n.js?v=20261024032151';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261024032151';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -170,7 +170,7 @@ let _perekam = null;
 let _timerRekam = null;
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261024031304');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261024032151');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;

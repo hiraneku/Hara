@@ -10,7 +10,7 @@
    Tidak ada emoji: seluruh ikon memakai sprite SVG `#i-…` di
    docs/index.html agar bentuknya seragam dengan sisa aplikasi. */
 
-import { esc } from '../core/dom.js?v=20261024031304';
+import { esc } from '../core/dom.js?v=20261024032151';
 
 /* Satu tombol baris formulir dengan ikon di kiri. */
 export function shField({ id, ikon = '', label = '', value = '', placeholder = '',

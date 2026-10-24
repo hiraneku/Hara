@@ -3,7 +3,7 @@
  * Di atas BATAS_WORKER berkas, pipeline dikirim ke Web Worker agar UI tetap responsif.
  * Di bawah itu, atau bila Worker tidak tersedia, dijalankan sinkron.
  */
-import { runPipeline } from './engine.js?v=20261024031304';
+import { runPipeline } from './engine.js?v=20261024032151';
 
 export const BATAS_WORKER = 500;
 let _worker = null;

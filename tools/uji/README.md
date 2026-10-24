@@ -41,6 +41,13 @@ for f in tools/uji/*.mjs; do node $f; done
 | `statistik.mjs` | K20: heatmap aktivitas, tugas per minggu, rentetan jurnal |
 | `riwayat-sesi.mjs` | K26: undo catatan lintas sesi (IDB), catatan terkunci tidak ditulis, log CSV |
 | `enkripsi-suara.mjs` | K17 enkripsi AES-GCM + PBKDF2, K18 cadangan frasa sandi, K15 baca keras & dikte |
+| `kunci-data.mjs` | MB3 kunci data acak, bungkus/buka dengan kunci pembungkus, segel isi catatan; PRF disimulasikan (autentikator asli tidak diuji) |
+| `cadangan-besar.mjs` | K18 cadangan terenkripsi ±10 MB: roundtrip byte demi byte, frasa salah, perusakan, penanda teks tidak bocor |
+| `tabel-rumus.mjs` | MB2 urut (naik/turun, aturan Excel), saring, rumus A1 SUM/AVERAGE/MIN/MAX/COUNT, galat #DIV/0! #REF! #NILAI! #SIKLUS! |
+| `tabel-lanjut-ui.mjs` | MB2 di editor (jsdom): data-hasil, urut mengubah urutan baris, saring tanpa menghapus data |
+| `papan.mjs` | MB1 logika papan: kelompok per properti, urutan dari contoh, (kosong) di akhir, kalender Senin |
+| `papan-ui.mjs` | MB1 papan & kalender di editor (jsdom): pindah kartu mengubah properti, geser bulan |
+| `pintar-ui.mjs` | S1–S5 lewat palette (jsdom): mirip, saran tag, tangkap cepat, tinjauan, ringkasan; catatan terkunci tidak bocor |
 | `alat-renamer.mjs` | dialog renamer K21–K25 & K22–K23 lewat klik sungguhan (jsdom): regex, contoh, syarat, resep, duplikat |
 | `fitur-catatan-ui.mjs` | K31 tenggat→tugas, K19 tabel properti, K30 sumber palette tugas (memuat app.js) |
 | `lib/catatan-idb.mjs` | pembantu bersama: baca/tulis record catatan di IndexedDB untuk uji |

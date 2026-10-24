@@ -24,6 +24,9 @@ docs/
 │   ├── bahasa-ja.js    kamus Jepang
 │   ├── theme.js        tema terang/gelap + warna aksen
 │   ├── dom.js          el, esc, stamp, tglHari — helper DOM dipakai semua modul
+│   ├── enkripsi.js     K17/K18: PBKDF2 + AES-GCM, cadangan terenkripsi frasa sandi
+│   ├── kunci-data.js   MB3: kunci data acak 256-bit, pembungkus, segel isi catatan (murni WebCrypto)
+│   ├── kunci-perangkat.js MB3: kunci pembungkus dari WebAuthn PRF (sidik jari perangkat)
 │   └── toast.js
 │
 ├── notes/              SEMUA fungsi fitur Catatan
@@ -46,6 +49,9 @@ docs/
 │   ├── pintar-aksi.js  integrasi fitur pintar ke palette; aturan: catatan terkunci tidak pernah dipakai
 │   ├── meta-ui.js      editor properti catatan
 │   ├── kunci.js        kunci catatan (PIN + sidik jari)
+│   ├── tabel-rumus.js  MB2: urut, saring, dan rumus tabel (murni, diuji tools/uji/tabel-rumus.mjs)
+│   ├── papan-logika.js MB1: pengelompokan Kanban & hari kalender (murni)
+│   ├── papan.js        MB1: render Kanban & kalender dari properti catatan
 │   ├── share.js        bagikan / salin catatan
 │   ├── mode-baca.js    mode baca, A−/A+, zen, cari di dalam catatan
 │   ├── baca-plus.js    ukuran teks baca + zen
