@@ -9,12 +9,12 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024163000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024171500';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
-  EQ_FREKUENSI, EQ_AWAL, klampEq,
-} from './logika.js?v=20261024163000';
+  EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
+} from './logika.js?v=20261024171500';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -65,33 +65,37 @@ export function keadaan() {
 const VOLUME = 1.6;
 let elemenSistem = null;     /* <audio> tersembunyi: agar Android/Chrome menampilkan kontrol media */
 let kompres = null;
-/* Ekualiser: 5 filter peaking berantai, dibangun saat konteks audio dibuat. */
+/* Ekualiser: 10 filter peaking berantai (dibangun saat konteks audio dibuat).
+   Preamp = offset gain sebelum pita; Q = lebar pita untuk semua pita. */
 let eqNodes = null;
-let eqKeadaan = { aktif: EQ_AWAL.aktif, gain: EQ_AWAL.gain.slice() };
+let eqKeadaan = normalisasiEq(EQ_AWAL);
 
 function terapkanEq() {
-  if (!eqNodes) return;
-  eqNodes.forEach((n, i) => { n.gain.value = eqKeadaan.aktif ? eqKeadaan.gain[i] : 0; });
+  const aktif = eqKeadaan.aktif;
+  if (eqNodes) {
+    eqNodes.forEach((n, i) => {
+      n.gain.value = aktif ? eqKeadaan.gain[i] : 0;
+      n.Q.value = eqKeadaan.q;
+    });
+  }
+  if (gain) gain.gain.value = VOLUME * Math.pow(10, (aktif ? eqKeadaan.preamp : 0) / 20);
 }
 
-/* Atur ekualiser: gain per pita dalam dB (-12..12). aktif=false = datar. */
-export function setEq({ aktif, gain }) {
-  eqKeadaan = {
-    aktif: aktif !== false,
-    gain: EQ_FREKUENSI.map((_, i) => klampEq(gain && gain[i])),
-  };
+/* Atur ekualiser. gain: 10 nilai dB (-12..12, langkah 0.5); q: 0.3..4; preamp: dB.
+   aktif=false = datar dan preamp nol (bypass). */
+export function setEq(patch = {}) {
+  eqKeadaan = normalisasiEq({ ...eqKeadaan, ...patch });
   terapkanEq();
   kirim('eq');
 }
 
 function bangunKeluaran(c) {
   gain = c.createGain();
-  gain.gain.value = VOLUME;
   eqNodes = EQ_FREKUENSI.map(f => {
     const n = c.createBiquadFilter();
     n.type = 'peaking';
     n.frequency.value = f;
-    n.Q.value = 1;
+    n.Q.value = eqKeadaan.q;
     n.gain.value = 0;
     return n;
   });

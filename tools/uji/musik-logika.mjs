@@ -173,33 +173,88 @@ uji('hue sampul stabil dan dalam 0..359', () => {
   }
 });
 
-uji('ekualiser: gain dijepit ±12 dB, bulat 1 dB, dan NaN jadi 0', () => {
-  assert.equal(L.klampEq(7.6), 8);
+uji('ekualiser: gain dijepit ±12 dB, bulat 0.5 dB, dan NaN jadi 0', () => {
+  assert.equal(L.klampEq(7.6), 7.5);
+  assert.equal(L.klampEq(7.8), 8);
   assert.equal(L.klampEq(-20), -12);
+  assert.equal(L.klampEq(20), 12);
   assert.equal(L.klampEq(NaN), 0);
   assert.equal(L.klampEq(undefined), 0);
+  assert.equal(L.klampEq(-0.2), 0);
 });
 
-uji('ekualiser: normalisasi memotong/mengisi 5 pita dan menjaga aktif', () => {
-  assert.deepEqual(L.normalisasiEq({ gain: [1, 2, 99] }).gain, [1, 2, 12, 0, 0]);
-  assert.deepEqual(L.normalisasiEq({ gain: [1, 2, 3, 4, 5, 6, 7] }).gain, [1, 2, 3, 4, 5]);
-  assert.equal(L.normalisasiEq({ aktif: false, gain: [] }).aktif, false);
+uji('ekualiser: Q dijepit 0.3–4 dan dibulatkan 0.1', () => {
+  assert.equal(L.klampQ(9), 4);
+  assert.equal(L.klampQ(0.01), 0.3);
+  assert.equal(L.klampQ(1.26), 1.3);
+  assert.equal(L.klampQ(NaN), 1);
+});
+
+uji('ekualiser: normalisasi selalu 10 pita, preamp dan Q ikut dijepit', () => {
+  const n = L.normalisasiEq({ gain: [1, 2, 99], preamp: -40, q: 8 });
+  assert.deepEqual(n.gain, [1, 2, 12, 0, 0, 0, 0, 0, 0, 0]);
+  assert.equal(n.preamp, -12);
+  assert.equal(n.q, 4);
+  assert.equal(n.gain.length, L.EQ_FREKUENSI.length);
+  assert.equal(L.normalisasiEq({ aktif: false }).aktif, false);
   assert.equal(L.normalisasiEq(null).aktif, true);
-  assert.equal(L.normalisasiEq(null).gain.length, 5);
+  assert.equal(L.normalisasiEq(null).gain.length, 10);
 });
 
-uji('ekualiser: preset punya 5 pita, pita datar sama dengan nol', () => {
+uji('ekualiser: 10 pita standar oktaf dari 31 Hz sampai 16 kHz', () => {
+  assert.deepEqual([...L.EQ_FREKUENSI], [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]);
+  assert.equal(L.labelFrekuensi(31), '31 Hz');
+  assert.equal(L.labelFrekuensi(1000), '1 kHz');
+  assert.equal(L.labelFrekuensi(16000), '16 kHz');
+});
+
+uji('ekualiser: semua preset 10 pita dan dalam batas', () => {
   for (const k of Object.keys(L.PRESET_EQ)) {
-    assert.equal(L.PRESET_EQ[k].length, L.EQ_FREKUENSI.length, k);
+    assert.equal(L.PRESET_EQ[k].length, 10, k);
     for (const v of L.PRESET_EQ[k]) assert.ok(v >= L.EQ_MIN && v <= L.EQ_MAX, k);
+    assert.ok(L.NAMA_PRESET_EQ[k], 'nama ' + k);
   }
   assert.ok(L.PRESET_EQ.datar.every(v => v === 0));
+  assert.equal(Object.keys(L.PRESET_EQ).length, 8);
 });
 
-uji('ekualiser: label frekuensi 60 Hz dan 14 kHz', () => {
-  assert.equal(L.labelFrekuensi(60), '60 Hz');
-  assert.equal(L.labelFrekuensi(3600), '3.6 kHz');
-  assert.equal(L.labelFrekuensi(14000), '14 kHz');
+uji('ekualiser: nama preset dirapikan, kosong ditolak, maks 24 karakter', () => {
+  assert.equal(L.namaPresetValid('  Malam   santai '), 'Malam santai');
+  assert.equal(L.namaPresetValid('   '), null);
+  assert.equal(L.namaPresetValid('x'.repeat(40)).length, 24);
+});
+
+uji('ekualiser: preset buatan sendiri dibersihkan, tanpa nama ganda, maks 10', () => {
+  const raw = [{ nama: 'A', gain: [1] }, { nama: ' A ', gain: [2] }, { nama: '  ', gain: [] }, null];
+  for (let i = 0; i < 15; i++) raw.push({ nama: 'P' + i, gain: [i] });
+  const k = L.normalisasiKustom(raw);
+  assert.equal(k[0].nama, 'A');
+  assert.equal(k[0].gain.length, 10);
+  assert.equal(k.length, L.EQ_KUSTOM_MAKS);
+  assert.deepEqual(L.normalisasiKustom('bukan array'), []);
+});
+
+uji('ekualiser: migrasi data 5 pita lama ke pita terdekat', () => {
+  const m = L.migrasiEqLama({ aktif: false, gain: [6, 4, 1, 0, -3] });
+  assert.equal(m.aktif, false);
+  assert.deepEqual(m.gain, [0, 6, 0, 4, 0, 1, 0, 0, 0, -3]);
+  assert.equal(L.migrasiEqLama(null), null);
+});
+
+uji('ekualiser: respons peaking = gain di pusat, ~0 jauh, Q besar lebih sempit', () => {
+  assert.ok(Math.abs(L.responPeaking(1000, 1000, 6, 1) - 6) < 1e-6);
+  assert.ok(Math.abs(L.responPeaking(1000, 1000, -9, 2) + 9) < 1e-6);
+  assert.ok(Math.abs(L.responPeaking(20000, 1000, 6, 1)) < 0.05);
+  assert.ok(L.responPeaking(2000, 1000, 6, 4) < L.responPeaking(2000, 1000, 6, 0.5));
+});
+
+uji('ekualiser: kurva datar saat nonaktif atau gain nol, dan naik dengan preamp', () => {
+  assert.ok(L.kurvaEq({ aktif: true, gain: [] }).every(([, db]) => db === 0));
+  assert.ok(L.kurvaEq({ aktif: false, gain: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12], preamp: 6 }).every(([, db]) => db === 0));
+  const kurva = L.kurvaEq({ aktif: true, gain: Array(10).fill(0), preamp: 3 }, 20);
+  assert.equal(kurva.length, 20);
+  assert.ok(kurva.every(([, db]) => Math.abs(db - 3) < 1e-9));
+  assert.ok(Math.abs(kurva[0][0] - 20) < 1e-9 && Math.abs(kurva[19][0] - 20000) < 1e-6);
 });
 
 uji('daftar putar: pindah item ke atas/bawah, tepi tidak berubah, tidak mengubah asal', () => {

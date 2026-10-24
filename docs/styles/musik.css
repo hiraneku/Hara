@@ -423,7 +423,32 @@
   padding: 14px 0; font-size: 15px; font-weight: 600;
 }
 .mus-preset.mus-preset-eq { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 0; padding: 6px 0 12px; }
-.mus-eq-baris { display: grid; grid-template-columns: 64px 1fr 64px; gap: 10px; align-items: center; padding: 6px 0; }
+.mus-eq-baris { display: grid; grid-template-columns: 56px 1fr 60px 34px; gap: 8px; align-items: center; padding: 5px 0; }
+.mus-eq-atur { display: grid; grid-template-columns: 56px 1fr 60px; gap: 8px; align-items: center; padding: 6px 0; }
+.mus-eq-grafik { margin: 6px 0 4px; }
+.mus-eq-grafik svg {
+  display: block; width: 100%; height: 150px; border-radius: 14px;
+  background: rgba(0, 0, 0, .28); border: 1px solid var(--mus-garis);
+}
+.mus-eq-grafik.mati svg { opacity: .5; }
+.mus-eq-kisi { stroke: rgba(255, 255, 255, .08); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mus-eq-nol { stroke: rgba(255, 255, 255, .28); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mus-eq-kurva {
+  fill: none; stroke: var(--mus-aksen); stroke-width: 2.2; vector-effect: non-scaling-stroke;
+  stroke-linejoin: round; stroke-linecap: round;
+}
+.mus-eq-skala { display: flex; justify-content: space-between; font-size: 11px; color: var(--mus-faint); padding: 4px 2px 0; font-variant-numeric: tabular-nums; }
+.mus-eq-sub { margin: 14px 0 6px; font-size: 12.5px; font-weight: 600; color: var(--mus-redup); }
+.mus-preset.mus-preset-kustom { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); margin-top: 0; }
+.mus-chip-grup { display: inline-flex; align-items: stretch; min-width: 0; }
+.mus-chip-grup .mus-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mus-chip-hapus {
+  width: 30px; flex: none; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--mus-garis); border-left: 0; background: rgba(255, 255, 255, .05);
+  border-radius: 0 999px 999px 0; color: var(--mus-faint);
+}
+.mus-chip-hapus .mus-ico { width: 13px; height: 13px; }
+.mus-chip-hapus:hover { color: var(--mus-bahaya); }
 .mus-eq-label { font-size: 13px; color: var(--mus-redup); font-variant-numeric: tabular-nums; }
 .mus-eq-geser { width: 100%; accent-color: var(--mus-aksen); }
 .mus-eq-angka {

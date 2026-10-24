@@ -195,36 +195,138 @@ export function hueDariId(id) {
   return h % 360;
 }
 
-/* ── Ekualiser (tahap 2): 5 pita, ±12 dB, langkah 1 dB ── */
-export const EQ_FREKUENSI = Object.freeze([60, 230, 910, 3600, 14000]);
+/* ── Ekualiser: 10 pita (standar oktaf), gain ±12 dB langkah 0.5, Q global,
+   preamp, grafik respons, dan preset buatan sendiri ── */
+export const EQ_FREKUENSI = Object.freeze([31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]);
 export const EQ_MIN = -12;
 export const EQ_MAX = 12;
+export const EQ_LANGKAH = 0.5;
+export const EQ_Q_MIN = 0.3;
+export const EQ_Q_MAX = 4;
+export const EQ_Q_AWAL = 1;
+export const EQ_KUSTOM_MAKS = 10;
+export const EQ_NAMA_MAKS = 24;
+
+const datar = Object.freeze(Array(10).fill(0));
 export const PRESET_EQ = Object.freeze({
-  datar: Object.freeze([0, 0, 0, 0, 0]),
-  bass: Object.freeze([6, 4, 1, 0, 0]),
-  vokal: Object.freeze([-2, 0, 3, 3, 1]),
-  terang: Object.freeze([0, 0, 0, 3, 5]),
+  datar,
+  bass: Object.freeze([6, 5, 4, 2, 1, 0, 0, 0, 0, 0]),
+  vokal: Object.freeze([-2, -2, -1, 0, 2, 3, 3, 2, 1, 0]),
+  terang: Object.freeze([0, 0, 0, 0, 0, 1, 2, 3, 4, 5]),
+  rock: Object.freeze([4, 3, 1, -1, -2, -1, 1, 3, 4, 4]),
+  pop: Object.freeze([-1, 1, 3, 4, 3, 0, -1, -1, 1, 2]),
+  klub: Object.freeze([5, 4, 1, 0, -1, -1, 0, 1, 3, 4]),
+  akustik: Object.freeze([2, 2, 2, 1, 0, 0, 1, 2, 3, 3]),
+});
+export const NAMA_PRESET_EQ = Object.freeze({
+  datar: 'Datar', bass: 'Bass', vokal: 'Vokal', terang: 'Terang',
+  rock: 'Rock', pop: 'Pop', klub: 'Klub', akustik: 'Akustik',
 });
 
+/* Gain pita / preamp: dibulatkan ke langkah 0.5 dB dan dijepit ke ±12. */
 export function klampEq(x) {
   const n = Number(x);
   if (!Number.isFinite(n)) return 0;
-  const b = Math.round(Math.min(EQ_MAX, Math.max(EQ_MIN, n)));
+  const b = Math.round(Math.min(EQ_MAX, Math.max(EQ_MIN, n)) / EQ_LANGKAH) * EQ_LANGKAH;
   return b === 0 ? 0 : b;
 }
 
-export const EQ_AWAL = Object.freeze({ aktif: true, gain: Object.freeze([0, 0, 0, 0, 0]) });
+/* Lebar pita Q: 0.3–4, dibulatkan 0.1. */
+export function klampQ(x) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return EQ_Q_AWAL;
+  return Math.round(Math.min(EQ_Q_MAX, Math.max(EQ_Q_MIN, n)) * 10) / 10;
+}
+
+export const EQ_AWAL = Object.freeze({ aktif: true, preamp: 0, q: EQ_Q_AWAL, gain: datar, kustom: Object.freeze([]) });
+
+export function namaPresetValid(s) {
+  const t = String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, EQ_NAMA_MAKS);
+  return t || null;
+}
+
+function normalisasiGain(g) {
+  return EQ_FREKUENSI.map((_, i) => klampEq(Array.isArray(g) ? g[i] ?? 0 : 0));
+}
+
+export function normalisasiKustom(raw) {
+  if (!Array.isArray(raw)) return [];
+  const hasil = [];
+  for (const x of raw) {
+    const nama = x && namaPresetValid(x.nama);
+    if (!nama || hasil.some(h => h.nama === nama)) continue;
+    hasil.push({ nama, gain: normalisasiGain(x.gain) });
+    if (hasil.length >= EQ_KUSTOM_MAKS) break;
+  }
+  return hasil;
+}
 
 export function normalisasiEq(raw) {
   const r = raw && typeof raw === 'object' ? raw : {};
-  const g = Array.isArray(r.gain) ? r.gain : [];
   return {
     aktif: typeof r.aktif === 'boolean' ? r.aktif : EQ_AWAL.aktif,
-    gain: EQ_FREKUENSI.map((_, i) => klampEq(g[i] ?? 0)),
+    preamp: klampEq(r.preamp),
+    q: klampQ(r.q),
+    gain: normalisasiGain(r.gain),
+    kustom: normalisasiKustom(r.kustom),
   };
 }
 
+/* Data EQ versi lama (5 pita, sebelum 20261024 v2): pindahkan ke pita terdekat. */
+export function migrasiEqLama(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.gain)) return null;
+  const lama = [60, 230, 910, 3600, 14000];
+  const gain = Array(10).fill(0);
+  lama.forEach((hz, i) => {
+    const j = EQ_FREKUENSI.reduce((best, f, k) => (Math.abs(Math.log(f / hz)) < Math.abs(Math.log(EQ_FREKUENSI[best] / hz)) ? k : best), 0);
+    gain[j] = klampEq(raw.gain[i]);
+  });
+  return normalisasiEq({ aktif: raw.aktif, gain });
+}
+
 export const labelFrekuensi = hz => (hz >= 1000 ? `${hz / 1000} kHz` : `${hz} Hz`);
+
+/* Respons satu filter peaking (rumus RBJ, sama dengan BiquadFilter Web Audio),
+   dalam dB pada frekuensi f. */
+export function responPeaking(f, f0, dB, Q, fs = 48000) {
+  const A = Math.pow(10, dB / 40);
+  const w0 = 2 * Math.PI * f0 / fs;
+  const alpha = Math.sin(w0) / (2 * Q);
+  const cos0 = Math.cos(w0);
+  const b = [1 + alpha * A, -2 * cos0, 1 - alpha * A];
+  const a = [1 + alpha / A, -2 * cos0, 1 - alpha / A];
+  const w = 2 * Math.PI * f / fs;
+  const num = poliKompleks(b, w);
+  const den = poliKompleks(a, w);
+  return 10 * Math.log10((num.re ** 2 + num.im ** 2) / (den.re ** 2 + den.im ** 2));
+}
+
+/* b0 + b1·e^(−jw) + b2·e^(−2jw) */
+function poliKompleks([b0, b1, b2], w) {
+  return {
+    re: b0 + b1 * Math.cos(w) + b2 * Math.cos(2 * w),
+    im: -(b1 * Math.sin(w) + b2 * Math.sin(2 * w)),
+  };
+}
+
+/* Kurva respons seluruh ekualiser: titik [hz, dB] berskala log dari 20 Hz ke 20 kHz.
+   Preamp ikut dihitung sebagai offset; bila nonaktif, kurva datar. */
+export function kurvaEq(eq, titik = 160) {
+  const e = normalisasiEq(eq);
+  const hasil = [];
+  for (let i = 0; i < titik; i++) {
+    const hz = 20 * Math.pow(1000, i / (titik - 1));
+    let db = 0;
+    if (e.aktif) {
+      db = e.preamp;
+      EQ_FREKUENSI.forEach((f0, k) => {
+        if (e.gain[k] !== 0) db += responPeaking(hz, f0, e.gain[k], e.q);
+      });
+    }
+    hasil.push([hz, db]);
+  }
+  return hasil;
+}
 
 /* ── Daftar putar (tahap 2) ── */
 

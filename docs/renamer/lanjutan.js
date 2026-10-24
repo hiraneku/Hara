@@ -12,9 +12,9 @@
  *    kelompokDuplikat
  */
 
-import { RULE_TYPES, parseFileName } from './model.js?v=20261024163000';
+import { RULE_TYPES, parseFileName } from './model.js?v=20261024171500';
 // Impor timbal-balik dengan engine.js aman: keduanya hanya memakai fungsi saat dipanggil.
-import { applyRule } from './engine.js?v=20261024163000';
+import { applyRule } from './engine.js?v=20261024171500';
 
 /* ───────────────────────── K23 · kondisi & grup ───────────────────────── */
 

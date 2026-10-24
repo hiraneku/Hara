@@ -4,15 +4,15 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024163000';
-import { toast } from '../../core/toast.js?v=20261024163000';
-import { t as tr } from '../../core/i18n.js?v=20261024163000';
-import { ensureCaret, caretEnd } from './caret.js?v=20261024163000';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261024163000';
-import { refresh } from './cleanup.js?v=20261024163000';
-import { snap } from './history.js?v=20261024163000';
-import { pasangGambar } from './image.js?v=20261024163000';
-import { pastikanKolomAkhir } from './blocks.js?v=20261024163000';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024171500';
+import { toast } from '../../core/toast.js?v=20261024171500';
+import { t as tr } from '../../core/i18n.js?v=20261024171500';
+import { ensureCaret, caretEnd } from './caret.js?v=20261024171500';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261024171500';
+import { refresh } from './cleanup.js?v=20261024171500';
+import { snap } from './history.js?v=20261024171500';
+import { pasangGambar } from './image.js?v=20261024171500';
+import { pastikanKolomAkhir } from './blocks.js?v=20261024171500';
 
 const LEBAR = 720;
 const TINGGI = 460;

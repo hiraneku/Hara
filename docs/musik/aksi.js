@@ -2,13 +2,13 @@
    pengaturan, dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi
    lagu lama sebelum berpindah, lalu muat lagu baru. */
 
-import { toast } from '../core/toast.js?v=20261024163000';
-import { t as tr } from '../core/i18n.js?v=20261024163000';
-import * as M from './mesin.js?v=20261024163000';
-import * as S from './simpan.js?v=20261024163000';
-import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024163000';
-import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024163000';
-import * as D from './daftar.js?v=20261024163000';
+import { toast } from '../core/toast.js?v=20261024171500';
+import { t as tr } from '../core/i18n.js?v=20261024171500';
+import * as M from './mesin.js?v=20261024171500';
+import * as S from './simpan.js?v=20261024171500';
+import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024171500';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024171500';
+import * as D from './daftar.js?v=20261024171500';
 
 /* Antrean putar: null = urutan pustaka; array id = urutan daftar putar yang sedang diputar. */
 let antrean = null;

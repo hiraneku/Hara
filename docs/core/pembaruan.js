@@ -11,7 +11,7 @@
 
    Di web (GitHub Pages / browser) plugin tidak ada, jadi semuanya dilewati. */
 
-import { toast } from './toast.js?v=20261024163000';
+import { toast } from './toast.js?v=20261024171500';
 
 const RILIS = 'https://github.com/hiraneku/Hara/releases/download/web-latest';
 const URL_VERSI = RILIS + '/version.json';
