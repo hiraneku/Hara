@@ -15,7 +15,7 @@
  *    tiruan yang diinjeksi.
  */
 
-import { kunciDariBytes } from './kunci-data.js?v=20261024035936';
+import { kunciDariBytes } from './kunci-data.js?v=20261024040822';
 
 const RP = { name: 'Hara' };
 

@@ -2489,21 +2489,33 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
 .mech-in.ada-kanan:not(.ada-kiri){-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent)}
 .mech-in.ada-kiri:not(.ada-kanan){-webkit-mask-image:linear-gradient(to right,transparent,#000 22px);mask-image:linear-gradient(to right,transparent,#000 22px)}
 
-/* ════════════ Menu "Semua fitur" (tombol Lainnya di Beranda) ════════════
-   Lembar bawah berisi kolom cari, lalu grup fitur berupa kartu ikon. */
-.fm-sheet .sh-b{padding-top:2px}
-.fm-grup{margin:16px 0 0}
-.fm-judul{font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--faint);margin:0 3px 9px}
-.fm-kisi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+/* ════════════ Menu "Lainnya" di Beranda ════════════
+   Bar pencarian di atas, grid layar utama, dan daftar hasil cari. */
+.fm-sheet .sh-b{padding-top:6px}
+.fm-bar{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;margin:0 0 4px;
+  border-radius:14px;background:var(--sunken);border:1px solid transparent;cursor:text;
+  transition:background .16s var(--ease),border-color .16s var(--ease),box-shadow .16s var(--ease)}
+.fm-bar:focus-within{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-weak)}
+.fm-bar>.ico{width:17px;height:17px;flex:none;color:var(--faint);transition:color .16s var(--ease)}
+.fm-bar:focus-within>.ico{color:var(--accent)}
+.fm-bar input{flex:1;min-width:0;height:100%;background:none;border:none;outline:none;
+  font:inherit;font-size:14px;color:var(--text);-webkit-appearance:none;appearance:none}
+.fm-bar input::placeholder{color:var(--faint)}
+.fm-bar input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.fm-kisi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
 @media (min-width:520px){.fm-kisi{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fm-daftar{display:flex;flex-direction:column;gap:2px;margin-top:10px}
 .fm-item{display:flex;align-items:center;gap:11px;min-width:0;min-height:62px;padding:10px 11px;
   text-align:left;border-radius:16px;background:var(--sunken);border:1px solid transparent;
   color:var(--text);font:inherit;cursor:pointer;transition:background .14s var(--ease),
   border-color .14s var(--ease),transform .14s var(--ease)}
 .fm-item:hover{background:var(--surface);border-color:var(--border-strong)}
-.fm-item:active{transform:scale(.97)}
-.fm-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fm-baris{display:flex;align-items:center;gap:11px;width:100%;min-width:0;min-height:52px;padding:8px 10px;
+  text-align:left;border-radius:14px;background:transparent;border:1px solid transparent;
+  color:var(--text);font:inherit;cursor:pointer;transition:background .14s var(--ease)}
+.fm-baris:hover{background:var(--sunken)}
+.fm-item:active,.fm-baris:active{transform:scale(.97)}
+.fm-item:focus-visible,.fm-baris:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fm-ikon{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;
   background:var(--accent-weak);color:var(--accent)}
 .fm-ikon .ico{width:17px;height:17px;stroke-width:1.7}

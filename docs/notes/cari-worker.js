@@ -1,5 +1,5 @@
 /* Web Worker pencarian (Ronde 11 · K12). Logika ada di cari-inti.js. */
-import { layani } from './cari-inti.js?v=20261024035936';
+import { layani } from './cari-inti.js?v=20261024040822';
 
 self.onmessage = e => {
   try {
