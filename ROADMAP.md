@@ -99,19 +99,19 @@
 > diubah untuk butir-butir ini. Kerjakan setelah pertanyaan pengguna terjawab.
 > Butir yang bertanda ❓ butuh keputusan sebelum dikerjakan.
 
-### M · Perbaikan (dari tinjauan ronde 12)
-- [ ] M1. Rapikan toolbar mobile: kendali baca (A−/A+, ikon) pindah ke menu
+### P · Perbaikan (dari tinjauan ronde 12)
+- [ ] P1. Rapikan toolbar mobile: kendali baca (A−/A+, ikon) pindah ke menu
       catatan, dan bar format disembunyikan saat keyboard tidak aktif atau
       saat menggulir ke bawah. Ada empat lapis kontrol di atas judul sekarang.
-- [ ] M2. Verifikasi bar bawah di perangkat. Di screenshot, Undo, Redo, `/`,
+- [ ] P2. Verifikasi bar bawah di perangkat. Di screenshot, Undo, Redo, `/`,
       B, dan I tidak terlihat dari kiri. Penyebabnya belum diketahui: bisa
       karena digulir, atau karena pengaturan tampilan bar.
-- [ ] M3. Virtualisasi daftar catatan (lihat K34) agar tetap cepat untuk
+- [ ] P3. Virtualisasi daftar catatan (lihat K34) agar tetap cepat untuk
       perpustakaan besar.
-- [ ] M4. Percepat `npm test`: jalankan paralel dan pisahkan tes cepat dari
+- [ ] P4. Percepat `npm test`: jalankan paralel dan pisahkan tes cepat dari
       tes berat (`kombinasi-*`, `font-*`, `renamer-*`). Saat ini satu putaran
       penuh memakan sekitar 10 menit.
-- [ ] M5. ❓ Dokumen `docs/PLAN.md` masih menyebut Tailwind, Vite, dan React,
+- [ ] P5. ❓ Dokumen `docs/PLAN.md` masih menyebut Tailwind, Vite, dan React,
       sedangkan kode memakai vanilla ES modules. Perlu keputusan apakah
       dokumen ini diperbarui (I33 menahannya).
 
@@ -129,7 +129,7 @@
 - [ ] S6. ❓ OCR foto (K14) dan dikte suara (K15). Keduanya butuh plugin native
       Capacitor, jadi tidak bisa diuji sepenuhnya di web.
 
-### M · Fitur modern (lanjutan dari E22–E24)
+### MB · Fitur modern (lanjutan dari E22–E24)
 - [ ] MB1. Tampilan database: Kanban dan kalender dari properti catatan (K19).
       Data properti sudah tersedia; tampilannya belum dibuat.
 - [ ] MB2. Tabel lanjutan: urut dan saring per kolom, serta rumus sederhana
