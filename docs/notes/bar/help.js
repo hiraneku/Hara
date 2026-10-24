@@ -152,6 +152,12 @@ export const HELP = {
     cara: 'Pilih menu ini lalu pilih berkasnya. Arahkan ke gambar untuk memunculkan tombol hapus.',
     tahu: 'Foto besar dikecilkan otomatis ke maksimal 1600 px agar hemat ruang. Gambar disimpan terpisah di perangkat, bukan di dalam teks catatan, jadi catatan tetap ringan.'
   },
+  gal: {
+    nama: 'Dari galeri',
+    apa: 'Menyisipkan gambar yang sudah pernah dipakai di catatan mana pun, tanpa memilih berkas lagi.',
+    cara: 'Pilih menu ini, lalu ketuk gambar yang diinginkan. Gambar disisipkan di posisi kursor.',
+    tahu: 'Gambar yang baru muncul paling depan. Untuk berkas baru dari perangkat, pakai menu Gambar.'
+  },
   tag: {
     nama: 'Tag',
     apa: 'Menandai catatan dengan kata kunci untuk dikelompokkan.',

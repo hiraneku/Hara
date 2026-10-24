@@ -35,7 +35,7 @@
 
 ## Bagian E — lebih besar (nanti)
 - [ ] E22. Sinkronisasi antar-perangkat (WebDAV/Drive/server)
-- [ ] E23. Tabel (tunggu fondasi stabil)
+- [ ] E23. Tabel — SEBAGIAN. Blok tabel dasar (tambah/hapus baris & kolom, navigasi Tab) sudah ada dan bisa disisipkan lewat menu `/`. Belum diuji di perangkat; fitur lanjutan belum diputuskan.
 - [ ] E24. Widget / pintasan layar kunci
 
 ## Bagian F — ronde 7 (SELESAI)
@@ -92,6 +92,13 @@
       • Full Undo / Rollback ganti nama;
       • Suite uji otomatis 78/78 hijau (`tools/uji/renamer-*.mjs`).
 
+
+## Bagian L — perapian bar & menu editor (SELESAI)
+- [x] L1. Aksi non-blok tidak lagi ganda di bar: "Tanggal" dan "Warna tag" hanya di menu `/` (dibuka lewat tombol `/` di bar). Jenis blok (Gambar, Pembatas) tetap di keduanya — aturannya ada di `docs/ARSITEKTUR.md`.
+- [x] L2. Ikon tidak lagi bentrok: Rumus memakai `i-sigma`, Dari galeri memakai `i-gallery` (keduanya baru di sprite), Warna tag memakai `i-palette`.
+- [x] L3. "Dari galeri" punya teks bantuan (ID/EN/JA), jadi tombol info muncul di grup Sisipkan.
+- [x] L4. Dokumen disesuaikan dengan kode: fitur editor di README, peta folder editor di ARSITEKTUR, status E23 di sini.
+- Ditunda (bukan bagian ronde ini): menggabungkan `blok-modern.js` dan `blok-generasi-baru.js` — perlu keputusan dulu, lihat ARSITEKTUR.
 
 ## Bagian K — ronde 11 (BERJALAN, bertahap)
 > Dikerjakan per tahap; tiap tahap punya suite uji sendiri. Butir yang butuh
@@ -201,6 +208,6 @@
 - [ ] K35. Aksesibilitas & navigasi keyboard penuh — SEBAGIAN. Palette (Ctrl/⌘+K) bisa dinavigasi keyboard. Navigasi keyboard penuh untuk daftar dan editor BELUM.
 
 ### Ditahan — menunggu keputusan pengguna
-- D18 riwayat versi · E22 sync (CRDT) · E23 tabel · E24 widget (butir lama)
+- D18 riwayat versi · E22 sync (CRDT) · E23 tabel (fitur lanjutan) · E24 widget (butir lama)
 - Fitur AI (ringkas / tanya-jawab catatan) — bertentangan dengan non-goal v1 di PLAN
 - Notifikasi terjadwal (web terbatas saat aplikasi tertutup; APK lewat Capacitor)

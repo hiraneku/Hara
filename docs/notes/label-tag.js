@@ -25,10 +25,10 @@
      diubah supaya komposisi tidak rusak; pembersihan menyusul begitu
      komposisi selesai. */
 
-import { state } from '../core/store.js?v=20261023235452';
-import { tandaUntukCatatan } from './label.js?v=20261023235452';
-import { chipTag } from './label.js?v=20261023235452';
-import { sel } from './editor/caret.js?v=20261023235452';
+import { state } from '../core/store.js?v=20261024003448';
+import { tandaUntukCatatan } from './label.js?v=20261024003448';
+import { chipTag } from './label.js?v=20261024003448';
+import { sel } from './editor/caret.js?v=20261024003448';
 
 /* Nama tag dari satu span.tg — teksnya "#nama" atau "#nama" plus spasi. */
 export function namaDariSpan(span) {

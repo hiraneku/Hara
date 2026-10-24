@@ -1,5 +1,5 @@
 /* Helper DOM dipakai semua modul. */
-import { t as tr, NAMA_HARI, NAMA_BULAN, bahasaSekarang } from './i18n.js?v=20261023235452';
+import { t as tr, NAMA_HARI, NAMA_BULAN, bahasaSekarang } from './i18n.js?v=20261024003448';
 
 export const el = id => document.getElementById(id);
 

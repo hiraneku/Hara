@@ -72,6 +72,9 @@ docs/
 │   │   ├── tempel-mekanik.js  teks polos dari luar → mekanik Hara (daftar, heading, tautan)
 │   │   ├── bilah-teks.js      bilah format di atas teks yang disorot
 │   │   ├── sorotan.js / warna.js / font.js  format lekat (sorot, warna, font)
+│   │   ├── blok-modern.js          blok khusus: toggle (lipat), tabel, memo suara, pill wikilink
+│   │   ├── blok-generasi-baru.js   rumus, kartu tautan, lampiran berkas, menu aksi blok, quick keys
+│   │   ├── sketsa.js               studio sketsa (blok gambar tangan)
 │   │   └── events.js   input, beforeinput, keydown, selectionchange
 │   │
 │   ├── bar/
@@ -143,6 +146,12 @@ docs/
 
 5. **Tanpa handler inline di HTML.** `onclick="..."` tidak bisa melihat scope
    modul. Semua kejadian dipasang lewat `addEventListener`.
+
+6. **Bar dan menu `/` — dua pintu, satu aturan.** Jenis blok (heading,
+   daftar, kutipan, kode, pembatas, gambar) boleh ada di bar DAN di menu `/`.
+   Aksi non-blok (tanggal, warna tag) hanya di menu `/`, karena tombol `/` di
+   bar sudah membukanya dengan satu ketuk. Saat menambah aksi baru, pilih salah
+   satu pintu, kecuali aksinya jenis blok.
 
 ## Menambah tools baru (mis. Reminder)
 

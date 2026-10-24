@@ -15,8 +15,8 @@
    - Modul ini TIDAK mengimpor modul inti lain — aman dipakai modul
      mana pun tanpa risiko lingkaran impor. */
 
-import { EN } from './bahasa-en.js?v=20261023235452';
-import { JA } from './bahasa-ja.js?v=20261023235452';
+import { EN } from './bahasa-en.js?v=20261024003448';
+import { JA } from './bahasa-ja.js?v=20261024003448';
 
 const KUNCI = 'hara.v1.bahasa';     /* 'id' | 'en' | 'ja' — bawaan 'id' */
 const KODE = ['id', 'en', 'ja'];
