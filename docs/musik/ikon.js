@@ -23,6 +23,7 @@ const JALUR = {
   satu: '<path d="M4 9.5V8a3 3 0 0 1 3-3h11"/><path d="m15.5 2.5 2.5 2.5-2.5 2.5"/><path d="M20 14.5V16a3 3 0 0 1-3 3H6"/><path d="m8.5 21.5-2.5-2.5 2.5-2.5"/><path d="M11.2 10.2 12.3 9.5v5.2"/>',
   semua: '<path d="M4 9.5V8a3 3 0 0 1 3-3h11"/><path d="m15.5 2.5 2.5 2.5-2.5 2.5"/><path d="M20 14.5V16a3 3 0 0 1-3 3H6"/><path d="m8.5 21.5-2.5-2.5 2.5-2.5"/>',
   antrean: '<path d="M3 6.5h11M3 12h11M3 17.5h6"/><path d="M16 14.5v6.5l5.2-3.25z" fill="currentColor"/>',
+  visual: '<path d="M5 19v-6M10 19V6M15 19v-9M20 19v-4"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   cari: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
   sliders: '<path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h2"/><path d="M10 12h10"/><circle cx="8" cy="12" r="2"/><path d="M4 18h12"/><path d="M20 18h0"/><circle cx="18" cy="18" r="2"/>',

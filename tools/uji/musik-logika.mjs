@@ -288,14 +288,17 @@ uji('hue sampul stabil dan dalam 0..359', () => {
   }
 });
 
-uji('ekualiser: gain dijepit ±12 dB, bulat 0.5 dB, dan NaN jadi 0', () => {
-  assert.equal(L.klampEq(7.6), 7.5);
-  assert.equal(L.klampEq(7.8), 8);
-  assert.equal(L.klampEq(-20), -12);
-  assert.equal(L.klampEq(20), 12);
+uji('ekualiser: gain dijepit ±20 dB, bulat 0.01 dB (nilai bebas), dan NaN jadi 0', () => {
+  assert.equal(L.klampEq(7.6), 7.6);
+  assert.equal(L.klampEq(5.37), 5.37);
+  assert.equal(L.klampEq(7.804), 7.8);
+  assert.equal(L.klampEq(-25), -20);
+  assert.equal(L.klampEq(25), 20);
+  assert.equal(L.klampEq(-19.5), -19.5);
   assert.equal(L.klampEq(NaN), 0);
   assert.equal(L.klampEq(undefined), 0);
-  assert.equal(L.klampEq(-0.2), 0);
+  assert.equal(L.klampEq(-0.004), 0);
+  assert.equal(L.klampEq(-0.2), -0.2);
 });
 
 uji('ekualiser: Q dijepit 0.3–4 dan dibulatkan 0.1', () => {
@@ -307,8 +310,8 @@ uji('ekualiser: Q dijepit 0.3–4 dan dibulatkan 0.1', () => {
 
 uji('ekualiser: normalisasi selalu 10 pita, preamp dan Q ikut dijepit', () => {
   const n = L.normalisasiEq({ gain: [1, 2, 99], preamp: -40, q: 8 });
-  assert.deepEqual(n.gain, [1, 2, 12, 0, 0, 0, 0, 0, 0, 0]);
-  assert.equal(n.preamp, -12);
+  assert.deepEqual(n.gain, [1, 2, 20, 0, 0, 0, 0, 0, 0, 0]);
+  assert.equal(n.preamp, -20);
   assert.equal(n.q, 4);
   assert.equal(n.gain.length, L.EQ_FREKUENSI.length);
   assert.equal(L.normalisasiEq({ aktif: false }).aktif, false);

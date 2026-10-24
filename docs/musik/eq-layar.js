@@ -2,23 +2,23 @@
    sepuluh pita, preset bawaan dan buatan sendiri, saklar aktif, dan reset.
    Pengaturan bersifat global (satu set untuk semua lagu) dan disimpan lewat eq.js. */
 
-import { cur, go } from '../core/router.js?v=20261024210000';
-import { t as tr } from '../core/i18n.js?v=20261024210000';
-import { toast } from '../core/toast.js?v=20261024210000';
-import { esc } from '../core/dom.js?v=20261024210000';
-import * as M from './mesin.js?v=20261024210000';
-import * as E from './eq.js?v=20261024210000';
+import { cur, go } from '../core/router.js?v=20261024220000';
+import { t as tr } from '../core/i18n.js?v=20261024220000';
+import { toast } from '../core/toast.js?v=20261024220000';
+import { esc } from '../core/dom.js?v=20261024220000';
+import * as M from './mesin.js?v=20261024220000';
+import * as E from './eq.js?v=20261024220000';
 import {
   EQ_FREKUENSI, EQ_MIN, EQ_MAX, EQ_LANGKAH, EQ_Q_MIN, EQ_Q_MAX, EQ_KUSTOM_MAKS, EQ_NAMA_MAKS,
   PRESET_EQ, NAMA_PRESET_EQ, klampEq, klampQ, labelFrekuensi, kurvaEq,
-} from './logika.js?v=20261024210000';
-import { ikon } from './ikon.js?v=20261024210000';
+} from './logika.js?v=20261024220000';
+import { ikon } from './ikon.js?v=20261024220000';
 
-const GRAF_W = 320, GRAF_H = 150, GRAF_DB = 15;
+const GRAF_W = 320, GRAF_H = 150, GRAF_DB = 20;
 const GRAF_HZ_MIN = 20, GRAF_HZ_MAX = 20000;
 
 const samaGain = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
-const fmtDb = v => (v > 0 ? `+${v}` : `${v}`);
+const fmtDb = v => { const n = Number(Number(v).toFixed(2)); return n > 0 ? `+${n}` : `${n}`; };
 const fmtQ = v => v.toFixed(1);
 
 /* Terapkan keadaan EQ ke mesin audio dan simpan. */
@@ -35,7 +35,7 @@ function presetAktif(e) {
   return k >= 0 ? { jenis: 'kustom', kunci: k } : null;
 }
 
-/* Titik SVG untuk kurva respons. Sumbu X logaritmik (20 Hz–20 kHz), sumbu Y ±15 dB. */
+/* Titik SVG untuk kurva respons. Sumbu X logaritmik (20 Hz–20 kHz), sumbu Y ±20 dB. */
 function xGrafik(hz) {
   return (Math.log(hz / GRAF_HZ_MIN) / Math.log(GRAF_HZ_MAX / GRAF_HZ_MIN)) * GRAF_W;
 }
@@ -49,7 +49,7 @@ function jalurGrafik(e) {
 }
 function kisiGrafik() {
   const garis = [];
-  for (const db of [-12, -6, 0, 6, 12]) {
+  for (const db of [-20, -10, 0, 10, 20]) {
     const y = yGrafik(db).toFixed(1);
     garis.push(`<line x1="0" x2="${GRAF_W}" y1="${y}" y2="${y}" class="${db === 0 ? 'mus-eq-nol' : 'mus-eq-kisi'}"/>`);
   }
@@ -144,7 +144,7 @@ export function eqView() {
     <section class="mus-kartu mus-set-kartu">
       <h3 class="mus-set-judul-bagian">${tr('Pita frekuensi')}</h3>
       ${pitaHtml(e)}
-      <p class="mus-catatan mus-set-pad">${tr('Rentang −12 sampai +12 dB, langkah 0,5. Geser atau ketik angka. Tombol ↺ mengembalikan satu pita ke 0.')}</p>
+      <p class="mus-catatan mus-set-pad">${tr('Rentang −20 sampai +20 dB, bisa nilai bebas (dua desimal). Geser atau ketik angka. Tombol ↺ mengembalikan satu pita ke 0.')}</p>
       <div class="mus-aksi-baris">
         <button type="button" class="mus-tombol" data-eq="reset">${ikon('reset')}<span>${tr('Reset semua ke datar')}</span></button>
       </div>

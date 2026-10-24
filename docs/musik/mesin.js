@@ -9,12 +9,12 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024210000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024220000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261024210000';
+} from './logika.js?v=20261024220000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -90,7 +90,7 @@ function terapkanEq() {
   if (gain) gain.gain.value = VOLUME * Math.pow(10, (aktif ? eqKeadaan.preamp : 0) / 20);
 }
 
-/* Atur ekualiser. gain: 10 nilai dB (-12..12, langkah 0.5); q: 0.3..4; preamp: dB.
+/* Atur ekualiser. gain: 10 nilai dB (-20..20, dua desimal); q: 0.3..4; preamp: dB.
    aktif=false = datar dan preamp nol (bypass). */
 export function setEq(patch = {}) {
   eqKeadaan = normalisasiEq({ ...eqKeadaan, ...patch });

@@ -3,18 +3,18 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024210000';
-import { esc } from '../core/dom.js?v=20261024210000';
-import { t as tr } from '../core/i18n.js?v=20261024210000';
-import { toast } from '../core/toast.js?v=20261024210000';
-import * as M from './mesin.js?v=20261024210000';
-import * as S from './simpan.js?v=20261024210000';
-import * as L from './logika.js?v=20261024210000';
-import * as A from './aksi.js?v=20261024210000';
-import { ikon } from './ikon.js?v=20261024210000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261024210000';
-import { segarSampul } from './sampul-dom.js?v=20261024210000';
-import { ambilSet } from './set.js?v=20261024210000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024220000';
+import { esc } from '../core/dom.js?v=20261024220000';
+import { t as tr } from '../core/i18n.js?v=20261024220000';
+import { toast } from '../core/toast.js?v=20261024220000';
+import * as M from './mesin.js?v=20261024220000';
+import * as S from './simpan.js?v=20261024220000';
+import * as L from './logika.js?v=20261024220000';
+import * as A from './aksi.js?v=20261024220000';
+import { ikon } from './ikon.js?v=20261024220000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261024220000';
+import { segarSampul } from './sampul-dom.js?v=20261024220000';
+import { ambilSet } from './set.js?v=20261024220000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
@@ -232,7 +232,7 @@ export function musikView() {
       <div class="mus-atas-aksi">
         <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr('Impor lagu')}">${ikon('impor')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="daftar" aria-label="${tr('Daftar putar')}">${ikon('list')}</button>
-        <button type="button" class="mus-ikon-btn" data-mus="eq" aria-label="${tr('Ekualiser')}">${ikon('eq')}</button>
+        <button type="button" class="mus-ikon-btn" data-mus="eq" aria-label="${tr('Efek & Visual')}">${ikon('eq')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="ekspor" aria-label="${tr('Ekspor lagu')}">${ikon('ekspor')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="pengaturan" aria-label="${tr('Pengaturan Musik')}">${ikon('sliders')}</button>
       </div>
@@ -475,7 +475,7 @@ function onClick(e) {
       go('musik-daftar');
       return;
     case 'eq':
-      go('musik-eq');
+      go('musik-efek');
       return;
     case 'ekspor':
       go('musik-ekspor');

@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20261024210000';
+import { t as tr } from './i18n.js?v=20261024220000';
 
 const views  = {};
 const titles = {};
@@ -24,7 +24,7 @@ export function registerViews(map, titleMap, indukMap) {
   Object.assign(induk, indukMap || {});
 }
 
-const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-eq', 'musik-ekspor'];
+const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-efek', 'musik-eq', 'musik-ekspor'];
 
 const saudara = (a, b) => induk[a] === b || induk[b] === a;
 

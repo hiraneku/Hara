@@ -229,12 +229,12 @@ export function hueDariId(id) {
   return h % 360;
 }
 
-/* ── Ekualiser: 10 pita (standar oktaf), gain ±12 dB langkah 0.5, Q global,
+/* ── Ekualiser: 10 pita (standar oktaf), gain ±20 dB (resolusi 0.01), Q global,
    preamp, grafik respons, dan preset buatan sendiri ── */
 export const EQ_FREKUENSI = Object.freeze([31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]);
-export const EQ_MIN = -12;
-export const EQ_MAX = 12;
-export const EQ_LANGKAH = 0.5;
+export const EQ_MIN = -20;
+export const EQ_MAX = 20;
+export const EQ_LANGKAH = 0.01;   /* langkah input; nilai bebas di antaranya */
 export const EQ_Q_MIN = 0.3;
 export const EQ_Q_MAX = 4;
 export const EQ_Q_AWAL = 1;
@@ -257,11 +257,11 @@ export const NAMA_PRESET_EQ = Object.freeze({
   rock: 'Rock', pop: 'Pop', klub: 'Klub', akustik: 'Akustik',
 });
 
-/* Gain pita / preamp: dibulatkan ke langkah 0.5 dB dan dijepit ke ±12. */
+/* Gain pita / preamp: dibulatkan ke 0.01 dB dan dijepit ke ±20. */
 export function klampEq(x) {
   const n = Number(x);
   if (!Number.isFinite(n)) return 0;
-  const b = Math.round(Math.min(EQ_MAX, Math.max(EQ_MIN, n)) / EQ_LANGKAH) * EQ_LANGKAH;
+  const b = Math.round(Math.min(EQ_MAX, Math.max(EQ_MIN, n)) * 100) / 100;
   return b === 0 ? 0 : b;
 }
 
