@@ -4,9 +4,9 @@
    Ekualiser dijalankan di halaman (ekspor.js) lewat OfflineAudioContext.
    Berbentuk skrip biasa karena lamejs memakai importScripts. */
 
-importScripts('../vendor/lamejs/lame.min.js?v=20261024220000');
+importScripts('../vendor/lamejs/lame.min.js?v=20261024230000');
 
-const siap = import('./ekspor-dsp.js?v=20261024220000');
+const siap = import('./ekspor-dsp.js?v=20261024230000');
 
 self.onmessage = async (e) => {
   const d = e.data;

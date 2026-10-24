@@ -4,11 +4,11 @@
      -> 10 pita peaking -> kompresor (node yang sama dengan pemutar) -> tulis berkas.
    Efek bisa dimatikan; bila mati, suara asli dipakai tanpa penguatan. */
 
-import * as S from './simpan.js?v=20261024220000';
-import * as E from './eq.js?v=20261024220000';
-import { VOLUME } from './mesin.js?v=20261024220000';
-import { SAMPEL_HZ, namaEkspor } from './ekspor-dsp.js?v=20261024220000';
-import { EQ_FREKUENSI } from './logika.js?v=20261024220000';
+import * as S from './simpan.js?v=20261024230000';
+import * as E from './eq.js?v=20261024230000';
+import { VOLUME } from './mesin.js?v=20261024230000';
+import { SAMPEL_HZ, namaEkspor } from './ekspor-dsp.js?v=20261024230000';
+import { EQ_FREKUENSI } from './logika.js?v=20261024230000';
 
 export const KBPS_PILIHAN = [128, 192, 320];
 export const FORMAT_PILIHAN = ['wav', 'mp3'];
@@ -19,7 +19,7 @@ const menunggu = new Map();
 
 function dapatkanPekerja() {
   if (pekerja) return pekerja;
-  pekerja = new Worker(new URL('./ekspor-pekerja.js?v=20261024220000', import.meta.url));
+  pekerja = new Worker(new URL('./ekspor-pekerja.js?v=20261024230000', import.meta.url));
   pekerja.onmessage = (e) => {
     const m = menunggu.get(e.data.id);
     if (!m) return;
