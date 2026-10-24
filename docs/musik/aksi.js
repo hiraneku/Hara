@@ -2,20 +2,92 @@
    pengaturan, dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi
    lagu lama sebelum berpindah, lalu muat lagu baru. */
 
-import { toast } from '../core/toast.js?v=20261024183000';
-import { t as tr } from '../core/i18n.js?v=20261024183000';
-import * as M from './mesin.js?v=20261024183000';
-import * as S from './simpan.js?v=20261024183000';
-import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024183000';
-import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024183000';
-import * as D from './daftar.js?v=20261024183000';
+import { toast } from '../core/toast.js?v=20261024190000';
+import { t as tr } from '../core/i18n.js?v=20261024190000';
+import * as M from './mesin.js?v=20261024190000';
+import * as S from './simpan.js?v=20261024190000';
+import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024190000';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024190000';
+import * as D from './daftar.js?v=20261024190000';
+import * as T from './tidur.js?v=20261024190000';
+import { ambilSet, ubahSet } from './set.js?v=20261024190000';
+import { pilihBerikut, urutkanAcak } from './mode.js?v=20261024190000';
 
 /* Antrean putar: null = urutan pustaka; array id = urutan daftar putar yang sedang diputar. */
 let antrean = null;
-export function aturAntrean(ids) { antrean = Array.isArray(ids) ? ids.slice() : null; }
+export function aturAntrean(ids) {
+  antrean = Array.isArray(ids) ? ids.slice() : null;
+  batalRencana();
+}
 function urutanPutar() {
   if (!antrean) return S.daftarLagu();
   return antrean.map(id => S.laguById(id)).filter(Boolean);
+}
+
+/* Antrean pengguna (mode ulang "antrean"): lagu yang ditambahkan lewat tombol Antre. */
+let antreanPengguna = [];
+export function toggleAntrean(id) {
+  const i = antreanPengguna.indexOf(id);
+  if (i >= 0) antreanPengguna.splice(i, 1);
+  else if (S.laguById(id)) antreanPengguna.push(id);
+  batalRencana();
+  return i < 0;
+}
+export function antreanLagu() { return antreanPengguna.slice(); }
+export function jumlahDaftarAktif() { return urutanPutar().length; }
+export function kosongkanAntrean() { antreanPengguna = []; batalRencana(); }
+
+/* Riwayat lagu yang sudah diputar (untuk tombol sebelumnya pada mode acak dan
+   untuk smart shuffle). Batas 50 entri. */
+let riwayat = [];
+function dorongRiwayat(id) {
+  if (!id) return;
+  riwayat.push(id);
+  if (riwayat.length > 50) riwayat.shift();
+}
+
+/* Urutan acak untuk satu daftar; disimpan selama daftar tidak berubah. */
+let urutanAcakCache = { kunci: '', ids: null };
+function urutanAcakUntuk(daftar) {
+  const kunci = daftar.join('|');
+  if (urutanAcakCache.kunci !== kunci || !urutanAcakCache.ids) {
+    urutanAcakCache = { kunci, ids: urutkanAcak(daftar) };
+  }
+  return urutanAcakCache.ids;
+}
+
+/* Lagu berikutnya menurut mode saat ini. Hasil bisa disimpan sebagai "rencana"
+   (untuk crossfade) dan dipakai saat transisi. */
+let rencana = null;      /* { id, dariAntrean } */
+let sedangSiapkan = false;
+export function batalRencana() {
+  rencana = null;
+  M.batalkanBerikut();
+}
+
+function pilihBerikutSekarang(manual) {
+  const set = ambilSet();
+  const daftar = urutanPutar().map(x => x.id);
+  if (daftar.length === 0) return null;
+  const hasil = pilihBerikut({
+    daftar,
+    idAktif: M.keadaan().id,
+    acak: set.acak,
+    ulang: set.ulang,
+    antrean: antreanPengguna,
+    manual,
+    urutan: set.acak === 'mati' ? null : urutanAcakUntuk(daftar),
+    riwayat,
+  });
+  if (hasil && hasil.urutan) urutanAcakCache = { kunci: daftar.join('|'), ids: hasil.urutan };
+  return hasil ? { id: hasil.id, dariAntrean: hasil.dariAntrean } : null;
+}
+
+/* Ubah mode acak atau ulang (dari tombol pemutar). */
+export function aturMode(patch) {
+  ubahSet(patch);
+  urutanAcakCache = { kunci: '', ids: null };
+  batalRencana();
 }
 
 /* Antrean aksi yang datang saat lagu masih dimuat (mis. geser tempo atau putar
@@ -64,6 +136,7 @@ export async function mainkanLagu(id, { putar = true } = {}) {
     if (putar) await M.putar();
     return;
   }
+  rencana = null;
   simpanPosisiSekarang();
   try {
     const berkas = await S.ambilBerkas(id);
@@ -95,26 +168,98 @@ export async function togglePutarUtama() {
   await M.putar();
 }
 
-/* Pindah lagu (manual, berputar di akhir daftar). Arah -1 dengan posisi lewat
-   3 detik hanya mengulang lagu ini. */
+/* Pindah lagu manual (tombol Sebelumnya / Berikutnya). Arah -1 dengan posisi lewat
+   3 detik hanya mengulang lagu ini. Berikutnya mengikuti mode acak dan ulang; dan
+   memakai crossfade bila diaktifkan. */
 export async function gantiLagu(arah) {
   const daftar = urutanPutar();
   if (daftar.length === 0) return;
   const k = M.keadaan();
   if (arah < 0 && k.posisi > 3 && k.id) { M.seek(0); return; }
+  if (arah > 0) {
+    const r = pilihBerikutSekarang(true);
+    if (!r) return;
+    await pindahKe(r, ambilSet().crossfade);
+    return;
+  }
+  if (arah < 0 && ambilSet().acak !== 'mati' && riwayat.length) {
+    const id = riwayat.pop();
+    if (S.laguById(id)) { await mainkanLagu(id); return; }
+  }
   const i = daftar.findIndex(x => x.id === k.id);
   const n = daftar.length;
-  const berikut = i < 0 ? daftar[0] : daftar[(i + arah + n) % n];
-  await mainkanLagu(berikut.id);
+  const sebelum = i < 0 ? daftar[0] : daftar[(i - 1 + n) % n];
+  await mainkanLagu(sebelum.id);
 }
 
-/* Lanjut otomatis setelah lagu selesai: berhenti di lagu terakhir. */
-export async function lanjutOtomatis() {
-  const daftar = urutanPutar();
-  const i = daftar.findIndex(x => x.id === M.keadaan().id);
-  if (i < 0 || i >= daftar.length - 1) return false;
-  await mainkanLagu(daftar[i + 1].id);
+/* Dipanggil saat satu lagu selesai (dari status 'selesai'). */
+export async function selesaiLagu() {
+  if (T.tidurSelesaiLagu()) return;            /* sleep timer: berhenti di sini */
+  const r = rencana || pilihBerikutSekarang(false);
+  rencana = null;
+  if (!r) return;                              /* mode urut/antrean habis: berhenti */
+  await pindahKe(r, null);
+}
+
+/* Pindah ke lagu r. Dengan crossfade (opsi = pengaturan), transisi dibuat halus
+   bila lagu berikutnya sudah siap; bila tidak, pindah biasa. */
+async function pindahKe(r, cf) {
+  const k = M.keadaan();
+  if (cf && cf.aktif && k.status === 'putar' && k.id && r.id !== k.id) {
+    const x = S.laguById(r.id);
+    const berkas = x && await S.ambilBerkas(r.id);
+    if (x && berkas) {
+      const siap = await M.siapkanBerikut(r.id, berkas, S.aturLagu(r.id), x.nama).catch(() => false);
+      if (siap && M.idBerikut() === r.id && komitPudar(r, cf.detik, x)) return;
+    }
+  }
+  if (r.dariAntrean) antreanPengguna.shift();
+  dorongRiwayat(k.id);
+  await mainkanLagu(r.id);
+}
+
+/* Crossfade: lagu berikutnya (sudah dimuat di mesin) menggantikan lagu aktif. */
+function komitPudar(r, detik, x) {
+  const k = M.keadaan();
+  S.simpanAtur(k.id, { tempo: k.tempo, pitch: k.pitch, loop: k.loop, posisi: 0 });
+  if (!M.mulaiPudarKeBerikut(detik)) return false;
+  T.tidurSelesaiLagu();
+  if (r.dariAntrean) antreanPengguna.shift();
+  dorongRiwayat(k.id);
+  S.tandaiTerakhir(r.id);
+  if (!x.sampulDiperiksa) {
+    S.ambilBerkas(r.id).then(b => { if (b) return ekstrakSampul(b, r.id); }).then(ada => { if (ada) M.beritahu('sampul'); }).catch(() => {});
+  }
   return true;
+}
+
+/* Dipanggil setiap ketukan posisi (dari mesin). Menyiapkan lagu berikutnya beberapa
+   detik sebelum akhir, lalu memulai crossfade pada detik ke-`fade`. */
+export function periksaTransisi(k) {
+  if (k.status !== 'putar' || !(k.durasi > 0) || !k.id) return;
+  const set = ambilSet();
+  if (!set.crossfade.aktif || set.ulang === 'satu') return;
+  if (!T.tidurMengizinkanTransisi()) return;
+  const sisa = k.durasi - k.posisi;
+  const f = set.crossfade.detik;
+  if (!rencana && !sedangSiapkan && sisa <= f + 6) {
+    const r = pilihBerikutSekarang(false);
+    if (!r || r.id === k.id) return;
+    rencana = r;
+    sedangSiapkan = true;
+    const x = S.laguById(r.id);
+    S.ambilBerkas(r.id)
+      .then(berkas => berkas && x && M.siapkanBerikut(r.id, berkas, S.aturLagu(r.id), x.nama))
+      .catch(() => false)
+      .finally(() => { sedangSiapkan = false; });
+    return;
+  }
+  if (rencana && sisa <= f && M.idBerikut() === rencana.id) {
+    const r = rencana;
+    const x = S.laguById(r.id);
+    rencana = null;
+    if (x) komitPudar(r, f, x);
+  }
 }
 
 export async function imporBerkas(files) {

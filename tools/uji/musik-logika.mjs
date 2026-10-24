@@ -2,6 +2,7 @@
    Tanpa jsdom — masuk ke `npm run test:cepat`. */
 import assert from 'node:assert/strict';
 import * as L from '../../docs/musik/logika.js';
+import * as MD from '../../docs/musik/mode.js';
 
 let lulus = 0;
 const uji = (nama, fn) => { fn(); lulus++; };
@@ -48,9 +49,116 @@ uji('format ukuran berkas', () => {
 
 uji('pengaturan layar Musik dibersihkan', () => {
   assert.deepEqual(L.normalisasiSet(undefined), L.SET_AWAL);
-  const s = L.normalisasiSet({ setelahSelesai: 'x', lanjutkanPosisi: 'ya', tempoAwal: 9 });
-  assert.deepEqual(s, { setelahSelesai: 'berhenti', lanjutkanPosisi: true, tempoAwal: 2 });
-  assert.equal(L.normalisasiSet({ setelahSelesai: 'ulangi' }).setelahSelesai, 'ulangi');
+  const s = L.normalisasiSet({ lanjutkanPosisi: 'ya', tempoAwal: 9, acak: 'ngawur', ulang: 'semua' });
+  assert.equal(s.lanjutkanPosisi, true);
+  assert.equal(s.tempoAwal, 2);
+  assert.equal(s.acak, 'mati');
+  assert.equal(s.ulang, 'semua');
+  assert.equal('setelahSelesai' in s, false);
+});
+
+uji('mode acak, ulang, dan sleep timer dibersihkan; crossfade dijepit 1–10 detik', () => {
+  const s = L.normalisasiSet({
+    acak: 'pintar', ulang: 'antrean', tidurMode: 'lagu', tidurMenit: 9999,
+    crossfade: { aktif: true, detik: 42 },
+  });
+  assert.equal(s.acak, 'pintar');
+  assert.equal(s.ulang, 'antrean');
+  assert.equal(s.tidurMode, 'lagu');
+  assert.equal(s.tidurMenit, L.TIDUR_MENIT_MAKS);
+  assert.deepEqual(s.crossfade, { aktif: true, detik: 10 });
+  assert.equal(L.normalisasiSet({ crossfade: { detik: 0 } }).crossfade.detik, 1);
+  assert.equal(L.normalisasiSet({ crossfade: 'x' }).crossfade.aktif, false);
+  assert.equal(L.normalisasiSet({ tidurMenit: 'abc' }).tidurMenit, L.SET_AWAL.tidurMenit);
+});
+
+uji('siklus tombol berpindah ke langkah berikutnya lalu kembali ke awal', () => {
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'mati'), 'acak');
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'acak'), 'random');
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'random'), 'daftarAcak');
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'daftarAcak'), 'pintar');
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'pintar'), 'acakUlang');
+  assert.equal(L.berikutnyaDalam(L.MODE_ACAK, 'acakUlang'), 'mati');
+  assert.equal(L.berikutnyaDalam(L.MODE_ULANG, 'urut'), 'satu');
+  assert.equal(L.berikutnyaDalam(L.MODE_ULANG, 'satu'), 'semua');
+  assert.equal(L.berikutnyaDalam(L.MODE_ULANG, 'semua'), 'antrean');
+  assert.equal(L.berikutnyaDalam(L.MODE_ULANG, 'antrean'), 'urut');
+});
+
+uji('pilih lagu berikutnya: urut, ulang, dan antrean', () => {
+  const d = ['a', 'b', 'c'];
+  const p = (o) => MD.pilihBerikut({ daftar: d, ...o });
+  assert.deepEqual(p({ idAktif: 'a' }), { id: 'b', dariAntrean: false });
+  assert.equal(p({ idAktif: 'c' }), null, 'urut berhenti di akhir');
+  assert.equal(p({ idAktif: 'c', ulang: 'semua' }).id, 'a', 'ulang semua membungkus');
+  assert.equal(p({ idAktif: 'c', manual: true }).id, 'a', 'Berikutnya manual membungkus');
+  assert.equal(p({ idAktif: 'a', ulang: 'satu' }).id, 'a', 'ulang satu mengulang lagu');
+  assert.equal(p({ idAktif: 'a', ulang: 'satu', manual: true }).id, 'b', 'Berikutnya tetap pindah');
+  assert.deepEqual(p({ idAktif: 'a', ulang: 'antrean', antrean: ['c'] }), { id: 'c', dariAntrean: true });
+  assert.equal(p({ idAktif: 'a', ulang: 'antrean', antrean: [] }), null, 'antrean kosong: berhenti');
+  assert.equal(p({ idAktif: 'a', ulang: 'antrean', antrean: [], manual: true }).id, 'b');
+  assert.equal(MD.pilihBerikut({ daftar: [], idAktif: null }), null);
+});
+
+uji('acak sekali: semua lagu muncul sekali, lalu berhenti (ulang urut)', () => {
+  const d = ['a', 'b', 'c', 'd'];
+  let urutan = null, id = 'a';
+  const kunjungan = [id];
+  for (;;) {
+    const r = MD.pilihBerikut({ daftar: d, idAktif: id, acak: 'acak', urutan, rnd: () => 0.3 });
+    if (!r) break;
+    if (r.urutan) urutan = r.urutan;
+    id = r.id; kunjungan.push(id);
+    assert.ok(kunjungan.length <= 10, 'tidak boleh berputar tanpa henti');
+  }
+  assert.equal(kunjungan.length, 4);
+  assert.deepEqual([...kunjungan].sort(), [...d].sort());
+});
+
+uji('shuffle repeat: urutan sama diulang tanpa henti', () => {
+  const d = ['a', 'b', 'c'];
+  const awal = MD.pilihBerikut({ daftar: d, idAktif: 'a', acak: 'acakUlang', rnd: () => 0.9 });
+  const u = awal.urutan;
+  assert.equal(u[0], 'a', 'lagu yang sedang main ada di depan urutan');
+  const jejak = [];
+  let id = 'a';
+  for (let i = 0; i < 7; i++) {
+    const r = MD.pilihBerikut({ daftar: d, idAktif: id, acak: 'acakUlang', urutan: u, rnd: () => 0.9 });
+    assert.ok(r, 'tidak boleh berhenti');
+    id = r.id; jejak.push(id);
+  }
+  assert.deepEqual(jejak, [u[1], u[2], u[0], u[1], u[2], u[0], u[1]]);
+});
+
+uji('daftar acak: urutan diacak ulang setiap putaran, tanpa henti', () => {
+  const d = ['a', 'b', 'c'];
+  let urutan = ['a', 'b', 'c'], id = 'c';
+  let r = MD.pilihBerikut({ daftar: d, idAktif: id, acak: 'daftarAcak', urutan, rnd: () => 0.1 });
+  assert.ok(r && r.urutan, 'putaran baru membawa urutan baru');
+  assert.notEqual(r.urutan, urutan);
+  assert.equal(r.urutan.length, 3);
+});
+
+uji('random play dan smart shuffle: tanpa henti, hindari lagu yang sama bila bisa', () => {
+  const d = ['a', 'b', 'c', 'd'];
+  for (let i = 0; i < 20; i++) {
+    const r = MD.pilihBerikut({ daftar: d, idAktif: 'a', acak: 'random', rnd: () => i / 20 });
+    assert.ok(r && r.id !== 'a');
+  }
+  const riwayat = ['b', 'c'];
+  for (let i = 0; i < 10; i++) {
+    const r = MD.pilihBerikut({ daftar: d, idAktif: 'a', acak: 'pintar', riwayat, rnd: () => i / 10 });
+    assert.ok(['d'].includes(r.id), `smart shuffle harus hindari yang baru diputar: ${r.id}`);
+  }
+  const satu = MD.pilihBerikut({ daftar: ['x'], idAktif: 'x', acak: 'pintar', riwayat: ['x'] });
+  assert.equal(satu.id, 'x', 'daftar satu lagu tetap bisa berjalan');
+});
+
+uji('urutkanAcak mempertahankan semua elemen dan tidak mengubah masukan', () => {
+  const asal = ['a', 'b', 'c', 'd', 'e'];
+  const hasil = MD.urutkanAcak(asal, () => 0.42);
+  assert.deepEqual([...hasil].sort(), [...asal].sort());
+  assert.deepEqual(asal, ['a', 'b', 'c', 'd', 'e']);
 });
 
 uji('format waktu m:ss dan h:mm:ss', () => {

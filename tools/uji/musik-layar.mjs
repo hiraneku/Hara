@@ -108,7 +108,7 @@ oke('seek bar waveform dan bar garis tampil', !!q('[data-mus-gel] canvas') && !!
 q('[data-mus=\"pengaturan\"]').click();
 await tunggu();
 oke('tombol pengaturan membuka Pengaturan Musik', R.cur === 'musik-set' && q('.mus-set-h')?.textContent === 'Pengaturan Musik');
-oke('pengaturan kosong: tanpa bagian', document.querySelectorAll('.mus-set-kartu').length === 0);
+oke('pengaturan: hanya sleep timer dan crossfade', document.querySelectorAll('.mus-set-kartu').length === 2 && !!q('[data-set="tidur-mulai"]') && !!q('[data-set="cf-aktif"]'));
 oke('navigasi bawah tetap disembunyikan di pengaturan', q('#bnav').classList.contains('hide'));
 go('musik');
 await tunggu();
@@ -343,6 +343,81 @@ await tunggu();
 oke('kembali dari Ekspor ke Musik', R.cur === 'musik');
 w.HTMLElement.prototype.click = klikAsli;
 oke('kontrol ekspor tidak memicu unduhan (tidak bentrok dengan ekspor Catatan)', unduhan === 0, `unduhan: ${unduhan}`);
+
+/* ── 10. mode pemutaran, antrean, sleep timer, crossfade ── */
+const SET = await import(`${AKAR}/docs/musik/set.js?v=${V}`);
+const T = await import(`${AKAR}/docs/musik/tidur.js?v=${V}`);
+SET.ubahSet({ acak: 'mati', ulang: 'urut' });
+go('musik', { segar: true });
+await tunggu();
+const labelAcak = () => q('[data-mus="acak"]')?.textContent.trim();
+const labelUlang = () => q('[data-mus="ulang"]')?.textContent.trim();
+oke('tombol acak awal: Shuffle: mati', labelAcak() === 'Shuffle: mati');
+oke('tombol ulang awal: Play in order', labelUlang() === 'Play in order');
+const jejakAcak = [];
+for (let i = 0; i < 6; i++) { q('[data-mus="acak"]').click(); await tunggu(20); jejakAcak.push(labelAcak()); }
+oke('acak berganti sesuai siklus lalu kembali ke mati',
+  JSON.stringify(jejakAcak) === JSON.stringify(['Shuffle', 'Random play', 'Randomized playlist', 'Smart shuffle', 'Shuffle repeat', 'Shuffle: mati']),
+  JSON.stringify(jejakAcak));
+const jejakUlang = [];
+for (let i = 0; i < 4; i++) { q('[data-mus="ulang"]').click(); await tunggu(20); jejakUlang.push(labelUlang()); }
+oke('ulang berganti: Repeat one, Repeat all, Queue (0), Play in order',
+  JSON.stringify(jejakUlang) === JSON.stringify(['Repeat one', 'Repeat all', 'Queue (0)', 'Play in order']),
+  JSON.stringify(jejakUlang));
+q('[data-mus="ulang"]').click(); await tunggu(20);
+q('[data-mus="ulang"]').click(); await tunggu(20);
+q('[data-mus="ulang"]').click(); await tunggu(20);
+const idPertama = S.daftarLagu()[0]?.id;
+oke('tombol Antre ada untuk setiap lagu', !!idPertama && !!q(`[data-mus="antre"][data-id="${idPertama}"]`));
+q(`[data-mus="antre"][data-id="${idPertama}"]`).click(); await tunggu();
+oke('Antre menandai lagu (aria-pressed)', q(`[data-mus="antre"][data-id="${idPertama}"]`)?.getAttribute('aria-pressed') === 'true');
+oke('antrean masuk ke label Queue (1)', labelUlang() === 'Queue (1)', labelUlang());
+q(`[data-mus="antre"][data-id="${idPertama}"]`).click(); await tunggu();
+oke('Antre kedua kali mengeluarkan lagu', q(`[data-mus="antre"][data-id="${idPertama}"]`)?.getAttribute('aria-pressed') === 'false' && labelUlang() === 'Queue (0)');
+SET.ubahSet({ ulang: 'urut' });
+
+/* Pengaturan Musik: sleep timer dan crossfade */
+go('musik-set', { segar: true });
+await tunggu();
+oke('Pengaturan: bagian sleep timer ada', !!q('[data-set="tidur-mulai"]'));
+oke('Pengaturan: saklar crossfade ada', !!q('[data-set="cf-aktif"]'));
+q('[data-set="tidur-mode"][data-nilai="lagu"]').click(); await tunggu();
+oke('mode sleep "setelah lagu ini" tersimpan', SET.ambilSet().tidurMode === 'lagu');
+oke('mode lagu: tidak ada pilihan menit', !q('[data-set="tidur-menit"]'));
+q('[data-set="tidur-mode"][data-nilai="waktu"]').click(); await tunggu();
+q('[data-set="tidur-menit"][data-nilai="15"]').click(); await tunggu();
+oke('preset 15 menit tersimpan', SET.ambilSet().tidurMenit === 15);
+const kustom = q('[data-set-input="tidur-menit"]');
+kustom.value = '45'; kustom.dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
+oke('menit kustom 45 tersimpan', SET.ambilSet().tidurMenit === 45);
+q('[data-set="tidur-mulai"]').click(); await tunggu();
+oke('timer waktu aktif setelah Mulai', T.tidurInfo().aktif && T.tidurInfo().mode === 'waktu');
+oke('status menampilkan jam berhenti', (q('[data-set-status="tidur"]')?.textContent || '').includes('pukul'));
+oke('tombol Batalkan timer muncul', !!q('[data-set="tidur-batal"]'));
+q('[data-set="tidur-batal"]').click(); await tunggu();
+oke('Batalkan mematikan timer', !T.tidurInfo().aktif && !!q('[data-set="tidur-mulai"]'));
+
+q('[data-set="cf-aktif"]').click(); await tunggu();
+oke('crossfade bisa dinyalakan', SET.ambilSet().crossfade.aktif === true);
+const geser = q('[data-set-input="cf-detik"]');
+geser.value = '6'; geser.dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
+oke('durasi crossfade 6 detik tersimpan', SET.ambilSet().crossfade.detik === 6);
+q('[data-set="cf-aktif"]').click(); await tunggu();
+oke('crossfade bisa dimatikan', SET.ambilSet().crossfade.aktif === false);
+
+/* Logika sleep timer (tanpa audio) */
+T.mulaiTidur({ mode: 'daftar', panjang: 2 });
+oke('daftar: lagu pertama selesai tidak menghentikan', T.tidurSelesaiLagu() === false && T.tidurInfo().hitung === 1);
+oke('daftar: transisi dilarang saat lagu terakhir berikut', T.tidurMengizinkanTransisi() === false);
+oke('daftar: lagu kedua selesai menghentikan', T.tidurSelesaiLagu() === true && !T.tidurInfo().aktif);
+T.mulaiTidur({ mode: 'lagu' });
+oke('lagu ini: transisi dilarang', T.tidurMengizinkanTransisi() === false);
+oke('lagu ini: selesai menghentikan', T.tidurSelesaiLagu() === true && !T.tidurInfo().aktif);
+oke('daftar kosong tidak bisa dimulai', T.mulaiTidur({ mode: 'daftar', panjang: 0 }) === false && !T.tidurInfo().aktif);
+T.batalTidur();
+SET.ubahSet({ tidurMode: 'waktu', tidurMenit: 30, crossfade: { aktif: false, detik: 3 } });
+go('musik', { segar: true });
+await tunggu();
 
 console.log(`\nmusik-layar: ${total - gagal}/${total} lulus`);
 if (gagal) process.exit(1);

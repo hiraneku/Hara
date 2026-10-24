@@ -2,17 +2,16 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024183000';
-import * as M from './mesin.js?v=20261024183000';
-import * as A from './aksi.js?v=20261024183000';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024183000';
-import { pengaturanView } from './pengaturan.js?v=20261024183000';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024183000';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024183000';
-import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261024183000';
-import { segarkanKartuMusik } from './kartu.js?v=20261024183000';
-import { segarSampul } from './sampul-dom.js?v=20261024183000';
-import { ambilSet } from './set.js?v=20261024183000';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024190000';
+import * as M from './mesin.js?v=20261024190000';
+import * as A from './aksi.js?v=20261024190000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024190000';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261024190000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024190000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024190000';
+import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261024190000';
+import { segarkanKartuMusik } from './kartu.js?v=20261024190000';
+import { segarSampul } from './sampul-dom.js?v=20261024190000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
@@ -24,19 +23,13 @@ function jadwalSimpan() {
   simpanTimer = setTimeout(() => A.simpanPosisiSekarang(), 300);
 }
 
-/* Perilaku setelah lagu selesai, dari pengaturan Musik. */
-function setelahSelesai() {
-  const pilihan = ambilSet().setelahSelesai;
-  if (pilihan === 'berikutnya') A.lanjutOtomatis();
-  else if (pilihan === 'ulangi') { M.seek(0); M.putar(); }
-}
-
 function onMesin(jenis, k) {
   if (jenis === 'lagu') A.jalankanTundaan(k.id);
   if (jenis === 'status' && k.status === 'kosong') A.batalkanTundaan();
   if (jenis === 'atur') jadwalSimpan();
   if (jenis === 'status' && (k.status === 'jeda' || k.status === 'selesai')) A.simpanPosisiSekarang();
-  if (jenis === 'status' && k.status === 'selesai') setTimeout(setelahSelesai, 0);
+  if (jenis === 'status' && k.status === 'selesai') setTimeout(() => A.selesaiLagu(), 0);
+  if (jenis === 'waktu') A.periksaTransisi(k);
   if (jenis === 'waktu' && k.status === 'putar' && Date.now() - posisiTerakhirSimpan > 4000) {
     posisiTerakhirSimpan = Date.now();
     A.simpanPosisiSekarang();
@@ -67,6 +60,7 @@ export const musikModule = {
     pasangLayar();
     pasangDaftar();
     pasangEq();
+    pasangPengaturan();
     pasangEkspor();
     terapkanEqTersimpan();
     M.dengar(onMesin);

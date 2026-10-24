@@ -9,12 +9,12 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024183000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024190000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261024183000';
+} from './logika.js?v=20261024190000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -42,6 +42,15 @@ let pitch = 0;
 let loop = { ...LOOP_KOSONG };
 let token = 0;                   /* membatalkan muat yang sudah usang */
 let timer = null;
+/* Deck: satu lagu yang sedang/akan diputar, dengan node pemudarnya sendiri.
+   Deck aktif memegang status (judul, durasi, loop, dst.); deck keluar memudar
+   sebentar saat transisi crossfade. */
+let pudarAktif = null;           /* GainNode pemudar untuk deck aktif */
+let deckAktif = null;
+let berikut = null;              /* deck berikutnya yang sudah dimuat (crossfade) */
+let tokenBerikut = 0;
+let memudar = [];                /* deck keluar yang masih memudar */
+let tokenPudar = 0;              /* membatalkan pemudaran sleep timer */
 const cacheGelombang = new Map(); /* id → puncak, hanya di memori */
 
 export const didukung = () => !!(self.AudioContext || self.webkitAudioContext);
@@ -150,12 +159,47 @@ function pastikanCtx() {
 
 function lepasShifter() {
   hentikanElemenSistem();
+  batalkanBerikut();
+  lepasMemudar();
+  tokenPudar++;
+  if (deckAktif) deckAktif.aktif = false;
+  deckAktif = null;
   if (shifter) {
     try { shifter.disconnect(); } catch (e) { /* sudah terlepas */ }
     shifter = null;
   }
+  if (pudarAktif) {
+    try { pudarAktif.disconnect(); } catch (e) { /* abaikan */ }
+    pudarAktif = null;
+  }
   buffer = null;
   hentikanTimer();
+}
+
+/* Bangun deck dari buffer. Deck belum tersambung ke keluaran. Event dari deck yang
+   tidak aktif diabaikan, sehingga deck keluar tidak mengubah status lagu baru. */
+function buatDeck(c, buf, id, judul, atur) {
+  const d = {
+    aktif: false, id, judul, buf, durasi: buf.duration,
+    tempo: klampTempo(atur.tempo), pitch: klampPitch(atur.pitch),
+    loop: sahkanLoop(atur.loop, buf.duration), shifter: null, pudar: null,
+  };
+  d.shifter = new PitchShifter(c, buf, 2048, () => { if (d.aktif) selesaiAlami(); });
+  d.shifter.on('play', e => { if (d.aktif) onPlay(e); });
+  d.shifter.tempo = d.tempo;
+  d.shifter.pitchSemitones = d.pitch;
+  d.pudar = c.createGain();
+  d.pudar.connect(gain);
+  return d;
+}
+
+function lepasSatuMemudar(k) {
+  try { k.shifter.disconnect(); } catch (e) { /* abaikan */ }
+  try { k.pudar.disconnect(); } catch (e) { /* abaikan */ }
+  memudar = memudar.filter(x => x !== k);
+}
+function lepasMemudar() {
+  memudar.slice().forEach(lepasSatuMemudar);
 }
 
 function mulaiTimer() {
@@ -207,14 +251,15 @@ export async function muatLagu(id, berkas, atur, judul) {
   const c = ctx;
 
   buffer = buf;
-  durasi = buf.duration;
-  shifter = new PitchShifter(c, buffer, 2048, selesaiAlami);
-  shifter.on('play', onPlay);
-  tempo = klampTempo(atur.tempo);
-  pitch = klampPitch(atur.pitch);
-  loop = sahkanLoop(atur.loop, durasi);
-  shifter.tempo = tempo;
-  shifter.pitchSemitones = pitch;
+  const d = buatDeck(c, buf, id, judul, atur);
+  d.aktif = true;
+  deckAktif = d;
+  pudarAktif = d.pudar;
+  shifter = d.shifter;
+  durasi = d.durasi;
+  tempo = d.tempo;
+  pitch = d.pitch;
+  loop = d.loop;
   const p = klampPosisi(atur.posisi, durasi);
   if (p > 0 && durasi > 0) shifter.percentagePlayed = Math.min(p, durasi - 0.05) / durasi;
   status = 'jeda';
@@ -235,7 +280,12 @@ export async function putar() {
   /* Konteks bisa tertidur saat aplikasi di latar; bangunkan lagi. */
   if (c.state === 'suspended') await c.resume();
   if (!shifter) return false;              /* bisa lepas saat menunggu resume */
-  shifter.connect(gain);
+  tokenPudar++;                            /* batalkan pemudaran sleep timer yang tertunda */
+  if (pudarAktif) {
+    pudarAktif.gain.cancelScheduledValues(c.currentTime);
+    pudarAktif.gain.setValueAtTime(1, c.currentTime);
+  }
+  shifter.connect(pudarAktif);
   mulaiElemenSistem();
   status = 'putar';
   mulaiTimer();
@@ -247,6 +297,8 @@ export async function putar() {
 export function jeda() {
   if (!shifter || status !== 'putar') return;
   hentikanElemenSistem();
+  tokenPudar++;
+  lepasMemudar();
   try { shifter.disconnect(); } catch (e) { /* abaikan */ }
   status = 'jeda';
   hentikanTimer();
@@ -302,6 +354,102 @@ export function setLoopAktif(on) {
 export function resetLoop() {
   loop = { ...LOOP_KOSONG };
   kirim('atur');
+}
+
+/* Pudarkan volume lagu aktif selama `detik`, lalu jeda. Dipakai sleep timer.
+   Dibatalkan bila pengguna main, jeda, atau ganti lagu sebelum selesai. */
+export function pudarSementara(detik = 10) {
+  if (!shifter || status !== 'putar' || !pudarAktif || !ctx) return false;
+  const g = ++tokenPudar;
+  const t = ctx.currentTime;
+  pudarAktif.gain.cancelScheduledValues(t);
+  pudarAktif.gain.setValueAtTime(pudarAktif.gain.value, t);
+  pudarAktif.gain.linearRampToValueAtTime(0, t + detik);
+  setTimeout(() => {
+    if (g !== tokenPudar) return;
+    jeda();
+    if (pudarAktif && ctx) {
+      pudarAktif.gain.cancelScheduledValues(ctx.currentTime);
+      pudarAktif.gain.setValueAtTime(1, ctx.currentTime);
+    }
+  }, detik * 1000);
+  return true;
+}
+
+/* ── Crossfade: siapkan lagu berikutnya lebih dulu, lalu mulai transisi ── */
+
+/* Muat lagu berikutnya ke deck tersendiri (belum diputar). */
+export async function siapkanBerikut(id, berkas, atur, judul) {
+  const giliran = ++tokenBerikut;
+  const c = await pastikanCtx();
+  const data = await berkas.arrayBuffer();
+  const buf = await c.decodeAudioData(data);
+  if (giliran !== tokenBerikut || !ctx) return false;   /* sudah dibatalkan */
+  batalkanBerikut(true);
+  const d = buatDeck(c, buf, id, judul, atur);
+  const p = klampPosisi(atur.posisi, d.durasi);
+  if (p > 0 && d.durasi > 0) d.shifter.percentagePlayed = Math.min(p, d.durasi - 0.05) / d.durasi;
+  berikut = d;
+  return true;
+}
+
+export function idBerikut() {
+  return berikut ? berikut.id : null;
+}
+
+export function batalkanBerikut(tanpaNaikToken) {
+  if (!tanpaNaikToken) tokenBerikut++;
+  if (!berikut) return;
+  try { berikut.shifter.disconnect(); } catch (e) { /* belum tersambung */ }
+  try { berikut.pudar.disconnect(); } catch (e) { /* abaikan */ }
+  berikut = null;
+}
+
+/* Mulai transisi: lagu aktif memudar keluar, lagu berikutnya naik dalam `detik`.
+   Setelah itu lagu berikutnya menjadi lagu aktif. Mengembalikan false bila tidak ada
+   lagu berikutnya yang siap atau pemutar sedang tidak main. */
+export function mulaiPudarKeBerikut(detik) {
+  if (!berikut || !shifter || !deckAktif || !ctx || status !== 'putar') return false;
+  const c = ctx;
+  const t = c.currentTime;
+  const d = Math.max(0.5, Number(detik) || 0);
+  const b = berikut;
+  berikut = null;
+  tokenPudar++;
+
+  /* Keluar: pemudar lagu lama turun ke 0, lalu lepas. */
+  const keluar = { shifter, pudar: pudarAktif, deck: deckAktif };
+  deckAktif.aktif = false;
+  if (pudarAktif) {
+    pudarAktif.gain.cancelScheduledValues(t);
+    pudarAktif.gain.setValueAtTime(pudarAktif.gain.value, t);
+    pudarAktif.gain.linearRampToValueAtTime(0, t + d);
+  }
+  memudar.push(keluar);
+  setTimeout(() => lepasSatuMemudar(keluar), d * 1000 + 300);
+
+  /* Masuk: pemudar lagu baru naik dari 0 ke 1. */
+  b.pudar.gain.cancelScheduledValues(t);
+  b.pudar.gain.setValueAtTime(0, t);
+  b.pudar.gain.linearRampToValueAtTime(1, t + d);
+  b.shifter.connect(b.pudar);
+  b.aktif = true;
+
+  deckAktif = b;
+  pudarAktif = b.pudar;
+  shifter = b.shifter;
+  buffer = b.buf;
+  durasi = b.durasi;
+  idAktif = b.id;
+  judulAktif = b.judul;
+  tempo = b.tempo;
+  pitch = b.pitch;
+  loop = b.loop;
+  cacheGelombang.delete(b.id);
+  kirim('lagu');
+  aturMediaSession();
+  aturPosisiSistem();
+  return true;
 }
 
 /* Durasi tanpa mendekode seluruh berkas (hemat memori untuk impor). */

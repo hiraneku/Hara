@@ -120,22 +120,56 @@ export const ATUR_AWAL = Object.freeze({
   tempo: TEMPO_RESET, pitch: 0, loop: { ...LOOP_KOSONG }, posisi: 0,
 });
 
-/* Pengaturan layar Musik (menu Pengaturan Musik). Nilai tak dikenal kembali ke awal. */
-export const PILIHAN_SETELAH_SELESAI = ['berhenti', 'berikutnya', 'ulangi'];
+/* Mode pemutaran (tombol di pemutar). Urutan = urutan saat tombol diklik.
+   Acak: 'mati' adalah keadaan biasa (tanpa acak); sisanya siklus dari permintaan.
+   Ulang: 'urut' (play in order) adalah keadaan biasa. */
+export const MODE_ACAK = Object.freeze(['mati', 'acak', 'random', 'daftarAcak', 'pintar', 'acakUlang']);
+export const MODE_ULANG = Object.freeze(['urut', 'satu', 'semua', 'antrean']);
+export const TIDUR_MODE = Object.freeze(['waktu', 'lagu', 'daftar']);
+export const TIDUR_PRESET = Object.freeze([5, 15, 30, 60]);
+export const TIDUR_MENIT_MAKS = 480;
+export const CROSSFADE_MIN = 1;
+export const CROSSFADE_MAKS = 10;
+export const CROSSFADE_AWAL = 3;
+
+/* Berikutnya dalam siklus; nilai tak dikenal kembali ke awal siklus. */
+export function berikutnyaDalam(urutan, nilai) {
+  const i = urutan.indexOf(nilai);
+  return urutan[(i + 1) % urutan.length];
+}
+
+/* Pengaturan layar Musik dan mode pemutar. Nilai tak dikenal kembali ke awal. */
 export const SET_AWAL = Object.freeze({
-  setelahSelesai: 'berhenti',
   lanjutkanPosisi: true,
   tempoAwal: TEMPO_RESET,
+  acak: 'mati',
+  ulang: 'urut',
+  tidurMode: 'waktu',
+  tidurMenit: 30,
+  crossfade: Object.freeze({ aktif: false, detik: CROSSFADE_AWAL }),
 });
+
+const klampBulat = (x, min, maks, awal) => {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return awal;
+  return Math.round(Math.min(maks, Math.max(min, n)));
+};
 
 export function normalisasiSet(raw) {
   const r = raw && typeof raw === 'object' ? raw : {};
+  const cf = r.crossfade && typeof r.crossfade === 'object' ? r.crossfade : {};
   return {
-    setelahSelesai: PILIHAN_SETELAH_SELESAI.includes(r.setelahSelesai)
-      ? r.setelahSelesai : SET_AWAL.setelahSelesai,
     lanjutkanPosisi: typeof r.lanjutkanPosisi === 'boolean'
       ? r.lanjutkanPosisi : SET_AWAL.lanjutkanPosisi,
     tempoAwal: klampTempo(r.tempoAwal ?? SET_AWAL.tempoAwal),
+    acak: MODE_ACAK.includes(r.acak) ? r.acak : SET_AWAL.acak,
+    ulang: MODE_ULANG.includes(r.ulang) ? r.ulang : SET_AWAL.ulang,
+    tidurMode: TIDUR_MODE.includes(r.tidurMode) ? r.tidurMode : SET_AWAL.tidurMode,
+    tidurMenit: klampBulat(r.tidurMenit, 1, TIDUR_MENIT_MAKS, SET_AWAL.tidurMenit),
+    crossfade: {
+      aktif: typeof cf.aktif === 'boolean' ? cf.aktif : SET_AWAL.crossfade.aktif,
+      detik: klampBulat(cf.detik, CROSSFADE_MIN, CROSSFADE_MAKS, SET_AWAL.crossfade.detik),
+    },
   };
 }
 

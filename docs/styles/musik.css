@@ -462,3 +462,15 @@
 }
 .mus-eq-angka:focus { outline: none; border-color: var(--mus-aksen); }
 .mus-eq-baris input:disabled { opacity: .38; }
+
+/* ── Mode pemutaran (acak & ulang) dan tombol antre ── */
+.mus-mode { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.mus-mode .mus-chip { display: inline-flex; align-items: center; gap: 6px; }
+.mus-mode .mus-ico { width: 16px; height: 16px; }
+.mus-item-antre {
+  height: 38px; min-width: 38px; padding: 0 6px; border: 0; border-radius: 12px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--mus-faint); cursor: pointer;
+}
+.mus-item-antre .mus-ico { width: 18px; height: 18px; }
+.mus-item-antre.on { color: var(--mus-aksen); }

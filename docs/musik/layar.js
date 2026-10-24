@@ -3,17 +3,25 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024183000';
-import { esc } from '../core/dom.js?v=20261024183000';
-import { t as tr } from '../core/i18n.js?v=20261024183000';
-import { toast } from '../core/toast.js?v=20261024183000';
-import * as M from './mesin.js?v=20261024183000';
-import * as S from './simpan.js?v=20261024183000';
-import * as L from './logika.js?v=20261024183000';
-import * as A from './aksi.js?v=20261024183000';
-import { ikon } from './ikon.js?v=20261024183000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261024183000';
-import { segarSampul } from './sampul-dom.js?v=20261024183000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024190000';
+import { esc } from '../core/dom.js?v=20261024190000';
+import { t as tr } from '../core/i18n.js?v=20261024190000';
+import { toast } from '../core/toast.js?v=20261024190000';
+import * as M from './mesin.js?v=20261024190000';
+import * as S from './simpan.js?v=20261024190000';
+import * as L from './logika.js?v=20261024190000';
+import * as A from './aksi.js?v=20261024190000';
+import { ikon } from './ikon.js?v=20261024190000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261024190000';
+import { segarSampul } from './sampul-dom.js?v=20261024190000';
+import { ambilSet } from './set.js?v=20261024190000';
+
+/* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
+const LABEL_ACAK = {
+  mati: 'Shuffle: mati', acak: 'Shuffle', random: 'Random play',
+  daftarAcak: 'Randomized playlist', pintar: 'Smart shuffle', acakUlang: 'Shuffle repeat',
+};
+const LABEL_ULANG = { urut: 'Play in order', satu: 'Repeat one', semua: 'Repeat all', antrean: 'Queue' };
 
 const JUMLAH_BAR = 160;
 const WARNA_MAIN = '#A9CFA6';
@@ -116,6 +124,7 @@ function pemutarHtml(v) {
       <button type="button" class="mus-btn" data-mus="maju" aria-label="${tr('Maju 10 detik')}">${ikon('maju')}</button>
       <button type="button" class="mus-btn" data-mus="berikutnya" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
     </div>
+    ${modeHtml()}
     <div class="mus-loop" role="group" aria-label="${tr('Loop A-B')}">
       <button type="button" class="mus-chip" data-mus="loop-a">A <span data-mus-out="a">${pa ? L.formatWaktu(v.loop.a) : '–'}</span></button>
       <button type="button" class="mus-chip" data-mus="loop-b">B <span data-mus-out="b">${pb ? L.formatWaktu(v.loop.b) : '–'}</span></button>
@@ -124,6 +133,17 @@ function pemutarHtml(v) {
       <button type="button" class="mus-chip mus-chip-hantu" data-mus="loop-reset" data-mus-out="loopReset"${pa || pb ? '' : ' disabled'}>${tr('Hapus A–B')}</button>
     </div>
   </article>`;
+}
+
+/* Tombol mode: acak dan ulang. Setiap klik berpindah ke mode berikutnya dalam siklus. */
+function modeHtml() {
+  const set = ambilSet();
+  const antre = A.antreanLagu().length;
+  const labelUlang = set.ulang === 'antrean' ? `${tr(LABEL_ULANG.antrean)} (${antre})` : tr(LABEL_ULANG[set.ulang]);
+  return `<div class="mus-mode" role="group" aria-label="${tr('Mode pemutaran')}">
+      <button type="button" class="mus-chip${set.acak !== 'mati' ? ' on' : ''}" data-mus="acak" aria-pressed="${set.acak !== 'mati'}">${ikon('acak')}<span>${tr(LABEL_ACAK[set.acak])}</span></button>
+      <button type="button" class="mus-chip${set.ulang !== 'urut' ? ' on' : ''}" data-mus="ulang" aria-pressed="${set.ulang !== 'urut'}">${ikon('repeat')}<span>${labelUlang}</span></button>
+    </div>`;
 }
 
 function kontrolHtml(v) {
@@ -165,9 +185,11 @@ function kontrolHtml(v) {
 }
 
 function pustakaHtml(v) {
+  const antre = A.antreanLagu();
   const items = v.daftar.map(x => {
     const aktif = v.sel && x.id === v.sel.id;
     const sedang = aktif && v.status === 'putar';
+    const dalamAntre = antre.includes(x.id);
     return `<li class="mus-item${aktif ? ' aktif' : ''}">
       <button type="button" class="mus-item-buka" data-mus="pilih" data-id="${esc(x.id)}" aria-current="${aktif ? 'true' : 'false'}">
         <span class="mus-thumb-wrap"><span class="mus-thumb" data-sampul-id="${esc(x.id)}"></span>${sedang ? eqHtml : ''}</span>
@@ -175,6 +197,9 @@ function pustakaHtml(v) {
           <span class="mus-item-judul">${esc(x.nama)}</span>
           <span class="mus-item-sub">${L.formatWaktu(x.durasi)}${x.ukuran ? ` · ${ukuranTeks(x.ukuran)}` : ''}</span>
         </span>
+      </button>
+      <button type="button" class="mus-item-antre${dalamAntre ? ' on' : ''}" data-mus="antre" data-id="${esc(x.id)}" aria-pressed="${dalamAntre}" aria-label="${tr(dalamAntre ? 'Keluarkan dari antrean' : 'Tambahkan ke antrean')}">
+        ${ikon(dalamAntre ? 'check' : 'plus')}
       </button>
       <button type="button" class="mus-item-hapus" data-mus="hapus" data-id="${esc(x.id)}" aria-label="${tr('Hapus lagu')}">
         ${ikon('trash')}<span class="mus-hapus-teks">${tr('Ketuk lagi')}</span>
@@ -471,6 +496,24 @@ function onClick(e) {
       A.aturAntrean(null);
       A.mainkanLagu(b.dataset.id);
       return;
+    case 'acak': {
+      const set = ambilSet();
+      A.aturMode({ acak: L.berikutnyaDalam(L.MODE_ACAK, set.acak) });
+      render();
+      return;
+    }
+    case 'ulang': {
+      const set = ambilSet();
+      A.aturMode({ ulang: L.berikutnyaDalam(L.MODE_ULANG, set.ulang) });
+      render();
+      return;
+    }
+    case 'antre': {
+      const masuk = A.toggleAntrean(b.dataset.id);
+      toast(tr(masuk ? 'Ditambahkan ke antrean' : 'Dikeluarkan dari antrean'));
+      render();
+      return;
+    }
     case 'hapus':
       hapusDenganDuaKetuk(b);
       return;
