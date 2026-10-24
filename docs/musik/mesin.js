@@ -13,6 +13,7 @@ import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=2026102416300
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
+  EQ_FREKUENSI, EQ_AWAL, klampEq,
 } from './logika.js?v=20261024163000';
 
 const pendengar = new Set();
@@ -64,17 +65,46 @@ export function keadaan() {
 const VOLUME = 1.6;
 let elemenSistem = null;     /* <audio> tersembunyi: agar Android/Chrome menampilkan kontrol media */
 let kompres = null;
+/* Ekualiser: 5 filter peaking berantai, dibangun saat konteks audio dibuat. */
+let eqNodes = null;
+let eqKeadaan = { aktif: EQ_AWAL.aktif, gain: EQ_AWAL.gain.slice() };
+
+function terapkanEq() {
+  if (!eqNodes) return;
+  eqNodes.forEach((n, i) => { n.gain.value = eqKeadaan.aktif ? eqKeadaan.gain[i] : 0; });
+}
+
+/* Atur ekualiser: gain per pita dalam dB (-12..12). aktif=false = datar. */
+export function setEq({ aktif, gain }) {
+  eqKeadaan = {
+    aktif: aktif !== false,
+    gain: EQ_FREKUENSI.map((_, i) => klampEq(gain && gain[i])),
+  };
+  terapkanEq();
+  kirim('eq');
+}
 
 function bangunKeluaran(c) {
   gain = c.createGain();
   gain.gain.value = VOLUME;
+  eqNodes = EQ_FREKUENSI.map(f => {
+    const n = c.createBiquadFilter();
+    n.type = 'peaking';
+    n.frequency.value = f;
+    n.Q.value = 1;
+    n.gain.value = 0;
+    return n;
+  });
   kompres = c.createDynamicsCompressor();
   kompres.threshold.value = -2;
   kompres.knee.value = 0;
   kompres.ratio.value = 20;
   kompres.attack.value = 0.003;
   kompres.release.value = 0.15;
-  gain.connect(kompres);
+  gain.connect(eqNodes[0]);
+  for (let i = 0; i < eqNodes.length - 1; i++) eqNodes[i].connect(eqNodes[i + 1]);
+  eqNodes[eqNodes.length - 1].connect(kompres);
+  terapkanEq();
   /* Lewat MediaStream ke elemen <audio> supaya dianggap pemutaran media (layar kunci).
      Bila tidak didukung, keluar langsung ke speaker seperti sebelumnya. */
   if (c.createMediaStreamDestination && typeof Audio !== 'undefined') {

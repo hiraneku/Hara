@@ -173,4 +173,67 @@ uji('hue sampul stabil dan dalam 0..359', () => {
   }
 });
 
+uji('ekualiser: gain dijepit ±12 dB, bulat 1 dB, dan NaN jadi 0', () => {
+  assert.equal(L.klampEq(7.6), 8);
+  assert.equal(L.klampEq(-20), -12);
+  assert.equal(L.klampEq(NaN), 0);
+  assert.equal(L.klampEq(undefined), 0);
+});
+
+uji('ekualiser: normalisasi memotong/mengisi 5 pita dan menjaga aktif', () => {
+  assert.deepEqual(L.normalisasiEq({ gain: [1, 2, 99] }).gain, [1, 2, 12, 0, 0]);
+  assert.deepEqual(L.normalisasiEq({ gain: [1, 2, 3, 4, 5, 6, 7] }).gain, [1, 2, 3, 4, 5]);
+  assert.equal(L.normalisasiEq({ aktif: false, gain: [] }).aktif, false);
+  assert.equal(L.normalisasiEq(null).aktif, true);
+  assert.equal(L.normalisasiEq(null).gain.length, 5);
+});
+
+uji('ekualiser: preset punya 5 pita, pita datar sama dengan nol', () => {
+  for (const k of Object.keys(L.PRESET_EQ)) {
+    assert.equal(L.PRESET_EQ[k].length, L.EQ_FREKUENSI.length, k);
+    for (const v of L.PRESET_EQ[k]) assert.ok(v >= L.EQ_MIN && v <= L.EQ_MAX, k);
+  }
+  assert.ok(L.PRESET_EQ.datar.every(v => v === 0));
+});
+
+uji('ekualiser: label frekuensi 60 Hz dan 14 kHz', () => {
+  assert.equal(L.labelFrekuensi(60), '60 Hz');
+  assert.equal(L.labelFrekuensi(3600), '3.6 kHz');
+  assert.equal(L.labelFrekuensi(14000), '14 kHz');
+});
+
+uji('daftar putar: pindah item ke atas/bawah, tepi tidak berubah, tidak mengubah asal', () => {
+  const asal = ['a', 'b', 'c'];
+  assert.deepEqual(L.pindahItem(asal, 1, -1), ['b', 'a', 'c']);
+  assert.deepEqual(L.pindahItem(asal, 1, 1), ['a', 'c', 'b']);
+  assert.deepEqual(L.pindahItem(asal, 0, -1), ['a', 'b', 'c']);
+  assert.deepEqual(L.pindahItem(asal, 2, 1), ['a', 'b', 'c']);
+  assert.deepEqual(asal, ['a', 'b', 'c']);
+});
+
+uji('daftar putar: tambah tanpa duplikat', () => {
+  assert.deepEqual(L.tambahUnik(['a', 'b'], 'c'), ['a', 'b', 'c']);
+  assert.deepEqual(L.tambahUnik(['a', 'b'], 'a'), ['a', 'b']);
+});
+
+uji('daftar putar: nama dirapikan, kosong ditolak, maks 60 karakter', () => {
+  assert.equal(L.namaDaftarValid('  Pagi   hari \n '), 'Pagi hari');
+  assert.equal(L.namaDaftarValid('   '), null);
+  assert.equal(L.namaDaftarValid(null), null);
+  assert.equal(L.namaDaftarValid('x'.repeat(100)).length, 60);
+});
+
+uji('daftar putar: normalisasi membuang data rusak dan duplikat lagu', () => {
+  const hasil = L.normalisasiDaftarPutar([
+    { id: 'd1', nama: 'Satu', lagu: ['a', 'a', 'b', 7] },
+    { id: 'd2', nama: '   ', lagu: ['x'] },
+    null,
+    { id: 'd3', nama: 'Dua' },
+  ]);
+  assert.deepEqual(hasil.map(d => d.id), ['d1', 'd3']);
+  assert.deepEqual(hasil[0].lagu, ['a', 'b']);
+  assert.deepEqual(hasil[1].lagu, []);
+  assert.deepEqual(L.normalisasiDaftarPutar('bukan array'), []);
+});
+
 console.log(`musik-logika: ${lulus} uji lulus`);

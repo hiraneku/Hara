@@ -132,6 +132,8 @@ daftarkanGrupFitur(() => [
   ] },
   { judul: tr('Musik'), item: [
     { id: 'u-music', label: tr('Musik'), hint: tr('Pemutar musik lokal'), ikon: 'i-music', utama: true, jalan: () => go('musik') },
+    { id: 'm-daftar', label: tr('Daftar putar'), hint: tr('Susun lagu dalam daftar'), ikon: 'i-list', jalan: () => go('musik-daftar') },
+    { id: 'm-eq', label: tr('Ekualiser'), hint: tr('Atur nada rentang frekuensi'), ikon: 'i-filter', jalan: () => go('musik-eq') },
   ] },
   { judul: tr('Ganti Nama Massal'), item: [
     { id: 'u-renamer', label: tr('Ganti Nama Massal'), hint: tr('Ubah nama banyak berkas'), ikon: 'i-rename', utama: true, jalan: () => go('renamer') },

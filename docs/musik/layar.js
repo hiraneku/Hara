@@ -202,6 +202,8 @@ export function musikView() {
       <p class="mus-atas-teks">${v.daftar.length} ${tr('lagu di perangkat')}</p>
       <div class="mus-atas-aksi">
         <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr('Impor lagu')}">${ikon('impor')}</button>
+        <button type="button" class="mus-ikon-btn" data-mus="daftar" aria-label="${tr('Daftar putar')}">${ikon('list')}</button>
+        <button type="button" class="mus-ikon-btn" data-mus="eq" aria-label="${tr('Ekualiser')}">${ikon('eq')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="pengaturan" aria-label="${tr('Pengaturan Musik')}">${ikon('sliders')}</button>
       </div>
     </header>
@@ -438,6 +440,12 @@ function onClick(e) {
     case 'pengaturan':
       go('musik-set');
       return;
+    case 'daftar':
+      go('musik-daftar');
+      return;
+    case 'eq':
+      go('musik-eq');
+      return;
     case 'putar':
       putarSel();
       return;
@@ -454,6 +462,7 @@ function onClick(e) {
       seekDenganMuat(tampilan().posisi + 10);
       return;
     case 'pilih':
+      A.aturAntrean(null);
       A.mainkanLagu(b.dataset.id);
       return;
     case 'hapus':

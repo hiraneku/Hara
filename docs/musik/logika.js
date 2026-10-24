@@ -194,3 +194,68 @@ export function hueDariId(id) {
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h % 360;
 }
+
+/* ── Ekualiser (tahap 2): 5 pita, ±12 dB, langkah 1 dB ── */
+export const EQ_FREKUENSI = Object.freeze([60, 230, 910, 3600, 14000]);
+export const EQ_MIN = -12;
+export const EQ_MAX = 12;
+export const PRESET_EQ = Object.freeze({
+  datar: Object.freeze([0, 0, 0, 0, 0]),
+  bass: Object.freeze([6, 4, 1, 0, 0]),
+  vokal: Object.freeze([-2, 0, 3, 3, 1]),
+  terang: Object.freeze([0, 0, 0, 3, 5]),
+});
+
+export function klampEq(x) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return 0;
+  const b = Math.round(Math.min(EQ_MAX, Math.max(EQ_MIN, n)));
+  return b === 0 ? 0 : b;
+}
+
+export const EQ_AWAL = Object.freeze({ aktif: true, gain: Object.freeze([0, 0, 0, 0, 0]) });
+
+export function normalisasiEq(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const g = Array.isArray(r.gain) ? r.gain : [];
+  return {
+    aktif: typeof r.aktif === 'boolean' ? r.aktif : EQ_AWAL.aktif,
+    gain: EQ_FREKUENSI.map((_, i) => klampEq(g[i] ?? 0)),
+  };
+}
+
+export const labelFrekuensi = hz => (hz >= 1000 ? `${hz / 1000} kHz` : `${hz} Hz`);
+
+/* ── Daftar putar (tahap 2) ── */
+
+/* Pindah satu item ke atas (-1) atau ke bawah (+1). Tidak berubah bila di tepi. */
+export function pindahItem(daftar, i, arah) {
+  const j = i + arah;
+  const b = daftar.slice();
+  if (i < 0 || i >= b.length || j < 0 || j >= b.length) return b;
+  [b[i], b[j]] = [b[j], b[i]];
+  return b;
+}
+
+/* Tambah id tanpa duplikat, di akhir. */
+export function tambahUnik(daftar, id) {
+  return daftar.includes(id) ? daftar.slice() : [...daftar, id];
+}
+
+/* Nama daftar: rapikan spasi, batasi panjang. null bila kosong. */
+export function namaDaftarValid(s) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  return t || null;
+}
+
+/* Bersihkan data daftar putar dari penyimpanan. */
+export function normalisasiDaftarPutar(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(x => x && typeof x.id === 'string' && namaDaftarValid(x.nama))
+    .map(x => ({
+      id: x.id,
+      nama: namaDaftarValid(x.nama),
+      lagu: Array.isArray(x.lagu) ? x.lagu.filter(v => typeof v === 'string').reduce(tambahUnik, []) : [],
+    }));
+}

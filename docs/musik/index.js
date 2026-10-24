@@ -7,6 +7,8 @@ import * as M from './mesin.js?v=20261024163000';
 import * as A from './aksi.js?v=20261024163000';
 import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024163000';
 import { pengaturanView } from './pengaturan.js?v=20261024163000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024163000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024163000';
 import { segarkanKartuMusik } from './kartu.js?v=20261024163000';
 import { segarSampul } from './sampul-dom.js?v=20261024163000';
 import { ambilSet } from './set.js?v=20261024163000';
@@ -57,10 +59,13 @@ export const musikModule = {
 
   init() {
     registerViews(
-      { musik: musikView, 'musik-set': pengaturanView },
-      { musik: 'Musik', 'musik-set': 'Pengaturan Musik' },
+      { musik: musikView, 'musik-set': pengaturanView, 'musik-daftar': daftarView, 'musik-eq': eqView },
+      { musik: 'Musik', 'musik-set': 'Pengaturan Musik', 'musik-daftar': 'Daftar Putar', 'musik-eq': 'Ekualiser' },
     );
     pasangLayar();
+    pasangDaftar();
+    pasangEq();
+    terapkanEqTersimpan();
     M.dengar(onMesin);
     onAfterRender(() => segarSampul(document));
     M.pasangAksiSistem({

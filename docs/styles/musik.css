@@ -400,3 +400,36 @@
 
 /* ── Pengaturan kosong ── */
 .mus-set-kosong { margin: 28px 4px 0; font-size: 14px; color: var(--mus-redup); }
+
+/* ── Daftar putar & Ekualiser (tahap 2) ── */
+.mus-daftar-baru { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; }
+.mus-teks {
+  flex: 1; min-width: 0; height: 42px; border-radius: 12px; padding: 0 12px;
+  border: 1px solid var(--mus-garis); background: rgba(0, 0, 0, .25);
+  color: var(--mus-teks); font: inherit; font-size: 15px;
+}
+.mus-teks:focus { outline: none; border-color: var(--mus-aksen); box-shadow: 0 0 0 3px rgba(169, 207, 166, .18); }
+.mus-daftar-baru .mus-tombol { flex: none; }
+.mus-aksi-baris { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 12px; }
+.mus-aksi-baris .mus-set-bahaya-kecil { width: auto; height: 40px; padding: 0 14px; }
+.mus-item-statis { cursor: default; }
+.mus-ikon-kecil { width: 34px; height: 34px; flex: none; }
+.mus-ikon-kecil .mus-ico { width: 16px; height: 16px; }
+.mus-thumb-daftar { background: var(--mus-kartu-tebal); color: var(--mus-aksen); }
+.mus-thumb-daftar .mus-ico { width: 20px; height: 20px; }
+.mus-chev { width: 16px; height: 16px; color: var(--mus-faint); flex: none; }
+.mus-baris-saklar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 0; font-size: 15px; font-weight: 600;
+}
+.mus-preset.mus-preset-eq { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 0; padding: 6px 0 12px; }
+.mus-eq-baris { display: grid; grid-template-columns: 64px 1fr 64px; gap: 10px; align-items: center; padding: 6px 0; }
+.mus-eq-label { font-size: 13px; color: var(--mus-redup); font-variant-numeric: tabular-nums; }
+.mus-eq-geser { width: 100%; accent-color: var(--mus-aksen); }
+.mus-eq-angka {
+  width: 64px; height: 36px; border-radius: 10px; padding: 0 6px; text-align: center;
+  border: 1px solid var(--mus-garis); background: rgba(0, 0, 0, .25); color: var(--mus-teks);
+  font: 600 14px var(--mono); font-variant-numeric: tabular-nums;
+}
+.mus-eq-angka:focus { outline: none; border-color: var(--mus-aksen); }
+.mus-eq-baris input:disabled { opacity: .38; }

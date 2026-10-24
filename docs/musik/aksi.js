@@ -8,6 +8,15 @@ import * as M from './mesin.js?v=20261024163000';
 import * as S from './simpan.js?v=20261024163000';
 import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024163000';
 import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024163000';
+import * as D from './daftar.js?v=20261024163000';
+
+/* Antrean putar: null = urutan pustaka; array id = urutan daftar putar yang sedang diputar. */
+let antrean = null;
+export function aturAntrean(ids) { antrean = Array.isArray(ids) ? ids.slice() : null; }
+function urutanPutar() {
+  if (!antrean) return S.daftarLagu();
+  return antrean.map(id => S.laguById(id)).filter(Boolean);
+}
 
 /* Antrean aksi yang datang saat lagu masih dimuat (mis. geser tempo atau putar
    ketika decode belum selesai). Dijalankan saat lagu dengan id itu siap. */
@@ -89,7 +98,7 @@ export async function togglePutarUtama() {
 /* Pindah lagu (manual, berputar di akhir daftar). Arah -1 dengan posisi lewat
    3 detik hanya mengulang lagu ini. */
 export async function gantiLagu(arah) {
-  const daftar = S.daftarLagu();
+  const daftar = urutanPutar();
   if (daftar.length === 0) return;
   const k = M.keadaan();
   if (arah < 0 && k.posisi > 3 && k.id) { M.seek(0); return; }
@@ -101,7 +110,7 @@ export async function gantiLagu(arah) {
 
 /* Lanjut otomatis setelah lagu selesai: berhenti di lagu terakhir. */
 export async function lanjutOtomatis() {
-  const daftar = S.daftarLagu();
+  const daftar = urutanPutar();
   const i = daftar.findIndex(x => x.id === M.keadaan().id);
   if (i < 0 || i >= daftar.length - 1) return false;
   await mainkanLagu(daftar[i + 1].id);
@@ -135,8 +144,20 @@ export async function imporBerkas(files) {
   return masuk;
 }
 
+/* Putar daftar putar mulai dari indeks tertentu. */
+export async function mainkanDaftar(idDaftar, indeks = 0) {
+  const d = D.daftarById(idDaftar);
+  if (!d) return;
+  const ids = d.lagu.filter(id => S.laguById(id));
+  if (ids.length === 0) { toast(tr('Daftar putar ini masih kosong')); return; }
+  aturAntrean(ids);
+  await mainkanLagu(ids[Math.min(Math.max(0, indeks), ids.length - 1)]);
+}
+
 export async function hapusLagu(id) {
   if (M.keadaan().id === id) M.lepas();
+  if (antrean) antrean = antrean.filter(x => x !== id);
+  D.lepasLaguDariSemua(id);
   try {
     await S.hapusLagu(id);
     toast(tr('Lagu dihapus'));
@@ -147,9 +168,10 @@ export async function hapusLagu(id) {
 
 export async function hapusSemuaLagu() {
   M.lepas();
+  aturAntrean(null);
   let gagal = 0;
   for (const x of S.daftarLagu()) {
-    try { await S.hapusLagu(x.id); } catch (e) { gagal++; }
+    try { await S.hapusLagu(x.id); D.lepasLaguDariSemua(x.id); } catch (e) { gagal++; }
   }
   toast(gagal ? tr('Sebagian lagu gagal dihapus') : tr('Semua lagu dihapus'));
 }

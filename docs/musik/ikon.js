@@ -22,6 +22,10 @@ const JALUR = {
   minus: '<path d="M5 12h14"/>',
   sampul: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="12" cy="12" r="3.2"/>',
   cek: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.4 2.4 4.6-4.8"/>',
+  list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
+  eq: '<path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="15" r="2.2" fill="currentColor"/><circle cx="12" cy="8" r="2.2" fill="currentColor"/><circle cx="18" cy="12" r="2.2" fill="currentColor"/>',
+  pindahAtas: '<path d="m6 14 6-6 6 6"/>',
+  pindahBawah: '<path d="m6 10 6 6 6-6"/>',
 };
 
 export function ikon(nama, kelas = '') {
