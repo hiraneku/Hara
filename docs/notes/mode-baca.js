@@ -10,10 +10,10 @@
    hanya bisa diubah oleh aplikasi itu sendiri (sinkron lewat welcomeV
    di core/store.js). Penghapusan oleh pengguna tetap dibolehkan. */
 
-import { state } from '../core/store.js?v=20261024235959';
-import { cur } from '../core/router.js?v=20261024235959';
-import { docEl } from './editor/caret.js?v=20261024235959';
-import { t as tr } from '../core/i18n.js?v=20261024235959';
+import { state } from '../core/store.js?v=20261025001200';
+import { cur } from '../core/router.js?v=20261025001200';
+import { docEl } from './editor/caret.js?v=20261025001200';
+import { t as tr } from '../core/i18n.js?v=20261025001200';
 
 const KUNCI = 'hara.v1.baca';
 let _baca = false;
@@ -81,22 +81,22 @@ export function sinkronModeBaca() {
   }
 
   /* Sinkronkan tombol cari mengambang kanan-bawah di Mode Baca & blok modern */
-  import('./baca-plus.js?v=20261024235959')
+  import('./baca-plus.js?v=20261025001200')
     .then(m => {
       if (!baca && m.cariTerbuka && m.cariTerbuka()) m.tutupCari();
       if (m.sinkronTombolCariMengambang) m.sinkronTombolCariMengambang();
     })
     .catch(() => {});
-  import('./editor/blok-modern.js?v=20261024235959')
+  import('./editor/blok-modern.js?v=20261025001200')
     .then(m => m.sinkronBacaBlokModern && m.sinkronBacaBlokModern())
     .catch(() => {});
-  import('./navigasi-fokus.js?v=20261024235959')
+  import('./navigasi-fokus.js?v=20261025001200')
     .then(m => {
       if (m.perbaruiGarisProgresBaca) m.perbaruiGarisProgresBaca();
       if (m.terapkanFokusDOM) m.terapkanFokusDOM();
     })
     .catch(() => {});
-  import('./lipat-bagian.js?v=20261024235959')
+  import('./lipat-bagian.js?v=20261025001200')
     .then(m => { if (m.terapkanLipatan) m.terapkanLipatan(); })
     .catch(() => {});
 }

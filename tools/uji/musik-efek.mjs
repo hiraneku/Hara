@@ -34,7 +34,7 @@ uji('batas dan langkah nilai (klampParam)', () => {
   const putar = D.efekById('spasial').lanjutan[0];
   assert.equal(D.klampParam(putar, 0.123), 0.1);
   assert.equal(D.klampParam(putar, 9), 1);
-  assert.equal(D.klampParam(wet, NaN), 25);
+  assert.equal(D.klampParam(wet, NaN), 35);
   const ruang = D.efekById('konvolusi').utama.find(p => p.id === 'ruang');
   assert.equal(D.klampParam(ruang, 'gua'), 'gua');
   assert.equal(D.klampParam(ruang, 'xxx'), 'aula');

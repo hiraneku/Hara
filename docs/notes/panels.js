@@ -12,12 +12,12 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20261024235959';
-import { cur } from '../core/router.js?v=20261024235959';
-import { touch } from './note-model.js?v=20261024235959';
-import { terlihat } from './kunci.js?v=20261024235959';
-import { t as tr } from '../core/i18n.js?v=20261024235959';
-import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261024235959';
+import { state, save } from '../core/store.js?v=20261025001200';
+import { cur } from '../core/router.js?v=20261025001200';
+import { touch } from './note-model.js?v=20261025001200';
+import { terlihat } from './kunci.js?v=20261025001200';
+import { t as tr } from '../core/i18n.js?v=20261025001200';
+import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261025001200';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

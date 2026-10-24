@@ -16,6 +16,20 @@ Web Audio sungguhan). BELUM diuji dengan telinga di perangkat (Android, iOS, spe
   Selisih sekitar 5 dB antar ruangan, karena highpass 60 Hz memotong bass lebih banyak di ruangan kecil.
 - Reverb: wet 100% sekitar -8 dB energi; default (wet 25%) sekitar -21 dB. Tingkat kekerasan belum dinilai dengan telinga.
 
+## Perbaikan kedua (Reverb dan Convolution terdengar terlalu pelan)
+- Uji realtime (AudioContext sungguhan, pukulan berulang): ekor Reverb default hanya sekitar -32 dB
+  di bawah pukulan, Convolution aula default sekitar -35 dB. Echo default sekitar -24 dB.
+- Reverb sekarang memakai topologi Freeverb: 8 comb per kanal dan 4 allpass seri per kanal, masukan mono.
+  Riak ekor turun dari 9,5 dB ke 8,0 dB (diukur dengan impuls). Biaya CPU naik; belum diukur di perangkat.
+- Kalibrasi: gain wet Reverb x2 (+6 dB), target energi IR Convolution x4 (+6 dB).
+- Wet default: Reverb 25% -> 35%, Convolution 30% -> 40%.
+- Hasil setelah kalibrasi (rasio ekor di celah 0,2-0,45 s terhadap pukulan): Reverb default sekitar -20 dB,
+  Reverb wet 100% sekitar -11 dB, Convolution aula default sekitar -26 dB, Convolution wet 100% sekitar -19 dB.
+- Angka ini dari Chromium headless. Belum didengar. Target level (rasio -20 s.d. -26 dB) adalah pilihan,
+  bukan hasil uji dengan telinga.
+- Catatan: uji sebelumnya dengan OfflineAudioContext tidak menangkap perubahan parameter saat audio berjalan.
+  Uji realtime di `/tmp/chr/live2.mjs` tidak disimpan di repo.
+
 ## Yang sudah ada
 - Kategori: Spatial & Ambience (satu kategori, tujuh efek).
 - Efek: Reverb, Echo, Delay, Stereo Widening, 3D / Spatial Audio, Early Reflections, Convolution Reverb.
@@ -29,7 +43,7 @@ Web Audio sungguhan). BELUM diuji dengan telinga di perangkat (Android, iOS, spe
 ## Keputusan desain
 - 3D / Spatial: pan posisi sederhana, bukan HRTF.
 - Convolution Reverb: IR bawaan (aula, ruangan kecil, gua) dari Voxengo. Lisensi di `ir/LICENSE-voxengo.txt`.
-- Reverb: algoritmik (comb feedback dan allpass), bukan IR.
+- Reverb: algoritmik (8 comb dan 4 allpass per kanal, gaya Freeverb), bukan IR.
 - Echo: mesin yang sama dengan Delay, dengan pemetaan parameter yang lebih sederhana.
 - Stereo Widening dan 3D sama-sama mengubah lebar stereo, tetapi dibuat terpisah.
 - Early Reflections dibuat terpisah dari Reverb (tap delay, bukan feedback).

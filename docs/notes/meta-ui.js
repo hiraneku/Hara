@@ -2,8 +2,8 @@
    Keduanya didefinisikan di sini karena dipakai dua layar: editor dan
    "Properties" (lihat views/props.js). */
 
-import { html } from './html-util.js?v=20261024235959';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024235959';
+import { html } from './html-util.js?v=20261025001200';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261025001200';
 
 /* Contoh nilai properti (saran visual) — diterjemahkan terpisah dari
    kamus global karena maknanya tunggal (mis. jenis "Catatan" = Note,

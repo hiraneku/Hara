@@ -5,7 +5,7 @@
    Catatan: hanya untuk pemutaran. Ekspor tidak memakai modul ini.
    Belum diuji di perangkat: butuh AudioContext sungguhan. */
 
-import { EFEK, IR_RUANG } from './efek-data.js?v=20261024235959';
+import { EFEK, IR_RUANG } from './efek-data.js?v=20261025001200';
 
 const RAMP = 0.05; // detik, untuk perubahan parameter halus
 /* Web Audio menyatakan Q lowpass/highpass dalam dB, bukan angka linear.
@@ -79,7 +79,12 @@ function buatAllpass(c, reg, detik, g) {
 }
 
 /* REVERB: algoritmik (empat comb feedback + dua allpass), wet dan lebar stereo. */
-const COMB_MS = [29.7, 37.1, 41.1, 43.7];
+// Topologi Freeverb (penalaan 44,1 kHz): 8 comb paralel per kanal, 4 allpass seri per kanal.
+// Kanan diberi selisih 23 sampel agar stereo tidak identik.
+const COMB_SAMPEL = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
+const AP_SAMPEL = [556, 441, 341, 225];
+const SELISIH_KANAN = 23;
+const SR_ACUAN = 44100;
 
 function bangunReverb(c, { reg }) {
   const masuk = reg(c.createGain());
@@ -87,29 +92,43 @@ function bangunReverb(c, { reg }) {
   const kering = reg(c.createGain()); kering.gain.value = 1;
   masuk.connect(kering); kering.connect(keluar);
 
+  // Masukan dijadikan mono dulu (seperti Freeverb), stereo dibentuk oleh selisih waktu.
+  const mono = reg(c.createGain());
+  mono.channelCount = 1; mono.channelCountMode = 'explicit'; mono.channelInterpretation = 'speakers';
+  masuk.connect(mono);
+
   const pre = reg(c.createDelay(1));
   const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.Q.value = Q_BUTTER;
-  masuk.connect(pre); pre.connect(hp);
+  mono.connect(pre); pre.connect(hp);
 
-  const jumlahKiri = reg(c.createGain()); jumlahKiri.gain.value = 0.25;
-  const jumlahKanan = reg(c.createGain()); jumlahKanan.gain.value = 0.25;
-  const combs = COMB_MS.map((ms, i) => {
-    const inG = reg(c.createGain());
-    const d = reg(c.createDelay(0.2));
-    const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = Q_BUTTER;
-    const fb = reg(c.createGain());
-    hp.connect(inG); inG.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d);
-    lp.connect(i % 2 === 0 ? jumlahKiri : jumlahKanan);
-    return { d, lp, fb, ms };
-  });
+  // Jumlah per kanal. Gain 1/8 agar jumlah 8 comb tidak membuat level melonjak.
+  const jumlahKiri = reg(c.createGain()); jumlahKiri.gain.value = 1 / 8;
+  const jumlahKanan = reg(c.createGain()); jumlahKanan.gain.value = 1 / 8;
+  const combs = [];
+  for (let k = 0; k < 2; k++) {
+    for (const sampel of COMB_SAMPEL) {
+      const inG = reg(c.createGain());
+      const d = reg(c.createDelay(0.2));
+      const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = Q_BUTTER;
+      const fb = reg(c.createGain());
+      hp.connect(inG); inG.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d);
+      lp.connect(k === 0 ? jumlahKiri : jumlahKanan);
+      combs.push({ d, lp, fb, sampel: sampel + (k ? SELISIH_KANAN : 0) });
+    }
+  }
 
-  const apKiri = buatAllpass(c, reg, 0.0050, 0.5);
-  const apKanan = buatAllpass(c, reg, 0.0043, 0.5);
-  jumlahKiri.connect(apKiri.in);
-  jumlahKanan.connect(apKanan.in);
+  const apKiri = AP_SAMPEL.map((s) => buatAllpass(c, reg, s / SR_ACUAN, 0.5));
+  const apKanan = AP_SAMPEL.map((s) => buatAllpass(c, reg, (s + SELISIH_KANAN) / SR_ACUAN, 0.5));
+  for (let i = 0; i < apKiri.length - 1; i++) {
+    apKiri[i].out.connect(apKiri[i + 1].in);
+    apKanan[i].out.connect(apKanan[i + 1].in);
+  }
+  jumlahKiri.connect(apKiri[0].in);
+  jumlahKanan.connect(apKanan[0].in);
 
   const mg = reg(c.createChannelMerger(2));
-  apKiri.out.connect(mg, 0, 0); apKanan.out.connect(mg, 0, 1);
+  apKiri[apKiri.length - 1].out.connect(mg, 0, 0);
+  apKanan[apKanan.length - 1].out.connect(mg, 0, 1);
   const lebar = buatLebar(c, reg);
   mg.connect(lebar.in);
   const wet = reg(c.createGain());
@@ -125,12 +144,12 @@ function bangunReverb(c, { reg }) {
       atur(pre.delayTime, p.predelay / 1000, c);
       atur(hp.frequency, Math.max(10, p.cutLow), c);
       for (const cb of combs) {
-        const dt = (cb.ms / 1000) * skala;
+        const dt = (cb.sampel / SR_ACUAN) * skala;
         atur(cb.d.delayTime, dt, c);
         atur(cb.fb.gain, Math.pow(10, (-3 * dt) / T), c);
         atur(cb.lp.frequency, potong, c);
       }
-      atur(wet.gain, (p.wet / 100) * 0.6, c);
+      atur(wet.gain, (p.wet / 100) * 1.2, c);
       lebar.atur(p.lebar / 100, 0);
     },
   };
@@ -289,7 +308,7 @@ function bangunPantulan(c, { reg }) {
    Normalisasi dilakukan sendiri, bukan normalize bawaan browser (hasilnya berbeda antar browser):
    energi total tiap IR diatur ke IR_ENERGI_TARGET, sehingga semua ruangan terdengar setara
    (sekitar -8 dB pada wet 100%, dekat dengan Reverb algoritmik). */
-const IR_ENERGI_TARGET = 0.15;
+const IR_ENERGI_TARGET = 0.6;
 
 function muatIr(c, id) {
   let peta = IR_CACHE.get(c);

@@ -1,38 +1,38 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261024235959';
-import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261024235959';
-import { toast } from './core/toast.js?v=20261024235959';
-import { mulaiPembaruan } from './core/pembaruan.js?v=20261024235959';
-import { mulaiBeranda } from './home/beranda.js?v=20261024235959';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261024235959';
-import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261024235959';
-import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261024235959';
-import { buatTinjauan } from './notes/pintar-aksi.js?v=20261024235959';
-import { bukaStatistik } from './notes/statistik-ui.js?v=20261024235959';
-import { notesModule } from './notes/index.js?v=20261024235959';
-import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261024235959';
-import { musikModule } from './musik/index.js?v=20261024235959';
-import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261024235959';
+import { load, state } from './core/store.js?v=20261025001200';
+import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261025001200';
+import { toast } from './core/toast.js?v=20261025001200';
+import { mulaiPembaruan } from './core/pembaruan.js?v=20261025001200';
+import { mulaiBeranda } from './home/beranda.js?v=20261025001200';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261025001200';
+import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261025001200';
+import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261025001200';
+import { buatTinjauan } from './notes/pintar-aksi.js?v=20261025001200';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261025001200';
+import { notesModule } from './notes/index.js?v=20261025001200';
+import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261025001200';
+import { musikModule } from './musik/index.js?v=20261025001200';
+import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261025001200';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
   bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih,
   jadikanBarisTenggatTugas, bukaTabelProperti, sumberTugasTerbuka,
   bukaTangkapCepat, bukaPanelRuangCatatan, bukaPanelVersiCatatan,
-} from './notes/fitur-lanjutan-ui.js?v=20261024235959';
+} from './notes/fitur-lanjutan-ui.js?v=20261025001200';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261024235959';
-import { bagikanCatatan } from './notes/share.js?v=20261024235959';
-import { bukaJurnalHari } from './notes/harian.js?v=20261024235959';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261024235959';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261024235959';
-import { simpanTemplatNote } from './notes/templat.js?v=20261024235959';
-import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261024235959';
-import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261024235959';
-import { bukaCariGanti } from './notes/cari-ganti.js?v=20261024235959';
-import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261024235959';
-import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261024235959';
-import { itemPintar } from './notes/pintar-aksi.js?v=20261024235959';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261024235959';
+  from './notes/model.js?v=20261025001200';
+import { bagikanCatatan } from './notes/share.js?v=20261025001200';
+import { bukaJurnalHari } from './notes/harian.js?v=20261025001200';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261025001200';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261025001200';
+import { simpanTemplatNote } from './notes/templat.js?v=20261025001200';
+import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261025001200';
+import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261025001200';
+import { bukaCariGanti } from './notes/cari-ganti.js?v=20261025001200';
+import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261025001200';
+import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261025001200';
+import { itemPintar } from './notes/pintar-aksi.js?v=20261025001200';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261025001200';
 
 const MODULES = [notesModule, renamerModule, musikModule];
 

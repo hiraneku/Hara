@@ -18,7 +18,7 @@ export const EFEK = Object.freeze([
   {
     id: 'reverb', nama: 'Reverb', ringkas: 'Gema ruangan, aula, atau tempat luas.',
     utama: [
-      P('wet', 'Wet', 0, 100, 1, 25, '%'),
+      P('wet', 'Wet', 0, 100, 1, 35, '%'),
       P('lebar', 'Lebar stereo', 0, 100, 1, 100, '%'),
       P('damping', 'Damping frek. tinggi', 0, 100, 1, 50, '%'),
       P('ukuran', 'Ukuran ruangan', 0, 100, 1, 50, '%'),
@@ -78,7 +78,7 @@ export const EFEK = Object.freeze([
   {
     id: 'konvolusi', nama: 'Convolution Reverb', ringkas: 'Meniru gema ruangan nyata dari rekaman.',
     utama: [
-      P('wet', 'Wet', 0, 100, 1, 30, '%'),
+      P('wet', 'Wet', 0, 100, 1, 40, '%'),
       PILIH('ruang', 'Ruangan', IR_RUANG.map(r => r.id), 'aula'),
       P('predelay', 'Pre-delay', 0, 500, 1, 0, 'ms'),
       P('lebar', 'Lebar stereo', 0, 100, 1, 100, '%'),
