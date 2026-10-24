@@ -8,12 +8,13 @@
    Semua angka diturunkan dari blocks saat panel dibuka — tidak ada
    nilai yang disimpan ganda, jadi tidak mungkin basi setelah disunting. */
 
-import { state } from '../core/store.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { t as tr, LOKALE } from '../core/i18n.js?v=20261023231757';
-import { openPop } from './menus/pop.js?v=20261023231757';
-import { plainText } from './note-model.js?v=20261023231757';
-import { tagUntukTampil } from './tags.js?v=20261023231757';
+import { state } from '../core/store.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { t as tr, LOKALE } from '../core/i18n.js?v=20261023235452';
+import { openPop } from './menus/pop.js?v=20261023235452';
+import { sheet, shAksi } from './sheet.js?v=20261023235452';
+import { plainText } from './note-model.js?v=20261023235452';
+import { tagUntukTampil } from './tags.js?v=20261023235452';
 
 export function statistikCatatan(note) {
   const blocks = Array.isArray(note?.blocks) ? note.blocks : [];
@@ -72,29 +73,40 @@ export function bukaInfoCatatan(jangkar) {
   if (!n) return;
 
   const s = statistikCatatan(n);
-  const item = (label, nilai) =>
-    `<div class="info-item"><span class="info-k">${label}</span><b class="info-v">${nilai}</b></div>`;
+  const item = (ikon, label, nilai) =>
+    `<div class="info-item">
+      <span class="info-ico" aria-hidden="true"><svg class="ico"><use href="#${ikon}"/></svg></span>
+      <span class="info-b"><b class="info-v">${nilai}</b><span class="info-k">${label}</span></span>
+    </div>`;
 
-  openPop(`<div class="info-sheet">
-    <div class="pop-h">${tr('Info catatan')}</div>
-    <p class="pop-note">${esc((n.title || '').trim() || tr('Tanpa judul'))}</p>
+  const isi = `<div class="if-hero">
+      <span class="if-hero-ico" aria-hidden="true"><svg class="ico"><use href="#i-clock"/></svg></span>
+      <span class="if-hero-t">
+        <b>${s.menit ? `${angka(s.menit)} ${tr('menit')}` : '—'}</b>
+        <i>${tr('Waktu baca')}</i>
+      </span>
+      <span class="if-hero-kata"><b>${angka(s.kata)}</b><i>${tr('Kata')}</i></span>
+    </div>
     <div class="info-grid">
-      ${item(tr('Kata'), angka(s.kata))}
-      ${item(tr('Huruf'), angka(s.huruf))}
-      ${item(tr('Blok'), angka(s.blok))}
-      ${item(tr('To-do selesai'), `${angka(s.selesai)}/${angka(s.todo)}`)}
-      ${item(tr('Gambar'), angka(s.gambar))}
-      ${item(tr('Lampiran'), angka(s.lampiran))}
-      ${item(tr('Tautan'), angka(s.tautan))}
-      ${item(tr('Tag'), angka(s.tag))}
+      ${item('i-txt', tr('Kata'), angka(s.kata))}
+      ${item('i-font', tr('Huruf'), angka(s.huruf))}
+      ${item('i-list', tr('Blok'), angka(s.blok))}
+      ${item('i-check2', tr('To-do selesai'), `${angka(s.selesai)}/${angka(s.todo)}`)}
+      ${item('i-img', tr('Gambar'), angka(s.gambar))}
+      ${item('i-clip', tr('Lampiran'), angka(s.lampiran))}
+      ${item('i-link', tr('Tautan'), angka(s.tautan))}
+      ${item('i-tag', tr('Tag'), angka(s.tag))}
     </div>
     <div class="info-meta">
-      <div><span>${tr('Waktu baca')}</span><b>${s.menit ? `${angka(s.menit)} ${tr('menit')}` : '—'}</b></div>
       <div><span>${tr('Dibuat')}</span><b>${formatTanggal(s.createdAt)}</b></div>
       <div><span>${tr('Terakhir diubah')}</span><b>${formatTanggal(s.updatedAt)}</b></div>
-    </div>
-    <div class="cg-aksi">
-      <button type="button" class="btn btn-sec" data-pop-close>${tr('Tutup')}</button>
-    </div>
-  </div>`);
+    </div>`;
+
+  openPop(sheet({
+    ikon: 'i-info',
+    judul: tr('Info catatan'),
+    catatan: esc((n.title || '').trim() || tr('Tanpa judul')),
+    isi,
+    kaki: shAksi({ batal: tr('Tutup'), tutup: true }),
+  }));
 }

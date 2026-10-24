@@ -11,11 +11,11 @@
    catatan lahir — bukan updatedAt, supaya hasilnya tidak berpindah
    setiap kali catatan lama disunting. */
 
-import { state } from '../core/store.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { terlihat } from './kunci.js?v=20261023231757';
-import { excerptOf } from './note-model.js?v=20261023231757';
+import { state } from '../core/store.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { terlihat } from './kunci.js?v=20261023235452';
+import { excerptOf } from './note-model.js?v=20261023235452';
 
 const MAKS = 6;
 
@@ -48,25 +48,30 @@ export function renderKilasBalikHtml(daftar = state.notes, sekarang = new Date()
     const cuplik = esc(excerptOf(n, 64));
     return `<button type="button" class="kb-row" data-open="${esc(n.id)}"
       title="${tr('Buka catatan dari {tahun}', { tahun })}">
-      <span class="kb-tahun">${tahun}</span>
+      <span class="kb-rail"><i class="kb-dot" aria-hidden="true"></i><span class="kb-year">${tahun}</span></span>
       <span class="kb-teks">
         <span class="kb-judul">${judul}</span>
         ${cuplik ? `<span class="kb-cuplik">${cuplik}</span>` : ''}
       </span>
-      <svg class="ico kb-chev"><use href="#i-chev"/></svg>
+      <svg class="ico kb-go" aria-hidden="true"><use href="#i-chev"/></svg>
     </button>`;
   }).join('');
 
-  return `<div class="kb-card" id="kilas-balik">
-    <button type="button" class="kb-head" data-kb-toggle aria-expanded="true">
-      <svg class="ico"><use href="#i-cal"/></svg>
-      <span class="kb-t">${tr('Kilas balik')}</span>
+  return `<section class="kb-card" id="kilas-balik">
+    <div class="kb-top" data-kb-toggle>
+      <span class="kb-ico" aria-hidden="true"><svg class="ico"><use href="#i-history"/></svg></span>
+      <span class="kb-ttl">
+        <b>${tr('Kilas balik')}</b>
+        <i>${tr('Hari ini di tahun-tahun lalu')}</i>
+      </span>
       <span class="kb-n">${hasil.length}</span>
-      <svg class="ico kb-chev"><use href="#i-chev"/></svg>
-    </button>
-    <div class="kb-cuplik-judul">${tr('Hari ini di tahun-tahun lalu')}</div>
+      <button type="button" class="kb-fold" data-kb-toggle aria-expanded="true"
+        title="${tr('Lipat kartu')}" aria-label="${tr('Lipat kartu')}">
+        <svg class="ico" aria-hidden="true"><use href="#i-chev"/></svg>
+      </button>
+    </div>
     <div class="kb-isi">${baris}</div>
-  </div>`;
+  </section>`;
 }
 
 export function bindKilasBalik() {
@@ -76,6 +81,11 @@ export function bindKilasBalik() {
     const kartu = b.closest('.kb-card');
     if (!kartu) return;
     const lipat = kartu.classList.toggle('lipat');
-    b.setAttribute('aria-expanded', String(!lipat));
+    const tombol = kartu.querySelector('.kb-fold');
+    if (tombol) {
+      tombol.setAttribute('aria-expanded', String(!lipat));
+      tombol.title = lipat ? tr('Buka kartu') : tr('Lipat kartu');
+      tombol.setAttribute('aria-label', tombol.title);
+    }
   });
 }

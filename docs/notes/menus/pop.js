@@ -1,19 +1,19 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20261023231757';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20261023231757';
-import { insertInline } from './insert.js?v=20261023231757';
-import { focusKeep } from '../bar/render.js?v=20261023231757';
-import { applyLink } from './link.js?v=20261023231757';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20261023231757';
-import { setFont } from '../editor/font.js?v=20261023231757';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20261023231757';
-import { setSorotan } from '../editor/sorotan.js?v=20261023231757';
-import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20261023231757';
-import { setCallout } from '../editor/blocks.js?v=20261023231757';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20261023231757';
-import { getar } from '../bar/prefs.js?v=20261023231757';
-import { toast } from '../../core/toast.js?v=20261023231757';
-import { t as tr } from '../../core/i18n.js?v=20261023231757';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20261023235452';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20261023235452';
+import { insertInline } from './insert.js?v=20261023235452';
+import { focusKeep } from '../bar/render.js?v=20261023235452';
+import { applyLink } from './link.js?v=20261023235452';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20261023235452';
+import { setFont } from '../editor/font.js?v=20261023235452';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20261023235452';
+import { setSorotan } from '../editor/sorotan.js?v=20261023235452';
+import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20261023235452';
+import { setCallout } from '../editor/blocks.js?v=20261023235452';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20261023235452';
+import { getar } from '../bar/prefs.js?v=20261023235452';
+import { toast } from '../../core/toast.js?v=20261023235452';
+import { t as tr } from '../../core/i18n.js?v=20261023235452';
 
 export const pop = () => document.getElementById('pop');
 
@@ -37,6 +37,17 @@ export function setPopIsi(html) {
   if (!p) return;
   p.innerHTML = html;
   const h = p.firstElementChild;
+
+  /* Lembar bawah (.sh) memakai slot .sh-x sendiri di kanan judul, jadi
+     tombol tutup duduk DI DALAM lembar — bukan melayang di atasnya. */
+  if (h && h.classList && h.classList.contains('sh')) {
+    const slot = h.querySelector('.sh-x');
+    if (slot) slot.appendChild(buatTombolX());
+    const judul = h.querySelector('.pop-h');
+    if (judul) judul.classList.add('ber-x');
+    return;
+  }
+
   if (h && h.classList && h.classList.contains('pop-h')) {
     h.appendChild(buatTombolX());
     h.classList.add('ber-x');
@@ -74,8 +85,13 @@ export function openPop(html, anchor) {
 
   const hasAnchor = !!(anchor && typeof anchor.getBoundingClientRect === 'function');
   const isModalBox = !!p.querySelector('.rn-modal-box');
+  /* Lembar formulir (.sh) SELALU modal: menempel di bawah layar di HP
+     dan di tengah layar di jendela lebar. */
+  const isSheet = !!p.querySelector('.sh');
+  p.classList.toggle('is-sh', isSheet);
+  document.body.classList.toggle('sheet-open', isSheet);
 
-  if (!hasAnchor || isModalBox) {
+  if (!hasAnchor || isModalBox || isSheet) {
     p.classList.add('pop-modal');
     document.getElementById('scrim')?.classList.add('on');
     p.style.left = '';
@@ -126,7 +142,9 @@ export function bindPop() {
     const t = e.target;
     if (!t || !t.closest) return;
     if (p.classList.contains('pop-modal')) {
-      if (t.closest('.rn-modal-box')) return;
+      /* Ketukan di dalam isi modal tidak menutupnya — hanya latar gelap
+         di luarnya. .rn-modal-box = dialog lama, .sh = lembar bawah. */
+      if (t.closest('.rn-modal-box') || t.closest('.sh')) return;
       closeAll();
       return;
     }
@@ -231,7 +249,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20261023231757').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20261023235452').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -240,7 +258,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20261023231757').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20261023235452').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -250,7 +268,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20261023231757').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20261023235452').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
@@ -264,37 +282,37 @@ export function bindPop() {
     else if (t.dataset.blk === 'img') { closeAll(); pilihGambar(); return; }
     else if (t.dataset.blk === 'toggle') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261023231757').then(m => m.insertToggle());
+      import('../editor/blok-modern.js?v=20261023235452').then(m => m.insertToggle());
       return;
     }
     else if (t.dataset.blk === 'table') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261023231757').then(m => m.insertTable());
+      import('../editor/blok-modern.js?v=20261023235452').then(m => m.insertTable());
       return;
     }
     else if (t.dataset.blk === 'audio') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261023231757').then(m => m.bukaPerekamMemoSuara());
+      import('../editor/blok-modern.js?v=20261023235452').then(m => m.bukaPerekamMemoSuara());
       return;
     }
     else if (t.dataset.blk === 'sketch') {
       closeAll();
-      import('../editor/sketsa.js?v=20261023231757').then(m => m.bukaStudioSketsa());
+      import('../editor/sketsa.js?v=20261023235452').then(m => m.bukaStudioSketsa());
       return;
     }
     else if (t.dataset.blk === 'math') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261023231757').then(m => m.bukaDialogRumus());
+      import('../editor/blok-generasi-baru.js?v=20261023235452').then(m => m.bukaDialogRumus());
       return;
     }
     else if (t.dataset.blk === 'bookmark') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261023231757').then(m => m.bukaDialogBookmark());
+      import('../editor/blok-generasi-baru.js?v=20261023235452').then(m => m.bukaDialogBookmark());
       return;
     }
     else if (t.dataset.blk === 'file') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261023231757').then(m => m.pilihLampiranBerkas());
+      import('../editor/blok-generasi-baru.js?v=20261023235452').then(m => m.pilihLampiranBerkas());
       return;
     }
     else if (t.dataset.blk === 'hr') insertHr();
@@ -303,7 +321,7 @@ export function bindPop() {
          ke area dokumen supaya panel tag tetap muncul di tempat wajar */
       closeAll();
       const jangkar = document.querySelector('.ed-doc');
-      import('../tagwarna.js?v=20261023231757').then(m => m.panelTag(jangkar));
+      import('../tagwarna.js?v=20261023235452').then(m => m.panelTag(jangkar));
       return;
     }
     else if (t.dataset.blk)     setBlock(t.dataset.blk);
@@ -320,8 +338,10 @@ export function closeAll() {
   if (p) {
     p.classList.remove('on');
     p.classList.remove('pop-modal');
+    p.classList.remove('is-sh');
     p.style.transform = '';
   }
+  document.body.classList.remove('sheet-open');
   document.getElementById('sheet')?.classList.remove('on');
   document.getElementById('scrim')?.classList.remove('on');
 }

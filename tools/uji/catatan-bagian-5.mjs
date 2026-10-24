@@ -304,6 +304,32 @@ console.log('── Bagian 5 (#15–#19): Cari & Ganti, Saringan, Kilas Balik, L
   document.querySelector('.pop-x')?.click();
 }
 
+/* ════════ #20 Kerapian: satu lembar bersama, ikon sprite, tanpa emoji ════════ */
+{
+  await bukaCariGanti(document.getElementById('dots'), 'kucing');
+  const panel = document.getElementById('pop');
+  cek('#20 Panel Bagian 5 memakai lembar .sh dengan tombol tutup di dalam kepala',
+    panel.classList.contains('is-sh') &&
+    !!panel.querySelector('.sh > .sh-h > .sh-x > .pop-x') &&
+    !!panel.querySelector('.sh > .sh-b'));
+  /* Ketukan di dalam lembar (mis. kolom isian) tidak boleh menutupnya. */
+  const diDalam = panel.querySelector('#cg-cari');
+  diDalam.dispatchEvent(new dom.window.PointerEvent('pointerdown', { bubbles: true }));
+  cek('#20 Menyentuh isian di dalam lembar tidak menutup panel',
+    document.getElementById('pop').classList.contains('on'));
+
+  cek('#20 Ikon panel seluruhnya sprite SVG (tanpa teks emoji)',
+    panel.querySelectorAll('.sh .ico use').length >= 5 &&
+    !/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(panel.innerHTML));
+  document.querySelector('.pop-x')?.click();
+
+  const pemilikEmoji = ['cari-ganti', 'saringan', 'kilas-balik', 'info-catatan', 'lipat-bagian', 'sheet']
+    .filter(nama => /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u
+      .test(readFileSync(`docs/notes/${nama}.js`, 'utf8')));
+  cek('#20 Berkas modul Bagian 5 bebas emoji — ikon hanya lewat #i-…',
+    pemilikEmoji.length === 0);
+}
+
 console.log(`\nTotal: ${lulus + gagal} pengujian · Lulus: ${lulus} · Gagal: ${gagal}`);
 if (gagal > 0) process.exit(1);
 process.exit(0);

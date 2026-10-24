@@ -5,20 +5,20 @@
  * #14 Bar Pindah Cepat Catatan Terakhir (Recent Notes 1-Jempol) + Peta Jaringan Sentuh Layar Penuh
  */
 
-import { state, save } from '../core/store.js?v=20261023231757';
-import { cur, go } from '../core/router.js?v=20261023231757';
-import { docEl, curBlock } from './editor/caret.js?v=20261023231757';
-import { updateCount } from './editor/cleanup.js?v=20261023231757';
-import { touch } from './note-model.js?v=20261023231757';
-import { openNote } from './model.js?v=20261023231757';
-import { terlihat } from './kunci.js?v=20261023231757';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261023231757';
-import { daftarRuang } from './ruang.js?v=20261023231757';
-import { openPop, closeAll } from './menus/pop.js?v=20261023231757';
-import { flush } from '../core/autosave.js?v=20261023231757';
-import { toast } from '../core/toast.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
+import { state, save } from '../core/store.js?v=20261023235452';
+import { cur, go } from '../core/router.js?v=20261023235452';
+import { docEl, curBlock } from './editor/caret.js?v=20261023235452';
+import { updateCount } from './editor/cleanup.js?v=20261023235452';
+import { touch } from './note-model.js?v=20261023235452';
+import { openNote } from './model.js?v=20261023235452';
+import { terlihat } from './kunci.js?v=20261023235452';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261023235452';
+import { daftarRuang } from './ruang.js?v=20261023235452';
+import { openPop, closeAll } from './menus/pop.js?v=20261023235452';
+import { flush } from '../core/autosave.js?v=20261023235452';
+import { toast } from '../core/toast.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
 
 const KUNCI_RECENT = 'hara.v1.recentNotes';
 const KUNCI_SCROLL = 'hara.v1.scrollPos';
@@ -80,7 +80,9 @@ export function teksProgresTargetKata(jumlahKata) {
   const target = Number(_fokus.targetKata) || 0;
   if (target <= 0) return '';
   const persen = Math.min(100, Math.round((jumlahKata / target) * 100));
-  return `<span class="dot">·</span><span class="target-pill${persen >= 100 ? ' done' : ''}">🎯 ${jumlahKata}/${target} (${persen}%)</span>`;
+  return `<span class="dot">·</span><span class="target-pill${persen >= 100 ? ' done' : ''}">` +
+    `<svg class="ico" aria-hidden="true"><use href="#i-target"/></svg>` +
+    `${jumlahKata}/${target} (${persen}%)</span>`;
 }
 
 export function bukaDialogFokusMenulis(jangkar) {
@@ -307,7 +309,7 @@ export function bukaGrafInteraktif() {
     <div class="sk-box">
       <div class="sk-top">
         <div class="sk-judul">${tr('Peta Jaringan Catatan')}</div>
-        <button type="button" class="btn btn-sec" id="gf-tutup">✕ ${tr('Tutup')}</button>
+        <button type="button" class="btn btn-sec" id="gf-tutup"><svg class="ico"><use href="#i-x"/></svg>${tr('Tutup')}</button>
       </div>
       <div class="gf-filter">
         <input type="search" class="in" id="gf-cari" placeholder="${esc(tr('Filter judul atau #tag…'))}">

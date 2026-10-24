@@ -4,15 +4,15 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261023231757';
-import { toast } from '../../core/toast.js?v=20261023231757';
-import { t as tr } from '../../core/i18n.js?v=20261023231757';
-import { ensureCaret, caretEnd } from './caret.js?v=20261023231757';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261023231757';
-import { refresh } from './cleanup.js?v=20261023231757';
-import { snap } from './history.js?v=20261023231757';
-import { pasangGambar } from './image.js?v=20261023231757';
-import { pastikanKolomAkhir } from './blocks.js?v=20261023231757';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261023235452';
+import { toast } from '../../core/toast.js?v=20261023235452';
+import { t as tr } from '../../core/i18n.js?v=20261023235452';
+import { ensureCaret, caretEnd } from './caret.js?v=20261023235452';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261023235452';
+import { refresh } from './cleanup.js?v=20261023235452';
+import { snap } from './history.js?v=20261023235452';
+import { pasangGambar } from './image.js?v=20261023235452';
+import { pastikanKolomAkhir } from './blocks.js?v=20261023235452';
 
 const LEBAR = 720;
 const TINGGI = 460;
@@ -257,12 +257,12 @@ export function bukaStudioSketsa(figEdit = null) {
       </div>
       <div class="sk-bar">
         <div class="sk-row">
-          <button type="button" class="sk-tool on" data-sk-alat="pena" title="${tr('Pena')}">✒ ${tr('Pena')}</button>
-          <button type="button" class="sk-tool" data-sk-alat="stabilo" title="${tr('Stabilo')}">🖍 ${tr('Stabilo')}</button>
-          <button type="button" class="sk-tool" data-sk-alat="garis" title="${tr('Garis')}">╱ ${tr('Garis')}</button>
-          <button type="button" class="sk-tool" data-sk-alat="panah" title="${tr('Panah')}">↗ ${tr('Panah')}</button>
-          <button type="button" class="sk-tool" data-sk-alat="kotak" title="${tr('Kotak')}">▭ ${tr('Kotak')}</button>
-          <button type="button" class="sk-tool" data-sk-alat="hapus" title="${tr('Hapus')}">⌫ ${tr('Hapus')}</button>
+          <button type="button" class="sk-tool on" data-sk-alat="pena" title="${tr('Pena')}"><svg class="ico"><use href="#i-pen"/></svg>${tr('Pena')}</button>
+          <button type="button" class="sk-tool" data-sk-alat="stabilo" title="${tr('Stabilo')}"><svg class="ico"><use href="#i-marker"/></svg>${tr('Stabilo')}</button>
+          <button type="button" class="sk-tool" data-sk-alat="garis" title="${tr('Garis')}"><svg class="ico"><use href="#i-minus"/></svg>${tr('Garis')}</button>
+          <button type="button" class="sk-tool" data-sk-alat="panah" title="${tr('Panah')}"><svg class="ico"><use href="#i-arrow-ne"/></svg>${tr('Panah')}</button>
+          <button type="button" class="sk-tool" data-sk-alat="kotak" title="${tr('Kotak')}"><svg class="ico"><use href="#i-square"/></svg>${tr('Kotak')}</button>
+          <button type="button" class="sk-tool" data-sk-alat="hapus" title="${tr('Hapus')}"><svg class="ico"><use href="#i-eraser"/></svg>${tr('Hapus')}</button>
         </div>
         <div class="sk-row">
           <div class="sk-swatches">
@@ -277,8 +277,8 @@ export function bukaStudioSketsa(figEdit = null) {
           <button type="button" class="sk-tool on" data-sk-pola="titik">${tr('Titik')}</button>
           <button type="button" class="sk-tool" data-sk-pola="garis">${tr('Garis buku')}</button>
           <span class="sk-spacer"></span>
-          <button type="button" class="sk-tool" id="sk-undo" aria-label="${tr('Urungkan')}">↶</button>
-          <button type="button" class="sk-tool" id="sk-redo" aria-label="${tr('Ulangi')}">↷</button>
+          <button type="button" class="sk-tool sk-ikon" id="sk-undo" aria-label="${tr('Urungkan')}" title="${tr('Urungkan')}"><svg class="ico"><use href="#i-undo"/></svg></button>
+          <button type="button" class="sk-tool sk-ikon" id="sk-redo" aria-label="${tr('Ulangi')}" title="${tr('Ulangi')}"><svg class="ico"><use href="#i-redo"/></svg></button>
           <button type="button" class="sk-tool" id="sk-bersih">${tr('Bersihkan')}</button>
         </div>
       </div>

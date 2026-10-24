@@ -1,34 +1,34 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261023231757';
-import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261023231757';
-import { toast } from './core/toast.js?v=20261023231757';
-import { mulaiPembaruan } from './core/pembaruan.js?v=20261023231757';
-import { mulaiBeranda } from './home/beranda.js?v=20261023231757';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261023231757';
-import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261023231757';
-import { bukaStatistik } from './notes/statistik-ui.js?v=20261023231757';
-import { notesModule } from './notes/index.js?v=20261023231757';
-import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261023231757';
-import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261023231757';
+import { load, state } from './core/store.js?v=20261023235452';
+import { go, onAfterRender, kembali, cur } from './core/router.js?v=20261023235452';
+import { toast } from './core/toast.js?v=20261023235452';
+import { mulaiPembaruan } from './core/pembaruan.js?v=20261023235452';
+import { mulaiBeranda } from './home/beranda.js?v=20261023235452';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261023235452';
+import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261023235452';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261023235452';
+import { notesModule } from './notes/index.js?v=20261023235452';
+import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261023235452';
+import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261023235452';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
   bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih,
   jadikanBarisTenggatTugas, bukaTabelProperti, sumberTugasTerbuka,
   bukaTangkapCepat, bukaPanelRuangCatatan, bukaPanelVersiCatatan,
-} from './notes/fitur-lanjutan-ui.js?v=20261023231757';
+} from './notes/fitur-lanjutan-ui.js?v=20261023235452';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261023231757';
-import { bagikanCatatan } from './notes/share.js?v=20261023231757';
-import { bukaJurnalHari } from './notes/harian.js?v=20261023231757';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261023231757';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261023231757';
-import { simpanTemplatNote } from './notes/templat.js?v=20261023231757';
-import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261023231757';
-import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261023231757';
-import { bukaCariGanti } from './notes/cari-ganti.js?v=20261023231757';
-import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261023231757';
-import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261023231757';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261023231757';
+  from './notes/model.js?v=20261023235452';
+import { bagikanCatatan } from './notes/share.js?v=20261023235452';
+import { bukaJurnalHari } from './notes/harian.js?v=20261023235452';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261023235452';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261023235452';
+import { simpanTemplatNote } from './notes/templat.js?v=20261023235452';
+import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261023235452';
+import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261023235452';
+import { bukaCariGanti } from './notes/cari-ganti.js?v=20261023235452';
+import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261023235452';
+import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261023235452';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261023235452';
 
 const MODULES = [notesModule, renamerModule];
 

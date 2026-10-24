@@ -12,18 +12,18 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20261023231757';
-import { touch } from './note-model.js?v=20261023231757';
-import { saveSoon } from './editor/cleanup.js?v=20261023231757';
-import { openPop, closeAll } from './menus/pop.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { toast } from '../core/toast.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261023231757';
-import { refresh } from './editor/cleanup.js?v=20261023231757';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261023231757';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261023231757';
-import { bukaStudioGambar } from './hamoji-gambar.js?v=20261023231757';
+import { state } from '../core/store.js?v=20261023235452';
+import { touch } from './note-model.js?v=20261023235452';
+import { saveSoon } from './editor/cleanup.js?v=20261023235452';
+import { openPop, closeAll } from './menus/pop.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { toast } from '../core/toast.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261023235452';
+import { refresh } from './editor/cleanup.js?v=20261023235452';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261023235452';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261023235452';
+import { bukaStudioGambar } from './hamoji-gambar.js?v=20261023235452';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
@@ -577,7 +577,7 @@ export function renderStickersHtml(stickers) {
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
           </button>
-          <button type="button" class="hamoji-stk-del" data-stk-act="del" aria-label="${tr('Hapus Stiker')}">✕</button>
+          <button type="button" class="hamoji-stk-del" data-stk-act="del" aria-label="${tr('Hapus Stiker')}"><svg class="ico"><use href="#i-x"/></svg></button>
           ${pakaiGambar ? '' : `
           <button type="button" class="hamoji-stk-color-btn" data-stk-act="color" title="${tr('Ganti Warna')}">
             <span class="hamoji-stk-color-dot" style="background:${esc(s.color || 'var(--text)')}"></span>
@@ -897,7 +897,7 @@ export function panelHamojiHtml() {
               ${isMilikUser ? `
                 <div class="hamoji-card-tools">
                   ${item.dataUrl ? `<button type="button" class="hamoji-card-mini" data-edit-custom="${esc(customId)}" title="${tr('Edit gambar')}" aria-label="${tr('Edit gambar')}">✎</button>` : ''}
-                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}">✕</button>
+                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}"><svg class="ico"><use href="#i-x"/></svg></button>
                 </div>
               ` : ''}
             </div>
@@ -1161,7 +1161,7 @@ export function bindHamoji() {
               ${isMilikUser ? `
                 <div class="hamoji-card-tools">
                   ${item.dataUrl ? `<button type="button" class="hamoji-card-mini" data-edit-custom="${esc(customId)}" title="${tr('Edit gambar')}" aria-label="${tr('Edit gambar')}">✎</button>` : ''}
-                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}">✕</button>
+                  <button type="button" class="hamoji-card-mini is-del" data-del-custom="${esc(customId)}" title="${tr('Hapus dari koleksi')}" aria-label="${tr('Hapus dari koleksi')}"><svg class="ico"><use href="#i-x"/></svg></button>
                 </div>
               ` : ''}
             </div>

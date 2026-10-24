@@ -7,19 +7,19 @@
  * #6 Blok Lampiran Berkas Offline (/file — simpan PDF/dokumen ke IndexedDB blobs + unduh/buka)
  */
 
-import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261023231757';
-import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261023231757';
-import { setBlock, setCallout, indent, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261023231757';
-import { insertInline } from '../menus/insert.js?v=20261023231757';
-import { openPop, closeAll } from '../menus/pop.js?v=20261023231757';
-import { refresh, saveNow } from './cleanup.js?v=20261023231757';
-import { snap } from './history.js?v=20261023231757';
-import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261023231757';
-import { state } from '../../core/store.js?v=20261023231757';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261023231757';
-import { toast } from '../../core/toast.js?v=20261023231757';
-import { esc } from '../../core/dom.js?v=20261023231757';
-import { t as tr } from '../../core/i18n.js?v=20261023231757';
+import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261023235452';
+import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261023235452';
+import { setBlock, setCallout, indent, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261023235452';
+import { insertInline } from '../menus/insert.js?v=20261023235452';
+import { openPop, closeAll } from '../menus/pop.js?v=20261023235452';
+import { refresh, saveNow } from './cleanup.js?v=20261023235452';
+import { snap } from './history.js?v=20261023235452';
+import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261023235452';
+import { state } from '../../core/store.js?v=20261023235452';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261023235452';
+import { toast } from '../../core/toast.js?v=20261023235452';
+import { esc } from '../../core/dom.js?v=20261023235452';
+import { t as tr } from '../../core/i18n.js?v=20261023235452';
 
 const SIMBOL_MATH = {
   '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
@@ -397,7 +397,7 @@ export function bukaMenuAksiBlok(blokTarget = null) {
       <div class="ba-label">${tr('Warna latar blok')}</div>
       <div class="ba-swatches">
         ${LATAR_BLOK.map(([kode, lbl, css]) =>
-          `<button type="button" class="ba-bg${bgAktif === kode ? ' on' : ''}" data-ba-bg="${kode}" title="${esc(tr(lbl))}" style="background:${css}">${kode ? '' : '∅'}</button>`
+          `<button type="button" class="ba-bg${bgAktif === kode ? ' on' : ''}" data-ba-bg="${kode}" title="${esc(tr(lbl))}" style="background:${css}">${kode ? '' : '<svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>'}</button>`
         ).join('')}
       </div>
       <div class="ba-actions">
@@ -464,18 +464,23 @@ export function sisipCapJamSekarang() {
 }
 
 export function renderQuickKeysHtml() {
+  const tombol = (aksi, ikon, label, isi = '') =>
+    `<button type="button" class="qk-btn" data-qk="${aksi}" title="${esc(label)}" aria-label="${esc(label)}">` +
+    (ikon ? `<svg class="ico" aria-hidden="true"><use href="#${ikon}"/></svg>` : '') +
+    (isi ? `<span class="qk-t">${isi}</span>` : '') + '</button>';
+
   return `<div class="qk-strip" id="qk-strip" role="toolbar" aria-label="${esc(tr('Pintas cepat keyboard'))}">
-    <button type="button" class="qk-btn" data-qk="out" title="${esc(tr('Kurangi indent'))}">⇤</button>
-    <button type="button" class="qk-btn" data-qk="in" title="${esc(tr('Tambah indent'))}">⇥</button>
-    <button type="button" class="qk-btn" data-qk="up" title="${esc(tr('Naikkan baris'))}">↑</button>
-    <button type="button" class="qk-btn" data-qk="down" title="${esc(tr('Turunkan baris'))}">↓</button>
-    <button type="button" class="qk-btn" data-qk="todo" title="${esc(tr('Jadikan To-do'))}">☑</button>
-    <button type="button" class="qk-btn" data-qk="wl" title="${esc(tr('Tautan catatan'))}">[[ ]]</button>
-    <button type="button" class="qk-btn" data-qk="tag" title="${esc(tr('Tagar'))}">#</button>
-    <button type="button" class="qk-btn" data-qk="jam" title="${esc(tr('Cap jam sekarang'))}">🕒</button>
-    <button type="button" class="qk-btn" data-qk="calc" title="${esc(tr('Hitung ekspresi'))}">=</button>
-    <button type="button" class="qk-btn" data-qk="teks" title="${esc(tr('Alat teks pintar'))}">Aa✨</button>
-    <button type="button" class="qk-btn" data-qk="blok" title="${esc(tr('Aksi blok'))}">⋮ ${esc(tr('Blok'))}</button>
+    ${tombol('out', 'i-outdent', tr('Kurangi indent'))}
+    ${tombol('in', 'i-indent', tr('Tambah indent'))}
+    ${tombol('up', 'i-up', tr('Naikkan baris'))}
+    ${tombol('down', 'i-down', tr('Turunkan baris'))}
+    ${tombol('todo', 'i-check2', tr('Jadikan To-do'))}
+    ${tombol('wl', '', tr('Tautan catatan'), '[[ ]]')}
+    ${tombol('tag', '', tr('Tagar'), '#')}
+    ${tombol('jam', 'i-clock', tr('Cap jam sekarang'))}
+    ${tombol('calc', '', tr('Hitung ekspresi'), '=')}
+    ${tombol('teks', 'i-sparkle', tr('Alat teks pintar'))}
+    ${tombol('blok', 'i-more', tr('Aksi blok'))}
   </div>`;
 }
 
@@ -576,10 +581,10 @@ export function bindBlokGenerasiBaru() {
       }
       else if (k === 'jam') sisipCapJamSekarang();
       else if (k === 'calc') {
-        import('../alat-cerdas.js?v=20261023231757').then(m => m.cobaHitungInlineSekarang(true));
+        import('../alat-cerdas.js?v=20261023235452').then(m => m.cobaHitungInlineSekarang(true));
       }
       else if (k === 'teks') {
-        import('../alat-cerdas.js?v=20261023231757').then(m => m.bukaAlatTeksPintar());
+        import('../alat-cerdas.js?v=20261023235452').then(m => m.bukaAlatTeksPintar());
       }
       else if (k === 'blok') bukaMenuAksiBlok();
     }

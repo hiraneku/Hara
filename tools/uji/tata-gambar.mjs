@@ -488,7 +488,7 @@ if (BAG === 'C') {
   const mb8 = d.getElementById('mode');
   const srcSblm = DOC().querySelector('.b-img img').getAttribute('src');
   klik(mb8);                       /* → mode baca */
-  await sleep(60);
+  await sleep(150);
   const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
   const ed8 = d.querySelector('.ed');
   const img8 = fig8 ? fig8.querySelector('img') : null;
@@ -501,7 +501,7 @@ if (BAG === 'C') {
      img8.style.display !== 'none',
      img8 ? (img8.getAttribute('src') || 'tanpa-src') : 'img hilang');
   klik(mb8);                       /* → kembali mode tulis */
-  await sleep(60);
+  await sleep(150);
   const ed8b = d.querySelector('.ed');
   const fig8b = DOC() ? DOC().querySelector('.b-img') : null;
   ok('C18 kembali ke mode tulis: kelas gambar utuh',

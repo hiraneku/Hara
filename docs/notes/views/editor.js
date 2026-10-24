@@ -1,14 +1,14 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261023231757';
-import { findNote } from '../model.js?v=20261023231757';
-import { esc } from '../../core/dom.js?v=20261023231757';
-import { blocksToDom } from '../note-model.js?v=20261023231757';
-import { barisProps } from '../meta-ui.js?v=20261023231757';
-import { t as tr } from '../../core/i18n.js?v=20261023231757';
-import { renderStickersHtml } from '../hamoji.js?v=20261023231757';
-import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261023231757';
-import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261023231757';
+import { state } from '../../core/store.js?v=20261023235452';
+import { findNote } from '../model.js?v=20261023235452';
+import { esc } from '../../core/dom.js?v=20261023235452';
+import { blocksToDom } from '../note-model.js?v=20261023235452';
+import { barisProps } from '../meta-ui.js?v=20261023235452';
+import { t as tr } from '../../core/i18n.js?v=20261023235452';
+import { renderStickersHtml } from '../hamoji.js?v=20261023235452';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261023235452';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261023235452';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -31,7 +31,7 @@ const n=findNote(state.openId)||state.notes[0];
     <button type="button" class="ea-b ea-ico et-cari" data-et="cari" aria-label="${tr('Cari di dalam catatan')}" title="${tr('Cari di dalam catatan (mode baca)')}"><svg class="ico"><use href="#i-search"/></svg></button>
     <button type="button" class="ea-b ea-ico" data-et="ganti" aria-label="${tr('Cari & ganti')}" title="${tr('Cari & ganti')}"><svg class="ico"><use href="#i-rename"/></svg></button>
     <button type="button" class="ea-b ea-ico" data-et="dafis" aria-label="${tr('Daftar isi catatan')}" title="${tr('Daftar isi — lompat ke heading')}"><svg class="ico"><use href="#i-list"/></svg></button>
-    <button type="button" class="ea-b ea-ico" data-et="fokus-tulis" aria-label="${tr('Mode fokus menulis & target kata')}" title="${tr('Mode fokus menulis & target kata')}">🎯</button>
+    <button type="button" class="ea-b ea-ico" data-et="fokus-tulis" aria-label="${tr('Mode fokus menulis & target kata')}" title="${tr('Mode fokus menulis & target kata')}"><svg class="ico"><use href="#i-target"/></svg></button>
     <button type="button" class="ea-b ea-ico" data-et="zen" aria-label="${tr('Mode fokus')}" aria-pressed="false" title="${tr('Mode fokus — sembunyikan semua kecuali catatan')}"><svg class="ico"><use href="#i-zen"/></svg></button>
   </div>
   ${renderQuickKeysHtml()}

@@ -11,14 +11,15 @@
    JSON. Privasi tetap dijaga: hitungan hanya membaca catatan yang
    terlihat (terlihat(n)) dan tidak pernah menyentuh catatan terkunci. */
 
-import { state } from '../core/store.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { toast } from '../core/toast.js?v=20261023231757';
-import { go, cur } from '../core/router.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { terlihat } from './kunci.js?v=20261023231757';
-import { pecahKueri, kueriKosong, catatanCocok } from './cari.js?v=20261023231757';
-import { openPop, closeAll } from './menus/pop.js?v=20261023231757';
+import { state } from '../core/store.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { toast } from '../core/toast.js?v=20261023235452';
+import { go, cur } from '../core/router.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { terlihat } from './kunci.js?v=20261023235452';
+import { pecahKueri, kueriKosong, catatanCocok } from './cari.js?v=20261023235452';
+import { openPop, closeAll } from './menus/pop.js?v=20261023235452';
+import { sheet, shField, shAksi } from './sheet.js?v=20261023235452';
 
 const KUNCI = 'hara.saringan.v1';
 const MAKS = 12;
@@ -126,67 +127,75 @@ export function renderSaringanBarHtml() {
   const daftar = daftarSaringan();
   if (!daftar.length) return '';
   const aktif = saringanAktifId();
+  const chip = x => {
+    const n = jumlahCocokSaringan(x.kueri);
+    const on = x.id === aktif;
+    return `<button type="button" class="sf-chip${on ? ' on' : ''}" data-sf="${esc(x.id)}"
+      aria-pressed="${on}" title="${esc(x.kueri)}">
+      <svg class="ico" aria-hidden="true"><use href="#${on ? 'i-check2' : 'i-filter'}"/></svg>
+      <span class="sf-nm">${esc(x.nama)}</span><b class="sf-ct">${n}</b></button>`;
+  };
   return `<div class="sf-bar" role="group" aria-label="${tr('Saringan tersimpan')}">
-    ${daftar.map(x => {
-      const n = jumlahCocokSaringan(x.kueri);
-      const on = x.id === aktif;
-      return `<button type="button" class="sf-chip${on ? ' on' : ''}" data-sf="${esc(x.id)}"
-        aria-pressed="${on}" title="${esc(x.kueri)}">
-        <svg class="ico"><use href="#i-search"/></svg>
-        <span>${esc(x.nama)}</span><b>${n}</b></button>`;
-    }).join('')}
-    ${aktif ? `<button type="button" class="sf-kelola sf-bersih" data-sf-bersih
-      title="${tr('Hapus filter saringan')}" aria-label="${tr('Hapus filter saringan')}">
-      <svg class="ico"><use href="#i-x"/></svg></button>` : ''}
-    <button type="button" class="sf-kelola" data-sf-kelola
-      title="${tr('Kelola saringan')}" aria-label="${tr('Kelola saringan')}">
-      <svg class="ico"><use href="#i-cog"/></svg></button>
+    <div class="sf-track">${daftar.map(chip).join('')}</div>
+    <div class="sf-aksi">
+      ${aktif ? `<button type="button" class="sf-kelola sf-bersih" data-sf-bersih
+        title="${tr('Hapus filter saringan')}" aria-label="${tr('Hapus filter saringan')}">
+        <svg class="ico"><use href="#i-x"/></svg></button>` : ''}
+      <button type="button" class="sf-kelola" data-sf-kelola
+        title="${tr('Kelola saringan')}" aria-label="${tr('Kelola saringan')}">
+        <svg class="ico"><use href="#i-cog"/></svg></button>
+    </div>
   </div>`;
 }
 
 export const renderSimpanSaringanHtml = () =>
   `<button type="button" class="sf-simpan" data-sf-baru>
-    <svg class="ico"><use href="#i-plus"/></svg>${tr('Simpan pencarian ini')}</button>`;
+    <span class="sf-simpan-i" aria-hidden="true"><svg class="ico"><use href="#i-plus"/></svg></span>
+    <span class="sf-simpan-t">${tr('Simpan pencarian ini')}</span>
+    <svg class="ico sf-simpan-go" aria-hidden="true"><use href="#i-chev"/></svg>
+  </button>`;
 
 /* ── panel simpan & kelola ── */
 export function bukaSimpanSaringan(kueri) {
   const q = String(kueri == null ? '' : kueri).trim();
   if (!q) { toast(tr('Ketik kata kunci dulu di kolom cari')); return; }
-  openPop(`<div class="sf-sheet">
-    <div class="pop-h">${tr('Simpan saringan')}</div>
-    <p class="pop-note">${tr('Saringan menyimpan kata kunci pencarian agar bisa dipakai lagi dengan satu ketukan.')}</p>
-    <label class="cg-f"><span>${tr('Nama saringan')}</span>
-      <input id="sf-nama" class="in" type="text" maxlength="40" autocomplete="off"
-        value="${esc(namaPendek(q))}" placeholder="${tr('Nama saringan')}"></label>
-    <div class="sf-cuplik">${esc(q)}</div>
-    <div class="cg-aksi">
-      <button type="button" class="btn btn-sec" data-pop-close>${tr('Batal')}</button>
-      <button type="button" class="btn btn-pri" id="sf-simpan">${tr('Simpan')}</button>
-    </div>
-  </div>`);
+  openPop(sheet({
+    ikon: 'i-bookmark',
+    judul: tr('Simpan saringan'),
+    catatan: esc(tr('Saringan menyimpan kata kunci pencarian agar bisa dipakai lagi dengan satu ketukan.')),
+    isi: shField({
+      id: 'sf-nama', ikon: 'i-filter', label: tr('Nama saringan'),
+      value: namaPendek(q), placeholder: tr('Nama saringan'), maxlength: 40,
+    }) + `<div class="sh-lab">${tr('Kata kunci')}</div>
+      <div class="sf-cuplik"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <span>${esc(q)}</span></div>`,
+    kaki: shAksi({ batal: tr('Batal'), tutup: true, utama: tr('Simpan'), utamaId: 'sf-simpan' }),
+  }));
 }
 
 export function bukaKelolaSaringan() {
   const daftar = daftarSaringan();
-  openPop(`<div class="sf-sheet">
-    <div class="pop-h">${tr('Kelola saringan')}</div>
-    ${daftar.length ? `<p class="pop-note">${tr('Ubah nama atau hapus saringan. Ketuk chip di layar Catatan untuk memakainya.')}</p>` : ''}
-    ${daftar.length ? daftar.map(x => `<div class="sf-manage" data-sf-baris="${esc(x.id)}">
-      <input class="in" type="text" maxlength="40" autocomplete="off"
+  const baris = daftar.map(x => `<div class="sf-manage" data-sf-baris="${esc(x.id)}">
+      <input class="sh-inp" type="text" maxlength="40" autocomplete="off"
         data-sf-nama-input="${esc(x.id)}" value="${esc(x.nama)}"
         aria-label="${tr('Nama saringan')}">
       <button type="button" class="sf-mini" data-sf-nama-simpan="${esc(x.id)}"
         title="${tr('Simpan nama')}" aria-label="${tr('Simpan nama')}">
         <svg class="ico"><use href="#i-check2"/></svg></button>
-      <button type="button" class="sf-mini danger" data-sf-hapus="${esc(x.id)}"
+      <button type="button" class="sf-mini bahaya" data-sf-hapus="${esc(x.id)}"
         title="${tr('Hapus saringan')}" aria-label="${tr('Hapus saringan')}">
         <svg class="ico"><use href="#i-trash"/></svg></button>
-      <div class="sf-manage-ket">${esc(x.kueri)} · ${jumlahCocokSaringan(x.kueri)} ${tr('catatan')}</div>
-    </div>`).join('') : `<p class="pop-note">${tr('Belum ada saringan tersimpan')}</p>`}
-    <div class="cg-aksi">
-      <button type="button" class="btn btn-sec" data-pop-close>${tr('Tutup')}</button>
-    </div>
-  </div>`);
+      <div class="sf-manage-ket"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <span>${esc(x.kueri)}</span><b>${jumlahCocokSaringan(x.kueri)}</b></div>
+    </div>`).join('');
+
+  openPop(sheet({
+    ikon: 'i-filter',
+    judul: tr('Kelola saringan'),
+    catatan: daftar.length ? esc(tr('Ubah nama atau hapus saringan. Ketuk chip di layar Catatan untuk memakainya.')) : '',
+    isi: daftar.length ? baris : `<p class="sh-kosong">${tr('Belum ada saringan tersimpan')}</p>`,
+    kaki: shAksi({ batal: tr('Tutup'), tutup: true }),
+  }));
 }
 
 /* Layar Catatan digambar ulang setelah saringan berubah. */
@@ -223,7 +232,7 @@ export function bindSaringan() {
 
     if (e.target.closest('#sf-simpan')) {
       const nama = document.getElementById('sf-nama')?.value || '';
-      const q = (document.querySelector('.sf-sheet .sf-cuplik')?.textContent || '').trim();
+      const q = (document.querySelector('.sh .sf-cuplik')?.textContent || '').trim();
       if (!q) { toast(tr('Ketik kata kunci dulu di kolom cari')); return; }
       const item = simpanSaringan(nama, q);
       if (item) toast(tr('Saringan disimpan'));

@@ -28,8 +28,8 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261023231757';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261023235452';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -278,14 +278,14 @@ export function blockToHtml(b) {
     const ket = escAttr(meta.desc || '');
     return `<div class="b-bmk" contenteditable="false" data-url="${url}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
       `<a class="bmk-main" href="${url}" target="_blank" rel="noopener noreferrer">` +
-      `<span class="bmk-ico">🔗</span>` +
+      `<span class="bmk-ico" aria-hidden="true"><svg class="ico"><use href="#i-link"/></svg></span>` +
       `<span class="bmk-info">` +
       `<span class="bmk-title">${jdl}</span>` +
       `${ket ? `<span class="bmk-desc">${ket}</span>` : ''}` +
       `<span class="bmk-host">${escAttr(host)}</span>` +
       `</span></a>` +
-      `<button type="button" class="bmk-act" data-bmk-edit title="${tr('Sunting')}">✎</button>` +
-      `<button type="button" class="bmk-act" data-bmk-del title="${tr('Hapus')}">✕</button>` +
+      `<button type="button" class="bmk-act" data-bmk-edit title="${tr('Sunting')}" aria-label="${tr('Sunting')}"><svg class="ico"><use href="#i-pen"/></svg></button>` +
+      `<button type="button" class="bmk-act" data-bmk-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `${pegangan()}</div>`;
   }
 
@@ -299,7 +299,7 @@ export function blockToHtml(b) {
       `<span class="fl-ext">${escAttr(ekst)}</span>` +
       `<div class="fl-info"><div class="fl-name">${nama}</div><div class="fl-size">${ukuranTerbaca(uk)}</div></div>` +
       `<button type="button" class="btn btn-sec fl-btn" data-file-dl>${tr('Unduh')}</button>` +
-      `<button type="button" class="bmk-act" data-file-del title="${tr('Hapus')}">✕</button>` +
+      `<button type="button" class="bmk-act" data-file-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `${pegangan()}</div>`;
   }
 
@@ -308,9 +308,9 @@ export function blockToHtml(b) {
     const sum = escAttr(meta.summary || '');
     return `<div class="b-toggle" contenteditable="false" data-open="${buka}"${bid}${ref}>` +
       `<div class="tgl-head">` +
-      `<button type="button" class="tgl-btn" data-tgl-btn aria-expanded="${buka === '1' ? 'true' : 'false'}" aria-label="Toggle">▸</button>` +
+      `<button type="button" class="tgl-btn" data-tgl-btn aria-expanded="${buka === '1' ? 'true' : 'false'}" aria-label="Toggle"><svg class="ico" aria-hidden="true"><use href="#i-chev"/></svg></button>` +
       `<input type="text" class="tgl-sum" value="${sum}" placeholder="${tr('Judul bagian lipat…')}">` +
-      `<button type="button" class="tgl-del" data-tgl-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}">✕</button>` +
+      `<button type="button" class="tgl-del" data-tgl-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `</div>` +
       `<div class="tgl-isi" contenteditable="true" data-ph="${tr('Isi bagian lipat…')}">${b.content || ''}</div>` +
       `${pegangan()}</div>`;
@@ -329,7 +329,7 @@ export function blockToHtml(b) {
       `<button type="button" data-tbl-act="add-col">+ ${tr('Kolom')}</button>` +
       `<button type="button" data-tbl-act="del-row">− ${tr('Baris')}</button>` +
       `<button type="button" data-tbl-act="del-col">− ${tr('Kolom')}</button>` +
-      `<button type="button" data-tbl-act="del-table" class="tbl-danger" title="${tr('Hapus')}">✕</button>` +
+      `<button type="button" data-tbl-act="del-table" class="tbl-danger" title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `</div>` +
       `<div class="tbl-scroll"><table>` +
       `<thead><tr>${head.map(c => `<th contenteditable="true">${escCell(c)}</th>`).join('')}</tr></thead>` +
@@ -343,11 +343,11 @@ export function blockToHtml(b) {
     const dur = Math.max(0, Number(meta.duration) || 0);
     const labelDur = `${String(Math.floor(dur / 60)).padStart(2, '0')}:${String(dur % 60).padStart(2, '0')}`;
     return `<figure class="b-audio" contenteditable="false" data-blob="${blobId}" data-dur="${dur}"${bid}${ref}>` +
-      `<button type="button" class="aud-btn" data-aud-play aria-label="${tr('Putar memo suara')}">▶</button>` +
+      `<button type="button" class="aud-btn" data-aud-play aria-label="${tr('Putar memo suara')}"><svg class="ico aud-i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="ico aud-i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>` +
       `<input type="text" class="aud-title" value="${judul}" aria-label="${tr('Judul memo')}">` +
       `<span class="aud-dur">${labelDur}</span>` +
       `<button type="button" class="aud-speed" data-aud-speed>1×</button>` +
-      `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}">✕</button>` +
+      `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `<audio preload="metadata"></audio>${pegangan()}</figure>`;
   }
 

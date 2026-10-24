@@ -18,15 +18,15 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261023231757';
-import { flush } from '../core/autosave.js?v=20261023231757';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023231757';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023231757';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261023231757';
-import { terlihat } from './kunci.js?v=20261023231757';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023231757';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
+import { state, save, SCHEMA } from '../core/store.js?v=20261023235452';
+import { flush } from '../core/autosave.js?v=20261023235452';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023235452';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023235452';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261023235452';
+import { terlihat } from './kunci.js?v=20261023235452';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023235452';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -236,13 +236,13 @@ function blokMd(b, noOl) {
       return [head, sep, ...body].join('\n');
     }
     case 'audio':
-      return `> 🎙️ ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
+      return `> Memo suara: ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
     case 'math':
       return `$$\n${meta.expr || ''}\n$$`;
     case 'bookmark':
-      return `[🔖 ${meta.title || meta.url || 'Tautan'}](${meta.url || 'https://'})${meta.desc ? ' — ' + meta.desc : ''}`;
+      return `[Tautan: ${meta.title || meta.url || 'Tautan'}](${meta.url || 'https://'})${meta.desc ? ' — ' + meta.desc : ''}`;
     case 'file':
-      return `[📎 ${meta.name || 'Lampiran'}](data:application/simpan-dalam-cadangan-json;id=${meta.blobId || ''};size=${meta.size || 0})`;
+      return `[Lampiran: ${meta.name || 'Lampiran'}](data:application/simpan-dalam-cadangan-json;id=${meta.blobId || ''};size=${meta.size || 0})`;
     case 'divider': return '---';
     case 'image':
       return `![${meta.alt || 'gambar'} ${meta.blobId || ''}](data:image/simpan-dalam-cadangan-json;id=${meta.blobId || ''})`;
@@ -503,11 +503,13 @@ function blokDariTeks(baris, noOl) {
     const expr = gabung.trim().replace(/^\$\$\s*/, '').replace(/\s*\$\$$/, '').trim();
     return makeBlock({ type: 'math', meta: { expr }, content: '' });
   }
-  const bmk = satu.match(/^\[🔖\s*([^\]]+)\]\((https?:[^\s)]+)\)(?:\s*—\s*(.*))?$/);
+  /* Tanda baca markdown tanpa emoji; bentuk lama (\u{1F516}) tetap
+     dibaca supaya cadangan yang diekspor versi sebelumnya tidak rusak. */
+  const bmk = satu.match(/^\[(?:\u{1F516}\s*|Tautan:\s*)([^\]]+)\]\((https?:[^\s)]+)\)(?:\s*—\s*(.*))?$/u);
   if (bmk) {
     return makeBlock({ type: 'bookmark', meta: { title: bmk[1].trim(), url: bmk[2].trim(), desc: (bmk[3] || '').trim() }, content: '' });
   }
-  const fl = satu.match(/^\[📎\s*([^\]]+)\]\(data:application\/[^)]*;id=([A-Za-z0-9_-]+);size=(\d+)\)\s*$/);
+  const fl = satu.match(/^\[(?:\u{1F4CE}\s*|Lampiran:\s*)([^\]]+)\]\(data:application\/[^)]*;id=([A-Za-z0-9_-]+);size=(\d+)\)\s*$/u);
   if (fl) {
     return makeBlock({ type: 'file', meta: { name: fl[1].trim(), blobId: fl[2], size: Number(fl[3]) || 0 }, content: '' });
   }

@@ -13,16 +13,17 @@
    Tombol Urungkan di toast mengembalikan DOM + judul persis seperti
    sebelum penggantian. */
 
-import { state, save } from '../core/store.js?v=20261023231757';
-import { toast } from '../core/toast.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { flush } from '../core/autosave.js?v=20261023231757';
-import { docEl } from './editor/caret.js?v=20261023231757';
-import { refresh, saveNow } from './editor/cleanup.js?v=20261023231757';
-import { snap } from './editor/history.js?v=20261023231757';
-import { touch } from './note-model.js?v=20261023231757';
-import { openPop, closeAll } from './menus/pop.js?v=20261023231757';
+import { state, save } from '../core/store.js?v=20261023235452';
+import { toast } from '../core/toast.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { flush } from '../core/autosave.js?v=20261023235452';
+import { docEl } from './editor/caret.js?v=20261023235452';
+import { refresh, saveNow } from './editor/cleanup.js?v=20261023235452';
+import { snap } from './editor/history.js?v=20261023235452';
+import { touch } from './note-model.js?v=20261023235452';
+import { openPop, closeAll } from './menus/pop.js?v=20261023235452';
+import { sheet, shField, shSeg, shAksi } from './sheet.js?v=20261023235452';
 
 /* ── pencocokan teks murni (tanpa regex, tanpa eval) ── */
 const KATA = /[\p{L}\p{N}_]/u;
@@ -288,6 +289,7 @@ function perbaruiHitungan() {
   if (!el) return;
   const q = (document.getElementById('cg-cari')?.value || '').trim();
   const n = hitungSekarang(q);
+  el.classList.toggle('kosong', !!q && !n);
   el.textContent = !q
     ? tr('Ketik kata yang ingin dicari')
     : (n ? tr('{n} kecocokan', { n }) : tr('Tidak ada kecocokan'));
@@ -298,31 +300,25 @@ function perbaruiHitungan() {
 export async function bukaCariGanti(jangkar, awalan = '') {
   opsi = { caseSensitif: false, kataUtuh: false };
   await flush();
-  openPop(`<div class="cg-sheet">
-    <div class="pop-h">${tr('Cari & ganti')}</div>
-    <label class="cg-f">
-      <span>${tr('Cari')}</span>
-      <input id="cg-cari" class="in" type="text" autocomplete="off" enterkeyhint="search"
-        placeholder="${tr('Kata yang dicari…')}" value="${esc(awalan || '')}">
-    </label>
-    <label class="cg-f">
-      <span>${tr('Ganti dengan')}</span>
-      <input id="cg-ganti" class="in" type="text" autocomplete="off"
-        placeholder="${tr('Teks pengganti…')}">
-    </label>
-    <div class="cg-opsi">
-      <button type="button" class="cg-tog" data-cg-opsi="caseSensitif"
-        aria-pressed="false" title="${tr('Peka huruf besar/kecil')}">Aa</button>
-      <button type="button" class="cg-tog" data-cg-opsi="kataUtuh"
-        aria-pressed="false">${tr('Kata utuh')}</button>
-    </div>
-    <div class="cg-hasil" id="cg-hasil" aria-live="polite"></div>
-    <div class="cg-aksi">
-      <button type="button" class="btn btn-sec" data-pop-close>${tr('Tutup')}</button>
-      <button type="button" class="btn btn-pri" id="cg-jalan" disabled>${tr('Ganti semua')}</button>
-    </div>
-    <p class="pop-note">${tr('Mengganti di judul dan seluruh teks catatan ini. Rumus, lampiran, dan tautan tidak diubah.')}</p>
-  </div>`);
+  const isi = shField({
+    id: 'cg-cari', ikon: 'i-search', label: tr('Cari'),
+    value: awalan || '', placeholder: tr('Kata yang dicari…'), enter: 'search',
+  }) + shField({
+    id: 'cg-ganti', ikon: 'i-pen', label: tr('Ganti dengan'),
+    placeholder: tr('Teks pengganti…'),
+  }) + shSeg([
+    { opsi: 'caseSensitif', teks: tr('Peka huruf'), ikon: 'i-txt' },
+    { opsi: 'kataUtuh', teks: tr('Kata utuh'), ikon: 'i-check2' },
+  ]) + `<div class="sh-stat" id="cg-hasil" aria-live="polite"></div>` +
+    `<p class="sh-note">${tr('Mengganti di judul dan seluruh teks catatan ini. Rumus, lampiran, dan tautan tidak diubah.')}</p>`;
+
+  openPop(sheet({
+    ikon: 'i-replace',
+    judul: tr('Cari & ganti'),
+    catatan: esc(tr('Judul & isi catatan ini')),
+    isi,
+    kaki: shAksi({ batal: tr('Tutup'), tutup: true, utama: tr('Ganti semua'), utamaId: 'cg-jalan' }),
+  }));
 
   perbaruiHitungan();
   const inp = document.getElementById('cg-cari');

@@ -7,12 +7,12 @@
  * transparan (bisa digeser, diperbesar/diperkecil, dan diputar di atas catatan).
  */
 
-import { openPop } from './menus/pop.js?v=20261023231757';
-import { WARNA_UMUM } from './menus/warna.js?v=20261023231757';
-import { normalizeWarna } from './editor/warna.js?v=20261023231757';
-import { esc } from '../core/dom.js?v=20261023231757';
-import { toast } from '../core/toast.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
+import { openPop } from './menus/pop.js?v=20261023235452';
+import { WARNA_UMUM } from './menus/warna.js?v=20261023235452';
+import { normalizeWarna } from './editor/warna.js?v=20261023235452';
+import { esc } from '../core/dom.js?v=20261023235452';
+import { toast } from '../core/toast.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
 
 export const KANVAS_UKUR = 256;
 const MAKS_UNDO = 25;
@@ -234,7 +234,7 @@ export function studioGambarHtml(awal = null) {
           <button type="button" class="hs-act-btn" id="hs-redo" title="${tr('Ulangi')}" aria-label="${tr('Ulangi')}">
             <svg class="ico"><use href="#i-redo"/></svg>
           </button>
-          <button type="button" class="hs-act-btn" id="hs-flip" title="${tr('Cerminkan horizontal')}" aria-label="${tr('Cerminkan horizontal')}">⇋</button>
+          <button type="button" class="hs-act-btn" id="hs-flip" title="${tr('Cerminkan horizontal')}" aria-label="${tr('Cerminkan horizontal')}"><svg class="ico"><use href="#i-flip"/></svg></button>
           <button type="button" class="hs-act-btn hs-danger" id="hs-clear" title="${tr('Bersihkan kanvas')}" aria-label="${tr('Bersihkan kanvas')}">
             <svg class="ico"><use href="#i-trash"/></svg>
           </button>
@@ -247,9 +247,9 @@ export function studioGambarHtml(awal = null) {
         <button type="button" class="hs-tool" data-hs-tool="soft" title="${tr('Kuas lembut / pipi merona')}">${tr('Lembut')}</button>
         <button type="button" class="hs-tool" data-hs-tool="fill" title="${tr('Isi warna area')}">${tr('Isi')}</button>
         <button type="button" class="hs-tool" data-hs-tool="eraser" title="${tr('Penghapus transparan')}">${tr('Hapus')}</button>
-        <button type="button" class="hs-tool" data-hs-tool="circle" title="${tr('Cap lingkaran')}" aria-label="${tr('Cap lingkaran')}">◯</button>
-        <button type="button" class="hs-tool" data-hs-tool="heart" title="${tr('Cap hati')}" aria-label="${tr('Cap hati')}">♡</button>
-        <button type="button" class="hs-tool" data-hs-tool="star" title="${tr('Cap bintang')}" aria-label="${tr('Cap bintang')}">☆</button>
+        <button type="button" class="hs-tool hs-ikon" data-hs-tool="circle" title="${tr('Cap lingkaran')}" aria-label="${tr('Cap lingkaran')}"><svg class="ico"><use href="#i-circle"/></svg></button>
+        <button type="button" class="hs-tool hs-ikon" data-hs-tool="heart" title="${tr('Cap hati')}" aria-label="${tr('Cap hati')}"><svg class="ico"><use href="#i-heart"/></svg></button>
+        <button type="button" class="hs-tool hs-ikon" data-hs-tool="star" title="${tr('Cap bintang')}" aria-label="${tr('Cap bintang')}"><svg class="ico"><use href="#i-star"/></svg></button>
       </div>
 
       <!-- Ukuran Kuas -->

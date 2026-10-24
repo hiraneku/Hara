@@ -47,6 +47,7 @@ docs/
 │   ├── share.js        bagikan / salin catatan
 │   ├── mode-baca.js    mode baca, A−/A+, zen, cari di dalam catatan
 │   ├── baca-plus.js    ukuran teks baca + zen
+│   ├── sheet.js        lembar bawah bersama (kepala ikon+judul, isi, kaki aksi)
 │   ├── cari-ganti.js   cari & ganti dalam satu catatan (judul + isi)
 │   ├── saringan.js     saringan pencarian tersimpan (Smart Folder ringan)
 │   ├── kilas-balik.js  "hari ini di tahun-tahun lalu"

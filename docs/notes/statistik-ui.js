@@ -1,9 +1,9 @@
 /* Dialog statistik (K20): heatmap jurnal & tugas selesai, grafik per minggu,
    rentetan jurnal. Dibuka dari command palette. Logika ada di statistik.js. */
 
-import { state } from '../core/store.js?v=20261023231757';
-import { t as tr } from '../core/i18n.js?v=20261023231757';
-import { aktivitasHarian, tugasSelesaiPerMinggu, rentetanJurnal, tingkatIntensitas } from './statistik.js?v=20261023231757';
+import { state } from '../core/store.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { aktivitasHarian, tugasSelesaiPerMinggu, rentetanJurnal, tingkatIntensitas } from './statistik.js?v=20261023235452';
 
 const OPASITAS = [0, 0.25, 0.5, 0.75, 1];
 const HARI_HURUF = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];
@@ -42,7 +42,7 @@ export function htmlStatistik(notes = state.notes, sekarang = Date.now()) {
   <div class="stat-box" role="dialog" aria-modal="true" aria-label="${esc(tr('Statistik & heatmap'))}">
     <div class="stat-head">
       <h3>${tr('Statistik & heatmap')}</h3>
-      <button class="btn btn-sec" data-stat-tutup aria-label="${esc(tr('Tutup'))}">✕</button>
+      <button class="btn btn-sec" data-stat-tutup aria-label="${esc(tr('Tutup'))}"><svg class="ico"><use href="#i-x"/></svg></button>
     </div>
     <div class="stat-ringkas">
       <div><b>${rentetan}</b><span>${tr('hari jurnal berturut-turut')}</span></div>

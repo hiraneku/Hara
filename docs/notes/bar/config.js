@@ -61,7 +61,7 @@ export const BAR = [
   },
   {
     g: 'daftar', label: '<svg class="bi"><use href="#i-list"/></svg>', title: 'Daftar',
-    reflect: { 'b-li': '•', 'b-ol': '1.', 'b-todo': '☑' },
+    reflect: { 'b-li': '•', 'b-ol': '1.', 'b-todo': '✓' },
     items: [
       { m: 'li',   ikon: 'i-list',   nama: 'Daftar',          kunci: '-' },
       { m: 'ol',   ikon: 'i-listol', nama: 'Daftar bernomor', kunci: '1.' },
