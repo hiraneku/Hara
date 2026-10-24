@@ -1,12 +1,14 @@
 /* Logika murni pemutar musik: batas tempo & nada, loop A-B, format waktu,
-   puncak gelombang, dan pengaturan per lagu. Tanpa DOM dan tanpa Web Audio
-   supaya bisa diuji sangat cepat (tools/uji/musik-logika.mjs). */
+   puncak gelombang, pengaturan per lagu, dan pengaturan layar Musik.
+   Tanpa DOM dan tanpa Web Audio supaya bisa diuji sangat cepat
+   (tools/uji/musik-logika.mjs). */
 
 export const TEMPO_MIN = 0.5;
 export const TEMPO_MAX = 2;
 export const TEMPO_RESET = 1;
 export const PITCH_MIN = -12;
 export const PITCH_MAX = 12;
+export const PITCH_LANGKAH = 0.01;   /* nada presisi: dua desimal semitone */
 export const LOOP_MIN_DETIK = 0.5;   /* rentang A-B terpendek yang masuk akal */
 export const LOMPAT_DETIK = 10;      /* langkah tombol mundur/maju */
 
@@ -21,11 +23,13 @@ export function klampTempo(x) {
   return Math.round(k * 100) / 100;
 }
 
+/* Nada dibulatkan ke 0.01 semitone dan dijepit ke ±12. */
 export function klampPitch(x) {
-  const n = Math.round(Number(x));
+  const n = Number(x);
   if (!Number.isFinite(n)) return 0;
   const k = Math.min(PITCH_MAX, Math.max(PITCH_MIN, n));
-  return k === 0 ? 0 : k;   /* hindari -0 */
+  const b = Math.round(k * 100) / 100;
+  return b === 0 ? 0 : b;   /* hindari -0 */
 }
 
 export function klampPosisi(detik, durasi) {
@@ -37,11 +41,15 @@ export function klampPosisi(detik, durasi) {
 
 export const persenTempo = t => `${Math.round(klampTempo(t) * 100)}%`;
 
+/* +3.47, -12.00, 0.00 — selalu dua desimal. */
 export function labelPitch(s) {
   const k = klampPitch(s);
-  if (k > 0) return `+${k}`;
-  return k === 0 ? '0' : `${k}`;
+  if (k === 0) return '0.00';
+  return `${k > 0 ? '+' : '-'}${Math.abs(k).toFixed(2)}`;
 }
+
+/* Nilai angka untuk kolom input nada (tanpa tanda plus). */
+export const angkaPitch = s => klampPitch(s).toFixed(2);
 
 /* m:ss, atau h:mm:ss untuk lagu panjang. Selalu dibulatkan ke bawah. */
 export function formatWaktu(detik) {
@@ -51,6 +59,15 @@ export function formatWaktu(detik) {
   const s = n % 60;
   const dua = x => String(x).padStart(2, '0');
   return h > 0 ? `${h}:${dua(m)}:${dua(s)}` : `${m}:${dua(s)}`;
+}
+
+/* 512 KB, 12.4 MB, 1.3 GB. */
+export function formatUkuran(bytes) {
+  const b = Number(bytes);
+  if (!Number.isFinite(b) || b <= 0) return '0 KB';
+  if (b < 1024 * 1024) return `${Math.max(1, Math.round(b / 1024))} KB`;
+  if (b < 1024 * 1024 * 1024) return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(b / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
 /* Titik loop A-B. Kedua titik null = belum ada loop. Loop hanya berjalan
@@ -69,7 +86,7 @@ export function tandaiLoop(loop, titik, pos, durasi) {
     if (titik === 'a') b = null; else a = null;
   }
   const lengkap = a !== null && b !== null;
-  return { a, b, aktif: lengkap ? true : false };
+  return { a, b, aktif: lengkap };
 }
 
 /* Mengembalikan loop yang sudah dibersihkan terhadap durasi lagu, atau
@@ -89,10 +106,10 @@ export function loopBerikutnya(posisi, loop) {
 }
 
 /* Pengaturan per lagu. Input dari penyimpanan dianggap tidak tepercaya. */
-export function normalisasiAtur(raw, durasi) {
+export function normalisasiAtur(raw, durasi, tempoAwal = TEMPO_RESET) {
   const r = raw && typeof raw === 'object' ? raw : {};
   return {
-    tempo: klampTempo(r.tempo ?? TEMPO_RESET),
+    tempo: klampTempo(r.tempo ?? tempoAwal),
     pitch: klampPitch(r.pitch ?? 0),
     loop: sahkanLoop(r.loop, durasi),
     posisi: klampPosisi(r.posisi ?? 0, durasi),
@@ -102,6 +119,28 @@ export function normalisasiAtur(raw, durasi) {
 export const ATUR_AWAL = Object.freeze({
   tempo: TEMPO_RESET, pitch: 0, loop: { ...LOOP_KOSONG }, posisi: 0,
 });
+
+/* Pengaturan layar Musik (menu Pengaturan Musik). Nilai tak dikenal kembali ke awal. */
+export const PILIHAN_SETELAH_SELESAI = ['berhenti', 'berikutnya', 'ulangi'];
+export const PILIHAN_GAYA_SEEK = ['garis', 'gelombang'];
+export const SET_AWAL = Object.freeze({
+  setelahSelesai: 'berhenti',
+  lanjutkanPosisi: true,
+  gayaSeek: 'garis',
+  tempoAwal: TEMPO_RESET,
+});
+
+export function normalisasiSet(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  return {
+    setelahSelesai: PILIHAN_SETELAH_SELESAI.includes(r.setelahSelesai)
+      ? r.setelahSelesai : SET_AWAL.setelahSelesai,
+    lanjutkanPosisi: typeof r.lanjutkanPosisi === 'boolean'
+      ? r.lanjutkanPosisi : SET_AWAL.lanjutkanPosisi,
+    gayaSeek: PILIHAN_GAYA_SEEK.includes(r.gayaSeek) ? r.gayaSeek : SET_AWAL.gayaSeek,
+    tempoAwal: klampTempo(r.tempoAwal ?? SET_AWAL.tempoAwal),
+  };
+}
 
 /* Puncak gelombang untuk waveform: nilai absolut maksimum per bin, dinormalkan
    ke 0..1. Hanya memakai satu kanal (cukup untuk visual). */
@@ -150,8 +189,8 @@ export function laguTerakhir(daftar) {
     (x.terakhirMain || x.ditambahkan || 0) >= (best.terakhirMain || best.ditambahkan || 0) ? x : best);
 }
 
-/* Warna sampul tetap per lagu dari hash nama, supaya tampil konsisten tanpa
-   gambar. Mengembalikan sudut hue 0..359. */
+/* Warna cadangan per lagu (dipakai bila tidak ada sampul), dari hash id.
+   Mengembalikan sudut hue 0..359. */
 export function hueDariId(id) {
   let h = 0;
   const s = String(id || '');

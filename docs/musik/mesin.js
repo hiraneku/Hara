@@ -16,6 +16,9 @@ import {
 } from './logika.js?v=20261024040822';
 
 const pendengar = new Set();
+/* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
+export function beritahu(jenis) { kirim(jenis); }
+
 export function dengar(fn) {
   pendengar.add(fn);
   return () => pendengar.delete(fn);
@@ -108,10 +111,20 @@ export async function muatLagu(id, berkas, atur, judul) {
   judulAktif = judul || '';
   status = 'memuat';
   kirim('status');
-  const c = await pastikanCtx();
-  const data = await berkas.arrayBuffer();
-  const buf = await c.decodeAudioData(data);
+  let buf;
+  try {
+    const c = await pastikanCtx();
+    const data = await berkas.arrayBuffer();
+    buf = await c.decodeAudioData(data);
+  } catch (e) {
+    if (giliran === token) {                /* gagal decode: jangan tinggal di 'memuat' */
+      idAktif = null; judulAktif = ''; status = 'kosong';
+      kirim('status');
+    }
+    throw e;
+  }
   if (giliran !== token) return false;     /* pengguna sudah pindah lagu */
+  const c = ctx;
 
   buffer = buf;
   durasi = buf.duration;
@@ -141,6 +154,7 @@ export async function putar() {
   if (status === 'selesai') shifter.percentagePlayed = 0;
   /* Konteks bisa tertidur saat aplikasi di latar; bangunkan lagi. */
   if (c.state === 'suspended') await c.resume();
+  if (!shifter) return false;              /* bisa lepas saat menunggu resume */
   shifter.connect(gain);
   status = 'putar';
   mulaiTimer();

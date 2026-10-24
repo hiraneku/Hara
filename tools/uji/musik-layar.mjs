@@ -46,7 +46,7 @@ oke('layar musik terbuka', R.cur === 'musik' && !!q('.mus'));
 oke('navigasi bawah disembunyikan di layar Musik', q('#bnav').classList.contains('hide'));
 oke('tombol kembali tampil di layar Musik', q('#back').style.display === 'grid');
 oke('keadaan kosong: ajakan impor', !!q('.mus-pemutar-kosong') && !!q('[data-mus="impor"]'));
-oke('input berkas audio tersedia', q('[data-mus-berkas]')?.getAttribute('accept') === 'audio/*');
+oke('input berkas audio tersedia', (q('[data-mus-berkas]')?.getAttribute('accept') || '').startsWith('audio/*'));
 oke('peringatan Web Audio muncul di jsdom', !!q('.mus-peringatan'));
 oke('kontrol tempo tidak aktif tanpa lagu', q('[data-mus-range="tempo"]')?.disabled === true);
 
@@ -66,7 +66,7 @@ S.simpanAtur(rek.id, { tempo: 0.75, pitch: 2, loop: null, posisi: 10 });
 go('musik', { segar: true });
 await tunggu();
 oke('tempo tersimpan dipulihkan (75%)', q('[data-mus-range="tempo"]')?.value === '75' && q('[data-mus-out="tempoNilai"]')?.textContent === '75%');
-oke('nada tersimpan dipulihkan (+2)', q('[data-mus-out="pitchNilai"]')?.textContent === '+2');
+oke('nada tersimpan dipulihkan (+2.00)', q('[data-mus-out="pitchNilai"]')?.textContent === '+2.00' && q('[data-mus-num="pitch"]')?.value === '2.00');
 oke('posisi tersimpan tampil (0:10)', q('[data-mus-out="posisi"]')?.textContent === '0:10');
 
 /* ── 4. kartu beranda ── */
@@ -99,6 +99,25 @@ q('[data-mus="hapus"][data-id="' + rek.id + '"]').click();
 await tunggu(150);
 oke('ketuk kedua menghapus lagu', S.laguById(rek.id) === null);
 oke('daftar diperbarui setelah hapus', [...document.querySelectorAll('.mus-item-judul')].map(e => e.textContent).join('|') === 'Lagu Kedua');
+
+/* ── 7. pengaturan Musik ── */
+oke('nada: langkah 0.01 pada slider dan kotak angka', q('[data-mus-range=\"pitch\"]')?.step === '0.01' && q('[data-mus-num=\"pitch\"]')?.step === '0.01');
+oke('sampul besar disiapkan di pemutar', !!q('.mus-sampul-besar[data-sampul-id]'));
+q('[data-mus=\"pengaturan\"]').click();
+await tunggu();
+oke('tombol pengaturan membuka Pengaturan Musik', R.cur === 'musik-set' && q('.mus-set-h')?.textContent === 'Pengaturan Musik');
+oke('pengaturan memuat empat bagian', document.querySelectorAll('.mus-set-kartu').length === 4);
+oke('navigasi bawah tetap disembunyikan di pengaturan', q('#bnav').classList.contains('hide'));
+q('[data-set=\"gayaSeek\"][data-nilai=\"gelombang\"]').click();
+await tunggu();
+oke('gaya seek bar tersimpan (gelombang)', (await import(`${AKAR}/docs/musik/set.js?v=${V}`)).ambilSet().gayaSeek === 'gelombang');
+q('[data-set=\"setelahSelesai\"][data-nilai=\"ulangi\"]').click();
+await tunggu();
+oke('pilihan setelah selesai tersimpan (ulangi)', (await import(`${AKAR}/docs/musik/set.js?v=${V}`)).ambilSet().setelahSelesai === 'ulangi');
+oke('pengaturan tetap di layar Pengaturan setelah diubah', R.cur === 'musik-set');
+go('musik');
+await tunggu();
+oke('seek bar mengikuti gaya gelombang', !!q('[data-mus-gel] canvas'));
 
 console.log(`\nmusik-layar: ${total - gagal}/${total} lulus`);
 if (gagal) process.exit(1);

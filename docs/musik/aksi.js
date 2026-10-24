@@ -1,12 +1,13 @@
 /* Aksi pemutar musik yang dipakai bersama oleh layar Musik, kartu di beranda,
-   dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi lagu lama
-   sebelum berpindah, lalu muat lagu baru. */
+   pengaturan, dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi
+   lagu lama sebelum berpindah, lalu muat lagu baru. */
 
 import { toast } from '../core/toast.js?v=20261024040822';
 import { t as tr } from '../core/i18n.js?v=20261024040822';
 import * as M from './mesin.js?v=20261024040822';
 import * as S from './simpan.js?v=20261024040822';
 import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261024040822';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261024040822';
 
 /* Antrean aksi yang datang saat lagu masih dimuat (mis. geser tempo atau putar
    ketika decode belum selesai). Dijalankan saat lagu dengan id itu siap. */
@@ -25,6 +26,21 @@ export function simpanPosisiSekarang() {
   if (!k.id || k.status === 'memuat' || k.status === 'kosong') return;
   const posisi = k.status === 'selesai' ? 0 : k.posisi;   /* selesai: mulai dari awal lagi */
   S.simpanAtur(k.id, { tempo: k.tempo, pitch: k.pitch, loop: k.loop, posisi });
+}
+
+/* Ambil sampul dari berkas dan simpan. Dipanggil saat impor, dan untuk lagu
+   lama yang belum pernah diperiksa. Mengembalikan true bila ada sampul. */
+export async function ekstrakSampul(berkas, id) {
+  let ada = false;
+  try {
+    const hasil = await ambilSampul(pembacaBlob(berkas));
+    if (hasil) {
+      await S.simpanSampul(id, new Blob([hasil.data], { type: hasil.mime }));
+      ada = true;
+    }
+  } catch (e) { /* gagal baca metadata: tetap tanpa sampul */ }
+  S.perbaruiLagu(id, { sampulDiperiksa: true, sampulAda: ada });
+  return ada;
 }
 
 export async function mainkanLagu(id, { putar = true } = {}) {
@@ -47,6 +63,9 @@ export async function mainkanLagu(id, { putar = true } = {}) {
     if (!ok) return;                  /* sudah diganti lagu lain */
     S.tandaiTerakhir(id);
     if (putar) await M.putar();
+    if (!x.sampulDiperiksa) {
+      ekstrakSampul(berkas, id).then(ada => { if (ada) M.beritahu('sampul'); });
+    }
   } catch (e) {
     M.lepas();
     toast(tr('Lagu ini tidak bisa diputar'));
@@ -67,7 +86,8 @@ export async function togglePutarUtama() {
   await M.putar();
 }
 
-/* Pindah lagu. Arah -1 dengan posisi lewat 3 detik hanya mengulang lagu ini. */
+/* Pindah lagu (manual, berputar di akhir daftar). Arah -1 dengan posisi lewat
+   3 detik hanya mengulang lagu ini. */
 export async function gantiLagu(arah) {
   const daftar = S.daftarLagu();
   if (daftar.length === 0) return;
@@ -77,6 +97,15 @@ export async function gantiLagu(arah) {
   const n = daftar.length;
   const berikut = i < 0 ? daftar[0] : daftar[(i + arah + n) % n];
   await mainkanLagu(berikut.id);
+}
+
+/* Lanjut otomatis setelah lagu selesai: berhenti di lagu terakhir. */
+export async function lanjutOtomatis() {
+  const daftar = S.daftarLagu();
+  const i = daftar.findIndex(x => x.id === M.keadaan().id);
+  if (i < 0 || i >= daftar.length - 1) return false;
+  await mainkanLagu(daftar[i + 1].id);
+  return true;
 }
 
 export async function imporBerkas(files) {
@@ -92,6 +121,7 @@ export async function imporBerkas(files) {
       const rekaman = await S.tambahLagu(f, { nama: namaDariBerkas(f.name), durasi });
       masuk++;
       if (!pertama) pertama = rekaman.id;
+      await ekstrakSampul(f, rekaman.id);
     } catch (e) {
       gagal++;
     }
@@ -115,3 +145,11 @@ export async function hapusLagu(id) {
   }
 }
 
+export async function hapusSemuaLagu() {
+  M.lepas();
+  let gagal = 0;
+  for (const x of S.daftarLagu()) {
+    try { await S.hapusLagu(x.id); } catch (e) { gagal++; }
+  }
+  toast(gagal ? tr('Sebagian lagu gagal dihapus') : tr('Semua lagu dihapus'));
+}

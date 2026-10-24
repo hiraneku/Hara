@@ -1,12 +1,15 @@
-/* Modul Musik (tahap 1): mendaftarkan layar 'musik', menghubungkan event mesin
-   ke penyimpanan dan layar, serta memasang kontrol layar kunci.
-   Dipasang dari app.js seperti modul lain (notesModule, renamerModule). */
+/* Modul Musik: mendaftarkan layar 'musik' dan 'musik-set' (Pengaturan Musik),
+   menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
+   layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go } from '../core/router.js?v=20261024040822';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024040822';
 import * as M from './mesin.js?v=20261024040822';
 import * as A from './aksi.js?v=20261024040822';
 import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024040822';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261024040822';
 import { segarkanKartuMusik } from './kartu.js?v=20261024040822';
+import { segarSampul } from './sampul-dom.js?v=20261024040822';
+import { ambilSet } from './set.js?v=20261024040822';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
@@ -18,16 +21,25 @@ function jadwalSimpan() {
   simpanTimer = setTimeout(() => A.simpanPosisiSekarang(), 300);
 }
 
+/* Perilaku setelah lagu selesai, dari pengaturan Musik. */
+function setelahSelesai() {
+  const pilihan = ambilSet().setelahSelesai;
+  if (pilihan === 'berikutnya') A.lanjutOtomatis();
+  else if (pilihan === 'ulangi') { M.seek(0); M.putar(); }
+}
+
 function onMesin(jenis, k) {
   if (jenis === 'lagu') A.jalankanTundaan(k.id);
   if (jenis === 'status' && k.status === 'kosong') A.batalkanTundaan();
   if (jenis === 'atur') jadwalSimpan();
   if (jenis === 'status' && (k.status === 'jeda' || k.status === 'selesai')) A.simpanPosisiSekarang();
+  if (jenis === 'status' && k.status === 'selesai') setTimeout(setelahSelesai, 0);
   if (jenis === 'waktu' && k.status === 'putar' && Date.now() - posisiTerakhirSimpan > 4000) {
     posisiTerakhirSimpan = Date.now();
     A.simpanPosisiSekarang();
   }
   if (jenis === 'lagu') posisiTerakhirSimpan = Date.now();
+  if (jenis === 'sampul') segarSampul(document);
 
   if (cur === 'musik') segarkanLayar(jenis);
   if (cur === 'home') {
@@ -44,9 +56,14 @@ export const musikModule = {
   color: '#A9CFA6',
 
   init() {
-    registerViews({ musik: musikView }, { musik: 'Musik' });
+    registerViews(
+      { musik: musikView, 'musik-set': pengaturanView },
+      { musik: 'Musik', 'musik-set': 'Pengaturan Musik' },
+    );
     pasangLayar();
+    pasangPengaturan();
     M.dengar(onMesin);
+    onAfterRender(() => segarSampul(document));
     M.pasangAksiSistem({
       sebelumnya: () => A.gantiLagu(-1),
       berikutnya: () => A.gantiLagu(1),

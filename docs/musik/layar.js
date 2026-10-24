@@ -1,6 +1,7 @@
-/* Layar Musik: pemutar penuh (sampul, waveform yang bisa diketuk & digeser,
-   transport, loop A-B) di atas, lalu kontrol tempo & nada, dan pustaka lagu.
-   Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan meneruskan aksi. */
+/* Layar Musik: pemutar penuh dengan sampul asli, seek bar (garis atau gelombang
+   sesuai Pengaturan Musik), transport, loop A-B, kontrol tempo & nada, dan
+   pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
+   meneruskan aksi. */
 
 import { cur, go, onAfterRender } from '../core/router.js?v=20261024040822';
 import { esc } from '../core/dom.js?v=20261024040822';
@@ -10,9 +11,11 @@ import * as M from './mesin.js?v=20261024040822';
 import * as S from './simpan.js?v=20261024040822';
 import * as L from './logika.js?v=20261024040822';
 import * as A from './aksi.js?v=20261024040822';
+import { ambilSet } from './set.js?v=20261024040822';
 import { ikon } from './ikon.js?v=20261024040822';
+import { segarSampul } from './sampul-dom.js?v=20261024040822';
 
-const JUMLAH_BAR = 180;
+const JUMLAH_BAR = 160;
 const WARNA_MAIN = '#A9CFA6';
 const WARNA_REDUP = 'rgba(243, 242, 236, .22)';
 
@@ -53,68 +56,92 @@ function tampilan() {
   };
 }
 
-const persenTeks = t => `${Math.round(t * 100)}%`;
-const ukuranTeks = b => (b > 0 ? `${(b / 1048576).toFixed(1)} MB` : '');
+/* Posisi thumb slider dalam persen, untuk warna isian (--p). */
+const pRange = (min, max, nilai) => `${Math.max(0, Math.min(100, ((nilai - min) / (max - min)) * 100)).toFixed(2)}%`;
+
+const persenTeks = t => `${Math.round(L.klampTempo(t) * 100)}%`;
+const ukuranTeks = b => L.formatUkuran(b);
 const eqHtml = '<span class="mus-eq" aria-hidden="true"><i></i><i></i><i></i></span>';
+const subLagu = v => (v.status === 'memuat'
+  ? tr('Memuat…')
+  : `${tr('Tempo')} ${persenTeks(v.tempo)} · ${tr('Nada')} ${L.labelPitch(v.pitch)}`);
 
 /* ── tampilan ── */
+
+/* Seek bar: garis (default) atau gelombang, sesuai pengaturan. */
+function gelHtml(v) {
+  const gaya = ambilSet().gayaSeek;
+  const isi = gaya === 'gelombang'
+    ? '<canvas aria-hidden="true"></canvas>'
+    : '<span class="mus-jalur" aria-hidden="true"><span class="mus-isi" data-mus-isi></span></span>';
+  return `<div class="mus-gel mus-gel-${gaya}" data-mus-gel role="slider" tabindex="0" aria-label="${tr('Posisi lagu')}"
+      aria-valuemin="0" aria-valuemax="${Math.round(v.durasi)}" aria-valuenow="${Math.round(v.posisi)}"
+      aria-valuetext="${L.formatWaktu(v.posisi)}">
+      ${isi}
+      <span class="mus-band" data-mus-band hidden></span>
+      <span class="mus-knob" data-mus-knob aria-hidden="true"></span>
+      <span class="mus-tanda" data-mus-tanda="a" hidden><b>A</b></span>
+      <span class="mus-tanda" data-mus-tanda="b" hidden><b>B</b></span>
+    </div>`;
+}
 
 function pemutarHtml(v) {
   if (!v.sel) {
     return `<article class="mus-pemutar mus-pemutar-kosong">
-      <div class="mus-art mus-art-kosong" aria-hidden="true">${ikon('nota')}</div>
-      <h2 class="mus-judul">${tr('Belum ada lagu')}</h2>
-      <p class="mus-sub">${tr('Impor lagu dari perangkat untuk mulai. Lagu tetap tersimpan di aplikasi.')}</p>
+      <div class="mus-sampul-besar mus-sampul-kosong" aria-hidden="true">${ikon('nota')}</div>
+      <div class="mus-judul-blok">
+        <h2 class="mus-judul">${tr('Belum ada lagu')}</h2>
+        <p class="mus-sub">${tr('Impor lagu dari perangkat untuk mulai. Lagu tetap tersimpan di aplikasi.')}</p>
+      </div>
       <button type="button" class="mus-tombol-utama" data-mus="impor">${ikon('impor')}<span>${tr('Impor lagu')}</span></button>
     </article>`;
   }
-  const hue = L.hueDariId(v.sel.id);
   const putar = v.status === 'putar';
   const memuat = v.status === 'memuat';
-  const sub = memuat ? tr('Memuat…') : `${tr('Tempo')} ${persenTeks(v.tempo)} · ${tr('Nada')} ${L.labelPitch(v.pitch)}`;
+  const pa = v.loop.a !== null && v.loop.a !== undefined;
+  const pb = v.loop.b !== null && v.loop.b !== undefined;
   return `<article class="mus-pemutar${putar ? ' mus-main' : ''}">
-    <div class="mus-art" style="--hue:${hue}" aria-hidden="true"><span class="mus-art-nota">${ikon('nota')}</span></div>
+    <div class="mus-sampul-besar" data-sampul-id="${esc(v.sel.id)}" aria-hidden="true"></div>
     <div class="mus-judul-blok">
       <h2 class="mus-judul" data-mus-out="judul">${esc(v.sel.nama)}</h2>
-      <p class="mus-sub" data-mus-out="sub">${sub}</p>
+      <p class="mus-sub" data-mus-out="sub">${subLagu(v)}</p>
     </div>
-    <div class="mus-gel" data-mus-gel role="slider" tabindex="0" aria-label="${tr('Posisi lagu')}"
-      aria-valuemin="0" aria-valuemax="${Math.round(v.durasi)}" aria-valuenow="${Math.round(v.posisi)}"
-      aria-valuetext="${L.formatWaktu(v.posisi)}">
-      <canvas aria-hidden="true"></canvas>
-      <span class="mus-tanda" data-mus-tanda="a" hidden><b>A</b></span>
-      <span class="mus-tanda" data-mus-tanda="b" hidden><b>B</b></span>
+    <div class="mus-gel-blok">
+      ${gelHtml(v)}
+      <div class="mus-waktu"><span data-mus-out="posisi">${L.formatWaktu(v.posisi)}</span><span data-mus-out="sisa">−${L.formatWaktu(Math.max(0, v.durasi - v.posisi))}</span></div>
     </div>
-    <div class="mus-waktu"><span data-mus-out="posisi">${L.formatWaktu(v.posisi)}</span><span>${L.formatWaktu(v.durasi)}</span></div>
     <div class="mus-transport">
-      <button type="button" class="mus-btn" data-mus="mundur" aria-label="${tr('Mundur 10 detik')}">${ikon('mundur')}</button>
       <button type="button" class="mus-btn" data-mus="sebelumnya" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
+      <button type="button" class="mus-btn" data-mus="mundur" aria-label="${tr('Mundur 10 detik')}">${ikon('mundur')}</button>
       <button type="button" class="mus-play" data-mus="putar" data-mus-out="putar" aria-label="${putar ? tr('Jeda') : tr('Putar')}">${ikon(putar ? 'pause' : 'play')}</button>
-      <button type="button" class="mus-btn" data-mus="berikutnya" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
       <button type="button" class="mus-btn" data-mus="maju" aria-label="${tr('Maju 10 detik')}">${ikon('maju')}</button>
+      <button type="button" class="mus-btn" data-mus="berikutnya" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
     </div>
     <div class="mus-loop" role="group" aria-label="${tr('Loop A-B')}">
-      <button type="button" class="mus-chip" data-mus="loop-a" data-mus-out="loopA">A <span data-mus-out="a">–</span></button>
-      <button type="button" class="mus-chip" data-mus="loop-b" data-mus-out="loopB">B <span data-mus-out="b">–</span></button>
-      <button type="button" class="mus-chip" data-mus="loop-on" data-mus-out="loopOn" aria-pressed="false">${ikon('loop')}<span>${tr('Ulangi A–B')}</span></button>
-      <button type="button" class="mus-chip mus-chip-hantu" data-mus="loop-reset" data-mus-out="loopReset">${tr('Hapus A–B')}</button>
+      <button type="button" class="mus-chip" data-mus="loop-a">A <span data-mus-out="a">${pa ? L.formatWaktu(v.loop.a) : '–'}</span></button>
+      <button type="button" class="mus-chip" data-mus="loop-b">B <span data-mus-out="b">${pb ? L.formatWaktu(v.loop.b) : '–'}</span></button>
+      <button type="button" class="mus-chip${pa && pb && v.loop.aktif ? ' on' : ''}" data-mus="loop-on" data-mus-out="loopOn"
+        aria-pressed="${!!(pa && pb && v.loop.aktif)}"${pa && pb ? '' : ' disabled'}>${ikon('loop')}<span>${tr('Ulangi A–B')}</span></button>
+      <button type="button" class="mus-chip mus-chip-hantu" data-mus="loop-reset" data-mus-out="loopReset"${pa || pb ? '' : ' disabled'}>${tr('Hapus A–B')}</button>
     </div>
   </article>`;
 }
 
 function kontrolHtml(v) {
   const dis = v.sel ? '' : ' disabled';
-  const tp = Math.round(v.tempo * 100);
+  const tp = Math.round(L.klampTempo(v.tempo) * 100);
+  const pTempo = pRange(50, 200, tp);
+  const pPitch = pRange(L.PITCH_MIN, L.PITCH_MAX, v.pitch);
   const preset = L.PRESET_TEMPO.map(x => {
     const on = Math.abs(v.tempo - x) < 0.001;
-    return `<button type="button" class="mus-chip${on ? ' on' : ''}" data-mus="tempo-preset" data-nilai="${x}" aria-pressed="${on}"${dis}>${x}×</button>`;
+    return `<button type="button" class="mus-chip${on ? ' on' : ''}" data-mus="tempo-preset" data-nilai="${x}" aria-pressed="${on}"${dis}>${Math.round(x * 100)}%</button>`;
   }).join('');
   return `<section class="mus-kartu" aria-labelledby="mus-h-tempo">
     <header class="mus-kartu-kepala">
       <div><h3 id="mus-h-tempo">${tr('Tempo')}</h3><p class="mus-catatan">${tr('Lebih cepat atau lambat, nada tidak berubah')}</p></div>
       <output class="mus-nilai" data-mus-out="tempoNilai">${tp}%</output>
     </header>
-    <input type="range" class="mus-range" min="50" max="200" step="1" value="${tp}" data-mus-range="tempo" aria-label="${tr('Tempo')}"${dis}>
+    <input type="range" class="mus-range" style="--p:${pTempo}" min="50" max="200" step="1" value="${tp}" data-mus-range="tempo" aria-label="${tr('Tempo')}"${dis}>
     <div class="mus-skala" aria-hidden="true"><span>50%</span><span>100%</span><span>200%</span></div>
     <div class="mus-baris">${preset}
       <button type="button" class="mus-chip mus-chip-hantu" data-mus="tempo-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
@@ -125,8 +152,16 @@ function kontrolHtml(v) {
       <div><h3 id="mus-h-nada">${tr('Nada')}</h3><p class="mus-catatan">${tr('Naik atau turun semitone, kecepatan tidak berubah')}</p></div>
       <output class="mus-nilai" data-mus-out="pitchNilai">${L.labelPitch(v.pitch)}</output>
     </header>
-    <input type="range" class="mus-range" min="-12" max="12" step="1" value="${v.pitch}" data-mus-range="pitch" aria-label="${tr('Nada')}"${dis}>
+    <input type="range" class="mus-range" style="--p:${pPitch}" min="${L.PITCH_MIN}" max="${L.PITCH_MAX}" step="${L.PITCH_LANGKAH}" value="${L.angkaPitch(v.pitch)}" data-mus-range="pitch" aria-label="${tr('Nada')}"${dis}>
     <div class="mus-skala" aria-hidden="true"><span>−12</span><span>0</span><span>+12</span></div>
+    <div class="mus-nada-baris">
+      <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="-1"${dis} aria-label="${tr('Turun 1 semitone')}">−1</button>
+      <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="-0.01"${dis} aria-label="${tr('Turun 0,01 semitone')}">−0.01</button>
+      <input type="number" class="mus-angka" inputmode="decimal" step="0.01" min="${L.PITCH_MIN}" max="${L.PITCH_MAX}"
+        value="${L.angkaPitch(v.pitch)}" data-mus-num="pitch" aria-label="${tr('Nada (semitone)')}"${dis}>
+      <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="0.01"${dis} aria-label="${tr('Naik 0,01 semitone')}">+0.01</button>
+      <button type="button" class="mus-chip mus-chip-kecil" data-mus="pitch-step" data-nilai="1"${dis} aria-label="${tr('Naik 1 semitone')}">+1</button>
+    </div>
     <div class="mus-baris">
       <button type="button" class="mus-chip mus-chip-hantu" data-mus="pitch-reset"${dis}>${ikon('reset')}<span>${tr('Atur ulang')}</span></button>
     </div>
@@ -139,7 +174,7 @@ function pustakaHtml(v) {
     const sedang = aktif && v.status === 'putar';
     return `<li class="mus-item${aktif ? ' aktif' : ''}">
       <button type="button" class="mus-item-buka" data-mus="pilih" data-id="${esc(x.id)}" aria-current="${aktif ? 'true' : 'false'}">
-        <span class="mus-thumb" style="--hue:${L.hueDariId(x.id)}">${sedang ? eqHtml : ikon('nota')}</span>
+        <span class="mus-thumb-wrap"><span class="mus-thumb" data-sampul-id="${esc(x.id)}"></span>${sedang ? eqHtml : ''}</span>
         <span class="mus-item-teks">
           <span class="mus-item-judul">${esc(x.nama)}</span>
           <span class="mus-item-sub">${L.formatWaktu(x.durasi)}${x.ukuran ? ` · ${ukuranTeks(x.ukuran)}` : ''}</span>
@@ -153,7 +188,7 @@ function pustakaHtml(v) {
   return `<section class="mus-kartu mus-pustaka" aria-labelledby="mus-h-pustaka">
     <header class="mus-kartu-kepala">
       <div><h3 id="mus-h-pustaka">${tr('Pustaka')}</h3><p class="mus-catatan">${v.daftar.length} ${tr('lagu')}</p></div>
-      <button type="button" class="mus-tombol" data-mus="impor">${ikon('impor')}<span>${tr('Impor')}</span></button>
+      <button type="button" class="mus-tombol" data-mus="impor">${ikon('plus')}<span>${tr('Impor')}</span></button>
     </header>
     ${items
       ? `<ul class="mus-daftar">${items}</ul>`
@@ -165,11 +200,20 @@ export function musikView() {
   const v = tampilan();
   const bisa = M.didukung();
   const peringatan = bisa ? '' : `<p class="mus-peringatan">${tr('Peramban ini tidak mendukung pemutar audio.')}</p>`;
+  const latar = v.sel ? `<div class="mus-latar" data-sampul-id="${esc(v.sel.id)}" aria-hidden="true"></div>` : '';
   return `<div class="mus" data-mus-root>
+    ${latar}
+    <header class="mus-atas">
+      <p class="mus-atas-teks">${v.daftar.length} ${tr('lagu di perangkat')}</p>
+      <div class="mus-atas-aksi">
+        <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr('Impor lagu')}">${ikon('impor')}</button>
+        <button type="button" class="mus-ikon-btn" data-mus="pengaturan" aria-label="${tr('Pengaturan Musik')}">${ikon('sliders')}</button>
+      </div>
+    </header>
     ${peringatan}
     <div class="mus-kolom mus-kiri">${pemutarHtml(v)}</div>
     <div class="mus-kolom mus-kanan">${kontrolHtml(v)}${pustakaHtml(v)}</div>
-    <input type="file" accept="audio/*" multiple class="mus-berkas" data-mus-berkas hidden>
+    <input type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.flac" multiple class="mus-berkas" data-mus-berkas hidden>
   </div>`;
 }
 
@@ -194,16 +238,19 @@ export function segarkanLayar(jenis) {
 
   set('[data-mus-out="judul"]', v.sel.nama);
   set('[data-mus-out="posisi"]', L.formatWaktu(v.posisi));
-  set('[data-mus-out="sub"]', v.status === 'memuat'
-    ? tr('Memuat…')
-    : `${tr('Tempo')} ${persenTeks(v.tempo)} · ${tr('Nada')} ${L.labelPitch(v.pitch)}`);
+  set('[data-mus-out="sisa"]', `−${L.formatWaktu(Math.max(0, v.durasi - v.posisi))}`);
+  set('[data-mus-out="sub"]', subLagu(v));
   set('[data-mus-out="tempoNilai"]', persenTeks(v.tempo));
   set('[data-mus-out="pitchNilai"]', L.labelPitch(v.pitch));
 
   const rentang = document.querySelector('[data-mus-range="tempo"]');
-  if (rentang && document.activeElement !== rentang) rentang.value = String(Math.round(v.tempo * 100));
+  if (rentang && document.activeElement !== rentang) rentang.value = String(Math.round(L.klampTempo(v.tempo) * 100));
+  if (rentang) rentang.style.setProperty('--p', pRange(50, 200, Math.round(L.klampTempo(v.tempo) * 100)));
   const rPitch = document.querySelector('[data-mus-range="pitch"]');
-  if (rPitch && document.activeElement !== rPitch) rPitch.value = String(v.pitch);
+  if (rPitch && document.activeElement !== rPitch) rPitch.value = L.angkaPitch(v.pitch);
+  if (rPitch) rPitch.style.setProperty('--p', pRange(L.PITCH_MIN, L.PITCH_MAX, v.pitch));
+  const angka = document.querySelector('[data-mus-num="pitch"]');
+  if (angka && document.activeElement !== angka) angka.value = L.angkaPitch(v.pitch);
 
   document.querySelectorAll('[data-mus="tempo-preset"]').forEach(b => {
     const on = Math.abs(v.tempo - Number(b.dataset.nilai)) < 0.001;
@@ -240,16 +287,53 @@ export function segarkanLayar(jenis) {
   if (kunci !== kunciPustaka) {
     kunciPustaka = kunci;
     const kartu = document.querySelector('.mus-pustaka');
-    if (kartu) kartu.outerHTML = pustakaHtml(v);
+    if (kartu) {
+      kartu.outerHTML = pustakaHtml(v);
+      segarSampul(document.querySelector('.mus-pustaka'));
+    }
   }
 
-  gambarGelombang(v);
+  gambarGel(v);
 }
 
-function gambarGelombang(v) {
+/* Seek bar: posisi, isian, rentang loop, dan penanda A/B. Waveform digambar
+   hanya bila gayanya 'gelombang'. */
+function gambarGel(v) {
   const g = document.querySelector('[data-mus-gel]');
   if (!g) return;
+  const d = v.durasi > 0 ? v.durasi : 0;
+  const kemajuan = d > 0 ? Math.min(1, v.posisi / d) : 0;
+  const pct = x => `${(x * 100).toFixed(3)}%`;
+
+  const knob = g.querySelector('[data-mus-knob]');
+  if (knob) knob.style.left = pct(kemajuan);
+  const isi = g.querySelector('[data-mus-isi]');
+  if (isi) isi.style.width = pct(kemajuan);
+
+  const adaLoop = v.loop && v.loop.a !== null && v.loop.b !== null && d > 0;
+  const band = g.querySelector('[data-mus-band]');
+  if (band) {
+    band.hidden = !adaLoop;
+    if (adaLoop) {
+      band.style.left = pct(v.loop.a / d);
+      band.style.width = pct((v.loop.b - v.loop.a) / d);
+    }
+  }
+  const tA = g.querySelector('[data-mus-tanda="a"]');
+  const tB = g.querySelector('[data-mus-tanda="b"]');
+  const adaA = v.loop && v.loop.a !== null && d > 0;
+  const adaB = v.loop && v.loop.b !== null && d > 0;
+  if (tA) { tA.hidden = !adaA; if (adaA) tA.style.left = pct(v.loop.a / d); }
+  if (tB) { tB.hidden = !adaB; if (adaB) tB.style.left = pct(v.loop.b / d); }
+
   const cv = g.querySelector('canvas');
+  if (cv) gambarWaveform(g, cv, v, kemajuan);
+
+  g.setAttribute('aria-valuenow', String(Math.round(v.posisi)));
+  g.setAttribute('aria-valuetext', L.formatWaktu(v.posisi));
+}
+
+function gambarWaveform(g, cv, v, kemajuan) {
   const r = g.getBoundingClientRect();
   const w = Math.max(1, Math.floor(r.width));
   const h = Math.max(1, Math.floor(r.height));
@@ -262,36 +346,14 @@ function gambarGelombang(v) {
   if (!c) return;
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, w, h);
-
   const puncak = v.terpasang ? M.puncakAktif(JUMLAH_BAR) : null;
-  const d = v.durasi > 0 ? v.durasi : 0;
-  const kemajuan = d > 0 ? Math.min(1, v.posisi / d) : 0;
   const bw = w / JUMLAH_BAR;
-
-  /* Rentang loop A-B diberi latar tipis. */
-  if (v.loop && v.loop.a !== null && v.loop.b !== null && d > 0) {
-    c.fillStyle = 'rgba(169, 207, 166, .12)';
-    const x1 = (v.loop.a / d) * w, x2 = (v.loop.b / d) * w;
-    c.fillRect(x1, 0, x2 - x1, h);
-  }
-
   for (let i = 0; i < JUMLAH_BAR; i++) {
     const nilai = puncak ? puncak[i] : 0.18;
-    const tinggi = Math.max(2, nilai * h * 0.92);
-    const x = i * bw + bw * 0.2;
+    const tinggi = Math.max(2, nilai * h * 0.9);
     c.fillStyle = (i + 0.5) / JUMLAH_BAR <= kemajuan ? WARNA_MAIN : WARNA_REDUP;
-    c.fillRect(x, (h - tinggi) / 2, Math.max(1, bw * 0.6), tinggi);
+    c.fillRect(i * bw + bw * 0.22, (h - tinggi) / 2, Math.max(1, bw * 0.56), tinggi);
   }
-
-  /* Penanda A & B. */
-  const tA = g.querySelector('[data-mus-tanda="a"]');
-  const tB = g.querySelector('[data-mus-tanda="b"]');
-  const ada = v.loop && v.loop.a !== null && d > 0;
-  if (tA) { tA.hidden = !ada; if (ada) tA.style.left = `${(v.loop.a / d) * 100}%`; }
-  const adaB = v.loop && v.loop.b !== null && d > 0;
-  if (tB) { tB.hidden = !adaB; if (adaB) tB.style.left = `${(v.loop.b / d) * 100}%`; }
-  g.setAttribute('aria-valuenow', String(Math.round(v.posisi)));
-  g.setAttribute('aria-valuetext', L.formatWaktu(v.posisi));
 }
 
 /* ── aksi dari pengguna ── */
@@ -320,6 +382,10 @@ async function putarSel() {
 
 function seekDenganMuat(detik) {
   siapkanLalu(() => M.seek(detik));
+}
+
+function aturNada(nilai) {
+  siapkanLalu(() => M.setPitch(nilai));
 }
 
 function hapusDenganDuaKetuk(btn) {
@@ -356,21 +422,24 @@ function sesudahRender() {
   const g = document.querySelector('[data-mus-gel]');
   if (ro) ro.disconnect();
   if (g && typeof ResizeObserver !== 'undefined') {
-    ro = new ResizeObserver(() => gambarGelombang(tampilan()));
+    ro = new ResizeObserver(() => gambarGel(tampilan()));
     ro.observe(g);
   }
   kunciPustaka = '';
-  gambarGelombang(tampilan());
+  gambarGel(tampilan());
 }
 
 function onClick(e) {
   if (cur !== 'musik') return;
   const b = e.target.closest('[data-mus]');
-  if (!b) return;
+  if (!b || b.disabled) return;
   const aksi = b.dataset.mus;
   switch (aksi) {
     case 'impor':
       document.querySelector('[data-mus-berkas]')?.click();
+      return;
+    case 'pengaturan':
+      go('musik-set');
       return;
     case 'putar':
       putarSel();
@@ -400,7 +469,10 @@ function onClick(e) {
       siapkanLalu(() => M.setTempo(L.TEMPO_RESET));
       return;
     case 'pitch-reset':
-      siapkanLalu(() => M.setPitch(0));
+      aturNada(0);
+      return;
+    case 'pitch-step':
+      aturNada(L.klampPitch(tampilan().pitch + Number(b.dataset.nilai)));
       return;
     case 'loop-a':
       siapkanLalu(() => M.tandai('a'));
@@ -422,10 +494,18 @@ function onClick(e) {
 
 function onChange(e) {
   const t = e.target;
-  if (!t || !t.matches || !t.matches('[data-mus-berkas]')) return;
-  const berkas = Array.from(t.files || []);
-  t.value = '';
-  A.imporBerkas(berkas).then(render);
+  if (!t || !t.matches) return;
+  if (t.matches('[data-mus-berkas]')) {
+    const berkas = Array.from(t.files || []);
+    t.value = '';
+    A.imporBerkas(berkas).then(render);
+    return;
+  }
+  if (t.matches('[data-mus-num="pitch"]')) {
+    const n = parseFloat(String(t.value).replace(',', '.'));
+    if (Number.isFinite(n)) aturNada(L.klampPitch(n));
+    else t.value = L.angkaPitch(tampilan().pitch);
+  }
 }
 
 function onInput(e) {
@@ -433,9 +513,16 @@ function onInput(e) {
   if (!t || !t.matches || !t.matches('[data-mus-range]')) return;
   const nilai = Number(t.value);
   if (t.dataset.musRange === 'tempo') {
+    t.style.setProperty('--p', pRange(50, 200, nilai));
     siapkanLalu(() => M.setTempo(nilai / 100));
   } else {
-    siapkanLalu(() => M.setPitch(nilai));
+    t.style.setProperty('--p', pRange(L.PITCH_MIN, L.PITCH_MAX, nilai));
+    /* Slider nada: ikut tampilkan angka dua desimal sambil digeser. */
+    const k = L.klampPitch(nilai);
+    set('[data-mus-out="pitchNilai"]', L.labelPitch(k));
+    const angka = document.querySelector('[data-mus-num="pitch"]');
+    if (angka && document.activeElement !== angka) angka.value = L.angkaPitch(k);
+    aturNada(k);
   }
 }
 

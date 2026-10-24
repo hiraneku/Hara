@@ -1,17 +1,19 @@
 /* Penyimpanan pustaka musik.
 
-   - Berkas audio: IndexedDB database TERPISAH ('hara-musik'). Sengaja bukan
-     'hara-files': sapuan blob yatim catatan (bersihkanBlobYatim) menghapus
+   - Berkas audio & sampul: IndexedDB database TERPISAH ('hara-musik'). Sengaja
+     bukan 'hara-files': sapuan blob yatim catatan (bersihkanBlobYatim) menghapus
      blob yang tidak dirujuk catatan, dan lagu tidak boleh ikut terhapus.
    - Metadata + pengaturan per lagu: localStorage (kecil, teks saja).
 
    Lagu tetap ada setelah aplikasi ditutup dan dibuka lagi. */
 
 import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261024040822';
+import { ambilSet } from './set.js?v=20261024040822';
 
 const DB = 'hara-musik';
 const TOKO = 'berkas';
 const KUNCI_META = 'hara.v1.musik';
+const awalanSampul = 'sampul:';
 
 let dbp = null;
 
@@ -102,11 +104,20 @@ export function perbaruiLagu(id, patch) {
   simpanMeta();
 }
 
-/* Pengaturan per lagu, sudah dibersihkan terhadap durasi lagu. */
+export function ukuranPustaka() {
+  return meta.lagu.reduce((s, x) => s + (x.ukuran || 0), 0);
+}
+
+/* Pengaturan per lagu, sudah dibersihkan terhadap durasi lagu. Lagu yang belum
+   pernah punya pengaturan memakai tempo awal dari pengaturan Musik. Posisi
+   hanya dipulihkan bila "lanjutkan dari posisi terakhir" aktif. */
 export function aturLagu(id) {
+  const set = ambilSet();
   const x = laguById(id);
   if (!x) return { ...ATUR_AWAL, loop: { ...ATUR_AWAL.loop } };
-  return normalisasiAtur(x.atur, x.durasi);
+  const a = normalisasiAtur(x.atur, x.durasi, set.tempoAwal);
+  if (!set.lanjutkanPosisi) a.posisi = 0;
+  return a;
 }
 
 export function simpanAtur(id, atur) {
@@ -121,7 +132,7 @@ export function simpanAtur(id, atur) {
   simpanMeta();
 }
 
-/* ── berkas audio ── */
+/* ── berkas audio & sampul ── */
 
 function idBaru() {
   return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -140,6 +151,8 @@ export async function tambahLagu(berkas, { nama, durasi }) {
     ditambahkan: Date.now(),
     terakhirMain: 0,
     atur: null,
+    sampulDiperiksa: false,
+    sampulAda: false,
   };
   meta.lagu.push(rekaman);
   simpanMeta();
@@ -151,10 +164,36 @@ export async function ambilBerkas(id) {
   return x || null;
 }
 
+export async function simpanSampul(id, blob) {
+  await tx('readwrite', s => s.put(blob, awalanSampul + id));
+  lupakanSampulUrl(id);
+}
+
+/* URL objek untuk sampul (di-cache di memori). null = lagu tanpa sampul. */
+const urlSampulCache = new Map();
+
+export async function urlSampul(id) {
+  if (urlSampulCache.has(id)) return urlSampulCache.get(id);
+  const x = laguById(id);
+  if (!x || !x.sampulAda) return null;
+  const blob = await tx('readonly', s => s.get(awalanSampul + id));
+  if (!blob) return null;
+  const url = URL.createObjectURL(blob);
+  urlSampulCache.set(id, url);
+  return url;
+}
+
+export function lupakanSampulUrl(id) {
+  const url = urlSampulCache.get(id);
+  if (url) URL.revokeObjectURL(url);
+  urlSampulCache.delete(id);
+}
+
 export async function hapusLagu(id) {
   await tx('readwrite', s => s.delete(id));
+  try { await tx('readwrite', s => s.delete(awalanSampul + id)); } catch (e) { /* sampul tak ada */ }
+  lupakanSampulUrl(id);
   meta.lagu = meta.lagu.filter(x => x.id !== id);
   if (meta.terakhirId === id) meta.terakhirId = null;
   simpanMeta();
 }
-

@@ -14,6 +14,14 @@ const JALUR = {
   nota: '<path d="M9 18V5.2l11-2v12.8"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   cari: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  sliders: '<path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h2"/><path d="M10 12h10"/><circle cx="8" cy="12" r="2"/><path d="M4 18h12"/><path d="M20 18h0"/><circle cx="18" cy="18" r="2"/>',
+  repeat: '<path d="M4 9.5V8a3 3 0 0 1 3-3h11"/><path d="m15.5 2.5 2.5 2.5-2.5 2.5"/><path d="M20 14.5V16a3 3 0 0 1-3 3H6"/><path d="m8.5 21.5-2.5-2.5 2.5-2.5"/>',
+  check: '<path d="m5 12.5 4.2 4.2L19 7"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  sampul: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="12" cy="12" r="3.2"/>',
+  cek: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.4 2.4 4.6-4.8"/>',
 };
 
 export function ikon(nama, kelas = '') {

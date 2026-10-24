@@ -15,21 +15,42 @@ uji('tempo dijepit ke 0.5–2.0 dan dibulatkan 1%', () => {
   assert.equal(L.klampTempo(undefined), 1);
 });
 
-uji('pitch dijepit ke ±12 semitone dan bulat', () => {
+uji('pitch dijepit ke ±12 semitone, presisi 0.01', () => {
   assert.equal(L.klampPitch(-99), -12);
   assert.equal(L.klampPitch(99), 12);
-  assert.equal(L.klampPitch(2.6), 3);
-  assert.equal(L.klampPitch(-0.2), 0);
-  assert.ok(!Object.is(L.klampPitch(-0.2), -0));
+  assert.equal(L.klampPitch(2.6), 2.6);
+  assert.equal(L.klampPitch(3.456), 3.46);
+  assert.equal(L.klampPitch(-7.854), -7.85);
+  assert.equal(L.klampPitch(0.004), 0);
+  assert.equal(L.klampPitch(-0.2), -0.2);
+  assert.ok(!Object.is(L.klampPitch(-0.001), -0));
   assert.equal(L.klampPitch('x'), 0);
 });
 
-uji('label tempo dan pitch', () => {
+uji('label tempo dan pitch dua desimal', () => {
   assert.equal(L.persenTempo(1), '100%');
   assert.equal(L.persenTempo(0.5), '50%');
-  assert.equal(L.labelPitch(5), '+5');
-  assert.equal(L.labelPitch(-3), '-3');
-  assert.equal(L.labelPitch(0), '0');
+  assert.equal(L.labelPitch(5), '+5.00');
+  assert.equal(L.labelPitch(3.47), '+3.47');
+  assert.equal(L.labelPitch(-3), '-3.00');
+  assert.equal(L.labelPitch(-12), '-12.00');
+  assert.equal(L.labelPitch(0), '0.00');
+  assert.equal(L.labelPitch(20), '+12.00');
+  assert.equal(L.angkaPitch(-0.5), '-0.50');
+});
+
+uji('format ukuran berkas', () => {
+  assert.equal(L.formatUkuran(0), '0 KB');
+  assert.equal(L.formatUkuran(512 * 1024), '512 KB');
+  assert.equal(L.formatUkuran(12.4 * 1024 * 1024), '12.4 MB');
+  assert.equal(L.formatUkuran(1.3 * 1024 * 1024 * 1024), '1.30 GB');
+});
+
+uji('pengaturan layar Musik dibersihkan', () => {
+  assert.deepEqual(L.normalisasiSet(undefined), L.SET_AWAL);
+  const s = L.normalisasiSet({ setelahSelesai: 'x', lanjutkanPosisi: 'ya', gayaSeek: 'gelombang', tempoAwal: 9 });
+  assert.deepEqual(s, { setelahSelesai: 'berhenti', lanjutkanPosisi: true, gayaSeek: 'gelombang', tempoAwal: 2 });
+  assert.equal(L.normalisasiSet({ setelahSelesai: 'ulangi' }).setelahSelesai, 'ulangi');
 });
 
 uji('format waktu m:ss dan h:mm:ss', () => {
