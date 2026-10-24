@@ -30,6 +30,27 @@
 - **Belum diuji:** perangkat Android dan ekspor ZIP nyata. Verifikasi di sini sampai meta blok dan cadangan JSON melalui DOM dan `domToBlocks`.
 - **Keterbatasan yang diketahui:** latar gelap belum bisa dipilih di UI. Format sudah menyimpannya, jadi begitu UI ada datanya sudah siap.
 
+## Perubahan 2 — A2 Digital paper, annotations, visual elements (langkah 1)
+
+- **ID:** A2. Dasar: model data goresan dari A1. Dikerjakan di sketsa dulu, karena model A1 ada di sana.
+- **Alasan urutan:** urutan dokumen §6.1 (A2 setelah A1).
+- **Kondisi awal (audit):** gambar di aliran catatan sudah bisa diubah lebar (40–100%), diputar, dan diatur posisinya kiri/tengah/kanan. Latar kertas (titik/garis/polos) hanya ada di sketsa. Belum ada objek bebas yang bisa dipilih dan dipindah di dalam kanvas.
+- **Yang berubah:**
+  - `docs/notes/editor/goresan.js`: format v2 menambah `objek` (`id`, `blob`, `x`, `y`, `w`, `h`), dengan batas 50 objek. v1 tetap bisa dibaca. Tambahan: `hitObjek` (uji titik), `idBlobDariGoresan` (daftar id blob).
+  - `docs/notes/editor/sketsa.js`: alat **Pilih** (pindah objek, objek yang disentuh naik ke atas). Tombol **Tambah gambar**, **Perbesar** (×1,15), **Perkecil** (×0,87), **Hapus objek**. Objek digambar di bawah goresan. Kotak pilihan tidak ikut tersimpan.
+  - `docs/notes/editor/image.js` dan `docs/notes/data-io.js`: id blob objek ikut dihitung sebagai "masih dipakai", supaya tidak dihapus oleh pembersihan blob yatim (batas 24 jam) atau hapus gambar.
+  - **Perbaikan bug lama** di `data-io.js` `idBlobDipakai`: potongan `data-blob="…"` salah satu karakter, sehingga karakter pertama id blob hilang dari daftar. Diperbaiki (`slice(11, -1)`).
+  - `tools/uji/sketsa-objek.mjs` (baru): 12 uji unit + 9 uji integrasi (jsdom). Pemilih berkas diganti stub, karena jsdom tidak bisa memilih berkas.
+  - Penstempelan `node tools/version.mjs`: 122 berkas, hanya string `?v=`.
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-objek.mjs`: 21/21 lulus.
+  - Uji mutasi: rumus geser objek sengaja dirusak, 1 uji gagal, lalu dipulihkan.
+  - `node tools/uji/sketsa-goresan.mjs`: 21/21. `node tools/uji/catatan-generasi-baru.mjs`: 24/24.
+  - `npm test` penuh: exit 0 (setelah penstempelan versi).
+- **Status A2 setelah langkah ini:** masih *Partially implemented*. Sudah ada objek bebas di sketsa. Belum ada: objek bebas di halaman catatan biasa, dan latar kertas untuk halaman catatan (ini bagian B7).
+- **Belum diuji:** perlindungan blob dari pembersihan blob yatim belum diuji dengan blob yang sudah berumur lebih dari 24 jam. Saat ini hanya diuji lewat `idBlobDariGoresan`. Belum diuji di perangkat Android.
+
 ## Berikutnya
 
-- A2 Digital paper, annotations, visual elements. Dependensi: model dari A1. Perlu keputusan skema objek visual sebelum mulai.
+- A6 Zoomable canvas (sesuai urutan §6.1: A2 → A6 → A7). Tetap berikutnya dalam urutan dokumen.
+- Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.
