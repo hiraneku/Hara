@@ -2,13 +2,13 @@
    supaya pengaturan lain bisa ditambahkan nanti: cukup tambah objek ke BAGIAN.
    Setiap item memakai data-set="kunci" dengan data-nilai bila pilihan. */
 
-import { cur, go } from '../core/router.js?v=20261024040822';
-import { t as tr } from '../core/i18n.js?v=20261024040822';
-import * as S from './simpan.js?v=20261024040822';
-import * as A from './aksi.js?v=20261024040822';
-import * as L from './logika.js?v=20261024040822';
-import { ambilSet, ubahSet } from './set.js?v=20261024040822';
-import { ikon } from './ikon.js?v=20261024040822';
+import { cur, go } from '../core/router.js?v=20261024143000';
+import { t as tr } from '../core/i18n.js?v=20261024143000';
+import * as S from './simpan.js?v=20261024143000';
+import * as A from './aksi.js?v=20261024143000';
+import * as L from './logika.js?v=20261024143000';
+import { ambilSet, ubahSet } from './set.js?v=20261024143000';
+import { ikon } from './ikon.js?v=20261024143000';
 
 const LABEL_SETELAH = { berhenti: 'Berhenti', berikutnya: 'Lagu berikutnya', ulangi: 'Ulangi lagu' };
 const LABEL_GAYA = { garis: 'Garis', gelombang: 'Gelombang' };
