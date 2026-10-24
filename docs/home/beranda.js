@@ -2,11 +2,11 @@
    widget musik (UI dulu, pemutar belum dihubungkan), dan bilah alat
    (Catatan & Pengingat). Dipasang sebagai tampilan layar 'home'. */
 
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024003448';
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024003448';
-import { bukaPalette } from '../core/palette.js?v=20261024003448';
-import { toast } from '../core/toast.js?v=20261024003448';
-import { namaSekarang, setNama } from './nama.js?v=20261024003448';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024010928';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024010928';
+import { bukaPalette } from '../core/palette.js?v=20261024010928';
+import { toast } from '../core/toast.js?v=20261024010928';
+import { namaSekarang, setNama } from './nama.js?v=20261024010928';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

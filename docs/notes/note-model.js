@@ -28,8 +28,8 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261024003448';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261024003448';
+import { t as tr } from '../core/i18n.js?v=20261024010928';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261024010928';
 
 export const BLOCK_TYPES = [
   'paragraph',

@@ -98,6 +98,7 @@
 - [x] L2. Ikon tidak lagi bentrok: Rumus memakai `i-sigma`, Dari galeri memakai `i-gallery` (keduanya baru di sprite), Warna tag memakai `i-palette`.
 - [x] L3. "Dari galeri" punya teks bantuan (ID/EN/JA), jadi tombol info muncul di grup Sisipkan.
 - [x] L4. Dokumen disesuaikan dengan kode: fitur editor di README, peta folder editor di ARSITEKTUR, status E23 di sini.
+- [x] L5. Baris pintas di atas editor (`#qk-strip`) tidak lagi mengulang bar bawah: Indent, Outdent, ↑, ↓, To-do, [[ ]] dan # dihapus darinya (sudah ada di bar). Sisa: Cap jam, Hitung ekspresi, Alat teks pintar, Aksi blok.
 - Ditunda (bukan bagian ronde ini): menggabungkan `blok-modern.js` dan `blok-generasi-baru.js` — perlu keputusan dulu, lihat ARSITEKTUR.
 
 ## Bagian K — ronde 11 (BERJALAN, bertahap)

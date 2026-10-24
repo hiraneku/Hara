@@ -1,14 +1,14 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261024003448';
-import { findNote } from '../model.js?v=20261024003448';
-import { esc } from '../../core/dom.js?v=20261024003448';
-import { blocksToDom } from '../note-model.js?v=20261024003448';
-import { barisProps } from '../meta-ui.js?v=20261024003448';
-import { t as tr } from '../../core/i18n.js?v=20261024003448';
-import { renderStickersHtml } from '../hamoji.js?v=20261024003448';
-import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261024003448';
-import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261024003448';
+import { state } from '../../core/store.js?v=20261024010928';
+import { findNote } from '../model.js?v=20261024010928';
+import { esc } from '../../core/dom.js?v=20261024010928';
+import { blocksToDom } from '../note-model.js?v=20261024010928';
+import { barisProps } from '../meta-ui.js?v=20261024010928';
+import { t as tr } from '../../core/i18n.js?v=20261024010928';
+import { renderStickersHtml } from '../hamoji.js?v=20261024010928';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261024010928';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261024010928';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];

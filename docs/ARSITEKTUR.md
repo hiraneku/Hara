@@ -152,6 +152,8 @@ docs/
    Aksi non-blok (tanggal, warna tag) hanya di menu `/`, karena tombol `/` di
    bar sudah membukanya dengan satu ketuk. Saat menambah aksi baru, pilih salah
    satu pintu, kecuali aksinya jenis blok.
+   Baris pintas di atas editor (`#qk-strip`, `blok-generasi-baru.js`) juga
+   hanya memuat aksi yang tidak ada di bar bawah.
 
 ## Menambah tools baru (mis. Reminder)
 
