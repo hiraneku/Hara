@@ -42,6 +42,8 @@ docs/
 │   ├── wikilink.js     catatan yang menyebut/menaut catatan lain
 │   ├── panels.js       panel balik, rujukan, graf
 │   ├── daftar-isi.js   daftar heading di panel
+│   ├── pintar.js       fitur pintar MURNI: TF-IDF, catatan serupa, saran tag, ringkasan, tinjauan (diuji tools/uji/pintar.mjs)
+│   ├── pintar-aksi.js  integrasi fitur pintar ke palette; aturan: catatan terkunci tidak pernah dipakai
 │   ├── meta-ui.js      editor properti catatan
 │   ├── kunci.js        kunci catatan (PIN + sidik jari)
 │   ├── share.js        bagikan / salin catatan

@@ -7,18 +7,18 @@
  * #6 Blok Lampiran Berkas Offline (/file — simpan PDF/dokumen ke IndexedDB blobs + unduh/buka)
  */
 
-import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261024010928';
-import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261024010928';
-import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261024010928';
-import { openPop, closeAll } from '../menus/pop.js?v=20261024010928';
-import { refresh, saveNow } from './cleanup.js?v=20261024010928';
-import { snap } from './history.js?v=20261024010928';
-import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261024010928';
-import { state } from '../../core/store.js?v=20261024010928';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261024010928';
-import { toast } from '../../core/toast.js?v=20261024010928';
-import { esc } from '../../core/dom.js?v=20261024010928';
-import { t as tr } from '../../core/i18n.js?v=20261024010928';
+import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261024021602';
+import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261024021602';
+import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261024021602';
+import { openPop, closeAll } from '../menus/pop.js?v=20261024021602';
+import { refresh, saveNow } from './cleanup.js?v=20261024021602';
+import { snap } from './history.js?v=20261024021602';
+import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261024021602';
+import { state } from '../../core/store.js?v=20261024021602';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261024021602';
+import { toast } from '../../core/toast.js?v=20261024021602';
+import { esc } from '../../core/dom.js?v=20261024021602';
+import { t as tr } from '../../core/i18n.js?v=20261024021602';
 
 const SIMBOL_MATH = {
   '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
@@ -551,10 +551,10 @@ export function bindBlokGenerasiBaru() {
       const k = qk.dataset.qk;
       if (k === 'jam') sisipCapJamSekarang();
       else if (k === 'calc') {
-        import('../alat-cerdas.js?v=20261024010928').then(m => m.cobaHitungInlineSekarang(true));
+        import('../alat-cerdas.js?v=20261024021602').then(m => m.cobaHitungInlineSekarang(true));
       }
       else if (k === 'teks') {
-        import('../alat-cerdas.js?v=20261024010928').then(m => m.bukaAlatTeksPintar());
+        import('../alat-cerdas.js?v=20261024021602').then(m => m.bukaAlatTeksPintar());
       }
       else if (k === 'blok') bukaMenuAksiBlok();
     }

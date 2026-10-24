@@ -8,14 +8,14 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261024010928';
-import { closeAll } from './menus/pop.js?v=20261024010928';
-import { docEl } from './editor/caret.js?v=20261024010928';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261024010928';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261024010928';
-import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024010928';
-import { t as tr } from '../core/i18n.js?v=20261024010928';
-import { bukaCariGanti } from './cari-ganti.js?v=20261024010928';
+import { toast } from '../core/toast.js?v=20261024021602';
+import { closeAll } from './menus/pop.js?v=20261024021602';
+import { docEl } from './editor/caret.js?v=20261024021602';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261024021602';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261024021602';
+import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024021602';
+import { t as tr } from '../core/i18n.js?v=20261024021602';
+import { bukaCariGanti } from './cari-ganti.js?v=20261024021602';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -242,6 +242,16 @@ export function tutupCari() {
 
 /* ── ikat kejadian ── */
 export function bindBacaPlus() {
+  /* P1: di layar sempit kendali baca dilipat ke satu tombol */
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('#ed-aksi-buka');
+    if (!t) return;
+    const isi = document.getElementById('ed-aksi-isi');
+    if (!isi) return;
+    const buka = !isi.classList.contains('buka');
+    isi.classList.toggle('buka', buka);
+    t.setAttribute('aria-expanded', String(buka));
+  });
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
     const diEd = e.target.closest('.ed') || e.target.closest('#cari-float');

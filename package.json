@@ -8,7 +8,8 @@
   "scripts": {
     "cap:sync": "cap sync android",
     "preview": "node tools/preview.mjs",
-    "test": "ls tools/uji/*.mjs | xargs -P 4 -I {} bash -c 'node \"{}\" || exit 255'"
+    "test": "ls tools/uji/*.mjs | xargs -P ${JOBS:-4} -I {} bash -c 'node \"{}\" || exit 255'",
+    "test:cepat": "node tools/uji/pintar.mjs && node tools/uji/tugas-lanjut.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

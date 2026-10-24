@@ -2456,3 +2456,14 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
   .ed-doc>.blk-terlipat{display:block!important}
   .kb-card{display:none}
 }
+
+/* ── P1/P2 · perapian toolbar mobile ── */
+.ea-toggle{display:none}
+@media (max-width:640px){
+  .ea-toggle{display:inline-flex}
+  .ed-aksi:not(.buka){display:none}
+}
+.mech-in.ada-kiri.ada-kanan{-webkit-mask-image:linear-gradient(to right,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+.mech-in.ada-kanan:not(.ada-kiri){-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 22px),transparent)}
+.mech-in.ada-kiri:not(.ada-kanan){-webkit-mask-image:linear-gradient(to right,transparent,#000 22px);mask-image:linear-gradient(to right,transparent,#000 22px)}
+

@@ -93,55 +93,59 @@
       • Suite uji otomatis 78/78 hijau (`tools/uji/renamer-*.mjs`).
 
 
-## Bagian M — ronde 12 (DIRENCANAKAN, belum dikerjakan)
+## Bagian M — ronde 12 (SEBAGIAN, bertahap)
 
-> Daftar ini dicatat dulu atas permintaan pengguna. Belum ada kode yang
-> diubah untuk butir-butir ini. Kerjakan setelah pertanyaan pengguna terjawab.
-> Butir yang bertanda ❓ butuh keputusan sebelum dikerjakan.
+> Keputusan pengguna (ronde 12): P5 ya · S6 ditunda sampai APK siap · MB3 kunci
+> enkripsi = kunci acak yang dilindungi sidik jari perangkat, migrasi = sekali saat
+> update dengan konfirmasi. Butir yang belum selesai ditandai di bawah.
 
-### P · Perbaikan (dari tinjauan ronde 12)
-- [ ] P1. Rapikan toolbar mobile: kendali baca (A−/A+, ikon) pindah ke menu
-      catatan, dan bar format disembunyikan saat keyboard tidak aktif atau
-      saat menggulir ke bawah. Ada empat lapis kontrol di atas judul sekarang.
-- [ ] P2. Verifikasi bar bawah di perangkat. Di screenshot, Undo, Redo, `/`,
-      B, dan I tidak terlihat dari kiri. Penyebabnya belum diketahui: bisa
-      karena digulir, atau karena pengaturan tampilan bar.
-- [ ] P3. Virtualisasi daftar catatan (lihat K34) agar tetap cepat untuk
-      perpustakaan besar.
-- [ ] P4. Percepat `npm test`: jalankan paralel dan pisahkan tes cepat dari
-      tes berat (`kombinasi-*`, `font-*`, `renamer-*`). Saat ini satu putaran
-      penuh memakan sekitar 10 menit.
-- [ ] P5. ❓ Dokumen `docs/PLAN.md` masih menyebut Tailwind, Vite, dan React,
-      sedangkan kode memakai vanilla ES modules. Perlu keputusan apakah
-      dokumen ini diperbarui (I33 menahannya).
+### P · Perbaikan
+- [x] P1. Toolbar mobile dirapikan. Kendali baca (A−/A+, cari, zen, dll.) dilipat ke
+      satu tombol di layar ≤ 640 px. **Belum:** bar format tidak otomatis
+      disembunyikan saat menggulir ke bawah.
+- [x] P2. Bar format punya indikator tepi (pudar) saat masih ada tombol di kiri/kanan.
+      Penyebab "Undo/Redo tidak terlihat" belum dipastikan di perangkat. Dugaan kuat:
+      bar sudah digeser dan tidak ada petunjuk. Perlu verifikasi di HP.
+- [ ] P3. Virtualisasi daftar catatan (K34). **Belum dikerjakan:** render daftar
+      berbasis string dan penanganan sapuan per baris perlu diuji di perangkat.
+- [~] P4. `npm test` memakai `JOBS` (default 4). Ditambah `npm run test:cepat`
+      (tes murni: pintar, tugas-lanjut). **Catatan:** paralelisme sudah ada sejak
+      sebelumnya, jadi ini bukan percepatan besar. Percepatan sungguhan butuh
+      pemangkasan tes jsdom yang berat.
+- [x] P5. `docs/PLAN.md` diperbarui: ditambah bagian "Stack nyata (dipakai sekarang)".
+      Rencana awal tetap dibiarkan sebagai arsip, diberi penanda.
 
-### S · Fitur pintar (tetap lokal, tanpa cloud)
-- [ ] S1. "Mirip dengan": panel catatan serupa memakai indeks Web Worker yang
-      sudah ada (`cari-worker.js`).
-- [ ] S2. Saran tag otomatis: kata kunci diambil dari isi catatan dengan
-      TF-IDF di browser. Pengguna menerima atau menolak tiap saran.
-- [ ] S3. Tangkap cepat yang cerdas: teks seperti "besok 15.00 bayar listrik"
-      menjadi tugas bertenggat. Memperluas parser tenggat (B9, K2).
-- [ ] S4. Tinjauan mingguan otomatis: rangkuman dari jurnal, tugas yang
-      selesai, dan catatan yang paling sering diedit (data dari K20).
-- [ ] S5. Ringkasan ekstraktif: pilih kalimat terpenting dari catatan panjang.
-      Bukan generasi teks, jadi tetap offline dan bisa diprediksi.
-- [ ] S6. ❓ OCR foto (K14) dan dikte suara (K15). Keduanya butuh plugin native
-      Capacitor, jadi tidak bisa diuji sepenuhnya di web.
+### S · Fitur pintar (lokal, tanpa cloud)
+Logika murni di `docs/notes/pintar.js` (diuji `tools/uji/pintar.mjs`, 40 pengujian).
+Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
+- [x] S1. Mirip dengan: catatan serupa, TF-IDF + kosinus. Hanya catatan yang terlihat
+      (tidak terkunci) yang dipakai.
+- [x] S2. Saran tag: kata khas catatan ini. Tombol "Tambah tag #…" menulis ke
+      `tagsManual`. Tidak ada tampilan penerimaan/penolakan terpisah.
+- [x] S3. Tangkap cepat: parser jam kini mengenali "jam 3 sore", "pukul 7.30",
+      "7 malam", dan "12 pagi" (`bacaJam` di `pengingat.js`). Input lewat `prompt()`
+      sederhana. **Belum:** tampilan input khusus.
+- [x] S4. Tinjauan minggu ini: membuat catatan baru berisi tag paling aktif, jumlah
+      catatan dibuat/diedit, tugas selesai, dan daftar terakhir diedit. Catatan
+      terkunci dikecualikan.
+- [x] S5. Ringkasan ekstraktif: 3 kalimat asli dari catatan, jadi catatan baru.
+      **Ditolak untuk catatan terkunci** agar isinya tidak bocor ke catatan tak terkunci.
+- [ ] S6. OCR foto (K14) dan dikte suara (K15). **Ditunda** sampai APK siap (keputusan
+      pengguna).
 
 ### MB · Fitur modern (lanjutan dari E22–E24)
-- [ ] MB1. Tampilan database: Kanban dan kalender dari properti catatan (K19).
-      Data properti sudah tersedia; tampilannya belum dibuat.
-- [ ] MB2. Tabel lanjutan: urut dan saring per kolom, serta rumus sederhana
-      (lanjutan E23).
-- [ ] MB3. ❓ Penyelesaian enkripsi: sambungkan `core/enkripsi.js` ke catatan
-      terkunci (K17) dan uji cadangan terenkripsi dengan berkas besar (K18).
-      K17 menunggu keputusan dari audit PIN.
+- [ ] MB1. Tampilan Kanban dan kalender dari properti catatan (K19). **Belum dikerjakan.**
+- [ ] MB2. Tabel lanjutan: urut dan saring per kolom, serta rumus sederhana. **Belum
+      dikerjakan.**
+- [ ] MB3. Penyelesaian enkripsi (K17, K18). Keputusan sudah ada: kunci acak dilindungi
+      sidik jari perangkat, migrasi sekali dengan konfirmasi. **Belum dikerjakan.**
+      Catatan: kunci sekarang hanya mengunci akses (`docs/notes/kunci.js`).
 
 ### Tidak diambil pada ronde ini
 - Sinkronisasi antar-perangkat (E22): belum diputuskan.
-- Tangkap dari share sheet dan widget (K13, E24): menunggu Capacitor.
-- Fitur AI: non-goal v1 di `docs/PLAN.md`, dan ditahan di bagian "Ditahan".
+- Tangkap dari share sheet dan widget (K13, E24): menunggu APK. Manifest Android
+  belum punya intent SEND, dan belum ada manifest web.
+- Fitur AI: non-goal v1 di `docs/PLAN.md`, dan ditahan.
 
 ## Bagian L — perapian bar & menu editor (SELESAI)
 - [x] L1. Aksi non-blok tidak lagi ganda di bar: "Tanggal" dan "Warna tag" hanya di menu `/` (dibuka lewat tombol `/` di bar). Jenis blok (Gambar, Pembatas) tetap di keduanya — aturannya ada di `docs/ARSITEKTUR.md`.

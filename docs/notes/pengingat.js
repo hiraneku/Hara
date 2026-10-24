@@ -12,7 +12,7 @@
    yang disimpan ke blok adalah `meta.ulangKe` (tenggat berulang yang sudah
    bergeser setelah dicentang), dan itu ditulis lewat atribut data-ulang. */
 
-import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261024010928';
+import { LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261024021602';
 
 const NAMA_HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 /* Nama hari Jepang — untuk label chip tenggat saat bahasa = Jepang. */
@@ -128,6 +128,31 @@ const uraiTanggal = (teksAsli) => {
   return null;
 };
 
+/* Jam dari sisa teks tenggat. Mengenali:
+     15.00 · 15:00 · jam 15 · pukul 15.30 · 3 sore · jam 3 sore · 7 malam
+   Penanda pagi/siang/sore/malam menggeser jam ke 24-jam. Mengembalikan
+   { jam: "HH:MM", panjang } atau null. */
+export function bacaJam(rest) {
+  const pola = [
+    /^(?:jam|pukul)\s+(\d{1,2})(?:[:.](\d{2}))?(?:\s*(pagi|siang|sore|malam))?(?=\s|$)/i,
+    /^(\d{1,2})[:.](\d{2})(?:\s*(pagi|siang|sore|malam))?(?=\s|$)/i,
+    /^(\d{1,2})\s*(pagi|siang|sore|malam)(?=\s|$)/i,
+  ];
+  for (const re of pola) {
+    const m = rest.match(re);
+    if (!m) continue;
+    let h = +m[1];
+    const mnt = m[2] && /^\d+$/.test(m[2]) ? +m[2] : 0;
+    const per = ((m[0].match(/pagi|siang|sore|malam/i) || [''])[0]).toLowerCase();
+    if ((per === 'sore' || per === 'malam') && h < 12) h += 12;
+    if (per === 'siang' && h >= 1 && h < 11) h += 12;
+    if (per === 'pagi' && h === 12) h = 0;
+    if (h > 23 || mnt > 59) return null;
+    return { jam: `${String(h).padStart(2, '0')}:${String(mnt).padStart(2, '0')}`, panjang: m[0].length };
+  }
+  return null;
+}
+
 /* Urai lengkap satu baris teks to-do. Mengembalikan null bila tanpa tenggat.
    { waktu, teks, jam, prioritas, aturan, sisa }
    - waktu : awal hari tenggat (ms). Untuk berulang, ini kejadian pertama.
@@ -140,11 +165,8 @@ export function uraiTugas(teks) {
   if (!tgl) return null;
   let rest = tanpaPrio.slice(tgl.panjang).trim();
   let jam = null;
-  const mj = rest.match(/^(?:jam\s+)?(\d{1,2})[:.](\d{2})(?=\s|$)/i);
-  if (mj && +mj[1] < 24 && +mj[2] < 60) {
-    jam = `${String(+mj[1]).padStart(2, '0')}:${mj[2]}`;
-    rest = rest.slice(mj[0].length).trim();
-  }
+  const j = bacaJam(rest);
+  if (j) { jam = j.jam; rest = rest.slice(j.panjang).trim(); }
   return {
     waktu: tgl.awal,
     teks: tgl.teks,
@@ -319,7 +341,7 @@ export function jadwalUlang(content, pilihan) {
   const tgl = uraiTanggal(tanpaPre);
   if (!tgl) return null;
   let rest = tanpaPre.slice(tgl.panjang).trim();
-  const mj = rest.match(/^(?:jam\s+)?(\d{1,2})[:.](\d{2})(?=\s|$)/i);
-  if (mj) rest = rest.slice(mj[0].length).trim();
+  const j = bacaJam(rest);
+  if (j) rest = rest.slice(j.panjang).trim();
   return (pre + kata + (rest ? ' ' + rest : '')).trim();
 }

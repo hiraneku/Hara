@@ -1,20 +1,20 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20261024010928';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261024010928';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261024010928';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261024010928';
-import { slashMenu } from '../menus/slash.js?v=20261024010928';
-import { wlMenu }    from '../menus/wikilink.js?v=20261024010928';
-import { tagMenu }   from '../menus/tag.js?v=20261024010928';
-import { linkMenu }  from '../menus/link.js?v=20261024010928';
-import { fontMenu } from '../menus/font.js?v=20261024010928';
-import { warnaMenu } from '../menus/warna.js?v=20261024010928';
-import { calloutMenu } from '../menus/callout.js?v=20261024010928';
-import { snap } from '../editor/history.js?v=20261024010928';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261024010928';
-import { tersembunyi, getar } from './prefs.js?v=20261024010928';
-import { HELP, HELP_GRUP } from './help.js?v=20261024010928';
-import { t as tr } from '../../core/i18n.js?v=20261024010928';
+import { BAR, GROUPS } from './config.js?v=20261024021602';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261024021602';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261024021602';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261024021602';
+import { slashMenu } from '../menus/slash.js?v=20261024021602';
+import { wlMenu }    from '../menus/wikilink.js?v=20261024021602';
+import { tagMenu }   from '../menus/tag.js?v=20261024021602';
+import { linkMenu }  from '../menus/link.js?v=20261024021602';
+import { fontMenu } from '../menus/font.js?v=20261024021602';
+import { warnaMenu } from '../menus/warna.js?v=20261024021602';
+import { calloutMenu } from '../menus/callout.js?v=20261024021602';
+import { snap } from '../editor/history.js?v=20261024021602';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261024021602';
+import { tersembunyi, getar } from './prefs.js?v=20261024021602';
+import { HELP, HELP_GRUP } from './help.js?v=20261024021602';
+import { t as tr } from '../../core/i18n.js?v=20261024021602';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -45,6 +45,28 @@ export function renderBar() {
   }).join('');
   rapikanSep(box);
   bindBar();
+  pasangPetunjukGeser(box);
+}
+
+/* P2: bar format bisa digeser ke samping, tapi scrollbar-nya disembunyikan.
+   Tanpa petunjuk, tombol di ujung (Undo, Redo, /, B, I) mudah tidak terlihat
+   setelah bar digeser. Tepi yang masih punya isi diberi pudar. */
+let _geserTerpasang = false;
+function pasangPetunjukGeser(box) {
+  const perbarui = () => {
+    const sisaKiri = box.scrollLeft > 4;
+    const sisaKanan = box.scrollLeft + box.clientWidth < box.scrollWidth - 4;
+    box.classList.toggle('ada-kiri', sisaKiri);
+    box.classList.toggle('ada-kanan', sisaKanan);
+  };
+  perbarui();
+  if (_geserTerpasang) return;
+  _geserTerpasang = true;
+  box.addEventListener('scroll', perbarui, { passive: true });
+  window.addEventListener('resize', () => {
+    const b = document.querySelector('.mech-in');
+    if (b) b.dispatchEvent(new Event('scroll'));
+  });
 }
 
 /* Hilangkan pemisah ganda atau yang berada di ujung. */
@@ -119,10 +141,10 @@ function jalankan(m, btn) {
   if (m === 'slash') return openPop(slashMenu(), btn);
   if (m === 'wl')    return openPop(wlMenu(),    btn);
   if (m === 'tag')   return openPop(tagMenu(),   btn);
-  if (m === 'tagwarna') { import('../tagwarna.js?v=20261024010928').then(({panelTag}) => panelTag(btn)); return; }
+  if (m === 'tagwarna') { import('../tagwarna.js?v=20261024021602').then(({panelTag}) => panelTag(btn)); return; }
   if (m === 'gal') {
     const mb = document.querySelector('.mb-g.open');
-    import('../galeri.js?v=20261024010928').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
+    import('../galeri.js?v=20261024021602').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
     return;
   }
   if (m === 'link')  return openPop(linkMenu(),  btn);
