@@ -1,14 +1,14 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261024021602';
-import { findNote } from '../model.js?v=20261024021602';
-import { esc } from '../../core/dom.js?v=20261024021602';
-import { blocksToDom } from '../note-model.js?v=20261024021602';
-import { barisProps } from '../meta-ui.js?v=20261024021602';
-import { t as tr } from '../../core/i18n.js?v=20261024021602';
-import { renderStickersHtml } from '../hamoji.js?v=20261024021602';
-import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261024021602';
-import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261024021602';
+import { state } from '../../core/store.js?v=20261024024733';
+import { findNote } from '../model.js?v=20261024024733';
+import { esc } from '../../core/dom.js?v=20261024024733';
+import { blocksToDom } from '../note-model.js?v=20261024024733';
+import { barisProps } from '../meta-ui.js?v=20261024024733';
+import { t as tr } from '../../core/i18n.js?v=20261024024733';
+import { renderStickersHtml } from '../hamoji.js?v=20261024024733';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261024024733';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261024024733';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -23,7 +23,6 @@ const n=findNote(state.openId)||state.notes[0];
  return `<div class="ed">
   ${renderBarCatatanTerakhirHtml()}
   <div class="ed-cover" id="ed-cover"${bgSampul ? ` style="background:${bgSampul}"` : ' hidden'}></div>
-  <button type="button" class="ea-b ea-toggle" id="ed-aksi-buka" aria-expanded="false" aria-controls="ed-aksi-isi" aria-label="${tr('Tampilkan kendali baca')}" title="${tr('Tampilkan kendali baca')}"><svg class="ico"><use href="#i-more"/></svg></button>
   <div class="ed-aksi" id="ed-aksi-isi" role="group" aria-label="${tr('Kendali baca')}">
     <button type="button" class="ea-b" data-et="kecil" aria-label="${tr('Perkecil teks bacaan')}" title="${tr('Perkecil teks bacaan')}">A−</button>
     <span class="ea-v" id="ed-ukur" aria-hidden="true">16px</span>

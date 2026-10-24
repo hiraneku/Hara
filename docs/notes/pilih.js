@@ -17,11 +17,12 @@
    sedangPilih) dan tombol semat kecil di baris disembunyikan (CSS):
    semuanya lewat bilah mini supaya tidak ada aksi yang salah sasaran. */
 
-import { cur, go, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024021602';
-import { toast } from '../core/toast.js?v=20261024021602';
-import { getar } from './bar/prefs.js?v=20261024021602';
-import { t as tr } from '../core/i18n.js?v=20261024021602';
-import { findNote, hapusBanyakDariList, sematBanyak, arsipBanyak } from './model.js?v=20261024021602';
+import { cur, go, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024024733';
+import { idDaftarNotes } from './views/list.js?v=20261024024733';
+import { toast } from '../core/toast.js?v=20261024024733';
+import { getar } from './bar/prefs.js?v=20261024024733';
+import { t as tr } from '../core/i18n.js?v=20261024024733';
+import { findNote, hapusBanyakDariList, sematBanyak, arsipBanyak } from './model.js?v=20261024024733';
 
 const TAHAN = 480;        /* ms menahan sebelum mode pilih menyala */
 const GESER_BATAL = 10;   /* px — lebih dari ini dianggap scroll/sapuan */
@@ -171,15 +172,18 @@ export function togglePilih(id) {
 }
 
 function pilihSemua() {
-  const baris = document.querySelectorAll('#wrap .row[data-open]');
-  if (!baris.length) return;
+  /* P3: daftar utama dirender bertahap — "semua" berarti seluruh hasil
+     saringan, bukan hanya baris yang sedang ada di DOM. */
+  const semua = cur === 'notes'
+    ? idDaftarNotes()
+    : [...document.querySelectorAll('#wrap .row[data-open]')].map(r => r.dataset.open);
+  if (!semua.length) return;
   let adaBaru = false;
-  baris.forEach(row => {
-    const id = row.dataset.open;
+  semua.forEach(id => {
     if (!ids.has(id)) { ids.add(id); adaBaru = true; }
   });
-  if (!baris.length || !adaBaru) {   /* ketuk dua kali = lepas semua */
-    baris.forEach(row => ids.delete(row.dataset.open));
+  if (!adaBaru) {   /* ketuk dua kali = lepas semua */
+    semua.forEach(id => ids.delete(id));
     if (!ids.size) { batalPilih(); return; }
   }
   terapkanDom();

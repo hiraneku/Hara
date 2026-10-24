@@ -1,5 +1,7 @@
 /* Kamus Bahasa Jepang Hara. */
 export const JA = {
+  "Muat {n} lagi": "あと{n}件を読み込む",
+  "{n} dari {t} ditampilkan": "{t}件中{n}件を表示",
   "Beranda": "ホーム",
   "Catatan": "ノート",
   "Reminder": "リマインダー",

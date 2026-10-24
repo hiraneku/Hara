@@ -3,18 +3,18 @@
    Catatan diarsipkan TIDAK tampil di sini (ada di layar Arsip), catatan
    yang dihapus ada di Sampah. Daftar utama bisa difilter per tag lewat
    chip tag (klik tag di mana pun = buka daftar dengan filter itu). */
-import { state } from '../../core/store.js?v=20261024021602';
-import { esc, tglHari } from '../../core/dom.js?v=20261024021602';
-import { rowFor } from './row.js?v=20261024021602';
-import { stt } from './data.js?v=20261024021602';
-import { tagDariIsi } from '../tags.js?v=20261024021602';
-import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261024021602';
-import { judulJurnalHari } from '../harian.js?v=20261024021602';
-import { terlihat } from '../kunci.js?v=20261024021602';
-import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261024021602';
-import { t as tr } from '../../core/i18n.js?v=20261024021602';
-import { renderSaringanBarHtml, saringCatatan, saringanAktif } from '../saringan.js?v=20261024021602';
-import { renderKilasBalikHtml } from '../kilas-balik.js?v=20261024021602';
+import { state } from '../../core/store.js?v=20261024024733';
+import { esc, tglHari } from '../../core/dom.js?v=20261024024733';
+import { rowFor } from './row.js?v=20261024024733';
+import { stt } from './data.js?v=20261024024733';
+import { tagDariIsi } from '../tags.js?v=20261024024733';
+import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261024024733';
+import { judulJurnalHari } from '../harian.js?v=20261024024733';
+import { terlihat } from '../kunci.js?v=20261024024733';
+import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261024024733';
+import { t as tr } from '../../core/i18n.js?v=20261024024733';
+import { renderSaringanBarHtml, saringCatatan, saringanAktif } from '../saringan.js?v=20261024024733';
+import { renderKilasBalikHtml } from '../kilas-balik.js?v=20261024024733';
 
 /* ── "Belum selesai": kumpulan todo yang belum dicentang dari semua
    catatan aktif. Satu ketukan lompat ke catatan & bloknya. ── */
@@ -101,6 +101,39 @@ export const homeView = () => {
 </div>`;
 };
 
+/* ── P3 · daftar bertahap (K34) ──
+   Daftar utama tidak lagi merender semua baris sekaligus: hanya LANGKAH
+   pertama yang masuk DOM. Baris berikutnya datang saat tombol "Muat lagi"
+   ditekan, atau saat sentinel mendekati layar (pasangMuatLebih). Batas
+   kembali ke LANGKAH setiap filter/urut/ruang/tampilan berubah.
+   Pilih semua & hitungan memakai daftar penuh (idDaftarNotes), bukan DOM. */
+export const LANGKAH_DAFTAR = 40;
+let batasDaftar = LANGKAH_DAFTAR;
+let kunciBatas = '';
+let idDaftarPenuh = [];
+let pengamatMuat = null;
+
+/* id semua catatan di daftar utama yang sedang difilter (bukan hanya yang tampil) */
+export const idDaftarNotes = () => idDaftarPenuh.slice();
+
+/* tambah satu langkah baris — dipanggil pengamat / tombol Muat lagi */
+export const tambahBatasDaftar = () => { batasDaftar += LANGKAH_DAFTAR; };
+
+/* Pasang pengamat untuk sentinel "Muat lagi" (IntersectionObserver).
+   `onMuat` menggambar ulang daftar. Tanpa IntersectionObserver (uji
+   jsdom, peramban tua), tombol tetap bisa dipakai. */
+export function pasangMuatLebih(onMuat) {
+  if (pengamatMuat) { pengamatMuat.disconnect(); pengamatMuat = null; }
+  const el = document.querySelector('[data-muat-lebih]');
+  if (!el || typeof IntersectionObserver === 'undefined') return;
+  pengamatMuat = new IntersectionObserver(entri => {
+    if (!entri.some(x => x.isIntersecting)) return;
+    if (pengamatMuat) { pengamatMuat.disconnect(); pengamatMuat = null; }
+    onMuat();
+  }, { root: document.getElementById('wrap'), rootMargin: '320px 0px' });
+  pengamatMuat.observe(el);
+}
+
 export const notesView = () => {
   const semuaAktif = aktif();
   let daftar = semuaAktif;
@@ -116,6 +149,14 @@ export const notesView = () => {
 
   const pin = urutkanCatatan(daftar.filter(n => n.pinned));
   const lain = urutkanCatatan(daftar.filter(n => !n.pinned));
+
+  /* batas tampil: reset bila keadaan filter/urut/ruang/tampilan berubah */
+  const kunci = JSON.stringify([rg || '', tag || '', sfAktif || null, urutSekarang(), modeTampilDaftar()]);
+  if (kunci !== kunciBatas) { kunciBatas = kunci; batasDaftar = LANGKAH_DAFTAR; }
+  idDaftarPenuh = [...pin, ...lain].map(n => n.id);
+  const pinTampil = pin.slice(0, batasDaftar);
+  const lainTampil = lain.slice(0, Math.max(0, batasDaftar - pin.length));
+  const sisa = daftar.length - pinTampil.length - lainTampil.length;
 
   return `<div class="page">
   <div class="ruang-bar" role="tablist" aria-label="${tr('Ruang catatan')}">
@@ -178,8 +219,12 @@ export const notesView = () => {
       <svg class="ico"><use href="#i-check2"/></svg>${tr('Pilih')}</button>` : ''}
   </div>
   ${renderKilasBalikHtml(daftar)}
-  ${pin.length ? overline(tr('Disematkan')) + kartu(pin, 'utama') : ''}
-  ${lain.length ? (pin.length ? overline(tr('Lainnya')) : '') + kartu(lain, 'utama') : ''}
+  ${pinTampil.length ? overline(tr('Disematkan')) + kartu(pinTampil, 'utama') : ''}
+  ${lainTampil.length ? (pinTampil.length ? overline(tr('Lainnya')) : '') + kartu(lainTampil, 'utama') : ''}
+  ${sisa > 0 ? `<div class="muat-lebih" data-muat-lebih>
+    <button type="button" class="btn btn-sec" data-muat-tombol>${tr('Muat {n} lagi', { n: Math.min(sisa, LANGKAH_DAFTAR) })}</button>
+    <span class="muat-n">${tr('{n} dari {t} ditampilkan', { n: daftar.length - sisa, t: daftar.length })}</span>
+  </div>` : ''}
   <div class="list-foot">
     <span class="chip">${tr('semua {n}', { n: daftar.length })}</span>
     <span class="sep"></span>

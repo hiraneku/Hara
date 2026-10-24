@@ -488,7 +488,14 @@ if (BAG === 'C') {
   const mb8 = d.getElementById('mode');
   const srcSblm = DOC().querySelector('.b-img img').getAttribute('src');
   klik(mb8);                       /* → mode baca */
-  await sleep(150);
+  /* tunggu render segar selesai: URL blob diambil dari IDB secara asinkron,
+     dan di bawah beban paralel itu melewati jeda tetap 150 ms. Berhenti begitu
+     gambar punya src dan tidak tersembunyi, atau setelah ±1 detik. */
+  for (let i = 0; i < 40; i++) {
+    const im = DOC() && DOC().querySelector('.b-img img');
+    if (im && im.getAttribute('src') && im.style.display !== 'none') break;
+    await sleep(25);
+  }
   const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
   const ed8 = d.querySelector('.ed');
   const img8 = fig8 ? fig8.querySelector('img') : null;

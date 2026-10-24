@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20261024021602';
+import { t as tr } from './i18n.js?v=20261024024733';
 
 const views  = {};
 const titles = {};
@@ -18,15 +18,21 @@ export function registerViews(map, titleMap) {
   Object.assign(titles, titleMap || {});
 }
 
-export function go(v) {
+/* opsi.segar: gambar ulang layar yang SAMA tanpa mengusik keadaannya —
+   onBeforeLeave tidak dijalankan (mode pilih & sejenisnya tetap hidup) dan
+   posisi gulir dipulihkan ke opsi.gulir. Dipakai untuk memuat baris daftar
+   berikutnya (P3). */
+export function go(v, opsi = {}) {
   if (!views[v]) return;
-  beforeLeave.forEach(fn => { try { fn(cur, v); } catch (e) {} });
-  if (v !== cur) sebelumnya = cur;
+  if (!opsi.segar) {
+    beforeLeave.forEach(fn => { try { fn(cur, v); } catch (e) {} });
+    if (v !== cur) sebelumnya = cur;
+  }
   cur = v;
 
   const w = document.getElementById('wrap');
   w.innerHTML = views[v]();
-  w.scrollTop = 0;
+  w.scrollTop = opsi.segar ? (opsi.gulir || 0) : 0;
   /* Judul layar disimpan sebagai kunci bahasa Indonesia (id) dan
      diterjemahkan saat digambar — mengganti bahasa lalu render ulang
      (go ke layar yang sama) langsung menyegarkan judulnya. */

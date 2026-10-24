@@ -84,6 +84,7 @@ docs/
 │   │   ├── prefs.js    kontrol mana yang tampil + saklar getar
 │   │   ├── actions.js  peta aksi tiap tombol
 │   │   ├── render.js   gambar bar + focusKeep
+│   │   ├── perilaku.js kapan bar tampil di HP (fokus teks / menu / gulir) + reset ke kiri
 │   │   └── help.js     teks bantuan tiap tombol
 │   │
 │   ├── menus/          pop, slash, slash-trigger, wikilink, tag, insert, link,

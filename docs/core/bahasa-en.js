@@ -1,5 +1,7 @@
 /* Kamus Bahasa Inggris Hara. */
 export const EN = {
+  "Muat {n} lagi": "Load {n} more",
+  "{n} dari {t} ditampilkan": "{n} of {t} shown",
   "Beranda": "Home",
   "Catatan": "Notes",
   "Reminder": "Reminder",

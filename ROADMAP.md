@@ -100,18 +100,30 @@
 > update dengan konfirmasi. Butir yang belum selesai ditandai di bawah.
 
 ### P · Perbaikan
-- [x] P1. Toolbar mobile dirapikan. Kendali baca (A−/A+, cari, zen, dll.) dilipat ke
-      satu tombol di layar ≤ 640 px. **Belum:** bar format tidak otomatis
-      disembunyikan saat menggulir ke bawah.
-- [x] P2. Bar format punya indikator tepi (pudar) saat masih ada tombol di kiri/kanan.
-      Penyebab "Undo/Redo tidak terlihat" belum dipastikan di perangkat. Dugaan kuat:
-      bar sudah digeser dan tidak ada petunjuk. Perlu verifikasi di HP.
-- [ ] P3. Virtualisasi daftar catatan (K34). **Belum dikerjakan:** render daftar
-      berbasis string dan penanganan sapuan per baris perlu diuji di perangkat.
-- [~] P4. `npm test` memakai `JOBS` (default 4). Ditambah `npm run test:cepat`
-      (tes murni: pintar, tugas-lanjut). **Catatan:** paralelisme sudah ada sejak
-      sebelumnya, jadi ini bukan percepatan besar. Percepatan sungguhan butuh
-      pemangkasan tes jsdom yang berat.
+- [x] P1. Toolbar mobile (≤ 640 px). Kendali baca (A−/A+, cari, cari & ganti, daftar
+      isi, mode fokus) pindah ke menu ··· di header editor; baris lipat di atas judul
+      dihapus. Bar format sembunyi saat keyboard tidak aktif (tidak ada fokus teks dan
+      tidak ada menu terbuka), dan sembunyi saat menggulir ke bawah; muncul lagi saat
+      menggulir ke atas atau saat fokus teks baru. Gulir yang terjadi tepat setelah
+      mengetik diabaikan. Di layar lebar bar tidak berubah. Diuji di jsdom
+      (`tools/uji/p-mobile-daftar.mjs`, P1a–P1n); **belum diuji di HP**.
+- [~] P2. Undo, Redo, `/`, B, I tidak tampak. Penyebab paling mungkin: bar sudah
+      tergulir ke kanan (kelima tombol itu ada di awal bar). Perbaikan: pudaran di
+      tepi bar bila masih ada tombol tersembunyi, dan bar kembali ke ujung kiri setiap
+      kali editor digambar (P2a). **Belum terverifikasi di perangkat**: sandbox tidak
+      punya browser atau HP, jadi gejala asli belum direproduksi.
+- [~] P3. Daftar catatan dirender bertahap: 40 baris per langkah, dengan tombol
+      "Muat N lagi" dan pengamat (IntersectionObserver) di `#wrap`. Pilih semua dan
+      hitungan memakai daftar penuh (`idDaftarNotes`), bukan baris di DOM. Render ulang
+      tanpa `onBeforeLeave` (`go(v, {segar:true})`) agar mode pilih tidak dibatalkan.
+      **Ini BUKAN virtualisasi DOM penuh** (K34): baris yang sudah dimuat tetap ada di
+      DOM. Virtualisasi penuh butuh tinggi baris yang stabil dan uji gulir di perangkat,
+      jadi ditunda. Diuji di jsdom (P3a–P3h).
+- [x] P4. `npm test` paralel (`JOBS`, default 4) untuk semua 56 berkas. Ditambah
+      `npm run test:cepat` (13 berkas murni tanpa jsdom, ±1 detik) dan
+      `npm run test:ui` (43 berkas jsdom). Catatan: di sandbox 2 core, `npm test`
+      tetap ±5 menit karena tes jsdom mendominasi (±530 detik serial). Pengurangannya
+      butuh penulisan ulang tes jsdom yang berat, belum dikerjakan.
 - [x] P5. `docs/PLAN.md` diperbarui: ditambah bagian "Stack nyata (dipakai sekarang)".
       Rencana awal tetap dibiarkan sebagai arsip, diberi penanda.
 
@@ -259,7 +271,7 @@ Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
 - [x] K31. Aksi lintas modul: catatan → Reminder/tugas sekali langkah — Perintah 'Ubah baris bertenggat jadi tugas': baris yang mengandung tenggat (parser pengingat) menjadi to-do. Uji `fitur-catatan-ui.mjs`. Pembuatan Reminder terpisah belum dipasang.
 - [ ] K32. Penyimpanan OPFS untuk berkas besar — BELUM. OPFS bukan pilihan untuk WebView Android; rencana: Capacitor Filesystem.
 - [ ] K33. Pembaruan PWA eksplisit ("versi baru tersedia") — TIDAK BERLAKU. Target produk APK, bukan PWA.
-- [ ] K34. Virtualisasi daftar catatan — BELUM. Daftar masih dirender sekaligus. Virtualisasi butuh verifikasi scroll di browser.
+- [ ] K34. Virtualisasi daftar catatan — SEBAGIAN. Daftar kini bertahap (40 baris, "Muat lagi"; lihat P3). Virtualisasi DOM penuh BELUM, menunggu uji gulir di perangkat.
 - [ ] K35. Aksesibilitas & navigasi keyboard penuh — SEBAGIAN. Palette (Ctrl/⌘+K) bisa dinavigasi keyboard. Navigasi keyboard penuh untuk daftar dan editor BELUM.
 
 ### Ditahan — menunggu keputusan pengguna

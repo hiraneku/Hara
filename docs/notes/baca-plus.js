@@ -8,14 +8,14 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261024021602';
-import { closeAll } from './menus/pop.js?v=20261024021602';
-import { docEl } from './editor/caret.js?v=20261024021602';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261024021602';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261024021602';
-import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024021602';
-import { t as tr } from '../core/i18n.js?v=20261024021602';
-import { bukaCariGanti } from './cari-ganti.js?v=20261024021602';
+import { toast } from '../core/toast.js?v=20261024024733';
+import { closeAll } from './menus/pop.js?v=20261024024733';
+import { docEl } from './editor/caret.js?v=20261024024733';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261024024733';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261024024733';
+import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261024024733';
+import { t as tr } from '../core/i18n.js?v=20261024024733';
+import { bukaCariGanti } from './cari-ganti.js?v=20261024024733';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */
@@ -242,33 +242,29 @@ export function tutupCari() {
 
 /* ── ikat kejadian ── */
 export function bindBacaPlus() {
-  /* P1: di layar sempit kendali baca dilipat ke satu tombol */
-  document.addEventListener('click', e => {
-    const t = e.target.closest && e.target.closest('#ed-aksi-buka');
-    if (!t) return;
-    const isi = document.getElementById('ed-aksi-isi');
-    if (!isi) return;
-    const buka = !isi.classList.contains('buka');
-    isi.classList.toggle('buka', buka);
-    t.setAttribute('aria-expanded', String(buka));
-  });
+  /* Kendali baca. Di layar sempit tombolnya ada di menu ··· (P1): saat
+     diketuk dari pop, menu ditutup dulu dan tombol ··· dipakai sebagai
+     jangkar supaya panel yang terbuka tetap menempel di header. */
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
+    const diPop = e.target.closest('#pop [data-pop-baca]');
     const diEd = e.target.closest('.ed') || e.target.closest('#cari-float');
     const d = docEl();
-    if (!diEd || !d || !d.isConnected) return;
+    if (!(diEd || diPop) || !d || !d.isConnected) return;
     const b = e.target.closest('[data-et]');
     if (!b) return;
+    const jangkar = diPop ? (document.getElementById('dots') || b) : b;
+    if (diPop) closeAll();
     if (b.dataset.et === 'kecil') { aturUkuran(-1); return; }
     if (b.dataset.et === 'besar') { aturUkuran(1); return; }
     if (b.dataset.et === 'zen') { toggleZen(); return; }
     if (b.dataset.et === 'cari') { bukaCari(); return; }
     if (b.dataset.et === 'ganti') {
       const inp = document.getElementById('cari-note-in');
-      bukaCariGanti(b, inp ? inp.value : '');
+      bukaCariGanti(jangkar, inp ? inp.value : '');
       return;
     }
-    if (b.dataset.et === 'dafis') { bukaDaftarIsi(b); return; }
+    if (b.dataset.et === 'dafis') { bukaDaftarIsi(jangkar); return; }
   });
 
   /* ketuk di luar panel cari (dan bukan tombolnya) → tutup */
