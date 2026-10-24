@@ -2022,6 +2022,17 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .tbl-bar .tbl-danger{margin-left:auto}
 .tbl-bar .tbl-danger:hover{border-color:var(--danger);color:var(--danger)}
 .ed.baca .tbl-bar{display:none}
+/* MB2 · urut & saring per kolom, rumus sederhana */
+.tbl-urut{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--border)}
+.tbl-urut .tbl-lbl{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.tbl-urut select{height:28px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:12px;padding:0 6px}
+.tbl-urut button{height:28px;min-width:28px;padding:0 8px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.tbl-urut button:hover{border-color:var(--accent);color:var(--accent)}
+.tbl-urut input[type=search]{height:28px;flex:1 1 120px;min-width:90px;max-width:220px;border-radius:9px;border:1px solid var(--border);background:var(--sunken);color:var(--text);font:inherit;font-size:12px;padding:0 9px;outline:none}
+.tbl-urut input[type=search]:focus{border-color:var(--accent)}
+.b-table tr[hidden]{display:none}
+.b-table td[data-hasil]::after{content:attr(data-hasil);display:block;margin-top:3px;font-size:11px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.b-table td[data-hasil^="#"]::after{color:var(--danger)}
 .tbl-scroll{overflow-x:auto}
 .b-table table{width:100%;border-collapse:collapse;font-size:14px}
 .b-table th,.b-table td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);

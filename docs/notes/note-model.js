@@ -28,8 +28,9 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261024024733';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261024024733';
+import { t as tr } from '../core/i18n.js?v=20261024031304';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261024031304';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261024031304';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -323,6 +324,23 @@ export function blockToHtml(b) {
     const head = rawRows[0] || [''];
     const body = rawRows.length > 1 ? rawRows.slice(1) : [head.map(() => '')];
     const escCell = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    /* MB2: hasil rumus (atribut, bukan teks — tidak ikut tersimpan) & keadaan saring/urut */
+    const keadaan = ambilKeadaanTabel(b.id);
+    const kolAktif = Math.min(keadaan.kol, Math.max(0, head.length - 1));
+    const hasil = hitungTabel(rawRows);
+    const lolos = lolosSaring(rawRows, kolAktif, keadaan.saring);
+    const hasilSel = (ri, idx) => {
+      const teks = String((rawRows[ri] && rawRows[ri][idx]) ?? '');
+      return adalahRumus(teks) ? ` data-hasil="${escAttr(hasil[ri][idx])}"` : '';
+    };
+    const tools = `<div class="tbl-urut">` +
+      `<label class="tbl-lbl">${tr('Kolom')} <select data-tbl-kol aria-label="${tr('Kolom untuk urut & saring')}">` +
+        head.map((h, i) => `<option value="${i}"${i === kolAktif ? ' selected' : ''}>${escAttr(h || (tr('Kolom') + ' ' + (i + 1)))}</option>`).join('') +
+      `</select></label>` +
+      `<button type="button" data-tbl-act="urut-naik" title="${tr('Urut naik')}" aria-label="${tr('Urut naik')}">↑</button>` +
+      `<button type="button" data-tbl-act="urut-turun" title="${tr('Urut turun')}" aria-label="${tr('Urut turun')}">↓</button>` +
+      `<input type="search" data-tbl-saring value="${escAttr(keadaan.saring)}" placeholder="${tr('Saring…')}" aria-label="${tr('Saring baris')}">` +
+      `</div>`;
     return `<div class="b-table" contenteditable="false"${bid}${ref}>` +
       `<div class="tbl-bar">` +
       `<button type="button" data-tbl-act="add-row">+ ${tr('Baris')}</button>` +
@@ -331,9 +349,10 @@ export function blockToHtml(b) {
       `<button type="button" data-tbl-act="del-col">− ${tr('Kolom')}</button>` +
       `<button type="button" data-tbl-act="del-table" class="tbl-danger" title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `</div>` +
+      tools +
       `<div class="tbl-scroll"><table>` +
       `<thead><tr>${head.map(c => `<th contenteditable="true">${escCell(c)}</th>`).join('')}</tr></thead>` +
-      `<tbody>${body.map(r => `<tr>${head.map((_, idx) => `<td contenteditable="true">${escCell(r[idx])}</td>`).join('')}</tr>`).join('')}</tbody>` +
+      `<tbody>${body.map((r, i) => `<tr${lolos[i] === false ? ' hidden' : ''}>${head.map((_, idx) => `<td contenteditable="true"${hasilSel(i + 1, idx)}>${escCell(r[idx])}</td>`).join('')}</tr>`).join('')}</tbody>` +
       `</table></div>${pegangan()}</div>`;
   }
 

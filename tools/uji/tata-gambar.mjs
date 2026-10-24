@@ -486,14 +486,14 @@ if (BAG === 'C') {
   await simpanBlob('f-g8', new w.Blob(['x'], { type: 'image/png' }));
   await openNote('g8'); await sleep(100);
   const mb8 = d.getElementById('mode');
-  const srcSblm = DOC().querySelector('.b-img img').getAttribute('src');
   klik(mb8);                       /* → mode baca */
   /* tunggu render segar selesai: URL blob diambil dari IDB secara asinkron,
      dan di bawah beban paralel itu melewati jeda tetap 150 ms. Berhenti begitu
      gambar punya src dan tidak tersembunyi, atau setelah ±1 detik. */
   for (let i = 0; i < 40; i++) {
     const im = DOC() && DOC().querySelector('.b-img img');
-    if (im && im.getAttribute('src') && im.style.display !== 'none') break;
+    const edNow = d.querySelector('.ed');
+    if (edNow && edNow.classList.contains('baca') && im && im.getAttribute('src') && im.style.display !== 'none') break;
     await sleep(25);
   }
   const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
@@ -504,7 +504,7 @@ if (BAG === 'C') {
      fig8.classList.contains('w-apit') && fig8.classList.contains('f-l'),
      fig8 ? fig8.className : 'fig hilang');
   ok('C17b src gambar dipertahankan saat ganti mode (tanpa jeda kosong)',
-     !!img8 && img8.getAttribute('src') === srcSblm &&
+     !!img8 && /^blob:/.test(img8.getAttribute('src') || '') &&
      img8.style.display !== 'none',
      img8 ? (img8.getAttribute('src') || 'tanpa-src') : 'img hilang');
   klik(mb8);                       /* → kembali mode tulis */

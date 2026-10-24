@@ -10,18 +10,19 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261024024733';
-import { refresh } from './cleanup.js?v=20261024024733';
-import { snap } from './history.js?v=20261024024733';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261024024733';
-import { cariJudul, judulSpan } from '../wikilink.js?v=20261024024733';
-import { openNote } from '../model.js?v=20261024024733';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261024024733';
-import { newBlockId, blockToHtml } from '../note-model.js?v=20261024024733';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261024024733';
-import { esc } from '../../core/dom.js?v=20261024024733';
-import { toast } from '../../core/toast.js?v=20261024024733';
-import { t as tr } from '../../core/i18n.js?v=20261024024733';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261024031304';
+import { refresh } from './cleanup.js?v=20261024031304';
+import { snap } from './history.js?v=20261024031304';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261024031304';
+import { cariJudul, judulSpan } from '../wikilink.js?v=20261024031304';
+import { openNote } from '../model.js?v=20261024031304';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261024031304';
+import { newBlockId, blockToHtml } from '../note-model.js?v=20261024031304';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261024031304';
+import { esc } from '../../core/dom.js?v=20261024031304';
+import { toast } from '../../core/toast.js?v=20261024031304';
+import { t as tr } from '../../core/i18n.js?v=20261024031304';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261024031304';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -97,6 +98,30 @@ function bacaRowsDariEl(tblEl) {
   );
 }
 
+/* MB2: saring hanya menyembunyikan baris di DOM (data tetap utuh) dan
+   menyimpan keadaannya per blok, tanpa menyentuh catatan. */
+function terapkanSaringTabel(box) {
+  const kol = Number((box.querySelector('[data-tbl-kol]') || {}).value) || 0;
+  const teks = (box.querySelector('[data-tbl-saring]') || {}).value || '';
+  simpanKeadaanTabel(box.getAttribute('data-bid') || '', kol, teks);
+  const lolos = lolosSaring(bacaRowsDariEl(box), kol, teks);
+  Array.from(box.querySelectorAll('tbody tr')).forEach((tr, i) => {
+    tr.hidden = lolos[i] === false;
+  });
+}
+
+/* MB2: hasil rumus ditulis sebagai atribut data-hasil (CSS menampilkannya di
+   bawah sel). Teks sel tidak berubah, jadi tidak ikut tersimpan. */
+function segarkanRumusTabel(box) {
+  const hasil = hitungTabel(bacaRowsDariEl(box));
+  Array.from(box.querySelectorAll('tr')).forEach((tr, ri) => {
+    Array.from(tr.querySelectorAll('th,td')).forEach((cell, ci) => {
+      if (adalahRumus((cell.textContent || '').trim())) cell.setAttribute('data-hasil', (hasil[ri] && hasil[ri][ci]) ?? '');
+      else cell.removeAttribute('data-hasil');
+    });
+  });
+}
+
 function renderUlangTabel(bTable, rows) {
   snap();
   const bid = bTable.getAttribute('data-bid') || newBlockId();
@@ -145,7 +170,7 @@ let _perekam = null;
 let _timerRekam = null;
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261024024733');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261024031304');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
@@ -428,6 +453,12 @@ export function bindBlokModern() {
           rows.forEach(r => r.pop());
           renderUlangTabel(box, rows);
         }
+      } else if (act === 'urut-naik' || act === 'urut-turun') {
+        /* MB2: urut mengubah urutan baris data (tersimpan), header tetap */
+        const kol = Number((box.querySelector('[data-tbl-kol]') || {}).value) || 0;
+        const teks = (box.querySelector('[data-tbl-saring]') || {}).value || '';
+        simpanKeadaanTabel(box.getAttribute('data-bid') || '', kol, teks);
+        renderUlangTabel(box, urutBaris(rows, kol, act === 'urut-naik'));
       } else if (act === 'del-table') {
         snap();
         const next = nearestEditable(box);
@@ -506,9 +537,22 @@ export function bindBlokModern() {
   /* Perubahan isi pada Toggle / Tabel / Judul Audio langsung memicu autosave */
   document.addEventListener('input', e => {
     if (!e.target.closest) return;
-    if (e.target.closest('.b-toggle') || e.target.closest('.b-table') || e.target.closest('.b-audio')) {
+    const box = e.target.closest('.b-table');
+    if (box && e.target.matches && e.target.matches('[data-tbl-saring]')) {
+      terapkanSaringTabel(box);
+      return;
+    }
+    if (e.target.closest('.b-toggle') || box || e.target.closest('.b-audio')) {
+      if (box) segarkanRumusTabel(box);
       refresh();
     }
+  });
+
+  /* MB2: ganti kolom urut/saring → saring ulang baris yang terlihat */
+  document.addEventListener('change', e => {
+    if (!e.target.closest || !e.target.matches || !e.target.matches('[data-tbl-kol]')) return;
+    const box = e.target.closest('.b-table');
+    if (box) terapkanSaringTabel(box);
   });
 
   /* Navigasi Tab / Shift+Tab antar sel di dalam Tabel */
