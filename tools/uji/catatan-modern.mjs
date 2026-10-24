@@ -243,11 +243,12 @@ console.log('── 5. Tangkap Cepat, Ruang/Folder, Grid, Kanban, Versi & Blok M
   toggleModeTampilDaftar();
 
   bukaTabelProperti('kanban');
-  const mvBtn = document.querySelector(`[data-kb-id="${nProyek.id}"][data-kb-st="selesai"]`);
+  /* MB1: kolom memakai penulisan dari saran properti ("Selesai"), jadi pencocokan tak peka huruf */
+  const mvBtn = document.querySelector(`[data-kb-id="${nProyek.id}"][data-kb-st="selesai" i]`);
   cek('Papan Kanban merender kartu pada kolom status draf', !!mvBtn);
   mvBtn.click();
   cek('Klik pindah kolom Kanban langsung mengubah properti status catatan',
-    nProyek.props.find(p => p.k === 'status').v === 'selesai');
+    nProyek.props.find(p => p.k === 'status').v.toLowerCase() === 'selesai');
 
   openNote(nProyek.id);
   await rekamVersiCatatan(nProyek);

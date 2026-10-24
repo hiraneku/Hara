@@ -8,25 +8,27 @@
  * - Pindah Ruang / Folder & Riwayat Versi Lokal Catatan
  */
 
-import { state, save } from '../core/store.js?v=20261024024733';
-import { go, cur } from '../core/router.js?v=20261024024733';
-import { flush } from '../core/autosave.js?v=20261024024733';
-import { toast } from '../core/toast.js?v=20261024024733';
-import { stamp } from '../core/dom.js?v=20261024024733';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024024733';
-import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261024024733';
+import { state, save } from '../core/store.js?v=20261024031304';
+import { go, cur } from '../core/router.js?v=20261024031304';
+import { flush } from '../core/autosave.js?v=20261024031304';
+import { toast } from '../core/toast.js?v=20261024031304';
+import { stamp } from '../core/dom.js?v=20261024031304';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261024031304';
+import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261024031304';
 export { hentikanBaca };
-import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261024024733';
-import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261024024733';
-import { openNote } from './model.js?v=20261024024733';
-import { waktuTenggat } from './pengingat.js?v=20261024024733';
-import { terlihat } from './kunci.js?v=20261024024733';
-import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261024024733';
-import { openPop, closeAll } from './menus/pop.js?v=20261024024733';
+import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261024031304';
+import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261024031304';
+import { openNote } from './model.js?v=20261024031304';
+import { waktuTenggat } from './pengingat.js?v=20261024031304';
+import { terlihat } from './kunci.js?v=20261024031304';
+import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261024031304';
+import { openPop, closeAll } from './menus/pop.js?v=20261024031304';
+import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalender,
+         setKelompok, setKalenderKunci } from './papan.js?v=20261024031304';
 import {
   daftarRuang, tambahRuang, pindahkanCatatanKeRuang,
   ambilVersiCatatan, pulihkanVersiCatatan,
-} from './ruang.js?v=20261024024733';
+} from './ruang.js?v=20261024031304';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const KODE_BAHASA = { id: 'id-ID', en: 'en-US', ja: 'ja-JP' };
@@ -155,22 +157,14 @@ export function jadikanBarisTenggatTugas() {
   toast(tr('{n} baris jadi tugas', { n: jumlah }));
 }
 
-/* ───────── K19 · tabel properti + Papan Kanban (status) ───────── */
+/* ───────── K19 · tabel properti + papan Kanban & kalender (MB1) ───────── */
 
 let _modeDb = 'tabel';
-const KOLOM_KANBAN_BAWAAN = ['ide', 'draf', 'berjalan', 'selesai'];
 
 export function bukaTabelProperti(modeAwal = '') {
   if (modeAwal) _modeDb = modeAwal;
   const aktif = state.notes.filter(n => !n.deletedAt && !n.archived && terlihat(n) && Array.isArray(n.props) && n.props.length);
   const kolom = [...new Set(aktif.flatMap(n => n.props.map(p => p.k)).filter(Boolean))];
-
-  /* Kolom Kanban dikumpulkan dari nilai `status` nyata + lajur standar */
-  const statusTambahan = aktif
-    .map(n => (n.props.find(p => p.k === 'status') || {}).v || '')
-    .map(v => v.trim())
-    .filter(v => v && !KOLOM_KANBAN_BAWAAN.includes(v.toLowerCase()));
-  const lajurKanban = [...KOLOM_KANBAN_BAWAAN, ...new Set(statusTambahan)];
 
   const baris = aktif.map(n => `<tr>
     <td style="padding:7px 8px;border-bottom:1px solid var(--border)"><a href="#" data-buka="${esc(n.id)}" style="color:var(--accent);font-weight:500">${esc(n.title || tr('Tanpa judul'))}</a></td>
@@ -180,69 +174,51 @@ export function bukaTabelProperti(modeAwal = '') {
     }).join('')}
   </tr>`).join('');
 
-  const kanbanHtml = `
-    <div class="kb-board">
-      ${lajurKanban.map(st => {
-        const kartu = aktif.filter(n => {
-          const v = ((n.props.find(p => p.k === 'status') || {}).v || '').trim().toLowerCase();
-          return st === 'ide' ? (!v || v === 'ide') : v === st.toLowerCase();
-        });
-        return `<div class="kb-col">
-          <div class="kb-head"><span>${esc(st)}</span><span class="chip">${kartu.length}</span></div>
-          <div class="kb-list">
-            ${kartu.map(n => `
-              <div class="kb-card">
-                <a href="#" class="kb-title" data-buka="${esc(n.id)}">${esc(n.title || tr('Tanpa judul'))}</a>
-                <div class="kb-move">
-                  ${KOLOM_KANBAN_BAWAAN.filter(x => x !== st.toLowerCase()).map(target =>
-                    `<button type="button" class="kb-mv-btn" data-kb-id="${esc(n.id)}" data-kb-st="${esc(target)}">→ ${esc(target)}</button>`
-                  ).join('')}
-                </div>
-              </div>`).join('') || `<span class="kb-empty">—</span>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  const tombolMode = (mode, label) =>
+    `<button type="button" class="btn ${_modeDb === mode ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="${mode}">${label}</button>`;
+
+  let isi;
+  if (aktif.length === 0) isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada catatan dengan properti.')}</p>`;
+  else if (_modeDb === 'kanban') isi = htmlKanban(aktif);
+  else if (_modeDb === 'kalender') isi = htmlKalender(aktif);
+  else isi = `<div style="overflow-x:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${tr('Catatan')}</th>${kolom.map(k => `<th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${esc(k)}</th>`).join('')}</tr></thead>
+      <tbody>${baris}</tbody></table></div>`;
 
   openPop(`
-    <div class="rn-modal-box" style="max-width:720px;max-height:82vh;overflow:auto">
+    <div class="rn-modal-box" style="max-width:760px;max-height:82vh;overflow:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <h3 class="rn-modal-title">${tr('Tabel properti')}</h3>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button type="button" class="btn ${_modeDb === 'tabel' ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="tabel">${tr('Tabel')}</button>
-          <button type="button" class="btn ${_modeDb === 'kanban' ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="kanban">Kanban</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${tombolMode('tabel', tr('Tabel'))}
+          ${tombolMode('kanban', 'Kanban')}
+          ${tombolMode('kalender', tr('Kalender'))}
           <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px"><svg class="ico"><use href="#i-x"/></svg></button>
         </div>
       </div>
-      ${aktif.length === 0
-        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada catatan dengan properti.')}</p>`
-        : _modeDb === 'kanban'
-          ? kanbanHtml
-          : `<div style="overflow-x:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse">
-              <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${tr('Catatan')}</th>${kolom.map(k => `<th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${esc(k)}</th>`).join('')}</tr></thead>
-              <tbody>${baris}</tbody></table></div>`}
+      ${isi}
     </div>`);
 
-  document.getElementById('pop').onclick = e => {
+  const pop = document.getElementById('pop');
+  pop.onchange = e => {
+    if (e.target.matches('[data-papan-kelompok]')) { setKelompok(e.target.value); bukaTabelProperti('kanban'); }
+    else if (e.target.matches('[data-kal-kunci]')) { setKalenderKunci(e.target.value); bukaTabelProperti('kalender'); }
+  };
+  pop.onclick = e => {
     const modeBtn = e.target.closest('[data-db-mode]');
-    if (modeBtn) {
-      bukaTabelProperti(modeBtn.dataset.dbMode);
-      return;
-    }
+    if (modeBtn) { bukaTabelProperti(modeBtn.dataset.dbMode); return; }
     const mv = e.target.closest('[data-kb-id]');
     if (mv) {
-      const targetNote = state.notes.find(x => x.id === mv.dataset.kbId);
-      if (targetNote) {
-        targetNote.props = Array.isArray(targetNote.props) ? targetNote.props : [];
-        const existing = targetNote.props.find(p => p.k === 'status');
-        if (existing) existing.v = mv.dataset.kbSt;
-        else targetNote.props.push({ k: 'status', v: mv.dataset.kbSt });
-        touch(targetNote);
-        save();
+      /* pindah kolom = ubah satu properti; kolom kosong menghapus nilainya */
+      if (pindahKeKolom(mv.dataset.kbId, mv.dataset.kbK || 'status', mv.dataset.kbSt)) {
         bukaTabelProperti('kanban');
       }
       return;
     }
+    const geser = e.target.closest('[data-kal-geser]');
+    if (geser) { geserKalender(+geser.dataset.kalGeser); bukaTabelProperti('kalender'); return; }
+    const hari = e.target.closest('[data-kal-hari]');
+    if (hari) { pilihHariKalender(hari.dataset.kalHari); bukaTabelProperti('kalender'); return; }
     const a = e.target.closest('[data-buka]');
     if (a) { e.preventDefault(); closeAll(); openNote(a.dataset.buka); }
   };
