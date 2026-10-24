@@ -2,17 +2,18 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024230000';
-import * as M from './mesin.js?v=20261024230000';
-import * as A from './aksi.js?v=20261024230000';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024230000';
-import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261024230000';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024230000';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024230000';
-import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261024230000';
-import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261024230000';
-import { segarkanKartuMusik } from './kartu.js?v=20261024230000';
-import { segarSampul } from './sampul-dom.js?v=20261024230000';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261024235900';
+import * as M from './mesin.js?v=20261024235900';
+import * as A from './aksi.js?v=20261024235900';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261024235900';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261024235900';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261024235900';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261024235900';
+import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261024235900';
+import { terapkanEfekTersimpan } from './efek.js?v=20261024235900';
+import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261024235900';
+import { segarkanKartuMusik } from './kartu.js?v=20261024235900';
+import { segarSampul } from './sampul-dom.js?v=20261024235900';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
@@ -65,6 +66,7 @@ export const musikModule = {
     pasangPengaturan();
     pasangEkspor();
     terapkanEqTersimpan();
+    terapkanEfekTersimpan();
     M.dengar(onMesin);
     onAfterRender(() => segarSampul(document));
     M.pasangAksiSistem({

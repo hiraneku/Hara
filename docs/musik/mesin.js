@@ -9,12 +9,13 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024230000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024235900';
+import { buatRantaiEfek } from './efek-dsp.js?v=20261024235900';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261024230000';
+} from './logika.js?v=20261024235900';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -78,6 +79,16 @@ let kompres = null;
    Preamp = offset gain sebelum pita; Q = lebar pita untuk semua pita. */
 let eqNodes = null;
 let eqKeadaan = normalisasiEq(EQ_AWAL);
+let efekMasuk = null;
+let efekKeluar = null;
+let efekRantai = null;
+let efekKeadaan = null;
+
+/* Atur efek pemutar. set: { id: { aktif, p } } dari efek.js. Berlaku langsung saat bermain. */
+export function aturEfek(set) {
+  efekKeadaan = set;
+  if (efekRantai) efekRantai.atur(set);
+}
 
 function terapkanEq() {
   const aktif = eqKeadaan.aktif;
@@ -116,7 +127,13 @@ function bangunKeluaran(c) {
   kompres.release.value = 0.15;
   gain.connect(eqNodes[0]);
   for (let i = 0; i < eqNodes.length - 1; i++) eqNodes[i].connect(eqNodes[i + 1]);
-  eqNodes[eqNodes.length - 1].connect(kompres);
+  /* Rantai efek: ekualiser -> efek aktif -> kompresor. Efek mati tidak memproses audio. */
+  efekMasuk = c.createGain();
+  efekKeluar = c.createGain();
+  eqNodes[eqNodes.length - 1].connect(efekMasuk);
+  efekKeluar.connect(kompres);
+  efekRantai = buatRantaiEfek(c, efekMasuk, efekKeluar);
+  if (efekKeadaan) efekRantai.atur(efekKeadaan);
   terapkanEq();
   /* Lewat MediaStream ke elemen <audio> supaya dianggap pemutaran media (layar kunci).
      Bila tidak didukung, keluar langsung ke speaker seperti sebelumnya. */

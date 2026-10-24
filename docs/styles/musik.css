@@ -565,3 +565,35 @@
   flex: none; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
   letter-spacing: .02em; color: var(--mus-redup); border: 1px solid var(--mus-garis);
 }
+
+/* ── Effect: daftar tujuh efek (satu kategori) ── */
+.mus-fx-kartu { padding: 16px 18px 6px; }
+.mus-fx-kategori { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 6px; }
+.mus-fx-daftar { display: flex; flex-direction: column; }
+.mus-fx { border-top: 1px solid var(--mus-garis); }
+.mus-fx:first-child { border-top: 0; }
+.mus-fx-baris { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+.mus-fx-teks { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.mus-fx-judul { font-size: 15px; font-weight: 650; color: var(--mus-teks); }
+.mus-fx.mati .mus-fx-judul { color: var(--mus-redup); }
+.mus-fx-sub { font-size: 12.5px; line-height: 1.4; color: var(--mus-faint); }
+.mus-fx-baris .mus-saklar { flex: none; }
+.mus-fx-panah {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--mus-garis); background: rgba(255, 255, 255, .04); color: var(--mus-redup);
+  transition: transform .2s, color .2s, border-color .2s;
+}
+.mus-fx-panah svg, .mus-fx-panah .mus-ico { width: 18px; height: 18px; }
+.mus-fx-panah.buka { transform: rotate(90deg); color: var(--mus-aksen); border-color: var(--mus-aksen); }
+.mus-fx-panel { display: flex; flex-direction: column; gap: 16px; padding: 2px 0 18px; }
+.mus-fx-kontrol { display: flex; flex-direction: column; gap: 8px; }
+.mus-fx-kepala { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13.5px; font-weight: 600; color: var(--mus-teks); }
+.mus-fx-kepala output { font-size: 13.5px; font-weight: 700; color: var(--mus-aksen); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mus-fx-kontrol .mus-range { width: 100%; }
+.mus-fx-seg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mus-fx-sub-judul {
+  margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--mus-garis);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mus-faint);
+}
+.mus-fx-catatan { margin: 0 4px; }
