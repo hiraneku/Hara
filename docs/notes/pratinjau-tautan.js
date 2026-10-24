@@ -9,13 +9,13 @@
    • Tautan mati (catatan belum ada) menampilkan petunjuk, bukan cuplikan.
    • Catatan terkunci (PIN) tidak menampilkan isinya — konsisten dengan D19. */
 
-import { state } from '../core/store.js?v=20261025001200';
-import { t as tr } from '../core/i18n.js?v=20261025001200';
-import { esc } from '../core/dom.js?v=20261025001200';
-import { cariJudul, judulSpan } from './wikilink.js?v=20261025001200';
-import { excerptOf } from './note-model.js?v=20261025001200';
-import { terlihat } from './kunci.js?v=20261025001200';
-import { openNote } from './model.js?v=20261025001200';
+import { state } from '../core/store.js?v=20261024170620';
+import { t as tr } from '../core/i18n.js?v=20261024170620';
+import { esc } from '../core/dom.js?v=20261024170620';
+import { cariJudul, judulSpan } from './wikilink.js?v=20261024170620';
+import { excerptOf } from './note-model.js?v=20261024170620';
+import { terlihat } from './kunci.js?v=20261024170620';
+import { openNote } from './model.js?v=20261024170620';
 
 const JEDA_HOVER = 350;
 const JEDA_TAHAN = 450;

@@ -4,15 +4,16 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025001200';
-import { toast } from '../../core/toast.js?v=20261025001200';
-import { t as tr } from '../../core/i18n.js?v=20261025001200';
-import { ensureCaret, caretEnd } from './caret.js?v=20261025001200';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261025001200';
-import { refresh } from './cleanup.js?v=20261025001200';
-import { snap } from './history.js?v=20261025001200';
-import { pasangGambar } from './image.js?v=20261025001200';
-import { pastikanKolomAkhir } from './blocks.js?v=20261025001200';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024170620';
+import { toast } from '../../core/toast.js?v=20261024170620';
+import { t as tr } from '../../core/i18n.js?v=20261024170620';
+import { ensureCaret, caretEnd } from './caret.js?v=20261024170620';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261024170620';
+import { refresh } from './cleanup.js?v=20261024170620';
+import { snap } from './history.js?v=20261024170620';
+import { pasangGambar } from './image.js?v=20261024170620';
+import { pastikanKolomAkhir } from './blocks.js?v=20261024170620';
+import { bacaGoresan, serialGoresan } from './goresan.js?v=20261024170620';
 
 const LEBAR = 720;
 const TINGGI = 460;
@@ -166,7 +167,7 @@ function gambarSatuJejak(ctx, st) {
 }
 
 /** Sisipkan blok gambar sketsa langsung ke posisi aktif di editor. */
-export async function sisipkanBlobSketsa(blob, figTarget = null) {
+export async function sisipkanBlobSketsa(blob, figTarget = null, goresanSimpan = '') {
   const id = buatIdBlob('sk_');
   try {
     await simpanBlob(id, blob);
@@ -186,6 +187,8 @@ export async function sisipkanBlobSketsa(blob, figTarget = null) {
     }
     if (btnX) btnX.setAttribute('data-imgx', id);
     figTarget.setAttribute('data-sketch', '1');
+    if (goresanSimpan) figTarget.setAttribute('data-goresan', goresanSimpan);
+    else figTarget.removeAttribute('data-goresan');
     refresh();
     pasangGambar();
     toast(tr('Sketsa diperbarui'));
@@ -201,7 +204,9 @@ export async function sisipkanBlobSketsa(blob, figTarget = null) {
     while (n && n !== d && n.parentNode !== d) n = n.parentNode;
     if (n && n.parentNode === d) blokRef = n;
   }
-  const blk = makeBlock({ type: 'image', meta: { blobId: id, alt: 'sketsa', sketch: true } });
+  const meta = { blobId: id, alt: 'sketsa', sketch: true };
+  if (goresanSimpan) meta.goresan = goresanSimpan;
+  const blk = makeBlock({ type: 'image', meta });
   const wrap = document.createElement('div');
   wrap.innerHTML = blockToHtml(blk);
   const el = wrap.firstElementChild;
@@ -244,6 +249,9 @@ export function bukaStudioSketsa(figEdit = null) {
   const tumpukRedo = [];
   let aktif = null;
   let gambarDasar = null;
+  /* true bila sketsa punya latar gambar (foto atau sketsa lama berbentuk PNG).
+     Dalam kondisi itu goresan tidak disimpan sebagai data, hanya gambar hasil. */
+  let adaLatarFoto = false;
 
   overlay.innerHTML = `
     <div class="sk-box">
@@ -300,17 +308,30 @@ export function bukaStudioSketsa(figEdit = null) {
 
   /* Bila mengedit sketsa yang sudah ada, muat blob gambarnya ke latar */
   if (figEdit) {
-    const imgLama = figEdit.querySelector('img[data-blob]');
-    const idLama = imgLama?.getAttribute('data-blob');
-    if (idLama) {
-      ambilBlob(idLama).then(blob => {
-        if (!blob || !ctx) return;
-        const u = URL.createObjectURL(blob);
-        const im = new Image();
-        im.onload = () => { gambarDasar = im; URL.revokeObjectURL(u); renderUlang(); };
-        im.onerror = () => URL.revokeObjectURL(u);
-        im.src = u;
-      }).catch(() => {});
+    /* Sketsa yang menyimpan goresan (data-goresan) dimuat sebagai objek, bukan PNG.
+       Gambar yang sudah di-scan atau foto biasa tetap memakai jalur PNG lama. */
+    const gor = figEdit.hasAttribute('data-scan') || figEdit.hasAttribute('data-orig-blob')
+      ? null
+      : bacaGoresan(figEdit.getAttribute('data-goresan') || '', LEBAR, TINGGI);
+    if (gor && gor.goresan.length) {
+      jejak.push(...gor.goresan);
+      latar = gor.latar;
+      pola = gor.pola;
+      overlay.querySelectorAll('[data-sk-pola]').forEach(b => b.classList.toggle('on', b.dataset.skPola === pola));
+    } else {
+      adaLatarFoto = true;
+      const imgLama = figEdit.querySelector('img[data-blob]');
+      const idLama = imgLama?.getAttribute('data-blob');
+      if (idLama) {
+        ambilBlob(idLama).then(blob => {
+          if (!blob || !ctx) return;
+          const u = URL.createObjectURL(blob);
+          const im = new Image();
+          im.onload = () => { gambarDasar = im; URL.revokeObjectURL(u); renderUlang(); };
+          im.onerror = () => URL.revokeObjectURL(u);
+          im.src = u;
+        }).catch(() => {});
+      }
     }
   }
 
@@ -385,6 +406,7 @@ export function bukaStudioSketsa(figEdit = null) {
     if (e.target.closest('#sk-bersih')) {
       jejak.length = 0;
       gambarDasar = null;
+      adaLatarFoto = false;
       renderUlang();
       return;
     }
@@ -397,9 +419,15 @@ export function bukaStudioSketsa(figEdit = null) {
         toast(tr('Coret sesuatu terlebih dahulu'));
         return;
       }
+      const goresanSimpan = adaLatarFoto
+        ? ''
+        : serialGoresan({ goresan: jejak, latar, pola }, LEBAR, TINGGI);
+      if (!adaLatarFoto && jejak.length && !goresanSimpan) {
+        toast(tr('Goresan terlalu banyak untuk disimpan sebagai objek; hanya gambar yang disimpan'));
+      }
       const blob = await eksporKanvasKeBlob(cv, ctx, jejak, latar);
       overlay.remove();
-      await sisipkanBlobSketsa(blob, figEdit);
+      await sisipkanBlobSketsa(blob, figEdit, goresanSimpan);
     }
   });
 

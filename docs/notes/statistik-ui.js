@@ -1,9 +1,9 @@
 /* Dialog statistik (K20): heatmap jurnal & tugas selesai, grafik per minggu,
    rentetan jurnal. Dibuka dari command palette. Logika ada di statistik.js. */
 
-import { state } from '../core/store.js?v=20261025001200';
-import { t as tr } from '../core/i18n.js?v=20261025001200';
-import { aktivitasHarian, tugasSelesaiPerMinggu, rentetanJurnal, tingkatIntensitas } from './statistik.js?v=20261025001200';
+import { state } from '../core/store.js?v=20261024170620';
+import { t as tr } from '../core/i18n.js?v=20261024170620';
+import { aktivitasHarian, tugasSelesaiPerMinggu, rentetanJurnal, tingkatIntensitas } from './statistik.js?v=20261024170620';
 
 const OPASITAS = [0, 0.25, 0.5, 0.75, 1];
 const HARI_HURUF = ['S', 'S', 'R', 'K', 'J', 'S', 'M'];

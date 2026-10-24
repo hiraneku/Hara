@@ -28,9 +28,9 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261025001200';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261025001200';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025001200';
+import { t as tr } from '../core/i18n.js?v=20261024170620';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261024170620';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261024170620';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -400,9 +400,10 @@ export function blockToHtml(b) {
         (ga ? ` data-ga="${ga}"` : '') + (gb ? ` data-gb="b"` : '');
     }
     const skAttr = meta.sketch ? ' data-sketch="1"' : '';
+    const gorAttr = meta.goresan ? ` data-goresan="${escAttr(meta.goresan)}"` : '';
     const scanAttr = meta.scan ? ` data-scan="${escAttr(meta.scan)}"` : '';
     const origAttr = meta.origBlob ? ` data-orig-blob="${escAttr(meta.origBlob)}"` : '';
-    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${scanAttr}${origAttr}${bgAttr}>` +
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${bgAttr}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
@@ -541,6 +542,8 @@ export function elToBlock(el) {
       if (alt) meta.alt = alt;
     }
     if (el.getAttribute && el.getAttribute('data-sketch') === '1') meta.sketch = true;
+    const gor = el.getAttribute && el.getAttribute('data-goresan');
+    if (gor) meta.goresan = gor;
     const sc = el.getAttribute && el.getAttribute('data-scan');
     if (sc) meta.scan = sc;
     const ob = el.getAttribute && el.getAttribute('data-orig-blob');
