@@ -219,4 +219,16 @@ uji('setiap efek bisa dibangun dan dilepas tanpa galat', () => {
   }
 });
 
+uji('semua filter memakai Q Butterworth (-3.01 dB): Q lowpass/highpass dinyatakan dalam dB', () => {
+  // Q 0 dB (linear 1) sudah berpuncak; di dalam loop umpan balik puncak itu membuat energi naik terus.
+  for (const e of D.EFEK) {
+    const ctx = buatKonteks();
+    const r = buatRantaiEfek(ctx, ctx.createGain(), ctx.createGain());
+    r.atur(D.ubahEfekPure(D.efekAwal(), e.id, { aktif: true }));
+    const filter = ctx.semua.filter(n => n.tipe === 'biquad');
+    assert.ok(filter.length > 0, `${e.id} punya filter`);
+    for (const n of filter) assert.ok(Math.abs(n.Q.value + 3.0103) < 1e-3, `${e.id}: Q=${n.Q.value}`);
+  }
+});
+
 console.log(`musik-efek: ${lulus} uji lulus`);

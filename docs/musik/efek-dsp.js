@@ -5,13 +5,19 @@
    Catatan: hanya untuk pemutaran. Ekspor tidak memakai modul ini.
    Belum diuji di perangkat: butuh AudioContext sungguhan. */
 
-import { EFEK, IR_RUANG } from './efek-data.js?v=20261024235900';
+import { EFEK, IR_RUANG } from './efek-data.js?v=20261024235959';
 
 const RAMP = 0.05; // detik, untuk perubahan parameter halus
+/* Web Audio menyatakan Q lowpass/highpass dalam dB, bukan angka linear.
+   -3.0103 dB = Q linear 0.707 = Butterworth (tanpa puncak). Q 0 dB (linear 1) sudah
+   berpuncak; di dalam loop umpan balik puncak itu membuat loop gain melewati 1 dan energi naik terus. */
+const Q_BUTTER = -3.0103;
+let segera = false; // true saat penerapan pertama instans baru: nilai langsung, tanpa transisi
 const IR_CACHE = new WeakMap(); // AudioContext -> Map(idRuang -> Promise<AudioBuffer>)
 
 function atur(param, nilai, c) {
-  param.setTargetAtTime(nilai, c.currentTime, RAMP);
+  if (segera) param.value = nilai;
+  else param.setTargetAtTime(nilai, c.currentTime, RAMP);
 }
 
 /* Wadah node: semua node dicatat supaya bisa dilepas bersamaan. */
@@ -32,7 +38,7 @@ function buatLebar(c, reg) {
   const sisi = reg(c.createGain());
   const kiriKeSisi = reg(c.createGain()); kiriKeSisi.gain.value = 0.5;
   const kananKeSisi = reg(c.createGain()); kananKeSisi.gain.value = -0.5;
-  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = 0.707;
+  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = Q_BUTTER;
   const w = reg(c.createGain()); w.gain.value = 1;
   const negasi = reg(c.createGain()); negasi.gain.value = -1;
   const outL = reg(c.createGain());
@@ -82,7 +88,7 @@ function bangunReverb(c, { reg }) {
   masuk.connect(kering); kering.connect(keluar);
 
   const pre = reg(c.createDelay(1));
-  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.Q.value = 0.5;
+  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.Q.value = Q_BUTTER;
   masuk.connect(pre); pre.connect(hp);
 
   const jumlahKiri = reg(c.createGain()); jumlahKiri.gain.value = 0.25;
@@ -90,7 +96,7 @@ function bangunReverb(c, { reg }) {
   const combs = COMB_MS.map((ms, i) => {
     const inG = reg(c.createGain());
     const d = reg(c.createDelay(0.2));
-    const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass';
+    const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = Q_BUTTER;
     const fb = reg(c.createGain());
     hp.connect(inG); inG.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d);
     lp.connect(i % 2 === 0 ? jumlahKiri : jumlahKanan);
@@ -147,8 +153,8 @@ function bangunGema(c, { reg }, pemetaan) {
   sp.connect(inL, 0); sp.connect(inR, 1);
   inL.connect(dL); inR.connect(dR);
 
-  const lpL = reg(c.createBiquadFilter()); lpL.type = 'lowpass';
-  const lpR = reg(c.createBiquadFilter()); lpR.type = 'lowpass';
+  const lpL = reg(c.createBiquadFilter()); lpL.type = 'lowpass'; lpL.Q.value = Q_BUTTER;
+  const lpR = reg(c.createBiquadFilter()); lpR.type = 'lowpass'; lpR.Q.value = Q_BUTTER;
   dL.connect(lpL); dR.connect(lpR);
 
   const fbSendiriL = reg(c.createGain()); const fbSendiriR = reg(c.createGain());
@@ -218,7 +224,7 @@ function bangunLebar(c, { reg }) {
 function bangunSpasial(c, { reg, pool }) {
   const pan = reg(c.createStereoPanner());
   const redam = reg(c.createGain());
-  const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass';
+  const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = Q_BUTTER;
   const lfo = reg(c.createOscillator()); lfo.type = 'sine'; lfo.frequency.value = 0;
   const lfoKedalaman = reg(c.createGain()); lfoKedalaman.gain.value = 0;
   lfo.connect(lfoKedalaman); lfoKedalaman.connect(pan.pan);
@@ -256,7 +262,7 @@ function bangunPantulan(c, { reg }) {
     masuk.connect(d); d.connect(g); g.connect(pan); pan.connect(bus);
     taps.push({ d, g, pan, i });
   }
-  const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass';
+  const lp = reg(c.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = Q_BUTTER;
   bus.connect(lp);
   const wet = reg(c.createGain());
   lp.connect(wet); wet.connect(keluar);
@@ -279,7 +285,12 @@ function bangunPantulan(c, { reg }) {
   };
 }
 
-/* CONVOLUTION REVERB: respons ruangan nyata (IR bawaan), dimuat sekali per konteks. */
+/* CONVOLUTION REVERB: respons ruangan nyata (IR bawaan), dimuat sekali per konteks.
+   Normalisasi dilakukan sendiri, bukan normalize bawaan browser (hasilnya berbeda antar browser):
+   energi total tiap IR diatur ke IR_ENERGI_TARGET, sehingga semua ruangan terdengar setara
+   (sekitar -8 dB pada wet 100%, dekat dengan Reverb algoritmik). */
+const IR_ENERGI_TARGET = 0.15;
+
 function muatIr(c, id) {
   let peta = IR_CACHE.get(c);
   if (!peta) { peta = new Map(); IR_CACHE.set(c, peta); }
@@ -289,7 +300,13 @@ function muatIr(c, id) {
     peta.set(id, fetch(url).then(res => {
       if (!res.ok) throw new Error('IR tidak ditemukan: ' + r.file);
       return res.arrayBuffer();
-    }).then(buf => c.decodeAudioData(buf)));
+    }).then(buf => c.decodeAudioData(buf)).then(buffer => {
+      let energi = 0;
+      for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        for (const v of buffer.getChannelData(ch)) energi += v * v;
+      }
+      return { buffer, skala: energi > 0 ? Math.sqrt(IR_ENERGI_TARGET / energi) : 0 };
+    }));
   }
   return peta.get(id);
 }
@@ -301,30 +318,50 @@ function bangunKonvolusi(c, { reg }) {
   masuk.connect(kering); kering.connect(keluar);
 
   const pre = reg(c.createDelay(1));
-  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.Q.value = 0.5;
-  const konv = reg(c.createConvolver());
-  const gainIr = reg(c.createGain());
+  const hp = reg(c.createBiquadFilter()); hp.type = 'highpass'; hp.Q.value = Q_BUTTER;
+  const gainIr = reg(c.createGain()); gainIr.gain.value = 0; // diam sampai IR dimuat
   const lebar = buatLebar(c, reg);
   const wet = reg(c.createGain());
-  masuk.connect(pre); pre.connect(hp); hp.connect(konv); konv.connect(gainIr);
+  masuk.connect(pre); pre.connect(hp);
   gainIr.connect(lebar.in); lebar.out.connect(wet); wet.connect(keluar);
 
+  /* ConvolverNode dibuat baru setiap ganti ruangan: buffer ConvolverNode tidak dijamin
+     bisa diganti di semua browser (Safari/WebKit bisa menolak). */
+  let konv = null;
   let ruangSekarang = null;
   let token = 0;
+  let hidup = true;
+  let skalaIr = 0;
+  let gainDb = 0;
+  const terapkanGain = () => atur(gainIr.gain, skalaIr * Math.pow(10, gainDb / 20), c);
+
   return {
     in: masuk,
     out: keluar,
+    buang() { hidup = false; },
     atur(p) {
       atur(pre.delayTime, p.predelay / 1000, c);
       atur(hp.frequency, Math.max(10, p.cutLow), c);
-      atur(gainIr.gain, Math.pow(10, p.gainIr / 20), c);
+      gainDb = p.gainIr;
+      terapkanGain();
       lebar.atur(p.lebar / 100, 0);
       atur(wet.gain, p.wet / 100, c);
       if (p.ruang !== ruangSekarang) {
         ruangSekarang = p.ruang;
         const t = ++token;
         muatIr(c, p.ruang)
-          .then(buf => { if (t === token) konv.buffer = buf; })
+          .then(({ buffer, skala }) => {
+            if (!hidup || t !== token) return; // efek sudah mati, atau ruangan sudah diganti lagi
+            const baru = reg(c.createConvolver());
+            baru.normalize = false; // skala sudah diatur di sini
+            baru.buffer = buffer;
+            hp.connect(baru);
+            baru.connect(gainIr);
+            if (konv) { hp.disconnect(konv); konv.disconnect(); }
+            konv = baru;
+            skalaIr = skala;
+            terapkanGain();
+          })
           .catch(() => { /* IR gagal dimuat: efek diam, audio asli tetap terdengar */ });
       }
     },
@@ -348,6 +385,7 @@ function bangunInstans(c, id) {
 }
 
 function lepasInstans(inst) {
+  if (typeof inst.buang === 'function') inst.buang();
   for (const node of inst.pool) {
     try { node.disconnect(); } catch (e) { /* abaikan */ }
     if (typeof node.stop === 'function') { try { node.stop(); } catch (e) { /* sudah berhenti */ } }
@@ -382,10 +420,18 @@ export function buatRantaiEfek(c, masuk, keluar) {
           aktif.delete(id);
         }
       }
+      const baru = new Set();
       for (const id of urutan) {
-        if (!aktif.has(id)) aktif.set(id, bangunInstans(c, id));
+        if (!aktif.has(id)) { aktif.set(id, bangunInstans(c, id)); baru.add(id); }
       }
-      for (const id of urutan) aktif.get(id).atur(set[id].p);
+      for (const id of urutan) {
+        if (baru.has(id)) {
+          segera = true; // penerapan pertama: nilai langsung, tidak ada transisi dari nilai default
+          try { aktif.get(id).atur(set[id].p); } finally { segera = false; }
+        } else {
+          aktif.get(id).atur(set[id].p);
+        }
+      }
       const kunci = urutan.join(',');
       if (kunci !== urutanSekarang) {
         sambungUlang(urutan);
