@@ -9,11 +9,11 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024150500';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024163000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
-} from './logika.js?v=20261024150500';
+} from './logika.js?v=20261024163000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -59,18 +59,63 @@ export function keadaan() {
   };
 }
 
+/* Volume dinaikkan sedikit dibanding keluaran mentah SoundTouch, lalu dijepit
+   kompresor supaya tidak pecah. */
+const VOLUME = 1.6;
+let elemenSistem = null;     /* <audio> tersembunyi: agar Android/Chrome menampilkan kontrol media */
+let kompres = null;
+
+function bangunKeluaran(c) {
+  gain = c.createGain();
+  gain.gain.value = VOLUME;
+  kompres = c.createDynamicsCompressor();
+  kompres.threshold.value = -2;
+  kompres.knee.value = 0;
+  kompres.ratio.value = 20;
+  kompres.attack.value = 0.003;
+  kompres.release.value = 0.15;
+  gain.connect(kompres);
+  /* Lewat MediaStream ke elemen <audio> supaya dianggap pemutaran media (layar kunci).
+     Bila tidak didukung, keluar langsung ke speaker seperti sebelumnya. */
+  if (c.createMediaStreamDestination && typeof Audio !== 'undefined') {
+    const tujuan = c.createMediaStreamDestination();
+    kompres.connect(tujuan);
+    elemenSistem = new Audio();
+    elemenSistem.srcObject = tujuan.stream;
+    elemenSistem.setAttribute('playsinline', '');
+    if (!('srcObject' in elemenSistem)) { elemenSistem = null; kompres.connect(c.destination); }
+  } else {
+    kompres.connect(c.destination);
+  }
+}
+
+/* Jika elemen gagal diputar, keluarkan audio langsung agar tetap terdengar. */
+let langsungDipasang = false;
+function mulaiElemenSistem() {
+  if (!elemenSistem) return;
+  const p = elemenSistem.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(() => {
+      if (!langsungDipasang && ctx && kompres) { langsungDipasang = true; kompres.connect(ctx.destination); }
+    });
+  }
+}
+function hentikanElemenSistem() {
+  if (elemenSistem) { try { elemenSistem.pause(); } catch (e) { /* abaikan */ } }
+}
+
 function pastikanCtx() {
   if (!ctx) {
     const AC = self.AudioContext || self.webkitAudioContext;
     ctx = new AC();
-    gain = ctx.createGain();
-    gain.connect(ctx.destination);
+    bangunKeluaran(ctx);
   }
   if (ctx.state === 'suspended') return ctx.resume().then(() => ctx);
   return Promise.resolve(ctx);
 }
 
 function lepasShifter() {
+  hentikanElemenSistem();
   if (shifter) {
     try { shifter.disconnect(); } catch (e) { /* sudah terlepas */ }
     shifter = null;
@@ -96,6 +141,7 @@ function onPlay(d) {
 
 function selesaiAlami() {
   if (status !== 'putar') return;
+  hentikanElemenSistem();
   try { shifter.disconnect(); } catch (e) { /* abaikan */ }
   status = 'selesai';
   hentikanTimer();
@@ -156,6 +202,7 @@ export async function putar() {
   if (c.state === 'suspended') await c.resume();
   if (!shifter) return false;              /* bisa lepas saat menunggu resume */
   shifter.connect(gain);
+  mulaiElemenSistem();
   status = 'putar';
   mulaiTimer();
   kirim('status');
@@ -165,6 +212,7 @@ export async function putar() {
 
 export function jeda() {
   if (!shifter || status !== 'putar') return;
+  hentikanElemenSistem();
   try { shifter.disconnect(); } catch (e) { /* abaikan */ }
   status = 'jeda';
   hentikanTimer();
