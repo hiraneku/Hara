@@ -3,24 +3,27 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024190000';
-import { esc } from '../core/dom.js?v=20261024190000';
-import { t as tr } from '../core/i18n.js?v=20261024190000';
-import { toast } from '../core/toast.js?v=20261024190000';
-import * as M from './mesin.js?v=20261024190000';
-import * as S from './simpan.js?v=20261024190000';
-import * as L from './logika.js?v=20261024190000';
-import * as A from './aksi.js?v=20261024190000';
-import { ikon } from './ikon.js?v=20261024190000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261024190000';
-import { segarSampul } from './sampul-dom.js?v=20261024190000';
-import { ambilSet } from './set.js?v=20261024190000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024200000';
+import { esc } from '../core/dom.js?v=20261024200000';
+import { t as tr } from '../core/i18n.js?v=20261024200000';
+import { toast } from '../core/toast.js?v=20261024200000';
+import * as M from './mesin.js?v=20261024200000';
+import * as S from './simpan.js?v=20261024200000';
+import * as L from './logika.js?v=20261024200000';
+import * as A from './aksi.js?v=20261024200000';
+import { ikon } from './ikon.js?v=20261024200000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261024200000';
+import { segarSampul } from './sampul-dom.js?v=20261024200000';
+import { ambilSet } from './set.js?v=20261024200000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
   mati: 'Shuffle: mati', acak: 'Shuffle', random: 'Random play',
   daftarAcak: 'Randomized playlist', pintar: 'Smart shuffle', acakUlang: 'Shuffle repeat',
 };
+/* Ikon tiap mode. Tombol hanya berupa ikon; nama mode muncul sebagai pop-up sementara saat diganti. */
+const IKON_ACAK = { mati: 'acakOff', acak: 'acak', random: 'random', daftarAcak: 'daftarAcak', pintar: 'pintar', acakUlang: 'acakUlang' };
+const IKON_ULANG = { urut: 'urut', satu: 'satu', semua: 'semua', antrean: 'antrean' };
 const LABEL_ULANG = { urut: 'Play in order', satu: 'Repeat one', semua: 'Repeat all', antrean: 'Queue' };
 
 const JUMLAH_BAR = 160;
@@ -135,14 +138,14 @@ function pemutarHtml(v) {
   </article>`;
 }
 
-/* Tombol mode: acak dan ulang. Setiap klik berpindah ke mode berikutnya dalam siklus. */
+/* Tombol mode: acak dan ulang, hanya ikon. Jumlah antrean ditampilkan sebagai lencana kecil. */
 function modeHtml() {
   const set = ambilSet();
   const antre = A.antreanLagu().length;
-  const labelUlang = set.ulang === 'antrean' ? `${tr(LABEL_ULANG.antrean)} (${antre})` : tr(LABEL_ULANG[set.ulang]);
+  const lencana = set.ulang === 'antrean' && antre > 0 ? `<b>${antre}</b>` : '';
   return `<div class="mus-mode" role="group" aria-label="${tr('Mode pemutaran')}">
-      <button type="button" class="mus-chip${set.acak !== 'mati' ? ' on' : ''}" data-mus="acak" aria-pressed="${set.acak !== 'mati'}">${ikon('acak')}<span>${tr(LABEL_ACAK[set.acak])}</span></button>
-      <button type="button" class="mus-chip${set.ulang !== 'urut' ? ' on' : ''}" data-mus="ulang" aria-pressed="${set.ulang !== 'urut'}">${ikon('repeat')}<span>${labelUlang}</span></button>
+      <button type="button" class="mus-modebtn${set.acak !== 'mati' ? ' on' : ''}" data-mus="acak" aria-label="${tr(LABEL_ACAK[set.acak])}">${ikon(IKON_ACAK[set.acak])}</button>
+      <button type="button" class="mus-modebtn${set.ulang !== 'urut' ? ' on' : ''}" data-mus="ulang" aria-label="${tr(LABEL_ULANG[set.ulang])}">${ikon(IKON_ULANG[set.ulang])}${lencana}</button>
     </div>`;
 }
 
@@ -498,13 +501,17 @@ function onClick(e) {
       return;
     case 'acak': {
       const set = ambilSet();
-      A.aturMode({ acak: L.berikutnyaDalam(L.MODE_ACAK, set.acak) });
+      const nanti = L.berikutnyaDalam(L.MODE_ACAK, set.acak);
+      A.aturMode({ acak: nanti });
+      toast(tr(LABEL_ACAK[nanti]));
       render();
       return;
     }
     case 'ulang': {
       const set = ambilSet();
-      A.aturMode({ ulang: L.berikutnyaDalam(L.MODE_ULANG, set.ulang) });
+      const nanti = L.berikutnyaDalam(L.MODE_ULANG, set.ulang);
+      A.aturMode({ ulang: nanti });
+      toast(tr(LABEL_ULANG[nanti]));
       render();
       return;
     }

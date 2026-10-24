@@ -3,17 +3,18 @@
    - Crossfade (saklar dan durasi 1–10 detik).
    Pengaturan disimpan lewat set.js; keadaan sleep timer hanya di memori (tidur.js). */
 
-import { cur, go } from '../core/router.js?v=20261024190000';
-import { t as tr } from '../core/i18n.js?v=20261024190000';
-import { toast } from '../core/toast.js?v=20261024190000';
-import * as M from './mesin.js?v=20261024190000';
-import * as A from './aksi.js?v=20261024190000';
-import * as T from './tidur.js?v=20261024190000';
-import { ambilSet, ubahSet } from './set.js?v=20261024190000';
-import { ikon } from './ikon.js?v=20261024190000';
-import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261024190000';
+import { cur, go } from '../core/router.js?v=20261024200000';
+import { t as tr } from '../core/i18n.js?v=20261024200000';
+import { toast } from '../core/toast.js?v=20261024200000';
+import * as M from './mesin.js?v=20261024200000';
+import * as A from './aksi.js?v=20261024200000';
+import * as T from './tidur.js?v=20261024200000';
+import { ambilSet, ubahSet } from './set.js?v=20261024200000';
+import { ikon } from './ikon.js?v=20261024200000';
+import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261024200000';
 
-const LABEL_TIDUR = { waktu: 'Setelah waktu', lagu: 'Setelah lagu ini', daftar: 'Setelah daftar habis' };
+/* Label singkat agar muat dalam tiga kolom pada layar kecil. */
+const LABEL_TIDUR = { waktu: 'Waktu', lagu: 'Lagu ini', daftar: 'Daftar habis' };
 
 function segar() {
   if (cur === 'musik-set') go('musik-set', { segar: true });
@@ -29,40 +30,49 @@ function keteranganTidur() {
 
 function kartuTidur(set) {
   const ti = T.tidurInfo();
-  const mode = TIDUR_MODE.map(m => `<button type="button" class="mus-chip${set.tidurMode === m ? ' on' : ''}" data-set="tidur-mode" data-nilai="${m}" aria-pressed="${set.tidurMode === m}">${tr(LABEL_TIDUR[m])}</button>`).join('');
+  const mode = TIDUR_MODE.map(m => `<button type="button" class="mus-pg-opsi${set.tidurMode === m ? ' on' : ''}" data-set="tidur-mode" data-nilai="${m}" aria-pressed="${set.tidurMode === m}">${tr(LABEL_TIDUR[m])}</button>`).join('');
   const lanjutan = set.tidurMode === 'waktu' ? `
-    <h4 class="mus-set-judul-bagian">${tr('Lanjutan')}</h4>
-    <div class="mus-preset" role="group" aria-label="${tr('Menit')}">
-      ${TIDUR_PRESET.map(m => `<button type="button" class="mus-chip${set.tidurMenit === m ? ' on' : ''}" data-set="tidur-menit" data-nilai="${m}" aria-pressed="${set.tidurMenit === m}">${m} ${tr('menit')}</button>`).join('')}
+    <div class="mus-pg-baris mus-pg-baris-label"><span class="mus-pg-label">${tr('Durasi')}</span><span class="mus-pg-sub">${tr('menit')}</span></div>
+    <div class="mus-pg-grid4" role="group" aria-label="${tr('Menit')}">
+      ${TIDUR_PRESET.map(m => `<button type="button" class="mus-pg-opsi${set.tidurMenit === m ? ' on' : ''}" data-set="tidur-menit" data-nilai="${m}" aria-pressed="${set.tidurMenit === m}">${m}</button>`).join('')}
     </div>
-    <div class="mus-baris-saklar">
+    <div class="mus-pg-baris">
       <span>${tr('Menit kustom')}</span>
-      <input type="number" class="mus-angka" min="1" max="${TIDUR_MENIT_MAKS}" step="1" value="${set.tidurMenit}" data-set-input="tidur-menit" aria-label="${tr('Menit kustom')}">
+      <span class="mus-pg-input"><input type="number" class="mus-angka" min="1" max="${TIDUR_MENIT_MAKS}" step="1" value="${set.tidurMenit}" data-set-input="tidur-menit" aria-label="${tr('Menit kustom')}"><em>${tr('menit')}</em></span>
     </div>` : '';
   const tombol = ti.aktif
-    ? `<button type="button" class="mus-tombol" data-set="tidur-batal">${ikon('x')}<span>${tr('Batalkan timer')}</span></button>`
-    : `<button type="button" class="mus-tombol-utama" data-set="tidur-mulai">${ikon('play')}<span>${tr('Mulai')}</span></button>`;
-  return `<section class="mus-kartu mus-set-kartu">
-    <h3 class="mus-set-judul-bagian">${tr('Sleep timer')}</h3>
-    <p class="mus-item-sub" role="status" data-set-status="tidur">${tr('Status')}: ${keteranganTidur()}</p>
-    <div class="mus-preset" role="group" aria-label="${tr('Mode sleep timer')}">${mode}</div>
+    ? `<button type="button" class="mus-pg-tombol" data-set="tidur-batal">${ikon('x')}<span>${tr('Batalkan timer')}</span></button>`
+    : `<button type="button" class="mus-pg-tombol utama" data-set="tidur-mulai">${ikon('play')}<span>${tr('Mulai')}</span></button>`;
+  return `<section class="mus-kartu mus-set-kartu mus-pg-kartu">
+    <h3 class="mus-pg-judul">${tr('Sleep timer')}</h3>
+    <p class="mus-pg-desc${ti.aktif ? ' aktif' : ''}" role="status" data-set-status="tidur">${tr('Status')}: ${keteranganTidur()}</p>
+    <div class="mus-pg-baris mus-pg-baris-label"><span class="mus-pg-label">${tr('Berhenti')}</span></div>
+    <div class="mus-pg-seg" role="group" aria-label="${tr('Mode sleep timer')}">${mode}</div>
     ${lanjutan}
-    <div class="mus-aksi-baris">${tombol}</div>
-    <p class="mus-catatan mus-set-pad">${tr('Volume memudar 10 detik sebelum berhenti. Timer bisa tertunda jika aplikasi berjalan di latar.')}</p>
+    ${tombol}
+    <p class="mus-pg-desc mus-pg-catatan">${tr('Volume memudar 10 detik sebelum berhenti. Timer bisa tertunda jika aplikasi berjalan di latar.')}</p>
   </section>`;
 }
 
 function kartuCrossfade(set) {
   const cf = set.crossfade;
-  return `<section class="mus-kartu mus-set-kartu">
-    <div class="mus-baris-saklar">
-      <span>${tr('Crossfade')}</span>
-      <button type="button" class="mus-saklar${cf.aktif ? ' on' : ''}" role="switch" aria-checked="${cf.aktif}" data-set="cf-aktif"><span></span></button>
+  return `<section class="mus-kartu mus-set-kartu mus-pg-kartu">
+    <div class="mus-pg-head">
+      <div>
+        <h3 class="mus-pg-judul">${tr('Crossfade')}</h3>
+        <p class="mus-pg-desc">${tr('Memudarkan audio yang sedang diputar sambil menaikkan volume audio berikutnya agar transisinya halus.')}</p>
+      </div>
+      <button type="button" class="mus-saklar${cf.aktif ? ' on' : ''}" role="switch" aria-checked="${cf.aktif}" aria-label="${tr('Crossfade')}" data-set="cf-aktif"><span></span></button>
     </div>
-    <p class="mus-catatan mus-set-pad">${tr('Memudarkan audio yang sedang diputar sambil menaikkan volume audio berikutnya agar transisinya halus.')}</p>
-    <div class="mus-kartu-kepala"><h4 class="mus-set-judul-bagian">${tr('Durasi')}</h4><output class="mus-nilai" data-set-out="cf-detik">${cf.detik} ${tr('detik')}</output></div>
-    <input type="range" class="mus-range" min="${CROSSFADE_MIN}" max="${CROSSFADE_MAKS}" step="1" value="${cf.detik}" data-set-input="cf-detik" aria-label="${tr('Durasi crossfade')}"${cf.aktif ? '' : ' disabled'}>
-    <p class="mus-catatan mus-set-pad">${tr('Berlaku saat pindah ke lagu berikutnya, baik otomatis maupun lewat tombol Berikutnya.')}</p>
+    <div class="mus-pg-baris mus-pg-baris-label">
+      <span class="mus-pg-label">${tr('Durasi')}</span>
+      <output class="mus-pg-nilai" data-set-out="cf-detik">${cf.detik} ${tr('detik')}</output>
+    </div>
+    <div class="mus-pg-geser${cf.aktif ? '' : ' mati'}">
+      <input type="range" class="mus-range" min="${CROSSFADE_MIN}" max="${CROSSFADE_MAKS}" step="1" value="${cf.detik}" data-set-input="cf-detik" aria-label="${tr('Durasi crossfade')}"${cf.aktif ? '' : ' disabled'}>
+      <div class="mus-pg-skala"><span>${CROSSFADE_MIN} ${tr('detik')}</span><span>${CROSSFADE_MAKS} ${tr('detik')}</span></div>
+    </div>
+    <p class="mus-pg-desc mus-pg-catatan">${tr('Berlaku saat pindah ke lagu berikutnya, baik otomatis maupun lewat tombol Berikutnya.')}</p>
   </section>`;
 }
 
@@ -74,8 +84,10 @@ export function pengaturanView() {
       <div><h2 class="mus-set-h">${tr('Pengaturan Musik')}</h2>
       <p class="mus-catatan">${tr('Perilaku pemutar dan tampilan Musik')}</p></div>
     </header>
-    ${kartuTidur(set)}
-    ${kartuCrossfade(set)}
+    <div class="mus-pg">
+      ${kartuTidur(set)}
+      ${kartuCrossfade(set)}
+    </div>
   </div>`;
 }
 

@@ -350,10 +350,11 @@ const T = await import(`${AKAR}/docs/musik/tidur.js?v=${V}`);
 SET.ubahSet({ acak: 'mati', ulang: 'urut' });
 go('musik', { segar: true });
 await tunggu();
-const labelAcak = () => q('[data-mus="acak"]')?.textContent.trim();
-const labelUlang = () => q('[data-mus="ulang"]')?.textContent.trim();
+const labelAcak = () => q('[data-mus="acak"]')?.getAttribute('aria-label');
+const labelUlang = () => q('[data-mus="ulang"]')?.getAttribute('aria-label');
+const lencanaAntre = () => q('[data-mus="ulang"] b')?.textContent ?? '';
 oke('tombol acak awal: Shuffle: mati', labelAcak() === 'Shuffle: mati');
-oke('tombol ulang awal: Play in order', labelUlang() === 'Play in order');
+oke('tombol ulang awal: Play in order', labelUlang() === 'Play in order' && lencanaAntre() === '');
 const jejakAcak = [];
 for (let i = 0; i < 6; i++) { q('[data-mus="acak"]').click(); await tunggu(20); jejakAcak.push(labelAcak()); }
 oke('acak berganti sesuai siklus lalu kembali ke mati',
@@ -361,8 +362,8 @@ oke('acak berganti sesuai siklus lalu kembali ke mati',
   JSON.stringify(jejakAcak));
 const jejakUlang = [];
 for (let i = 0; i < 4; i++) { q('[data-mus="ulang"]').click(); await tunggu(20); jejakUlang.push(labelUlang()); }
-oke('ulang berganti: Repeat one, Repeat all, Queue (0), Play in order',
-  JSON.stringify(jejakUlang) === JSON.stringify(['Repeat one', 'Repeat all', 'Queue (0)', 'Play in order']),
+oke('ulang berganti: Repeat one, Repeat all, Queue, Play in order',
+  JSON.stringify(jejakUlang) === JSON.stringify(['Repeat one', 'Repeat all', 'Queue', 'Play in order']),
   JSON.stringify(jejakUlang));
 q('[data-mus="ulang"]').click(); await tunggu(20);
 q('[data-mus="ulang"]').click(); await tunggu(20);
@@ -371,9 +372,9 @@ const idPertama = S.daftarLagu()[0]?.id;
 oke('tombol Antre ada untuk setiap lagu', !!idPertama && !!q(`[data-mus="antre"][data-id="${idPertama}"]`));
 q(`[data-mus="antre"][data-id="${idPertama}"]`).click(); await tunggu();
 oke('Antre menandai lagu (aria-pressed)', q(`[data-mus="antre"][data-id="${idPertama}"]`)?.getAttribute('aria-pressed') === 'true');
-oke('antrean masuk ke label Queue (1)', labelUlang() === 'Queue (1)', labelUlang());
+oke('antrean masuk ke lencana Queue (1)', labelUlang() === 'Queue' && lencanaAntre() === '1', labelUlang() + ' ' + lencanaAntre());
 q(`[data-mus="antre"][data-id="${idPertama}"]`).click(); await tunggu();
-oke('Antre kedua kali mengeluarkan lagu', q(`[data-mus="antre"][data-id="${idPertama}"]`)?.getAttribute('aria-pressed') === 'false' && labelUlang() === 'Queue (0)');
+oke('Antre kedua kali mengeluarkan lagu', q(`[data-mus="antre"][data-id="${idPertama}"]`)?.getAttribute('aria-pressed') === 'false' && lencanaAntre() === '');
 SET.ubahSet({ ulang: 'urut' });
 
 /* Pengaturan Musik: sleep timer dan crossfade */
