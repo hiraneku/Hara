@@ -4,16 +4,17 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024182343';
-import { toast } from '../../core/toast.js?v=20261024182343';
-import { t as tr } from '../../core/i18n.js?v=20261024182343';
-import { ensureCaret, caretEnd } from './caret.js?v=20261024182343';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261024182343';
-import { refresh } from './cleanup.js?v=20261024182343';
-import { snap } from './history.js?v=20261024182343';
-import { pasangGambar } from './image.js?v=20261024182343';
-import { pastikanKolomAkhir } from './blocks.js?v=20261024182343';
-import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS } from './goresan.js?v=20261024182343';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024185135';
+import { toast } from '../../core/toast.js?v=20261024185135';
+import { t as tr } from '../../core/i18n.js?v=20261024185135';
+import { ensureCaret, caretEnd } from './caret.js?v=20261024185135';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261024185135';
+import { refresh } from './cleanup.js?v=20261024185135';
+import { snap } from './history.js?v=20261024185135';
+import { pasangGambar } from './image.js?v=20261024185135';
+import { pastikanKolomAkhir } from './blocks.js?v=20261024185135';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261024185135';
+import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261024185135';
 
 const LEBAR = 720;
 const TINGGI = 460;
@@ -43,7 +44,9 @@ function svgDariJejak(jejak, latar, w = LEBAR, h = TINGGI) {
       ? `<rect width="${w}" height="${h}" fill="#ffffff"/>`
       : '';
   const isi = jejak.map(st => {
-    const op = st.alat === 'stabilo' ? 0.36 : 1;
+    const gy = st.alat === 'pena' ? faktorGaya(st.gaya) : { skala: 1, alpha: 1 };
+    const op = st.alat === 'stabilo' ? 0.36 : gy.alpha;
+    const lebar = st.ukuran * gy.skala;
     if (st.alat === 'kotak' && st.pts.length >= 2) {
       const a = st.pts[0], b = st.pts[st.pts.length - 1];
       const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
@@ -56,10 +59,10 @@ function svgDariJejak(jejak, latar, w = LEBAR, h = TINGGI) {
     if (!st.pts.length) return '';
     if (st.pts.length === 1) {
       const p = st.pts[0];
-      return `<circle cx="${p.x}" cy="${p.y}" r="${Math.max(2, st.ukuran / 2)}" fill="${st.warna}" opacity="${op}"/>`;
+      return `<circle cx="${p.x}" cy="${p.y}" r="${Math.max(2, lebar / 2)}" fill="${st.warna}" opacity="${op}"/>`;
     }
     const d = st.pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${Math.round(p.x)} ${Math.round(p.y)}`).join(' ');
-    return `<path d="${d}" fill="none" stroke="${st.warna}" stroke-width="${st.ukuran}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+    return `<path d="${d}" fill="none" stroke="${st.warna}" stroke-width="${lebar}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bgRect}${isi}</svg>`;
 }
@@ -163,8 +166,9 @@ function gambarSatuJejak(ctx, st) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = st.warna;
     ctx.fillStyle = st.warna;
-    ctx.lineWidth = st.alat === 'stabilo' ? st.ukuran * 2.6 : st.ukuran;
-    ctx.globalAlpha = st.alat === 'stabilo' ? 0.34 : 1;
+    const gy = st.alat === 'pena' ? faktorGaya(st.gaya) : { skala: 1, alpha: 1 };
+    ctx.lineWidth = st.alat === 'stabilo' ? st.ukuran * 2.6 : st.ukuran * gy.skala;
+    ctx.globalAlpha = st.alat === 'stabilo' ? 0.34 : gy.alpha;
   }
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -288,6 +292,8 @@ export function bukaStudioSketsa(figEdit = null) {
   let alat = 'pena';
   let warna = '#111827';
   let ukuran = 4;
+  /* A3: gaya sapuan pena (tinta, kuas, pensil). Hanya berlaku untuk alat pena. */
+  let gaya = 'tinta';
   let pola = 'titik';
   let latar = 'putih';
   const jejak = [];
@@ -337,6 +343,7 @@ export function bukaStudioSketsa(figEdit = null) {
             ${[2, 4, 8, 14].map(u => `<button type="button" class="sk-sz${u === 4 ? ' on' : ''}" data-sk-uk="${u}">${u}px</button>`).join('')}
           </div>
         </div>
+        <div class="sk-row" id="sk-presets-baris"></div>
         <div class="sk-row">
           <button type="button" class="sk-tool" id="sk-zoom-kecil" title="${tr('Perkecil tampilan')}">−</button>
           <button type="button" class="sk-tool" id="sk-zoom-reset" title="${tr('Tampilan pas layar')}">100%</button>
@@ -492,6 +499,85 @@ export function bukaStudioSketsa(figEdit = null) {
     renderUlang();
   };
 
+  /* A3: preset gaya pena. Bawaan dan kustom muncul di satu baris; kustom bisa disimpan dan dihapus. */
+  const barPreset = overlay.querySelector('#sk-presets-baris');
+  const presetCocok = p => alat === 'pena' && p.warna === warna && p.ukuran === ukuran && p.gaya === gaya;
+
+  const tandaPreset = () => {
+    if (!barPreset) return;
+    const daftar = daftarPreset();
+    const cocok = daftar.find(p => !p.bawaan && presetCocok(p)) || daftar.find(presetCocok) || null;
+    barPreset.querySelectorAll('[data-sk-preset]').forEach(b => b.classList.toggle('on', !!cocok && b.dataset.skPreset === cocok.id));
+    const hapus = barPreset.querySelector('#sk-preset-hapus');
+    if (hapus) hapus.disabled = !cocok || cocok.bawaan;
+  };
+
+  const bangunBarPreset = () => {
+    if (!barPreset) return;
+    barPreset.replaceChildren();
+    for (const p of daftarPreset()) {
+      const nama = p.bawaan ? tr(p.nama) : p.nama;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sk-tool';
+      b.dataset.skPreset = p.id;
+      b.title = `${nama} · ${p.ukuran}px`;
+      const titik = document.createElement('span');
+      titik.className = 'sk-pdot';
+      titik.style.background = p.warna;
+      b.append(titik, document.createTextNode(' ' + nama));
+      barPreset.appendChild(b);
+    }
+    const simpan = document.createElement('button');
+    simpan.type = 'button';
+    simpan.className = 'sk-tool';
+    simpan.id = 'sk-preset-simpan';
+    simpan.textContent = tr('Simpan preset');
+    const hapus = document.createElement('button');
+    hapus.type = 'button';
+    hapus.className = 'sk-tool';
+    hapus.id = 'sk-preset-hapus';
+    hapus.textContent = tr('Hapus preset');
+    barPreset.append(simpan, hapus);
+    tandaPreset();
+  };
+
+  const terapkanPreset = p => {
+    alat = 'pena';
+    warna = p.warna;
+    ukuran = p.ukuran;
+    gaya = p.gaya;
+    overlay.querySelectorAll('[data-sk-alat]').forEach(b => b.classList.toggle('on', b.dataset.skAlat === 'pena'));
+    overlay.querySelectorAll('[data-sk-warna]').forEach(b => b.classList.toggle('on', b.dataset.skWarna.toLowerCase() === warna));
+    overlay.querySelectorAll('[data-sk-uk]').forEach(b => b.classList.toggle('on', Number(b.dataset.skUk) === ukuran));
+    if (pilihanId) { pilihanId = null; perbaruiBarObjek(); renderUlang(); }
+    tandaPreset();
+  };
+
+  const aksiSimpanPreset = () => {
+    const hasil = simpanPresetKustom({ warna, ukuran, gaya });
+    if (!hasil.ok) {
+      toast(hasil.alasan === 'penuh'
+        ? tr('Preset kustom sudah penuh (maks {n}). Hapus salah satu dulu.', { n: MAKS_PRESET_KUSTOM })
+        : hasil.alasan === 'ada'
+          ? tr('Gaya ini sudah tersimpan sebagai preset')
+          : tr('Preset tidak bisa disimpan'));
+      return;
+    }
+    bangunBarPreset();
+    toast(tr('Preset disimpan'));
+  };
+
+  const aksiHapusPreset = () => {
+    const cocok = daftarPreset().find(p => !p.bawaan && presetCocok(p));
+    if (!cocok) { toast(tr('Pilih preset kustom dulu')); return; }
+    hapusPresetKustom(cocok.id);
+    bangunBarPreset();
+    toast(tr('Preset dihapus'));
+  };
+
+  bangunBarPreset();
+
   const renderUlang = () => {
     if (!ctx) return;
     gambarKisiLatar(ctx, pola, latar, kw, kh);
@@ -570,7 +656,7 @@ export function bukaStudioSketsa(figEdit = null) {
       return;
     }
     tumpukRedo.length = 0;
-    aktif = { alat, warna, ukuran, pts: [p] };
+    aktif = { alat, warna, ukuran, ...(alat === 'pena' ? { gaya } : {}), pts: [p] };
     renderUlang();
   });
   cv.addEventListener('pointermove', e => {
@@ -608,11 +694,20 @@ export function bukaStudioSketsa(figEdit = null) {
   cv.addEventListener('pointercancel', akhiriGoresan);
 
   overlay.addEventListener('click', async e => {
+    const btnPreset = e.target.closest('[data-sk-preset]');
+    if (btnPreset) {
+      const p = daftarPreset().find(x => x.id === btnPreset.dataset.skPreset);
+      if (p) terapkanPreset(p);
+      return;
+    }
+    if (e.target.closest('#sk-preset-simpan')) { aksiSimpanPreset(); return; }
+    if (e.target.closest('#sk-preset-hapus')) { aksiHapusPreset(); return; }
     const btnAlat = e.target.closest('[data-sk-alat]');
     if (btnAlat) {
       alat = btnAlat.dataset.skAlat;
       overlay.querySelectorAll('[data-sk-alat]').forEach(b => b.classList.toggle('on', b === btnAlat));
       if (alat !== 'pilih' && pilihanId) { pilihanId = null; perbaruiBarObjek(); renderUlang(); }
+      tandaPreset();
       return;
     }
     const btnWarna = e.target.closest('[data-sk-warna]');
@@ -623,12 +718,14 @@ export function bukaStudioSketsa(figEdit = null) {
         overlay.querySelectorAll('[data-sk-alat]').forEach(b => b.classList.toggle('on', b.dataset.skAlat === 'pena'));
       }
       overlay.querySelectorAll('[data-sk-warna]').forEach(b => b.classList.toggle('on', b === btnWarna));
+      tandaPreset();
       return;
     }
     const btnUk = e.target.closest('[data-sk-uk]');
     if (btnUk) {
       ukuran = Number(btnUk.dataset.skUk) || 4;
       overlay.querySelectorAll('[data-sk-uk]').forEach(b => b.classList.toggle('on', b === btnUk));
+      tandaPreset();
       return;
     }
     const btnPola = e.target.closest('[data-sk-pola]');

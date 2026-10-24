@@ -106,7 +106,8 @@ console.log('── Unit: model goresan (goresan.js) ──');
   const teks = serialGoresan({ goresan: asli, latar: 'gelap', pola: 'garis' }, LB, TG);
   const balik = bacaGoresan(teks, LB, TG);
   cek('Unit: serialisasi lalu baca balik menghasilkan goresan, latar, dan pola yang sama',
-    !!balik && balik.latar === 'gelap' && balik.pola === 'garis' && JSON.stringify(balik.goresan) === JSON.stringify(asli));
+    !!balik && balik.latar === 'gelap' && balik.pola === 'garis'
+    && JSON.stringify(balik.goresan) === JSON.stringify(asli.map(st => ({ alat: st.alat, warna: st.warna, ukuran: st.ukuran, gaya: 'tinta', pts: st.pts }))));
   cek('Unit: data rusak tidak membuat error (null)', bacaGoresan('{rusak', LB, TG) === null);
   cek('Unit: versi tidak dikenal ditolak (null)', bacaGoresan('{"v":9,"goresan":[]}', LB, TG) === null);
   cek('Unit: string kosong ditolak (null)', bacaGoresan('', LB, TG) === null);

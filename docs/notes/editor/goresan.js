@@ -6,20 +6,33 @@
  * (bukan hanya gambar PNG), supaya bisa dibuka ulang dan diedit.
  *
  * Format tersimpan (string JSON, disimpan di atribut data-goresan blok gambar):
- *   { "v": 3, "latar": "putih"|"gelap", "pola": "titik"|"garis"|"polos",
+ *   { "v": 4, "latar": "putih"|"gelap", "pola": "titik"|"garis"|"polos",
  *     "kanvas":  { "w": 720, "h": 460 },
- *     "goresan": [ { "alat": "pena", "warna": "#111827", "ukuran": 4,
+ *     "goresan": [ { "alat": "pena", "warna": "#111827", "ukuran": 4, "gaya": "tinta",
  *                    "pts": [ { "x": 10.5, "y": 20 }, ... ] } ],
  *     "objek":   [ { "id": "o1", "blob": "sk_abc", "x": 40, "y": 60, "w": 200, "h": 120 } ] }
  *
- * v1 (hanya goresan) dan v2 (tanpa kanvas) tetap bisa dibaca dengan ukuran default. Urutan "objek" adalah urutan tumpukan (akhir = paling atas).
+ * v1 (hanya goresan) dan v2 (tanpa kanvas) tetap bisa dibaca dengan ukuran default.
+ * v3 (tanpa "gaya") dibaca sebagai gaya "tinta". Gaya hanya berlaku untuk alat "pena" (A3). Urutan "objek" adalah urutan tumpukan (akhir = paling atas).
  * Koordinat berada di ruang logis kanvas (LEBAR x TINGGI), sama seperti di sketsa.js.
  */
 
-export const VERSI_GORESAN = 3;
-export const VERSI_DIDUKUNG = [1, 2, 3];
+export const VERSI_GORESAN = 4;
+export const VERSI_DIDUKUNG = [1, 2, 3, 4];
 export const ALAT_GORESAN = ['pena', 'stabilo', 'garis', 'panah', 'kotak', 'hapus'];
 export const LATAR_GORESAN = ['putih', 'gelap'];
+/* Gaya sapuan pena (A3). Tinta = bawaan. Kuas lebih tebal dan agak transparan, pensil lebih tipis dan pudar. */
+export const GAYA_GORESAN = ['tinta', 'kuas', 'pensil'];
+const FAKTOR_GAYA = {
+  tinta: { skala: 1, alpha: 1 },
+  kuas: { skala: 2.2, alpha: 0.85 },
+  pensil: { skala: 0.8, alpha: 0.55 },
+};
+
+/** Pengali lebar dan transparansi untuk gaya sapuan. Dipakai canvas dan SVG agar hasilnya sama. */
+export function faktorGaya(gaya) {
+  return FAKTOR_GAYA[gaya] || FAKTOR_GAYA.tinta;
+}
 export const POLA_GORESAN = ['polos', 'titik', 'garis'];
 
 /* Batas agar catatan tidak membengkak. Data yang melewati batas tidak disimpan
@@ -62,6 +75,7 @@ function bersihkanSatu(st, lebar, tinggi) {
   if (!ALAT_GORESAN.includes(st.alat)) return null;
   if (!Array.isArray(st.pts)) return null;
   const warna = RE_WARNA.test(st.warna) ? st.warna : '#111827';
+  const gaya = GAYA_GORESAN.includes(st.gaya) ? st.gaya : 'tinta';
   const ukuran = angkaDalamRentang(st.ukuran, 1, BATAS_GORESAN.ukuranMaks);
   if (ukuran === null) return null;
   const pts = [];
@@ -76,6 +90,7 @@ function bersihkanSatu(st, lebar, tinggi) {
     alat: st.alat,
     warna,
     ukuran: Math.round(ukuran * 10) / 10,
+    gaya,
     pts,
   };
 }

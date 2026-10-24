@@ -74,7 +74,33 @@
 - **Belum diuji:** zoom dan geser di HP sungguhan (ukuran layar, lebar stage, dan gerakan jari). Stage di jsdom tidak punya tata letak, jadi `clientWidth` dianggap 0.
 - **Status:** A6 dan A7 masing-masing masih *Partially implemented* di sisi perilaku, karena zoom belum pinch dan ukuran kanvas belum punya batas per halaman catatan. Kedua fitur ini sudah berfungsi di sketsa.
 
+## Perubahan 4 — A3 Custom pen and brush presets
+
+- **ID:** A3.
+- **Alasan urutan:** §6.1 menempatkan A3 setelah A7. §6.2 menyebut A3, A4, dan A5 memakai model data yang sama dari A1. Dependensi: A1 (goresan sebagai data), A6 dan A7 (sudah selesai, tidak mengubah gaya).
+- **Kondisi awal (audit):** hanya satu jenis pena. Preset belum ada.
+- **Yang berubah:**
+  - `docs/notes/editor/goresan.js`: format **v4**. Setiap goresan punya field `gaya` (`tinta`, `kuas`, `pensil`). Data v3 tanpa `gaya` dibaca sebagai `tinta`. Ditambah `faktorGaya()` yang dipakai canvas dan SVG agar hasilnya sama. Kuas: lebar ×2,2 dan transparansi 0,85. Pensil: lebar ×0,8 dan transparansi 0,55. Tinta: tidak berubah.
+  - `docs/notes/editor/preset-pena.js` (baru): daftar preset. Tiga preset bawaan (Tinta hitam, Kuas biru, Pensil abu) tidak bisa dihapus. Preset kustom maksimal 8, disimpan di `localStorage` kunci `hara.pena.v1`, terpisah dari catatan. Data rusak diabaikan.
+  - `docs/notes/editor/sketsa.js`: baris preset di toolbar. Memilih preset mengaktifkan alat Pena dan mengisi warna, ukuran, dan gaya. Tombol **Simpan preset** menyimpan kombinasi aktif sebagai "Gaya N". Tombol **Hapus preset** hanya aktif untuk preset kustom yang sedang cocok. Gaya hanya berlaku untuk alat Pena. Stabilo, Garis, Panah, Kotak tidak ikut.
+  - `docs/styles/notes.css`: titik warna pada tombol preset (`.sk-pdot`).
+  - `tools/uji/sketsa-pena.mjs` (baru): 27 uji unit (19 preset, 8 gaya) + 14 uji integrasi (jsdom). Hasil: 41/41.
+  - `tools/uji/sketsa-goresan.mjs` (diubah): harapan uji serialisasi A1 diperbarui. Setiap goresan sekarang punya `gaya: 'tinta'` setelah dibaca balik (perubahan format yang disengaja). Urutan kunci disamakan dengan hasil baca.
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-pena.mjs`: 41/41 lulus.
+  - Uji mutasi 1: gaya tidak diterapkan saat memilih preset. 2 uji gagal, lalu dipulihkan.
+  - Uji mutasi 2: gaya tidak disimpan di goresan. 1 uji gagal, lalu dipulihkan.
+  - Uji mutasi 3: pemeriksaan duplikat preset dinonaktifkan. 5 uji gagal, lalu dipulihkan.
+  - `node tools/uji/sketsa-goresan.mjs`: 21/21 (setelah harapan uji diperbarui).
+  - `npm test` penuh: lihat catatan hasil di bawah.
+- **Belum diuji:**
+  - Tampilan kuas dan pensil secara visual. Chromium tidak tersedia di sandbox, dan jsdom tidak menjalankan canvas. Renderer hanya diperiksa lewat `faktorGaya()` dan pembacaan kode.
+  - Pena di HP sungguhan.
+  - Versi lama aplikasi membaca data v4. Desain A1 menjamin gambar PNG tetap tampil, tetapi ini belum diuji.
+- **Batasan:** kuas dan pensil hanya mengubah lebar dan transparansi. Tekanan stylus belum dipakai, dan tekstur pensil belum ada. Preset tidak disinkronkan lintas perangkat (menunggu D2).
+- **Status:** A3 *Partially implemented* (preset pena ada di sketsa, belum di halaman catatan biasa).
+
 ## Berikutnya
 
-- A3 Custom pen and brush presets (urutan §6.1 setelah A7).
+- A4 Shape recognition (urutan §6.1 setelah A3). Dependensi: model goresan dari A1 dan A3.
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

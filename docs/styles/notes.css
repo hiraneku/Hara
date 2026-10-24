@@ -2177,6 +2177,8 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .sk-sw{width:30px;height:30px;border-radius:999px;border:2px solid var(--border);cursor:pointer;flex:none}
 .sk-sw.on{transform:scale(1.12);border-color:var(--accent)}
 .sk-sizes{display:flex;gap:5px;margin-left:auto}
+/* A3: titik warna pada tombol preset pena */
+.sk-pdot{width:12px;height:12px;border-radius:999px;flex:none;border:1px solid rgba(0,0,0,.15)}
 .sk-spacer{flex:1}
 
 /* #11 Pratinjau Kartu Gambar */
