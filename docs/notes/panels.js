@@ -257,101 +257,153 @@ export function panelYatim(n) {
     <p class="dm-kosong">${tr('Catatan ini tidak menaut ke catatan lain dan tidak ditaut catatan lain. Tambahkan [[Judul]] untuk menghubungkannya.')}</p></section>`;
 }
 
+/* ── 4. Local graph ──
+   Pusat = catatan ini. Langkah 1: tetangga langsung (ditaut ke sini atau menaut
+   ke sini). Langkah 2 (opsional): tetangga dari tetangga. Maksimal MAKS_SIMPUL
+   simpul; sisanya disebut di bawah grafik. Tepi = tautan asli antar simpul. */
+const MAKS_SIMPUL = 50;
+const MAKS_MATI = 3;
+let langkahGraf = 1;
+
+export function langkahGrafAktif() { return langkahGraf; }
+export function setLangkahGraf(n) { langkahGraf = n === 2 ? 2 : 1; return langkahGraf; }
+
+/* Peta tautan seluruh catatan yang terlihat: keluar[id] = [{judul}], masuk[judulKecil] = Set(id). */
+function petaTautan(n) {
+  const daftar = [n, ...lainnya(n)];
+  const keluar = new Map();
+  const masuk = new Map();
+  const perJudul = new Map();
+  for (const x of daftar) {
+    const j = teksJudul(x).toLowerCase();
+    if (j && !perJudul.has(j)) perJudul.set(j, x);
+  }
+  for (const x of daftar) {
+    const list = [];
+    (x.blocks || []).forEach(b => wlDariBlok(b).forEach(w => {
+      if (!list.some(l => l.judul === w.judul)) list.push(w);
+    }));
+    keluar.set(x.id, list);
+    list.forEach(w => {
+      const j = w.judul.toLowerCase();
+      if (!masuk.has(j)) masuk.set(j, new Set());
+      masuk.get(j).add(x.id);
+    });
+  }
+  return { keluar, masuk, perJudul, byId: new Map(daftar.map(x => [x.id, x])) };
+}
+
+/* Simpul & tepi graf lokal. Mengembalikan { simpul: [{x, lv}], mati: [judul], tepi: [[idA, idB]], dilewati }. */
+function bangunGraf(n, langkah) {
+  const peta = petaTautan(n);
+  const kunciJudul = x => teksJudul(x).toLowerCase();
+  const simpul = new Map([[n.id, { x: n, lv: 0 }]]);
+  const dibuang = new Set();
+  const tetangga = x => {
+    /* tetangga keluar (yang ditaut x) dan masuk (yang menaut ke x) */
+    const hasil = [];
+    for (const w of peta.keluar.get(x.id) || []) {
+      const t = peta.perJudul.get(w.judul.toLowerCase());
+      if (t && t.id !== x.id) hasil.push(t);
+    }
+    for (const id of peta.masuk.get(kunciJudul(x)) || []) {
+      const t = peta.byId.get(id);
+      if (t && t.id !== x.id) hasil.push(t);
+    }
+    const unik = new Map();
+    hasil.forEach(t => unik.set(t.id, t));
+    return [...unik.values()].sort((p, q) => teksJudul(p).localeCompare(teksJudul(q)));
+  };
+  const tambah = (x, lv) => {
+    if (simpul.has(x.id)) return;
+    if (simpul.size >= MAKS_SIMPUL) { dibuang.add(x.id); return; }
+    simpul.set(x.id, { x, lv });
+  };
+
+  const lv1 = tetangga(n);
+  lv1.forEach(x => tambah(x, 1));
+  if (langkah >= 2) {
+    for (const x of lv1) tetangga(x).forEach(y => tambah(y, 2));
+  }
+
+  /* tautan mati dari catatan pusat (catatan belum dibuat) */
+  const mati = [];
+  for (const w of peta.keluar.get(n.id) || []) {
+    if (!peta.perJudul.has(w.judul.toLowerCase()) && !mati.includes(w.judul)) mati.push(w.judul);
+  }
+
+  /* tepi: pasangan simpul yang saling menaut (satu arah pun cukup) */
+  const tepi = [];
+  const ada = new Set();
+  for (const [id, { x }] of simpul) {
+    for (const w of peta.keluar.get(id) || []) {
+      const t = peta.perJudul.get(w.judul.toLowerCase());
+      if (!t || t.id === id || !simpul.has(t.id)) continue;
+      const k = id < t.id ? id + '\u0001' + t.id : t.id + '\u0001' + id;
+      if (!ada.has(k)) { ada.add(k); tepi.push([id, t.id]); }
+    }
+  }
+  return { simpul: [...simpul.values()], mati: mati.slice(0, MAKS_MATI), tepi, dilewati: dibuang.size };
+}
+
 /* ── 4. Local graph ── */
 export function panelGraf(n) {
-  const judul = teksJudul(n);
-  const nodeCat = [];             /* catatan tetangga */
-  const petaId = new Map();
-  const tambah = x => { if (!petaId.has(x.id)) { petaId.set(x.id, x); nodeCat.push(x); } };
+  const g = bangunGraf(n, langkahGraf);
+  const lv1 = g.simpul.filter(s => s.lv === 1);
+  const lv2 = g.simpul.filter(s => s.lv === 2);
+  const total = g.simpul.length + g.mati.length;
 
-  /* tetangga: judul yang ditaut catatan ini + yang menaut ke sini */
-  const keluar = [];
-  const lihatWl = j => { if (!keluar.some(k => k.judul === j.judul)) keluar.push(j); };
-  (n.blocks || []).forEach(b => wlDariBlok(b).forEach(lihatWl));
-  const targetAda = keluar.map(k => ({ k, t: cariJudul(k.judul) })).filter(x => x.t);
-  targetAda.forEach(x => tambah(x.t));
-  const mati = keluar.filter(k => !cariJudul(k.judul));
-  lainnya(n).forEach(x => {
-    let menaut = false;
-    (x.blocks || []).forEach(b => {
-      if (menaut) return;
-      wlDariBlok(b).forEach(w => { if (w.judul.toLowerCase() === judul.toLowerCase()) menaut = true; });
-    });
-    if (menaut) tambah(x);
-  });
+  const tombol = [1, 2].map(k => `<button type="button" class="btn btn-sec${langkahGraf === k ? ' on' : ''}" style="padding:3px 9px;font-size:12px" data-graf-langkah="${k}" aria-pressed="${langkahGraf === k}">${k === 1 ? tr('1 langkah') : tr('2 langkah')}</button>`).join('');
+  const header = `<div class="panel-h">
+    <svg class="ico"><use href="#i-graph"/></svg>${tr('Local graph')}<span class="n">${total}</span>
+    <span style="margin-left:auto;display:flex;gap:6px">${tombol}
+    <button type="button" class="btn btn-sec" style="padding:3px 9px;font-size:12px" data-buka-graf>${tr('Layar penuh')}</button></span></div>`;
 
-  const nodeSemua = nodeCat.slice(0, 12);
-  const total = nodeSemua.length + (mati.length ? 1 : 0) + 1;
   if (total === 1) {
-    return `<section class="panel"><div class="panel-h">
-      <svg class="ico"><use href="#i-graph"/></svg>${tr('Local graph')}<span class="n">1</span></div>
+    return `<section class="panel">${header}
       <p class="dm-kosong">${tr('Belum ada tetangga. Tulis [[Judul Catatan Lain]] — begitu tautannya ada, catatan itu muncul di sini bersama backlinknya.')}</p></section>`;
   }
 
-  /* posisi deterministik: lingkaran dengan urutan stabil */
-  const titik = [];
-  const pos = (i, jum) => {
+  /* posisi deterministik: lingkaran. Langkah 2 memakai cincin luar. */
+  const dua = lv2.length > 0;
+  const R1 = dua ? { x: 28, y: 22 } : { x: 33, y: 26 };
+  const R2 = { x: 45, y: 41 };
+  const posCincin = (i, jum, r) => {
     const sudut = -Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, jum);
-    return {
-      x: +(50 + 33 * Math.cos(sudut)).toFixed(1),
-      y: +(50 + 26 * Math.sin(sudut)).toFixed(1),
-    };
+    return { x: +(50 + r.x * Math.cos(sudut)).toFixed(1), y: +(50 + r.y * Math.sin(sudut)).toFixed(1) };
   };
-  titik.push({ id: n.id, me: true, x: 50, y: 50 });
-  const nama = x => String(x.title || tr('(tanpa judul)')).slice(0, 20);
-  nodeSemua.forEach((x, i) => { titik.push({ id: x.id, judul: nama(x), ...pos(i, nodeSemua.length) }); });
-  let matiPos = null;
-  if (mati.length && nodeSemua.length < 12) {
-    matiPos = { judul: nama({ title: mati[0].judul }), ...pos(nodeSemua.length, nodeSemua.length + 1) };
-    titik.push({ id: 'mati:' + mati[0].judul, judul: matiPos.judul, mati: true, x: matiPos.x, y: matiPos.y });
-  }
+  const titik = [{ id: n.id, me: true, x: 50, y: 50 }];
+  const nama = x => String(teksJudul(x) || tr('(tanpa judul)')).slice(0, 20);
+  const cincin1 = [...lv1.map(s => ({ id: s.x.id, judul: nama(s.x) })),
+    ...g.mati.map(j => ({ id: 'mati:' + j, judul: String(j).slice(0, 20), mati: true, judulAsli: j }))];
+  cincin1.forEach((z, i) => titik.push({ ...z, ...posCincin(i, cincin1.length, R1) }));
+  lv2.forEach((s, i) => titik.push({ id: s.x.id, judul: nama(s.x), lv: 2, ...posCincin(i, lv2.length, R2) }));
 
-  /* tepi: antar semua pasangan yang benar-benar bertaut */
-  const tepi = [];
-  const olehId = new Map(titik.filter(t => !t.mati && !t.me).map(t => [t.id, t]));
-  const pilih = (a, b) => a < b ? a + '\u0001' + b : b + '\u0001' + a;
-  const cekPasangan = (A, B) => {
-    const dari = petaId.get(A), ke = petaId.get(B);
-    if (!dari || !ke) return;
-    let ada = false;
-    (dari.blocks || []).forEach(b => {
-      if (ada) return;
-      wlDariBlok(b).forEach(w => {
-        if (w.judul.toLowerCase() === teksJudul(ke).toLowerCase()) ada = true;
-      });
-    });
-    if (ada) {
-      const k = pilih(A, B);
-      if (!tepi.includes(k)) tepi.push(k);
-    }
-  };
-  const semuaId = [n.id, ...nodeSemua.map(x => x.id)];
-  for (let a = 0; a < semuaId.length; a++)
-    for (let b = a + 1; b < semuaId.length; b++) cekPasangan(semuaId[a], semuaId[b]);
-
-  const garis = tepi.map(k => {
-    const [a, b] = k.split('\u0001');
-    const pa = titik.find(t => t.id === a), pb = titik.find(t => t.id === b);
+  const posisi = new Map(titik.map(t => [t.id, t]));
+  const garis = g.tepi.map(([a, b]) => {
+    const pa = posisi.get(a), pb = posisi.get(b);
     if (!pa || !pb) return '';
     return `<line x1="${pa.x}%" y1="${pa.y}%" x2="${pb.x}%" y2="${pb.y}%"/>`;
   }).join('');
 
   const titikHtml = titik.map(t => {
     const ket = t.mati
-      ? ` data-dm-buat="${esc(t.judul)}"`
+      ? ` data-dm-buat="${esc(t.judulAsli)}"`
       : t.me ? '' : ` data-dm-buka="${t.id}"`;
-    const cls = (t.me ? 'me' : t.mati ? 'dead' : '');
-    return `<div class="gnode ${cls}" style="left:${t.x}%;top:${t.y}%" role="button" tabindex="0"${ket} aria-label="${esc(t.mati ? tr('Buat') + ' ' + t.judul : t.me ? tr('Catatan ini') : tr('Buka') + ' ' + t.judul)}">
-      <span class="gdot"></span><span>${esc(t.me ? teksJudul(n) || tr('(tanpa judul)') : t.judul)}</span></div>`;
+    const cls = (t.me ? 'me' : t.mati ? 'dead' : (t.lv === 2 ? 'lv2' : ''));
+    const label = t.me ? (teksJudul(n) || tr('(tanpa judul)')) : t.judul;
+    return `<div class="gnode ${cls}" style="left:${t.x}%;top:${t.y}%" role="button" tabindex="0"${ket} aria-label="${esc(t.mati ? tr('Buat') + ' ' + t.judulAsli : t.me ? tr('Catatan ini') : tr('Buka') + ' ' + t.judul)}">
+      <span class="gdot"></span><span>${esc(label)}</span></div>`;
   }).join('');
 
-  return `<section class="panel"><div class="panel-h">
-    <svg class="ico"><use href="#i-graph"/></svg>${tr('Local graph')}<span class="n">${total}</span>
-    <button type="button" class="btn btn-sec" style="margin-left:auto;padding:3px 9px;font-size:12px" data-buka-graf>${tr('Layar penuh')}</button></div>
+  const catatanBatas = g.dilewati > 0
+    ? `<p class="dm-kosong" style="padding:6px 2px 0">${tr('Menampilkan {n} simpul; {m} lainnya disembunyikan.', { n: g.simpul.length, m: g.dilewati })}</p>`
+    : '';
+  return `<section class="panel">${header}
     <div class="graph">
       <svg style="position:absolute;inset:0;width:100%;height:100%" stroke="var(--border-strong)" stroke-width="1" aria-hidden="true">${garis}</svg>
       ${titikHtml}
-    </div></section>`;
+    </div>${catatanBatas}</section>`;
 }
 
 /* ── pemuat: render ke #dm (dipanggil tiap render & tiap selesai simpan) ── */

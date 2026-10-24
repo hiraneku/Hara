@@ -2524,3 +2524,20 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .fm-teks small{font-size:11px;color:var(--faint);line-height:1.3;overflow:hidden;
   display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+
+/* Pratinjau tautan [[...]] (pratinjau-tautan.js) */
+.pratinjau-tautan{position:fixed;z-index:90;width:min(300px,calc(100vw - 16px));background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-pop);padding:10px 12px;
+  font-size:13px;line-height:1.45;color:var(--text);box-sizing:border-box}
+.pratinjau-tautan[hidden]{display:none}
+.pratinjau-tautan .pt-h{font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pratinjau-tautan .pt-t{color:var(--muted);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.pratinjau-tautan .pt-kunci{font-style:italic}
+.pratinjau-tautan .pt-f{margin-top:8px;display:flex;justify-content:flex-end}
+.pratinjau-tautan .pt-btn{font-size:12px;height:28px;padding:0 10px;border-radius:var(--r-sm,6px);
+  border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer}
+
+.gnode.lv2 .gdot{opacity:.6}
+.graph .btn.on{background:var(--accent-weak);color:var(--text)}
+
+.ver-diff > div{color:var(--text)}

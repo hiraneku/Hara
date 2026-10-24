@@ -53,6 +53,7 @@ import {
   bindNavigasiFokus, pulihkanPosisiGulir, perbaruiGarisProgresBaca, terapkanFokusDOM, sinkronSampulDOM,
 } from './navigasi-fokus.js?v=20261025001200';
 import { bindHamoji } from './hamoji.js?v=20261025001200';
+import { pasangPratinjauTautan } from './pratinjau-tautan.js?v=20261025001200';
 import { setRuangAktif, tambahRuang, hapusRuang, toggleModeTampilDaftar } from './ruang.js?v=20261025001200';
 import { bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih, bukaTabelProperti } from './fitur-lanjutan-ui.js?v=20261025001200';
 import { bukaStatistik } from './statistik-ui.js?v=20261025001200';
@@ -60,7 +61,7 @@ import { bindTagWarna } from './tagwarna.js?v=20261025001200';
 import { bindGaleri } from './galeri.js?v=20261025001200';
 import { menuTemplat, terapkanTemplat, hapusTemplat, formIsianTemplat } from './templat.js?v=20261025001200';
 import { pasangSeret } from './drag.js?v=20261025001200';
-import { muatPanels, tautkanSebutan } from './panels.js?v=20261025001200';
+import { muatPanels, tautkanSebutan, setLangkahGraf } from './panels.js?v=20261025001200';
 import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20261025001200';
 import { setTag, stt } from './views/data.js?v=20261025001200';
 import { simpanRiwayat, hapusRiwayat } from './cari.js?v=20261025001200';
@@ -417,6 +418,7 @@ export const notesModule = {
     bindBilahTeks();          /* bilah format di atas teks yang disorot */
     bindBlokModern();         /* blok toggle, tabel, memo suara, bilah kode & pill wikilink */
     bindHamoji();             /* Hamoji: kaomoji text & interactive stickers */
+    pasangPratinjauTautan();  /* pratinjau [[tautan]]: hover (mouse) / tahan-lama (sentuh) */
     bindBlokGenerasiBaru();
     bindNavigasiFokus();
 
@@ -783,6 +785,8 @@ export const notesModule = {
       }
       const buat = e.target.closest('[data-dm-buat]');
       if (buat) { buatNoteBerjudul(buat.dataset.dmBuat); return; }
+      const gl = e.target.closest('[data-graf-langkah]');
+      if (gl) { setLangkahGraf(Number(gl.dataset.grafLangkah)); muatPanels(); return; }
       const buka = e.target.closest('[data-dm-buka]');
       if (buka) { lompatKe(buka.dataset.dmBuka, buka.dataset.dmBid || null); return; }
 

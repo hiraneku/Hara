@@ -59,7 +59,7 @@ state.notes.push(
 /* ── C1: pemecah kueri ── */
 const k1 = cari.pecahKueri('tag:dapur judul:resep');
 oke('C1a tag & judul dipisah benar',
-  JSON.stringify(k1) === JSON.stringify({tag:['dapur'],judul:['resep'],kata:[]}), JSON.stringify(k1));
+  JSON.stringify({tag:k1.tag,judul:k1.judul,kata:k1.kata}) === JSON.stringify({tag:['dapur'],judul:['resep'],kata:[]}), JSON.stringify(k1));
 const k2 = cari.pecahKueri('judul:"resep kue"');
 oke('C1b nilai berkutip boleh berspasi', k2.judul.length === 1 && k2.judul[0] === 'resep kue',
   JSON.stringify(k2));

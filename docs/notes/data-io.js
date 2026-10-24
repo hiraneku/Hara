@@ -27,6 +27,8 @@ import { terlihat } from './kunci.js?v=20261025001200';
 import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261025001200';
 import { daftarRuang, tambahRuang } from './ruang.js?v=20261025001200';
 import { t as tr } from '../core/i18n.js?v=20261025001200';
+import { extractZip } from '../renamer/unzip.js?v=20261025001200';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261025001200';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -375,6 +377,21 @@ export function buatZip(entri) {
 }
 
 /* Baca zip → [{nama, teks}] (hanya metode store; deflate dilewati). */
+/* Baca zip (STORE dan DEFLATE) dan ambil berkas teks: .md, .markdown, .csv, .json.
+   Berkas lain dihitung sebagai dilewati. Memakai pembaca zip renamer. */
+export async function bacaZipLengkap(bytes) {
+  const berkas = await extractZip(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
+  const dec = new TextDecoder('utf-8');
+  const entri = [];
+  let dilewati = 0;
+  for (const f of berkas) {
+    const nama = f.fullPath || f.name || '';
+    if (/\.(md|markdown|csv|json)$/i.test(nama)) entri.push({ nama, teks: dec.decode(f.data) });
+    else dilewati++;
+  }
+  return { entri, dilewati };
+}
+
 export function bacaZip(bytes) {
   const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const baca16 = o => u[o] | (u[o + 1] << 8);
@@ -611,24 +628,39 @@ export function catatanDariMarkdown(nama, teks) {
 }
 
 /* Siapkan impor dari nama berkas + isi → ringkasan terpadu. */
+/* decodeURIComponent yang tidak melempar untuk nama berkas yang tidak valid. */
+function decodeURIComponent_aman(s) {
+  try { return decodeURIComponent(s); } catch (e) { return s; }
+}
+
 export async function siapImpor(nama, isi, mentah) {
   const nm = String(nama || '').toLowerCase();
   if (nm.endsWith('.json')) return siapImporJson(String(isi));
   if (nm.endsWith('.zip')) {
-    const { entri, dilewati } = bacaZip(mentah);
+    const { entri, dilewati } = await bacaZipLengkap(mentah);
+    /* Notion: tautan antar halaman dijadikan [[wikilink]] (lihat impor-notion.js).
+       Untuk zip biasa, tautan ke berkas .md lain di zip ikut diperlakukan sama. */
+    const peta = petaTautanNotion(entri);
     const catatan = [];
     for (const e of entri) {
       const eNama = e.nama.toLowerCase();
-      if (eNama.endsWith('.md')) catatan.push(catatanDariMarkdown(e.nama, e.teks));
-      else if (eNama.endsWith('.json') && !catatan.length && entri.length === 1)
+      if (eNama.endsWith('.md') || eNama.endsWith('.markdown')) {
+        const teks = tulisUlangTautan(e.teks, normJalur(decodeURIComponent_aman(e.nama)), peta);
+        catatan.push(catatanDariMarkdown(namaBersihNotion(e.nama) + '.md', teks));
+      } else if (eNama.endsWith('.csv')) {
+        catatan.push(catatanDariMarkdown(namaBersihNotion(e.nama) + '.md', csvKeMarkdown(e.teks)));
+      } else if (eNama.endsWith('.json') && !catatan.length && entri.length === 1)
         return siapImporJson(e.teks);
     }
     if (!catatan.length && !dilewati) throw new Error(tr('Zip tidak berisi berkas .md.'));
     return { jenis: 'md', catatan, dilewati, jumlahBlob: 0 };
   }
+  if (nm.endsWith('.csv')) {
+    return { jenis: 'md', catatan: [catatanDariMarkdown(namaBersihNotion(nama) + '.md', csvKeMarkdown(String(isi)))], dilewati: 0, jumlahBlob: 0 };
+  }
   if (nm.endsWith('.md') || nm.endsWith('.markdown') || nm.endsWith('.txt'))
     return { jenis: 'md', catatan: [catatanDariMarkdown(nama, String(isi))], dilewati: 0, jumlahBlob: 0 };
-  throw new Error(tr('Jenis berkas tidak dikenal — pakai .json, .md, atau .zip.'));
+  throw new Error(tr('Jenis berkas tidak dikenal — pakai .json, .md, .csv, atau .zip.'));
 }
 
 /* Terapkan impor (json: gabung/timpa; md: selalu tambah baru). */

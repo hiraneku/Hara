@@ -27,7 +27,7 @@ import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalend
          setKelompok, setKalenderKunci } from './papan.js?v=20261025001200';
 import {
   daftarRuang, tambahRuang, pindahkanCatatanKeRuang,
-  ambilVersiCatatan, pulihkanVersiCatatan,
+  ambilVersiCatatan, pulihkanVersiCatatan, bandingVersiDenganSekarang,
 } from './ruang.js?v=20261025001200';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -368,28 +368,76 @@ export async function bukaPanelVersiCatatan(anchor) {
   const n = catatanBuka();
   if (!n) { toast(tr('Buka catatan dulu')); return; }
   const versi = await ambilVersiCatatan(n.id);
-  openPop(`
+
+  const kepala = judul => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <h3 class="rn-modal-title" style="margin:0">${judul}</h3>
+        <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px;flex:none"><svg class="ico"><use href="#i-x"/></svg></button>
+      </div>`;
+
+  const tampilDaftar = () => {
+    openPop(`
     <div class="rn-modal-box" style="max-width:460px;max-height:76vh;overflow:auto">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <h3 class="rn-modal-title">${tr('Riwayat versi lokal')}</h3>
-        <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px"><svg class="ico"><use href="#i-x"/></svg></button>
-      </div>
+      ${kepala(tr('Riwayat versi lokal'))}
       ${versi.length === 0
-        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada snapshot versi tersimpan untuk catatan ini. Snapshot direkam otomatis saat kamu menyunting.')}</p>`
+        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.')}</p>`
         : versi.map((v, i) => `
           <div class="ver-item">
             <div style="min-width:0;flex:1">
               <div style="font-size:13px;font-weight:600">${esc(v.title || tr('Tanpa judul'))} · <span style="font-weight:400;color:var(--muted)">${stamp(v.at)}</span></div>
               <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(plainText(v).slice(0, 90) || tr('Kosong'))}</div>
             </div>
+            <button type="button" class="btn btn-sec" style="height:30px;font-size:12px;flex:none" data-versi-banding="${i}">${tr('Bandingkan')}</button>
             <button type="button" class="btn btn-sec" style="height:30px;font-size:12px;flex:none" data-versi-pulih="${i}">${tr('Pulihkan')}</button>
           </div>`).join('')}
     </div>
   `, anchor);
+    sambungPop();
+  };
 
-  const popEl = document.getElementById('pop');
-  if (popEl) {
+  const tampilBanding = i => {
+    const v = versi[i];
+    if (!v) return;
+    const ops = bandingVersiDenganSekarang(v, n);
+    const MAKS_TAMPIL = 300;
+    let isi;
+    if (!ops) {
+      isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Catatan terlalu panjang untuk dibandingkan.')}</p>`;
+    } else if (!ops.some(x => x.o !== ' ')) {
+      isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Tidak ada perbedaan dengan catatan sekarang.')}</p>`;
+    } else {
+      const tambah = ops.filter(x => x.o === '+').length;
+      const hapus = ops.filter(x => x.o === '-').length;
+      const baris = ops.slice(0, MAKS_TAMPIL).map(x => {
+        const gaya = x.o === '+' ? 'background:rgba(34,197,94,.14)'
+          : x.o === '-' ? 'background:rgba(239,68,68,.14);text-decoration:line-through;opacity:.85' : '';
+        const tanda = x.o === '+' ? '+' : x.o === '-' ? '−' : ' ';
+        return `<div style="font-size:12.5px;padding:2px 6px;border-radius:4px;white-space:pre-wrap;word-break:break-word;${gaya}"><span style="color:var(--muted);margin-right:6px">${tanda}</span>${esc(x.t)}</div>`;
+      }).join('');
+      isi = `<div style="font-size:12px;color:var(--muted);margin:6px 0">${tr('Hanya di versi ini: {h} baris · Hanya di sekarang: {t} baris', { h: hapus, t: tambah })}</div>
+        <div class="ver-diff" style="display:flex;flex-direction:column;gap:2px">${baris}</div>
+        ${ops.length > MAKS_TAMPIL ? `<p style="font-size:12px;color:var(--muted)">${tr('… {n} baris lagi tidak ditampilkan.', { n: ops.length - MAKS_TAMPIL })}</p>` : ''}`;
+    }
+    openPop(`
+    <div class="rn-modal-box" style="max-width:460px;max-height:76vh;overflow:auto">
+      ${kepala(tr('Bandingkan dengan sekarang'))}
+      <div style="font-size:12.5px;color:var(--muted);margin:4px 0 8px">${esc(v.title || tr('Tanpa judul'))} · ${stamp(v.at)}</div>
+      ${isi}
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px">
+        <button type="button" class="btn btn-sec" data-versi-kembali="1">${tr('Kembali')}</button>
+        <button type="button" class="btn btn-sec" data-versi-pulih="${i}">${tr('Pulihkan')}</button>
+      </div>
+    </div>
+  `, anchor);
+    sambungPop();
+  };
+
+  const sambungPop = () => {
+    const popEl = document.getElementById('pop');
+    if (!popEl) return;
     popEl.onclick = async e => {
+      if (e.target.closest('[data-versi-kembali]')) { tampilDaftar(); return; }
+      const bd = e.target.closest('[data-versi-banding]');
+      if (bd) { tampilBanding(Number(bd.dataset.versiBanding)); return; }
       const btn = e.target.closest('[data-versi-pulih]');
       if (!btn) return;
       const ok = await pulihkanVersiCatatan(n.id, Number(btn.dataset.versiPulih));
@@ -399,7 +447,9 @@ export async function bukaPanelVersiCatatan(anchor) {
         toast(tr('Versi catatan dipulihkan'));
       }
     };
-  }
+  };
+
+  tampilDaftar();
 }
 
 /* ───────── K30 · sumber pencarian lintas modul (dipakai palette) ───────── */

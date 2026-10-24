@@ -18,6 +18,7 @@ import { go, cur } from '../core/router.js?v=20261025001200';
 import { t as tr } from '../core/i18n.js?v=20261025001200';
 import { terlihat } from './kunci.js?v=20261025001200';
 import { pecahKueri, kueriKosong, catatanCocok } from './cari.js?v=20261025001200';
+import { petaNamaRuang } from './ruang.js?v=20261025001200';
 import { openPop, closeAll } from './menus/pop.js?v=20261025001200';
 import { sheet, shField, shAksi } from './sheet.js?v=20261025001200';
 
@@ -112,14 +113,16 @@ export function saringCatatan(daftar) {
   if (!s) return daftar;
   const k = pecahKueri(s.kueri);
   if (kueriKosong(k)) return daftar;
-  return (Array.isArray(daftar) ? daftar : []).filter(n => catatanCocok(n, k));
+  const ctx = { namaRuang: petaNamaRuang() };
+  return (Array.isArray(daftar) ? daftar : []).filter(n => catatanCocok(n, k, ctx));
 }
 
 export function jumlahCocokSaringan(kueri, daftar = state.notes) {
   const k = pecahKueri(kueri);
   if (kueriKosong(k)) return 0;
+  const ctx = { namaRuang: petaNamaRuang() };
   return (Array.isArray(daftar) ? daftar : [])
-    .filter(n => n && !n.deletedAt && !n.archived && terlihat(n) && catatanCocok(n, k))
+    .filter(n => n && !n.deletedAt && !n.archived && terlihat(n) && catatanCocok(n, k, ctx))
     .length;
 }
 

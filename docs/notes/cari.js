@@ -3,6 +3,14 @@
    ── Operator (huruf kecil, menempel ke titik dua) ──
    • tag:nama     → hanya catatan yang punya tag itu (cocok sebagian);
    • judul:kata   → hanya pada judul (alias: title:kata);
+   • folder:nama  → hanya catatan di ruang/folder yang namanya cocok (alias: ruang:);
+   • properti:nilai atau properti:kunci=nilai (atau kunci:nilai)
+                  → cocok di salah satu properti catatan;
+   • sebelum:TANGGAL / sesudah:TANGGAL → berdasarkan tanggal ubah terakhir.
+                  Format 2026-10-24 atau 24/10/2026. sebelum: = sebelum hari itu;
+                  sesudah: = sesudah hari itu (hari itu sendiri tidak ikut);
+   • -operator    → kebalikan: -tag:x, -judul:x, -folder:x, -properti:x, -kata
+                    (mis. -kecuali, -"frasa"), juga -sebelum:/-sesudah:;
    • #nama        → jalan pintas lama untuk tag:nama;
    • "dua kata"   → frasa utuh (boleh sebagai nilai operator);
    • sisanya      → kata biasa: SEMUA kata harus cocok di judul, isi,
@@ -26,68 +34,125 @@
 import { esc } from '../core/dom.js?v=20261025001200';
 import { tagUntukTampil } from './tags.js?v=20261025001200';
 import { plainText } from './note-model.js?v=20261025001200';
-import { peringkat } from './cari-inti.js?v=20261025001200';
+import { peringkat, cocokPersis, kosongKueri } from './cari-inti.js?v=20261025001200';
 
 const KEY = 'hara.cari.v1';
 const MAKS_RIWAYAT = 6;
 
 /* ── pembaca kueri ──
-   Satu regex, empat bentuk: prefix:"nilai berkutip" · prefix:nilai ·
-   "frasa" · kata. */
-const TOKEN = /([A-Za-z]+):"([^"]*)"|([A-Za-z]+):(\S+)|([A-Za-z]+):|"([^"]*)"|(\S+)/g;
+   Satu regex. Grup 1 = '-' (kecuali). Lalu: prefix:"nilai" · prefix:nilai ·
+   prefix: (menggantung) · "frasa" · kata. */
+const TOKEN = /(-?)(?:([A-Za-z]+):"([^"]*)"|([A-Za-z]+):(\S+)|([A-Za-z]+):|"([^"]*)"|(\S+))/g;
+
+const PREFIX = {
+  tag: 'tag', judul: 'judul', title: 'judul',
+  folder: 'folder', ruang: 'folder',
+  properti: 'properti', property: 'properti', prop: 'properti',
+  sebelum: 'sebelum', sesudah: 'sesudah',
+};
+
+/* Tanggal "2026-10-24" atau "24/10/2026" → batas ms (awal hari).
+   sebelum → t < awal hari itu. sesudah → t ≥ awal hari berikutnya.
+   Tanggal tidak valid → null (diperlakukan sebagai teks biasa). */
+export function batasTanggal(jenis, teks) {
+  const t = String(teks || '').trim();
+  let y, mo, d;
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(t);
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else {
+    m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(t);
+    if (!m) return null;
+    d = +m[1]; mo = +m[2]; y = +m[3];
+  }
+  const dasar = new Date(y, mo - 1, d);
+  if (dasar.getFullYear() !== y || dasar.getMonth() !== mo - 1 || dasar.getDate() !== d) return null;
+  return jenis === 'sebelum' ? dasar.getTime() : new Date(y, mo - 1, d + 1).getTime();
+}
+
+/* "kunci=nilai" atau "kunci:nilai" → {k, v}; tanpa pemisah → {k: null, v}. */
+function pecahProperti(nil) {
+  const sama = nil.indexOf('=');
+  const i = sama >= 0 ? sama : nil.indexOf(':');
+  if (i > 0) return { k: nil.slice(0, i).trim(), v: nil.slice(i + 1).trim() };
+  return { k: null, v: nil.trim() };
+}
 
 export function pecahKueri(q) {
-  const hasil = { tag: [], judul: [], kata: [] };
+  const hasil = kosongKueri();
   const s = String(q == null ? '' : q);
   let m;
   TOKEN.lastIndex = 0;
   while ((m = TOKEN.exec(s))) {
-    if (m[1] !== undefined) {
-      const nil = (m[2] || '').trim();
-      if (!nil) continue;
-      const kunci = m[1].toLowerCase();
-      if (kunci === 'tag') hasil.tag.push(nil);
-      else if (kunci === 'judul' || kunci === 'title') hasil.judul.push(nil);
-      else hasil.kata.push(`${m[1]}:${nil}`);      /* operator tak dikenal = teks biasa */
-    } else if (m[3] !== undefined) {
-      const kunci = m[3].toLowerCase();
-      const nil = m[4];
-      if (kunci === 'tag') hasil.tag.push(nil);
-      else if (kunci === 'judul' || kunci === 'title') hasil.judul.push(nil);
-      else hasil.kata.push(`${m[3]}:${nil}`);
-    } else if (m[5] !== undefined) {
-      /* operator menggantung ("tag:" / "judul:") — diabaikan, bukan
-         dianggap kata biasa: pengguna yang baru mengetik titik dua
-         belum punya maksud pencarian apa pun */
-    } else if (m[6] !== undefined) {
-      const nil = m[6].trim();
-      if (nil) hasil.kata.push(nil);
-    } else if (m[7] !== undefined) {
-      const nil = m[7];
-      if (nil.startsWith('#') && nil.length > 1) hasil.tag.push(nil.slice(1));
-      else hasil.kata.push(nil);
+    const neg = m[1] === '-';
+    const pakai = neg ? hasil.kecuali : hasil;
+    const pfx = m[2] !== undefined ? m[2] : m[4] !== undefined ? m[4] : m[6];
+    if (pfx !== undefined) {
+      const nilMentah = m[2] !== undefined ? m[3] : m[4] !== undefined ? m[5] : '';
+      const nil = (nilMentah || '').trim();
+      if (!nil) continue;                       /* "tag:" / "judul:\"\"" — diabaikan */
+      const jenis = PREFIX[pfx.toLowerCase()];
+      if (jenis === 'tag' || jenis === 'judul' || jenis === 'folder') pakai[jenis].push(nil);
+      else if (jenis === 'properti') pakai.properti.push(pecahProperti(nil));
+      else if (jenis === 'sebelum' || jenis === 'sesudah') {
+        const batas = batasTanggal(jenis, nil);
+        if (batas === null) pakai.kata.push(`${pfx}:${nil}`);   /* tanggal salah = teks biasa */
+        else pakai.tanggal.push({ rel: jenis, batas, teks: `${jenis}:${nil}` });
+      } else pakai.kata.push(`${pfx}:${nil}`);                 /* operator tak dikenal = teks biasa */
+      continue;
     }
+    if (m[7] !== undefined) {                   /* "frasa" */
+      const nil = m[7].trim();
+      if (nil) pakai.kata.push(nil);
+      continue;
+    }
+    const teks = m[8];
+    if (!neg && teks.startsWith('#') && teks.length > 1) hasil.tag.push(teks.slice(1));
+    else if (neg && teks.startsWith('#') && teks.length > 1) hasil.kecuali.tag.push(teks.slice(1));
+    else if (teks) pakai.kata.push(teks);
   }
   return hasil;
 }
 
 export const kueriKosong = k =>
-  !k.tag.length && !k.judul.length && !k.kata.length;
+  !k.tag.length && !k.judul.length && !k.kata.length
+  && !(k.folder || []).length && !(k.properti || []).length && !(k.tanggal || []).length
+  && !Object.values(k.kecuali || {}).some(a => a.length);
 
-/* Apakah catatan cocok dengan kueri. Semua syarat harus terpenuhi. */
-export function catatanCocok(n, k) {
+/* Label operator untuk chip di layar cari (satu string per operator). */
+export function labelOperator(k) {
+  const out = [];
+  const tambah = (awal, daftar, teksFn) => (daftar || []).forEach(x => out.push(awal + teksFn(x)));
+  const satu = (pre, kec) => {
+    tambah(pre + 'tag:', kec ? k.kecuali.tag : k.tag, x => x);
+    tambah(pre + 'judul:', kec ? k.kecuali.judul : k.judul, x => x);
+    tambah(pre + 'folder:', kec ? k.kecuali.folder : k.folder, x => x);
+    tambah(pre + 'properti:', kec ? k.kecuali.properti : k.properti, p => (p.k ? p.k + '=' : '') + p.v);
+    tambah(pre, kec ? k.kecuali.tanggal : k.tanggal, t => t.teks);
+  };
+  satu('', false);
+  satu('-', true);
+  return out;
+}
+
+/* Apakah catatan cocok dengan kueri. Semua syarat harus terpenuhi.
+   ctx.namaRuang(id) → nama folder (opsional; tanpa itu operator folder: tidak cocok). */
+export function catatanCocok(n, k, ctx) {
   if (!n) return false;
-  const tag = tagUntukTampil(n).map(t => t.toLowerCase());
-  if (!k.tag.every(x => tag.some(t => t.includes(x.toLowerCase())))) return false;
+  return cocokPersis(entriDariCatatan(n, ctx), k);
+}
 
-  const judul = String(n.title || '').toLowerCase();
-  if (!k.judul.every(x => judul.includes(x.toLowerCase()))) return false;
-
-  if (k.kata.length) {
-    const teks = `${n.title || ''} ${tag.join(' ')} ${plainText(n)}`.toLowerCase();
-    if (!k.kata.every(x => teks.includes(x.toLowerCase()))) return false;
-  }
-  return true;
+/* Entri indeks dari sebuah catatan — satu sumber untuk catatanCocok dan Worker. */
+export function entriDariCatatan(n, ctx) {
+  const namaRuang = ctx && typeof ctx.namaRuang === 'function' ? ctx.namaRuang : null;
+  return {
+    id: n.id,
+    judul: String(n.title || ''),
+    tag: tagUntukTampil(n),
+    teks: plainText(n),
+    updatedAt: n.updatedAt || 0,
+    folder: n.folderId && namaRuang ? String(namaRuang(n.folderId) || '') : '',
+    props: (n.props || []).map(p => ({ k: String(p.k ?? ''), v: String(p.v ?? '') })),
+  };
 }
 
 /* Kata yang layak disorot di judul/cuplikan: kata biasa + nilai operator
@@ -206,22 +271,17 @@ function matikanPekerja() {
 
 /* Peringkat untuk daftar catatan (yang sudah disaring terlihat) dan kueri k.
    Mengembalikan Promise<{ ids, mirip }>. */
-const entriIndeks = notes => notes.map(n => ({
-  id: n.id,
-  judul: String(n.title || ''),
-  tag: tagUntukTampil(n),
-  teks: plainText(n),
-  updatedAt: n.updatedAt || 0,
-}));
+const entriIndeks = (notes, ctx) => notes.map(n => entriDariCatatan(n, ctx));
 
-export async function cariPeringkat(notes, k) {
+export async function cariPeringkat(notes, k, ctx) {
   const w = ambilPekerja();
-  if (!w) return peringkat(entriIndeks(notes), k);
-  /* sidik murah: id + waktu ubah + panjang isi (menangkap ubahan yang lupa touch) */
-  const kunci = notes.map(n => `${n.id}:${n.updatedAt || 0}:${(n.blocks || []).reduce((a, b) => a + ((b && b.content) || '').length, 0)}:${(n.title || '').length}`).join('|');
+  if (!w) return peringkat(entriIndeks(notes, ctx), k);
+  /* sidik murah: id + waktu ubah + panjang isi (menangkap ubahan yang lupa touch)
+     + nama folder (ganti nama ruang harus memperbarui indeks) */
+  const kunci = notes.map(n => `${n.id}:${n.updatedAt || 0}:${(n.blocks || []).reduce((a, b) => a + ((b && b.content) || '').length, 0)}:${(n.title || '').length}:${n.folderId && ctx && ctx.namaRuang ? ctx.namaRuang(n.folderId) : ''}`).join('|');
   try {
     if (kunci !== kunciIndeks) {
-      w.postMessage({ jenis: 'indeks', indeks: entriIndeks(notes), seq: ++seqKirim });
+      w.postMessage({ jenis: 'indeks', indeks: entriIndeks(notes, ctx), seq: ++seqKirim });
       kunciIndeks = kunci;
     }
     const seq = ++seqKirim;
@@ -231,6 +291,6 @@ export async function cariPeringkat(notes, k) {
     return { ids: hasil.ids, mirip: hasil.mirip };
   } catch (err) {
     matikanPekerja();
-    return peringkat(entriIndeks(notes), k);
+    return peringkat(entriIndeks(notes, ctx), k);
   }
 }

@@ -9,7 +9,8 @@ import { AK, akSekarang } from '../../core/theme.js?v=20261025001200';
 import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261025001200';
 import { tandaTag, WARNA_TAG } from '../label.js?v=20261025001200';
 import { terlihat } from '../kunci.js?v=20261025001200';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261025001200';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261025001200';
+import { petaNamaRuang } from '../ruang.js?v=20261025001200';
 import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261025001200';
 import { namaSekarang } from '../../home/nama.js?v=20261025001200';
 import { renderSimpanSaringanHtml } from '../saringan.js?v=20261025001200';
@@ -58,10 +59,7 @@ export function daftarTagHtml(q) {
    sebuah catatan ikut muncul. Riwayat pencarian tampil saat kolom
    masih kosong. */
 const chipOperator = k => {
-  const isi = [
-    ...k.tag.map(x => `tag:${x}`),
-    ...k.judul.map(x => `judul:${x}`),
-  ];
+  const isi = labelOperator(k);
   if (!isi.length) return '';
   return `<div class="rx-op">${isi.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 };
@@ -96,7 +94,7 @@ export function renderHasilCari(q) {
      tertentu mengandung kata kunci itu. Hanya yang terlihat dikirim ke
      indeks/Worker. */
   const terlihatSaja = state.notes.filter(n => !n.deletedAt && terlihat(n));
-  cariPeringkat(terlihatSaja, k).then(r => {
+  cariPeringkat(terlihatSaja, k, { namaRuang: petaNamaRuang() }).then(r => {
     if (gilir !== gilirCari) return;
     const wadah = document.getElementById('cari-hasil');
     if (wadah) tampilkanHasil(wadah, mentah, k, terlihatSaja, r);
@@ -157,7 +155,7 @@ search:()=>`<div class="page">
       aria-label="${tr('Cari catatan')}" value="${esc(kueriCari)}"></div>
   ${renderSimpanSaringanHtml()}
   <div id="cari-hasil">${riwayatHtml()}<p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
-  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
+  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama, judul:kata, folder:ruang, properti:nilai, atau sebelum:/sesudah: dengan tanggal (mis. 2026-10-01). Awali dengan - untuk mengecualikan (mis. -kecuali). Bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
 
 tags:()=>{
   const sem = semuaTag();
@@ -302,5 +300,5 @@ set:()=>{ const akPilih = akSekarang() || '';
       <div class="row-s" id="ruang">${tr('menghitung…')}</div></div></div>
   </div>
   <input type="file" id="impor-in" hidden
-    accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
+    accept=".json,.md,.markdown,.txt,.csv,.zip,application/json,text/markdown,text/csv,application/zip">
   <p class="note" style="padding:20px 0 0">${tr('Keluar-masuk kapan saja: Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks.')} ${tr('Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.')}</p></div>`}};

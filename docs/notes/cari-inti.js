@@ -41,16 +41,55 @@ export function lev(a, b, batas) {
 
 export const batasSalah = kata => (kata.length >= 8 ? 2 : kata.length >= 4 ? 1 : 0);
 
-/* Cocok persis — sama dengan catatanCocok(). */
-export function cocokPersis(e, k) {
+/* Kueri kosong dengan bentuk lengkap (dipakai cari.js dan uji). */
+export const kosongKueri = () => ({
+  tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [],
+  kecuali: { tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [] },
+});
+
+/* properti: { k: string|null, v: string }. Tanpa kunci → cocok di nama atau nilai. */
+export function cocokProperti(props, p) {
+  const vn = norm(p.v);
+  const kn = p.k ? norm(p.k) : null;
+  return props.some(x => (kn
+    ? norm(x.k).includes(kn) && norm(x.v).includes(vn)
+    : norm(x.k).includes(vn) || norm(x.v).includes(vn)));
+}
+
+/* tanggal: { rel: 'sebelum'|'sesudah', batas } — ms sejak epoch, awal hari. */
+export function cocokTanggal(ms, t) {
+  return t.rel === 'sebelum' ? ms < t.batas : ms >= t.batas;
+}
+
+/* Semua operator selain kata biasa (tag, judul, folder, properti, tanggal),
+   termasuk versi kecuali-nya. Dipakai cocokPersis dan skorMirip. */
+export function cocokOperator(e, k) {
+  const kec = k.kecuali || {};
   const tag = e.tag.map(norm);
-  if (!k.tag.every(x => tag.some(t => t.includes(norm(x))))) return false;
   const judul = norm(e.judul);
-  if (!k.judul.every(x => judul.includes(norm(x)))) return false;
-  if (k.kata.length) {
-    const teks = `${e.judul || ''} ${tag.join(' ')} ${e.teks || ''}`.toLowerCase();
-    if (!k.kata.every(x => teks.includes(norm(x)))) return false;
+  const folder = norm(e.folder || '');
+  const props = (e.props || []).map(p => ({ k: String(p.k ?? ''), v: String(p.v ?? '') }));
+  const ada = {
+    tag: x => tag.some(t => t.includes(norm(x))),
+    judul: x => judul.includes(norm(x)),
+    folder: x => folder.includes(norm(x)),
+    properti: p => cocokProperti(props, p),
+    tanggal: t => cocokTanggal(e.updatedAt || 0, t),
+  };
+  for (const jenis of ['tag', 'judul', 'folder', 'properti', 'tanggal']) {
+    if (!(k[jenis] || []).every(x => ada[jenis](x))) return false;
+    if ((kec[jenis] || []).some(x => ada[jenis](x))) return false;
   }
+  return true;
+}
+
+/* Cocok persis — sama dengan catatanCocok() di cari.js. */
+export function cocokPersis(e, k) {
+  if (!cocokOperator(e, k)) return false;
+  const kec = k.kecuali || {};
+  const teks = `${e.judul || ''} ${e.tag.map(norm).join(' ')} ${e.teks || ''}`.toLowerCase();
+  if (!k.kata.every(x => teks.includes(norm(x)))) return false;
+  if ((kec.kata || []).some(x => teks.includes(norm(x)))) return false;
   return true;
 }
 
@@ -79,8 +118,10 @@ export function skorPersis(e, k) {
 /* Skor kecocokan mirip: tiap kata harus punya kawan dengan jarak ≤ batas. */
 export function skorMirip(e, k) {
   if (!k.kata.length) return -1;
-  if (!k.tag.every(x => e.tag.some(t => norm(t).includes(norm(x))))) return -1;
-  if (!k.judul.every(x => norm(e.judul).includes(norm(x)))) return -1;
+  if (!cocokOperator(e, k)) return -1;
+  const kec = k.kecuali || {};
+  const teksUtuh = `${e.judul} ${e.tag.join(' ')} ${e.teks}`.toLowerCase();
+  if ((kec.kata || []).some(x => teksUtuh.includes(norm(x)))) return -1;
   const kata = kataDari(`${e.judul} ${e.tag.join(' ')} ${e.teks}`);
   let s = 0;
   for (const x0 of k.kata) {
