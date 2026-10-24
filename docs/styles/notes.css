@@ -843,13 +843,17 @@ body.zen #cari-note{top:16px}
 .jurnal-btn{margin-bottom:20px;color:var(--muted)}
 .jurnal-btn:hover{color:var(--text)}
 .jurnal-btn .ico{width:15px;height:15px}
-.list-bar{display:flex;justify-content:flex-end;margin:0 0 10px}
-.urut-chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;
+/* bar chip daftar: rata kiri seperti chip Ruang di atasnya, membungkus ke baris
+   berikutnya bila sempit (tidak lagi terdorong keluar layar di HP) */
+.list-bar{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;
+  gap:6px;margin:0 0 10px;min-width:0}
+.urut-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;
   border-radius:999px;background:var(--sunken);color:var(--muted);font-size:12px;
-  font-weight:500;transition:.12s var(--ease)}
+  font-weight:500;line-height:1;white-space:nowrap;flex:none;max-width:100%;
+  transition:.12s var(--ease)}
 .urut-chip:hover{background:var(--border);color:var(--text)}
-.urut-chip .ico{width:13px;height:13px}
-.urut-chip b{color:var(--text);font-weight:600}
+.urut-chip .ico{width:13px;height:13px;flex:none}
+.urut-chip b{color:var(--text);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ════════════ B10 — tag berwarna ════════════
    Tag memakai PALET LABEL (bukan aksen): urutan tetap di seluruh
