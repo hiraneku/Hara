@@ -161,6 +161,13 @@ uji('urutkanAcak mempertahankan semua elemen dan tidak mengubah masukan', () => 
   assert.deepEqual(asal, ['a', 'b', 'c', 'd', 'e']);
 });
 
+uji('berkas WebM dikenali sebagai audio (juga bila tipe MIME-nya video/webm)', () => {
+  assert.equal(L.kemungkinanAudio({ name: 'rekaman.webm', type: 'audio/webm' }), true);
+  assert.equal(L.kemungkinanAudio({ name: 'rekaman.webm', type: 'video/webm' }), true);
+  assert.equal(L.kemungkinanAudio({ name: 'REKAMAN.WEBM', type: '' }), true);
+  assert.equal(L.kemungkinanAudio({ name: 'gambar.webp', type: 'image/webp' }), false);
+});
+
 uji('format waktu m:ss dan h:mm:ss', () => {
   assert.equal(L.formatWaktu(0), '0:00');
   assert.equal(L.formatWaktu(65.9), '1:05');

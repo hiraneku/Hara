@@ -9,12 +9,12 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024200000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261024210000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261024200000';
+} from './logika.js?v=20261024210000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -453,7 +453,19 @@ export function mulaiPudarKeBerikut(detik) {
 }
 
 /* Durasi tanpa mendekode seluruh berkas (hemat memori untuk impor). */
+/* Durasi berkas audio. Metadata elemen audio dicoba dulu. Bila gagal atau tidak
+   terhingga (umum pada WebM dari perekam, yang tidak menyimpan durasi), durasi
+   dihitung dari hasil decode. */
 export function bacaDurasi(berkas) {
+  return bacaDurasiMedia(berkas).catch(async () => {
+    const c = await pastikanCtx();
+    const buf = await c.decodeAudioData(await berkas.arrayBuffer());
+    if (!(buf.duration > 0)) throw new Error('durasi tidak terbaca');
+    return buf.duration;
+  });
+}
+
+function bacaDurasiMedia(berkas) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(berkas);
     const a = new Audio();

@@ -2,7 +2,7 @@
    lagu tetap di IndexedDB (simpan.js). Lagu yang dihapus dari pustaka otomatis
    dikeluarkan dari semua daftar. */
 
-import { normalisasiDaftarPutar, namaDaftarValid, tambahUnik } from './logika.js?v=20261024200000';
+import { normalisasiDaftarPutar, namaDaftarValid, tambahUnik } from './logika.js?v=20261024210000';
 
 const KUNCI = 'hara.v1.musik.daftar';
 let cache = null;

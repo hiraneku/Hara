@@ -3,18 +3,18 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261024200000';
-import { esc } from '../core/dom.js?v=20261024200000';
-import { t as tr } from '../core/i18n.js?v=20261024200000';
-import { toast } from '../core/toast.js?v=20261024200000';
-import * as M from './mesin.js?v=20261024200000';
-import * as S from './simpan.js?v=20261024200000';
-import * as L from './logika.js?v=20261024200000';
-import * as A from './aksi.js?v=20261024200000';
-import { ikon } from './ikon.js?v=20261024200000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261024200000';
-import { segarSampul } from './sampul-dom.js?v=20261024200000';
-import { ambilSet } from './set.js?v=20261024200000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261024210000';
+import { esc } from '../core/dom.js?v=20261024210000';
+import { t as tr } from '../core/i18n.js?v=20261024210000';
+import { toast } from '../core/toast.js?v=20261024210000';
+import * as M from './mesin.js?v=20261024210000';
+import * as S from './simpan.js?v=20261024210000';
+import * as L from './logika.js?v=20261024210000';
+import * as A from './aksi.js?v=20261024210000';
+import { ikon } from './ikon.js?v=20261024210000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261024210000';
+import { segarSampul } from './sampul-dom.js?v=20261024210000';
+import { ambilSet } from './set.js?v=20261024210000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
@@ -240,7 +240,7 @@ export function musikView() {
     ${peringatan}
     <div class="mus-kolom mus-kiri">${pemutarHtml(v)}</div>
     <div class="mus-kolom mus-kanan">${kontrolHtml(v)}${pustakaHtml(v)}</div>
-    <input type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.flac,.aif,.aiff,.caf,.3gp" multiple class="mus-berkas" data-mus-berkas hidden>
+    <input type="file" accept="audio/*,video/webm,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm,.aif,.aiff,.caf,.3gp" multiple class="mus-berkas" data-mus-berkas hidden>
   </div>`;
 }
 
