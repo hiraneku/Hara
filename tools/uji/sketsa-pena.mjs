@@ -123,12 +123,12 @@ console.log('── Unit: preset pena (preset-pena.js) ──');
   localStorage.clear();
 }
 
-console.log('── Unit: gaya goresan (goresan.js v4) ──');
+console.log('── Unit: gaya goresan (goresan.js v4, v5 sejak A5) ──');
 {
-  cek('Unit gaya: versi penyimpanan sekarang 4', VERSI_GORESAN === 4);
+  cek('Unit gaya: versi penyimpanan sekarang 5 (A5: lapisan)', VERSI_GORESAN === 5);
   const teks = serialGoresan({ goresan: [{ alat: 'pena', warna: '#2563eb', ukuran: 10, gaya: 'kuas', pts: [{ x: 10, y: 10 }, { x: 20, y: 20 }] }] }, 720, 460);
   const b = bacaGoresan(teks);
-  cek('Unit gaya: gaya "kuas" tersimpan dan terbaca balik', !!b && b.goresan[0].gaya === 'kuas' && JSON.parse(teks).v === 4);
+  cek('Unit gaya: gaya "kuas" tersimpan dan terbaca balik', !!b && b.goresan[0].gaya === 'kuas' && JSON.parse(teks).v === 5);
   const rusak = bacaGoresan(serialGoresan({ goresan: [{ alat: 'pena', warna: '#111111', ukuran: 3, gaya: 'neon', pts: [{ x: 1, y: 1 }] }] }, 720, 460));
   cek('Unit gaya: gaya tidak dikenal jadi "tinta"', !!rusak && rusak.goresan[0].gaya === 'tinta');
   const v3 = bacaGoresan('{"v":3,"kanvas":{"w":720,"h":460},"goresan":[{"alat":"pena","warna":"#111111","ukuran":3,"pts":[{"x":5,"y":5}]}]}');

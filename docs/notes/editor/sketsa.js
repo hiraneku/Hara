@@ -4,18 +4,19 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025011852';
-import { toast } from '../../core/toast.js?v=20261025011852';
-import { t as tr } from '../../core/i18n.js?v=20261025011852';
-import { ensureCaret, caretEnd } from './caret.js?v=20261025011852';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261025011852';
-import { refresh } from './cleanup.js?v=20261025011852';
-import { snap } from './history.js?v=20261025011852';
-import { pasangGambar } from './image.js?v=20261025011852';
-import { pastikanKolomAkhir } from './blocks.js?v=20261025011852';
-import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261025011852';
-import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261025011852';
-import { kenaliBentuk } from './bentuk.js?v=20261025011852';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025020026';
+import { toast } from '../../core/toast.js?v=20261025020026';
+import { t as tr } from '../../core/i18n.js?v=20261025020026';
+import { ensureCaret, caretEnd } from './caret.js?v=20261025020026';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261025020026';
+import { refresh } from './cleanup.js?v=20261025020026';
+import { snap } from './history.js?v=20261025020026';
+import { pasangGambar } from './image.js?v=20261025020026';
+import { pastikanKolomAkhir } from './blocks.js?v=20261025020026';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261025020026';
+import { lapisanAwal, bisaDiedit, tambahLapisan, hapusLapisan, pindahLapisan, urutanGambar, urutanRender } from './lapisan.js?v=20261025020026';
+import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261025020026';
+import { kenaliBentuk } from './bentuk.js?v=20261025020026';
 
 /* A4: berapa lama ujung dibiarkan diam sebelum coretan dikenali sebagai bentuk. */
 const JEDA_TAHAN_MS = 650;
@@ -336,6 +337,9 @@ export function bukaStudioSketsa(figEdit = null) {
   /* Objek visual (gambar yang dipindah & diubah ukurannya). Akhir daftar = paling atas. */
   const objek = [];
   let pilihanId = null;
+  /* A5: lapisan. Urutan array = tumpukan (akhir = paling atas). Lapisan aktif menerima goresan dan objek baru. */
+  let lapisan = lapisanAwal();
+  let lapisanAktif = lapisan[0].id;
   let seret = null;
   const gambarObjekCache = new Map();
   /* A7: ukuran kanvas kerja (default 720×460). A6: zoom hanya ukuran tampilan. */
@@ -380,6 +384,7 @@ export function bukaStudioSketsa(figEdit = null) {
             ${[2, 4, 8, 14].map(u => `<button type="button" class="sk-sz${u === 4 ? ' on' : ''}" data-sk-uk="${u}">${u}px</button>`).join('')}
           </div>
         </div>
+        <div class="sk-row" id="sk-lapisan-baris"></div>
         <div class="sk-row" id="sk-presets-baris"></div>
         <div class="sk-row">
           <button type="button" class="sk-tool" id="sk-zoom-kecil" title="${tr('Perkecil tampilan')}">−</button>
@@ -438,6 +443,7 @@ export function bukaStudioSketsa(figEdit = null) {
   };
 
   const tambahObjekDariBerkas = async berkas => {
+    if (!lapisanAktifBolehDiedit()) return;
     const blobId = buatIdBlob('ob_');
     try { await simpanBlob(blobId, berkas); }
     catch { toast(tr('Ruang penyimpanan penuh')); return; }
@@ -446,7 +452,7 @@ export function bukaStudioSketsa(figEdit = null) {
     const w = dim.w * skala;
     const h = dim.h * skala;
     const id = 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    objek.push({ id, blob: blobId, x: (kw - w) / 2, y: (kh - h) / 2, w, h });
+    objek.push({ id, blob: blobId, x: (kw - w) / 2, y: (kh - h) / 2, w, h, lapisan: lapisanAktif });
     pilihanId = id;
     perbaruiBarObjek();
     renderUlang();
@@ -558,7 +564,7 @@ export function bukaStudioSketsa(figEdit = null) {
     const hasil = kenaliBentuk(aktif.pts);
     if (!hasil) return;
     const asli = aktif;
-    const bentuk = { alat: hasil.alat, warna: asli.warna, ukuran: asli.ukuran, gaya: 'tinta', pts: hasil.pts };
+    const bentuk = { alat: hasil.alat, warna: asli.warna, ukuran: asli.ukuran, gaya: 'tinta', lapisan: asli.lapisan, pts: hasil.pts };
     bentukSementara = { asli, bentuk, nama: hasil.nama };
     titikTahan = asli.pts[asli.pts.length - 1];
     aktif = bentuk;
@@ -652,15 +658,69 @@ export function bukaStudioSketsa(figEdit = null) {
 
   bangunBarPreset();
 
+  /* A5: lapisan. Lapisan aktif menerima goresan dan objek baru. Lapisan tersembunyi atau terkunci tidak bisa diedit. */
+  const pesanLapisanTerkunci = () => tr('Lapisan ini terkunci atau disembunyikan');
+  const lapisanAktifBolehDiedit = () => {
+    if (bisaDiedit(lapisan, lapisanAktif)) return true;
+    toast(pesanLapisanTerkunci());
+    return false;
+  };
+  const lepasPilihanTerkunci = () => {
+    const o = objek.find(x => x.id === pilihanId);
+    if (o && !bisaDiedit(lapisan, o.lapisan)) pilihanId = null;
+  };
+  const buatTombol = (id, teks, cls) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    if (id) b.id = id;
+    b.textContent = teks;
+    return b;
+  };
+  const bangunBarLapisan = () => {
+    const baris = overlay.querySelector('#sk-lapisan-baris');
+    if (!baris) return;
+    const idx = lapisan.findIndex(l => l.id === lapisanAktif);
+    const label = document.createElement('span');
+    label.className = 'sk-lap-label';
+    label.textContent = tr('Lapisan');
+    baris.replaceChildren(label);
+    /* urutan dari bawah ke atas, sama dengan urutan array */
+    for (const l of lapisan) {
+      const grup = document.createElement('span');
+      grup.className = 'sk-lap' + (l.id === lapisanAktif ? ' on' : '') + (bisaDiedit(lapisan, l.id) ? '' : ' kunci');
+      const nama = buatTombol('', l.nama, 'sk-tool sk-lap-nama');
+      nama.dataset.skLap = l.id;
+      nama.setAttribute('aria-pressed', String(l.id === lapisanAktif));
+      const tampil = buatTombol('', l.tampil ? tr('Sembunyikan') : tr('Tampilkan'), 'sk-tool sk-lap-aksi');
+      tampil.dataset.skLapTampil = l.id;
+      const kunci = buatTombol('', l.kunci ? tr('Buka kunci') : tr('Kunci'), 'sk-tool sk-lap-aksi');
+      kunci.dataset.skLapKunci = l.id;
+      grup.append(nama, tampil, kunci);
+      baris.append(grup);
+    }
+    const tambah = buatTombol('sk-lap-tambah', tr('Lapisan baru'), 'sk-tool');
+    const naik = buatTombol('sk-lap-naik', tr('Naik'), 'sk-tool');
+    naik.disabled = idx >= lapisan.length - 1;
+    const turun = buatTombol('sk-lap-turun', tr('Turun'), 'sk-tool');
+    turun.disabled = idx <= 0;
+    const hapus = buatTombol('sk-lap-hapus', tr('Hapus lapisan'), 'sk-tool');
+    hapus.disabled = lapisan.length <= 1;
+    baris.append(tambah, naik, turun, hapus);
+  };
+  bangunBarLapisan();
+
   const renderUlang = () => {
     if (!ctx) return;
     gambarKisiLatar(ctx, pola, latar, kw, kh);
     if (gambarDasar) {
       try { ctx.drawImage(gambarDasar, 0, 0, kw, kh); } catch {}
     }
-    for (const o of objek) gambarSatuObjek(ctx, o, gambarObjekDiKanvas(o), o.id === pilihanId);
-    for (const st of jejak) gambarSatuJejak(ctx, st);
-    if (aktif) gambarSatuJejak(ctx, aktif);
+    /* A5: per lapisan dari bawah; objek di bawah goresan dalam satu lapisan (A2); lapisan tersembunyi dilewati */
+    for (const r of urutanRender(lapisan, objek, aktif ? [...jejak, aktif] : jejak)) {
+      if (r.tipe === 'objek') gambarSatuObjek(ctx, r.item, gambarObjekDiKanvas(r.item), r.item.id === pilihanId);
+      else gambarSatuJejak(ctx, r.item);
+    }
   };
 
   /* Bila mengedit sketsa yang sudah ada, muat blob gambarnya ke latar */
@@ -671,13 +731,17 @@ export function bukaStudioSketsa(figEdit = null) {
       ? null
       : bacaGoresan(figEdit.getAttribute('data-goresan') || '');
     if (gor && (gor.goresan.length || gor.objek.length
-      || gor.kanvas.w !== LEBAR || gor.kanvas.h !== TINGGI)) {
+      || gor.kanvas.w !== LEBAR || gor.kanvas.h !== TINGGI
+      || JSON.stringify(gor.lapisan) !== JSON.stringify(lapisanAwal()))) {
       kw = gor.kanvas.w;
       kh = gor.kanvas.h;
       cv.width = kw;
       cv.height = kh;
       jejak.push(...gor.goresan);
       objek.push(...gor.objek);
+      lapisan = gor.lapisan;
+      lapisanAktif = ([...lapisan].reverse().find(l => bisaDiedit(lapisan, l.id)) || lapisan[0]).id;
+      bangunBarLapisan();
       latar = gor.latar;
       pola = gor.pola;
       overlay.querySelectorAll('[data-sk-pola]').forEach(b => b.classList.toggle('on', b.dataset.skPola === pola));
@@ -720,11 +784,15 @@ export function bukaStudioSketsa(figEdit = null) {
     }
     const p = titikDariEvent(e);
     if (alat === 'pilih') {
-      const i = hitObjek(objek, p.x, p.y);
+      /* A5: hanya objek di lapisan yang bisa diedit yang bisa dipilih */
+      const bisa = objek.filter(o => bisaDiedit(lapisan, o.lapisan));
+      const i = hitObjek(bisa, p.x, p.y);
       pilihanId = null;
+      if (i < 0 && hitObjek(objek, p.x, p.y) >= 0) toast(pesanLapisanTerkunci());
       if (i >= 0) {
+        const o = bisa[i];
         /* objek yang disentuh dipindah ke atas tumpukan lalu ikut digeser */
-        const [o] = objek.splice(i, 1);
+        objek.splice(objek.indexOf(o), 1);
         objek.push(o);
         pilihanId = o.id;
         seret = { id: o.id, dx: p.x - o.x, dy: p.y - o.y };
@@ -733,8 +801,9 @@ export function bukaStudioSketsa(figEdit = null) {
       renderUlang();
       return;
     }
+    if (!lapisanAktifBolehDiedit()) return;
     tumpukRedo.length = 0;
-    aktif = { alat, warna, ukuran, ...(alat === 'pena' ? { gaya } : {}), pts: [p] };
+    aktif = { alat, warna, ukuran, ...(alat === 'pena' ? { gaya } : {}), lapisan: lapisanAktif, pts: [p] };
     mulaiTimerTahan();
     renderUlang();
   });
@@ -840,6 +909,51 @@ export function bukaStudioSketsa(figEdit = null) {
       inp.click();
       return;
     }
+    /* A5: baris lapisan */
+    const lapPilih = e.target.closest('[data-sk-lap]');
+    if (lapPilih) { lapisanAktif = lapPilih.dataset.skLap; bangunBarLapisan(); return; }
+    const lapTampil = e.target.closest('[data-sk-lap-tampil]');
+    const lapKunci = e.target.closest('[data-sk-lap-kunci]');
+    if (lapTampil || lapKunci) {
+      const l = lapisan.find(x => x.id === (lapTampil || lapKunci).dataset[lapTampil ? 'skLapTampil' : 'skLapKunci']);
+      if (l) { if (lapTampil) l.tampil = !l.tampil; else l.kunci = !l.kunci; }
+      lepasPilihanTerkunci();
+      perbaruiBarObjek();
+      bangunBarLapisan();
+      renderUlang();
+      return;
+    }
+    if (e.target.closest('#sk-lap-tambah')) {
+      const r = tambahLapisan(lapisan);
+      if (!r.ok) { toast(tr('Maksimal 8 lapisan')); return; }
+      lapisan = r.list;
+      lapisanAktif = r.id;
+      bangunBarLapisan();
+      return;
+    }
+    const lapGerak = e.target.closest('#sk-lap-naik, #sk-lap-turun');
+    if (lapGerak) {
+      const r = pindahLapisan(lapisan, lapisanAktif, lapGerak.id === 'sk-lap-naik' ? 1 : -1);
+      if (r.ok) lapisan = r.list;
+      bangunBarLapisan();
+      renderUlang();
+      return;
+    }
+    if (e.target.closest('#sk-lap-hapus')) {
+      const isi = jejak.filter(st => st.lapisan === lapisanAktif).length
+        + objek.filter(o => o.lapisan === lapisanAktif).length;
+      const r = hapusLapisan(lapisan, lapisanAktif, isi);
+      if (!r.ok) {
+        toast(r.alasan === 'berisi' ? tr('Lapisan masih berisi. Kosongkan dulu') : tr('Minimal satu lapisan'));
+        return;
+      }
+      const i = lapisan.findIndex(l => l.id === lapisanAktif);
+      lapisan = r.list;
+      lapisanAktif = lapisan[Math.max(0, Math.min(i - 1, lapisan.length - 1))].id;
+      bangunBarLapisan();
+      renderUlang();
+      return;
+    }
     if (e.target.closest('#sk-besar')) { ubahUkuranPilihan(1.15); return; }
     if (e.target.closest('#sk-kecil')) { ubahUkuranPilihan(0.87); return; }
     if (e.target.closest('#sk-hapus-objek')) {
@@ -873,18 +987,30 @@ export function bukaStudioSketsa(figEdit = null) {
     if (e.target.closest('#sk-undo')) {
       bentukSementara = null;
       sembunyiBentuk();
-      if (jejak.length) { tumpukRedo.push(jejak.pop()); renderUlang(); }
+      /* A5: goresan di lapisan terkunci atau tersembunyi tidak boleh diurungkan */
+      if (jejak.length) {
+        if (!bisaDiedit(lapisan, jejak[jejak.length - 1].lapisan)) toast(pesanLapisanTerkunci());
+        else { tumpukRedo.push(jejak.pop()); renderUlang(); }
+      }
       return;
     }
     if (e.target.closest('#sk-redo')) {
-      if (tumpukRedo.length) { jejak.push(tumpukRedo.pop()); renderUlang(); }
+      if (tumpukRedo.length) {
+        if (!bisaDiedit(lapisan, tumpukRedo[tumpukRedo.length - 1].lapisan)) toast(pesanLapisanTerkunci());
+        else { jejak.push(tumpukRedo.pop()); renderUlang(); }
+      }
       return;
     }
     if (e.target.closest('#sk-bersih')) {
       bentukSementara = null;
       sembunyiBentuk();
+      /* A5: hanya item di lapisan yang bisa diedit yang dibersihkan */
+      const sisaJejak = jejak.filter(st => !bisaDiedit(lapisan, st.lapisan));
+      const sisaObjek = objek.filter(o => !bisaDiedit(lapisan, o.lapisan));
       jejak.length = 0;
+      jejak.push(...sisaJejak);
       objek.length = 0;
+      objek.push(...sisaObjek);
       pilihanId = null;
       perbaruiBarObjek();
       gambarDasar = null;
@@ -906,11 +1032,11 @@ export function bukaStudioSketsa(figEdit = null) {
       renderUlang();
       const goresanSimpan = adaLatarFoto
         ? ''
-        : serialGoresan({ goresan: jejak, objek, latar, pola }, kw, kh);
+        : serialGoresan({ goresan: jejak, objek, latar, pola, lapisan }, kw, kh);
       if (!adaLatarFoto && (jejak.length || objek.length) && !goresanSimpan) {
         toast(tr('Goresan terlalu banyak untuk disimpan sebagai objek; hanya gambar yang disimpan'));
       }
-      const blob = await eksporKanvasKeBlob(cv, ctx, jejak, latar);
+      const blob = await eksporKanvasKeBlob(cv, ctx, urutanGambar(lapisan, jejak), latar);
       overlay.remove();
       await sisipkanBlobSketsa(blob, figEdit, goresanSimpan);
     }

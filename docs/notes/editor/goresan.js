@@ -17,8 +17,12 @@
  * Koordinat berada di ruang logis kanvas (LEBAR x TINGGI), sama seperti di sketsa.js.
  */
 
-export const VERSI_GORESAN = 4;
-export const VERSI_DIDUKUNG = [1, 2, 3, 4];
+import { bersihkanLapisan, idLapisanValid, lapisanAwal, ID_LAPISAN_DASAR } from './lapisan.js?v=20261025020026';
+
+/* v5 (A5): daftar "lapisan" di level sketsa; setiap goresan dan objek punya field "lapisan".
+   v4 dan sebelumnya dibaca sebagai satu lapisan bawaan. */
+export const VERSI_GORESAN = 5;
+export const VERSI_DIDUKUNG = [1, 2, 3, 4, 5];
 /* "elips" dan "poligon" dibuat oleh pengenalan bentuk (A4). Keduanya tetap data yang bisa diedit. */
 export const ALAT_GORESAN = ['pena', 'stabilo', 'garis', 'panah', 'kotak', 'elips', 'poligon', 'hapus'];
 export const LATAR_GORESAN = ['putih', 'gelap'];
@@ -97,7 +101,7 @@ function bersihkanSatu(st, lebar, tinggi) {
 }
 
 /** Salin daftar goresan dengan nilai yang sudah dibersihkan. Goresan tidak valid dibuang. */
-export function bersihkanGoresan(list, lebar, tinggi) {
+export function bersihkanGoresan(list, lebar, tinggi, lap = lapisanAwal()) {
   if (!Array.isArray(list)) return [];
   const hasil = [];
   let total = 0;
@@ -106,7 +110,7 @@ export function bersihkanGoresan(list, lebar, tinggi) {
     if (!b) continue;
     total += b.pts.length;
     if (total > BATAS_GORESAN.titikTotal) break;
-    hasil.push(b);
+    hasil.push({ ...b, lapisan: idLapisanValid(lap, typeof st.lapisan === 'string' ? st.lapisan : '') });
   }
   return hasil;
 }
@@ -131,7 +135,7 @@ function bersihkanObjekSatu(o, lebar, tinggi) {
 }
 
 /** Salin daftar objek visual yang sudah dibersihkan. Objek tidak valid dan id ganda dibuang. */
-export function bersihkanObjek(list, lebar, tinggi) {
+export function bersihkanObjek(list, lebar, tinggi, lap = lapisanAwal()) {
   if (!Array.isArray(list)) return [];
   const hasil = [];
   const sudahAda = new Set();
@@ -139,7 +143,7 @@ export function bersihkanObjek(list, lebar, tinggi) {
     const b = bersihkanObjekSatu(o, lebar, tinggi);
     if (!b || sudahAda.has(b.id)) continue;
     sudahAda.add(b.id);
-    hasil.push(b);
+    hasil.push({ ...b, lapisan: idLapisanValid(lap, typeof o.lapisan === 'string' ? o.lapisan : '') });
   }
   return hasil;
 }
@@ -159,12 +163,14 @@ export function bersihkanKanvas(k) {
  * Mengembalikan '' bila tidak ada goresan, objek, maupun perubahan ukuran kanvas,
  * atau bila melewati batas. Tidak memotong data diam-diam.
  */
-export function serialGoresan({ goresan = [], objek = [], latar = 'putih', pola = 'titik' } = {}, lebar, tinggi) {
+export function serialGoresan({ goresan = [], objek = [], latar = 'putih', pola = 'titik', lapisan } = {}, lebar, tinggi) {
   const kanvas = bersihkanKanvas({ w: lebar, h: tinggi });
+  const lap = bersihkanLapisan(lapisan);
+  const lapisanBawaan = lap.length === 1 && lap[0].id === ID_LAPISAN_DASAR && lap[0].tampil && !lap[0].kunci && lap[0].nama === 'Dasar';
   const adaGoresan = Array.isArray(goresan) && goresan.length > 0;
   const adaObjek = Array.isArray(objek) && objek.length > 0;
   const ukuranDefault = kanvas.w === KANVAS_BATAS.defaultW && kanvas.h === KANVAS_BATAS.defaultH;
-  if (!adaGoresan && !adaObjek && ukuranDefault) return '';
+  if (!adaGoresan && !adaObjek && ukuranDefault && lapisanBawaan) return '';
   if (adaGoresan) {
     if (goresan.length > BATAS_GORESAN.goresan) return '';
     let total = 0;
@@ -181,8 +187,9 @@ export function serialGoresan({ goresan = [], objek = [], latar = 'putih', pola 
     latar: LATAR_GORESAN.includes(latar) ? latar : 'putih',
     pola: POLA_GORESAN.includes(pola) ? pola : 'titik',
     kanvas,
-    goresan: bersihkanGoresan(goresan, kanvas.w, kanvas.h),
-    objek: bersihkanObjek(objek, kanvas.w, kanvas.h),
+    lapisan: lap,
+    goresan: bersihkanGoresan(goresan, kanvas.w, kanvas.h, lap),
+    objek: bersihkanObjek(objek, kanvas.w, kanvas.h, lap),
   });
   return teks.length <= BATAS_GORESAN.bytes ? teks : '';
 }
@@ -195,12 +202,14 @@ export function bacaGoresan(teks) {
   try { o = JSON.parse(teks); } catch { return null; }
   if (!o || typeof o !== 'object' || !VERSI_DIDUKUNG.includes(o.v)) return null;
   const kanvas = bersihkanKanvas(o.v >= 3 ? o.kanvas : null);
+  const lap = bersihkanLapisan(o.v >= 5 ? o.lapisan : null);
   return {
     latar: LATAR_GORESAN.includes(o.latar) ? o.latar : 'putih',
     pola: POLA_GORESAN.includes(o.pola) ? o.pola : 'titik',
     kanvas,
-    goresan: bersihkanGoresan(o.goresan, kanvas.w, kanvas.h),
-    objek: bersihkanObjek(o.objek, kanvas.w, kanvas.h),
+    lapisan: lap,
+    goresan: bersihkanGoresan(o.goresan, kanvas.w, kanvas.h, lap),
+    objek: bersihkanObjek(o.objek, kanvas.w, kanvas.h, lap),
   };
 }
 

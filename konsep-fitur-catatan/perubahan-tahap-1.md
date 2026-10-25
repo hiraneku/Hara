@@ -121,7 +121,7 @@
   - Uji mutasi 1: timer tahan dimatikan. 8 uji gagal, lalu dipulihkan.
   - Uji mutasi 2: gerak jauh tidak membatalkan pengenalan. 2 uji gagal, lalu dipulihkan.
   - Uji mutasi 3: tombol Coretan asli saat masih ditahan dikembalikan ke versi lama. 1 uji gagal, lalu dipulihkan. Mutasi ini menangkap bug yang ditemukan saat uji pertama: bentuk belum masuk jejak saat masih ditahan, sehingga pengembalian tidak berjalan.
-  - `npm test` penuh: exit 0, 10 suite lulus (termasuk `sketsa-bentuk` 29/29), dijalankan dengan stempel versi final.
+  - `npm test` penuh saat itu: exit 0. **Koreksi (ditemukan saat A5):** angka itu keliru. Log A4 (`/tmp/npmtest-a4.log`) memuat 4 cek gagal di `tools/uji/paste.mjs` ("blok gambar tersisip", "punya data-blob", "type=image di model", "teks biasa tetap teks"), tetapi exit code tetap 0 karena `paste.mjs` dan 8 suite lain tidak memanggil `process.exit(1)`. Penyebabnya: tunggu waktu tetap (`sleep(120)`) terhadap pipeline gambar yang asinkron, dan 8 suite itu tidak menyampaikan kegagalan lewat exit code. Perbaikannya ada di Perubahan 6 (A5).
 - **Keterbatasan yang diketahui:**
   - **Heksagon dikenali sebagai elips.** Pada ambang yang cukup longgar untuk lingkaran tangan, heksagon juga lolos sebagai elips. Mengetatkan ambang membuat lingkaran dengan gangguan 6 px gagal sekitar 40% dari percobaan, jadi ambang dibiarkan. Pengguna bisa memilih **Coretan asli**.
   - **Panah belum dikenali dari coretan.** Garis dan panah sulit dibedakan dari satu coretan. Panah tetap dibuat dengan alat Panah.
@@ -131,7 +131,57 @@
   - Chromium tidak tersedia di sandbox, jadi tampilan `elips` dan `poligon` di canvas belum dilihat langsung. Renderer hanya diperiksa lewat kode dan jalur SVG.
 - **Status:** A4 *Partially implemented* (di sketsa, untuk garis, elips, lingkaran, persegi, persegi panjang, segitiga, dan poligon).
 
+## Perubahan 6 — A5 Layer system
+
+- **ID:** A5.
+- **Alasan urutan:** §6.1 menempatkan A5 setelah A4. §6.2 menyebut A3–A5 memakai model data yang sama dari A1, jadi lapisan ditambahkan sebagai field `lapisan` di goresan dan objek, bukan format baru.
+- **Dependensi:** A1 (goresan sebagai data), A2 (objek visual dan urutan tumpukan), A3 dan A4 (alat dan gaya yang sudah ada, format v4).
+- **Kondisi awal (audit):** tidak ada lapisan. Semua goresan dan objek satu tumpukan.
+- **Keputusan desain (§1.2 dokumen koreksi, keputusan agen):**
+  - Lapisan mengelompokkan goresan dan objek. Bukan satu lapisan per objek. Maksimal 8 lapisan.
+  - Lapisan awal bernama **Dasar**. Lapisan baru otomatis bernama **Lapisan N** (N terkecil yang belum dipakai).
+  - Urutan array lapisan = tumpukan. Akhir = paling atas. Di dalam satu lapisan, objek tetap di bawah goresan (konsisten dengan A2).
+  - **Tersembunyi:** tidak tampil, tidak bisa dipilih atau diubah, dan tidak menerima coretan baru.
+  - **Terkunci:** tetap tampil, tetapi tidak bisa diubah.
+  - Coretan dan objek baru masuk ke lapisan aktif. Lapisan aktif dipilih dengan menekan namanya.
+  - Lapisan yang masih berisi tidak bisa dihapus. Lapisan terakhir tidak bisa dihapus.
+  - **Bersihkan** hanya menghapus item di lapisan yang bisa diedit. **Urungkan** dan **Ulangi** yang menyentuh lapisan terkunci atau tersembunyi ditolak dengan pesan.
+  - Data v1–v4 dibaca sebagai satu lapisan Dasar. Sketsa tanpa isi dan hanya berisi Dasar tetap menghasilkan data kosong, seperti sebelumnya.
+  - Sketsa berlatar foto atau sketsa lama tetap memakai jalur PNG. Lapisan tidak disimpan sebagai data di jalur itu (sama dengan A2).
+- **Yang berubah:**
+  - `docs/notes/editor/lapisan.js` (baru): logika murni. `tambahLapisan`, `hapusLapisan`, `pindahLapisan`, `bisaDiedit`, `urutanGambar`, `urutanRender`, `bersihkanLapisan`.
+  - `docs/notes/editor/goresan.js`: format v5 (`VERSI_GORESAN = 5`, `VERSI_DIDUKUNG = [1..5]`). Field `lapisan` di setiap goresan dan objek, dan di level sketsa. Data v4 dibaca sebagai lapisan Dasar.
+  - `docs/notes/editor/sketsa.js`: state lapisan, render per lapisan lewat `urutanRender`, baris lapisan (nama, Tampilkan/Sembunyikan, Kunci/Buka kunci, Lapisan baru, Naik, Turun, Hapus lapisan), aturan pilih, gambar, undo, redo, bersihkan, dan simpan.
+  - `docs/styles/notes.css`: gaya `.sk-lap` untuk baris lapisan.
+  - `tools/uji/sketsa-lapisan.mjs` (baru): 31 uji unit dan 29 uji integrasi (jsdom).
+  - **Harapan yang diubah secara sadar** (bukan dilonggarkan):
+    - `tools/uji/sketsa-goresan.mjs`: harapan round-trip menambah `lapisan: 'dasar'` pada setiap goresan.
+    - `tools/uji/sketsa-pena.mjs`: versi penyimpanan 4 → 5 (dua harapan).
+  - **Sinyal kegagalan uji** (diperbaiki di A5, karena `npm test` tidak bisa dipercaya sebelumnya):
+    - `tools/uji/paste.mjs`: tunggu waktu tetap (`sleep(120)`) diganti tunggu kondisi (`tungguKondisi`, sampai 4 detik) untuk pipeline gambar yang asinkron. Dua titik (gambar dan teks biasa) juga diubah. Ditambah `process.exit(1)` bila ada cek gagal.
+    - `tools/uji/tata-gambar.mjs`: cek B1 menunggu `src` gambar dengan tunggu kondisi. Sebelumnya gagal 1 cek di run paralel.
+    - `caret-elemen`, `font-ganti`, `font-menyeluruh`, `kombinasi-dasar`, `kombinasi-lanjut`, `kondisi-tepi`, `spasi-dan-penanda`: ditambah `process.exit(1)` bila ada kegagalan. Isi uji tidak diubah. Delapan suite ini lulus saat dijalankan sendiri.
+  - `tools/version.mjs`: stempel `?v=` menjadi `20261025020026`. 122 berkas hanya berubah stempel. 13 berkas berisi perubahan nyata (lihat daftar di atas dan di A1–A4).
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-lapisan.mjs`: **60/60 lulus** (31 unit, 29 integrasi). Integrasi menjalankan alur lewat tombol: tambah lapisan, coret di lapisan atas, sembunyikan, kunci, Bersihkan, Urungkan, hapus lapisan berisi (ditolak), hapus lapisan kosong, Turun, Naik, batas 8 lapisan, gambar sebagai objek di lapisan, objek di lapisan tersembunyi tidak bisa dipilih, dan data v4 lama dibuka lalu disimpan sebagai v5.
+  - **Uji mutasi** (setiap mutasi dipulihkan lalu diverifikasi dengan `cmp`):
+    - M1: `urutanRender` merender lapisan tersembunyi → 59/60, tertangkap.
+    - M2: `bisaDiedit` mengabaikan kunci → 49/60, tertangkap.
+    - M3: pilih objek tanpa filter lapisan → 59/60, tertangkap.
+    - M4: Urungkan menyentuh lapisan terkunci → 49/60, tertangkap.
+    - M5: Bersihkan menghapus lapisan terkunci → 49/60, tertangkap.
+    - M6: hapus lapisan yang masih berisi diizinkan → 54/60, tertangkap.
+  - Suite sketsa dan catatan lain, setelah stempel final: `sketsa-goresan` 21/21, `sketsa-pena` 41/41, `sketsa-objek` 21/21, `sketsa-kanvas` 22/22, `sketsa-bentuk` 29/29, `catatan-generasi-baru` 24/24.
+  - Uji paralel: `paste.mjs` 8 run paralel (dua ronde masing-masing 4 run) semuanya 60/60. `tata-gambar.mjs` 4 run paralel semuanya lulus.
+  - `npm test` penuh: exit 0. Semua 76 berkas `tools/uji/*.mjs` dijalankan paralel (`xargs -P 4`), dan exit 0 berarti tiap berkas keluar dengan 0. Tidak ada baris ✗ atau GAGAL di log (`/tmp/npmtest-a5d.log`). Dua run penuh sebelumnya di sesi ini gagal secara flaky: run pertama pada `paste` (3 cek, exit 123), run kedua pada `tata-gambar` (1 cek, exit 123). Keduanya sudah diperbaiki seperti dijelaskan di atas.
+- **Keterbatasan yang diketahui:**
+  - Tampilan lapisan di canvas dan baris lapisan di HP belum dilihat. Chromium tidak tersedia di sandbox, dan uji hanya memeriksa logika serta DOM. Ini sama dengan keterbatasan A1–A4.
+  - Tidak ada cara memindahkan goresan atau objek dari satu lapisan ke lapisan lain. Yang tersedia: hapus item, Bersihkan, atau Urungkan. Lapisan berisi tidak bisa dihapus sampai kosong.
+  - Lapisan hanya untuk sketsa. Blok catatan biasa belum mendapat lapisan. Itu membutuhkan keputusan tersendiri karena menyentuh model blok.
+  - Di jsdom, `canvas.getContext` tidak tersedia. Karena itu render canvas sebenarnya tidak dijalankan. Yang diuji adalah urutan render (`urutanRender`), bukan piksel.
+- **Status:** A5 *Partially implemented* (di sketsa; blok catatan biasa belum).
+
 ## Berikutnya
 
-- A5 Layer system (urutan §6.1 setelah A4). Dependensi: model objek dari A1 dan A2, dan aturan §6.2 agar A3–A5 memakai model data yang sama.
+- A8 Landscape workspace, A9 Pinned toolbar, B7 Templat kertas kustom (urutan §6.1 setelah A5).
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

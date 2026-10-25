@@ -5,13 +5,13 @@
    SAMA disisipkan ke editor (tidak disalin — berbagi berkas). Gambar
    ditampilkan sebagai thumbnail kecil (dibuat sekali per sesi). */
 
-import { state } from '../core/store.js?v=20261025011852';
-import { esc } from '../core/dom.js?v=20261025011852';
-import { openPop, closeAll } from './menus/pop.js?v=20261025011852';
-import { toast } from '../core/toast.js?v=20261025011852';
-import { ambilBlob } from '../core/blobs.js?v=20261025011852';
-import { terlihat } from './kunci.js?v=20261025011852';
-import { t as tr } from '../core/i18n.js?v=20261025011852';
+import { state } from '../core/store.js?v=20261025020026';
+import { esc } from '../core/dom.js?v=20261025020026';
+import { openPop, closeAll } from './menus/pop.js?v=20261025020026';
+import { toast } from '../core/toast.js?v=20261025020026';
+import { ambilBlob } from '../core/blobs.js?v=20261025020026';
+import { terlihat } from './kunci.js?v=20261025020026';
+import { t as tr } from '../core/i18n.js?v=20261025020026';
 
 const MAKS_TAMPIL = 120;   /* popup kecil — cukup yang terbaru */
 
@@ -129,7 +129,7 @@ export function bindGaleri() {
     const id = g.getAttribute('data-gal');
     if (!id) return;
     closeAll();
-    import('./editor/image.js?v=20261025011852')
+    import('./editor/image.js?v=20261025020026')
       .then(async m => {
         const asal = catatanPemakai(id);
         const x = gambarDariCatatan().find(y => y.id === id);
