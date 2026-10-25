@@ -1,8 +1,8 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025074430';
-import { refresh } from './cleanup.js?v=20261025074430';
-import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025081850';
+import { refresh } from './cleanup.js?v=20261025081850';
+import { bungkusTerakhir } from './komposisi.js?v=20261025081850';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };

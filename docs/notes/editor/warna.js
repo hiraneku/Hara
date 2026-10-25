@@ -14,9 +14,9 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025074430';
-import { refresh } from './cleanup.js?v=20261025074430';
-import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261025081850';
+import { refresh } from './cleanup.js?v=20261025081850';
+import { bungkusTerakhir } from './komposisi.js?v=20261025081850';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -199,8 +199,15 @@ export function setWarna(hex) {
   const d = docEl();
   if (!d) return;
   hex = normalizeWarna(hex) || '';
+  /* Caret harus ada di editor. Kalau tidak (menu baru ditutup, fokus pindah),
+     pulihkan dulu — jangan membuang niat warna diam-diam. */
+  if (!seleksiDiEditor()) ensureCaret();
+  if (!seleksiDiEditor()) {
+    /* editor belum pernah disentuh: simpan niatnya saja, berlaku saat mengetik */
+    _pending = hex || null; _lekat = hex || null; _modeBawaan = false;
+    return;
+  }
   const s = sel();
-  if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return;
   const r = s.getRangeAt(0);
 
   /* ── Tanpa teks terpilih ──
@@ -378,7 +385,11 @@ export function bungkusWarnaKomposisi(n) {
 /* Pindah blok membatalkan warna yang menunggu — sama seperti font. */
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
+  /* seleksi di luar editor = bukan pindah blok (keyboard turun, fokus pindah) */
+  if (!seleksiDiEditor()) return;
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
+  if (blokTerakhir && blokTerakhir !== b) {
+    _pending = null; _lekat = null; _modeBawaan = false;
+  }
   blokTerakhir = b;
 });

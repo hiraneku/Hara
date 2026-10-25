@@ -1,6 +1,6 @@
 /* Posisi kursor. Bagian paling rawan — semua bug "aloH" berasal dari sini.
    Aturan: caret HARUS bertumpu pada text node, tidak pernah pada elemen. */
-import { BLOCKCLS } from './blocks.js?v=20261025074430';
+import { BLOCKCLS } from './blocks.js?v=20261025081850';
 
 export const docEl = () => document.querySelector('.ed-doc');
 
@@ -25,6 +25,15 @@ document.addEventListener('pointerdown', e => {
   if (dalam && !bukanTeks) bukaKeyboard();
 }, true);
 export const sel   = () => window.getSelection();
+
+/* Apakah seleksi berada di dalam editor. Seleksi di luar editor (keyboard
+   turun, fokus pindah ke menu atau body) BUKAN pindah blok. Pengamat
+   seleksi harus mengabaikannya — kalau tidak, format yang menunggu (warna,
+   sorotan, tebal, …) ikut dibuang karena curBlock() jatuh ke blok terakhir. */
+export function seleksiDiEditor(){
+  const d=docEl(); const s=sel();
+  return !!(d && s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer));
+}
 
 export const editable = el => el && el.classList &&
   !el.classList.contains('b-div') &&
@@ -86,6 +95,14 @@ export function ensureCaret(){
      loncat ke belakang ("Halo" -> "aloH"). Turunkan ke text node nyata. */
   if(r.collapsed && r.startContainer.nodeType===1){
     const el=r.startContainer;
+    /* caret di LEVEL KONTAINER (.ed-doc): jangan sisipkan text node di sana —
+       itu teks di luar blok. Pindahkan caret ke blok teks terdekat. */
+    if(el===d){
+      const dekat=el.childNodes[r.startOffset]||el.childNodes[r.startOffset-1]||null;
+      const t=nearestEditable(dekat||d.lastElementChild||d.firstElementChild);
+      if(t){ caretEnd(t); return sel().getRangeAt(0); }
+      return r;
+    }
     if(el.classList && el.classList.contains('b-div')){
       const t=nearestEditable(el); if(t){ caretEnd(t); return sel().getRangeAt(0); }
     }

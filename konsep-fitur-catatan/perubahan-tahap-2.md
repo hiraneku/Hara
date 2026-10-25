@@ -127,3 +127,31 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Karakter `￼` (U+FFFC) tidak bisa direproduksi di Chromium desktop.** Dugaan: Chromium Android menampilkan elemen atomik (misalnya tombol pegangan blok `button.blk-h` di setiap blok) sebagai `￼`. Dugaan ini belum diverifikasi. Perlu uji di HP Android sungguhan.
   - Mode Bawaan belum didukung untuk komposisi IME. Teks IME yang mendarat di span warna tetap berwarna.
   - Klik mouse di blok kosong di desktop memindahkan kursor ke `DIV@0` di `blocks`, dan ketikan tidak masuk. Sudah ada sebelum perubahan ini (`a8e87d7` dan base sesi). Di HP dengan ketukan sentuh tidak terjadi.
+
+## Perbaikan · Warna mati saat keyboard turun, dan caret di level kontainer
+
+- **Gejala (dilaporkan pengguna):**
+  1. Di catatan kosong, warna sudah diaktifkan, tetapi huruf pertama tidak berwarna sampai spasi ditekan. Kadang berhasil setelah huruf diketik lalu dihapus berulang.
+  2. Warna aktif, mengetik `halo`, menghapusnya, lalu keyboard turun: warna mati sendiri.
+- **Akar masalah (terbukti di harness, bukan tebakan):**
+  - Keluhan 2 **terbukti**. Saat seleksi keluar dari editor (keyboard turun, fokus pindah), `curBlock()` jatuh ke blok terakhir. Pengamat `selectionchange` di warna, sorotan, font, dan marks menganggap itu "pindah blok" lalu membuang niat format yang menunggu. Dua paragraf, warna di paragraf pertama, seleksi keluar: `lekat` menjadi `null`. Satu paragraf: tidak reset, karena blok terakhir sama dengan blok aktif.
+  - `setWarna`, `setSorotan`, dan `setFont` membuang niat diam-diam jika seleksi tidak di editor, bukan memulihkan caret dulu.
+  - `ensureCaret()` (caret.js) menyisipkan text node di kontainer `.ed-doc` jika caret berada di level kontainer. Itu teks di luar blok.
+  - Keluhan 1 **belum direproduksi**. Di harness, huruf pertama selalu berwarna, termasuk setelah ketuk, IME, spasi-BS berulang, catatan kedua, dan seleksi hilang sebelum Pakai. Kemungkinan penyebab tetap, tetapi belum dibuktikan: keyboard Android sungguhan tidak ada di harness.
+- **Perbaikan:**
+  - `docs/notes/editor/caret.js`: helper baru `seleksiDiEditor()`. `ensureCaret()` memindahkan caret dari level kontainer ke blok terdekat, tidak menyisipkan teks di kontainer.
+  - `docs/notes/editor/warna.js`, `sorotan.js`, `font.js`: `selectionchange` mengabaikan seleksi di luar editor. `setWarna`, `setSorotan`, `setFont` memulihkan caret dengan `ensureCaret()` dulu, dan hanya menyimpan niat jika tetap tidak ada caret.
+  - `docs/notes/editor/events.js`: `selectionchange` marks memakai aturan yang sama.
+  - Sempat dicoba: syarat `blokTerakhir.isConnected` untuk mengabaikan blok yang sudah lepas. Dibatalkan. Ia membuat 3 berkas uji gagal (`caret-elemen`, `kombinasi-dasar`, `font-ganti`), karena pindah blok setelah render ulang tidak lagi mereset niat. Alasan reset catatan baru juga tidak terbukti.
+- **Dependensi:** lanjutan dari `6ec9d1a` (komposisi IME). Tidak ada ID roadmap.
+- **Cara uji (Chromium headless, harness di `/home/user/unduh/a9-lekat/lekat.mjs`, hasil nyata):**
+  - Keluhan 2: dua paragraf, `T:abc|ENTER|NAIK|PAKAI|T:halo|SELKELUAR`. Sebelum: `lekat` null. Sesudah: `#e53935` tetap. Satu paragraf: tetap.
+  - Caret di kontainer: `CONT|PAKAI|T:halo`. Sebelum: `#teks` di root `.ed-doc`. Sesudah: tidak ada. Hasil `halo` berwarna.
+  - Seleksi hilang sebelum Pakai, kosong dan IME: berwarna.
+  - Spasi dan BS berulang sebelum huruf (`T: |BS:1|…|T:halo`, dan IME `K: |K:  |K:halo`): tidak ada karakter sampah, spasi yang dihapus benar-benar hilang.
+  - Regresi browser, semua hijau: `ketik-bawaan`, `ketik-bawaan-sorot`, `ctrl-format` 4/4, `bold-enter`, `warna-semua` 22/22, `ketik3`, `ketik-format` untuk mode warna, sorotan, bilah tebal, bilah miring, Ctrl+I, Ctrl+B pada DELAY 0 dan 80, serta `ENTER=1`. IME `ime.mjs` HP: `halo`. IME urut `ime2.mjs`: `halo dunia apa kabar` utuh.
+  - `npm test` penuh: exit 0, 37/37 di `kondisi-tepi`, semua berkas uji lulus (`/tmp/npmtest-keluhan2.log`).
+- **Belum terbukti:**
+  - Keluhan 1 di HP Android sungguhan. Perlu langkah persis dari pengguna (lihat catatan di bawah).
+  - Chromium kadang menyisipkan `<font color="…">` di sekitar teks hasil komposisi IME saat caret berada di span berwarna yang sudah dikosongkan (BS sampai kosong lalu mengetik). Warnanya tetap benar, dan struktur ini belum diperiksa lebih lanjut.
+  - Karakter `￼` (U+FFFC) di HP belum direproduksi. Lihat entri sebelumnya.

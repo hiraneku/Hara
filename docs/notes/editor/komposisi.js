@@ -8,7 +8,7 @@
 
    Modul ini sengaja tidak mengimpor cleanup.js/marks.js supaya tidak
    menambah siklus impor (warna.js, sorotan.js, marks.js saling memakainya). */
-import { sel, curBlock } from './caret.js?v=20261025074430';
+import { sel, curBlock } from './caret.js?v=20261025081850';
 
 /* Rentang yang berisi n karakter TERAKHIR sebelum caret, di dalam blok
    yang sama. Bisa melintasi beberapa text node. null kalau tidak ada. */

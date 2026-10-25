@@ -1,21 +1,21 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20261025074430';
-import { setBlock, indent } from './blocks.js?v=20261025074430';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025074430';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025074430';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025074430';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025074430';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025074430';
-import { onTitle } from '../model.js?v=20261025074430';
-import { tanganiPaste } from './paste.js?v=20261025074430';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025074430';
-import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025074430';
-import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025074430';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025074430';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261025074430';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025074430';
-import { toast } from '../../core/toast.js?v=20261025074430';
-import { t as tr } from '../../core/i18n.js?v=20261025074430';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261025081850';
+import { setBlock, indent } from './blocks.js?v=20261025081850';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025081850';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025081850';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025081850';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025081850';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025081850';
+import { onTitle } from '../model.js?v=20261025081850';
+import { tanganiPaste } from './paste.js?v=20261025081850';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025081850';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025081850';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025081850';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025081850';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261025081850';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025081850';
+import { toast } from '../../core/toast.js?v=20261025081850';
+import { t as tr } from '../../core/i18n.js?v=20261025081850';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -310,10 +310,10 @@ export function bindEditor() {
   let _lastAnchor=null;
   document.addEventListener('selectionchange',()=>{
     if(!docEl()) return;
-    const s=sel();
-    const a=s&&s.anchorNode;
+    /* seleksi di luar editor = bukan pindah blok (keyboard turun) */
+    if(!seleksiDiEditor()){ syncBtns(); return; }
     const blk=curBlock();
-    if(_lastAnchor && blk!==_lastAnchor){ pending.clear(); sticky.clear(); mati.clear(); }
+    if(_lastAnchor && _lastAnchor!==blk){ pending.clear(); sticky.clear(); mati.clear(); }
     _lastAnchor=blk;
     syncBtns();
   });

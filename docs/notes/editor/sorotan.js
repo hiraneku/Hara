@@ -16,10 +16,10 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025074430';
-import { refresh } from './cleanup.js?v=20261025074430';
-import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
-import { normalizeWarna } from './warna.js?v=20261025074430';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261025081850';
+import { refresh } from './cleanup.js?v=20261025081850';
+import { bungkusTerakhir } from './komposisi.js?v=20261025081850';
+import { normalizeWarna } from './warna.js?v=20261025081850';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -124,8 +124,12 @@ export function setSorotan(hex) {
   const d = docEl();
   if (!d) return;
   hex = normalizeWarna(hex) || '';
+  if (!seleksiDiEditor()) ensureCaret();
+  if (!seleksiDiEditor()) {
+    _pending = hex || null; _lekat = hex || null; _modeBawaan = false;
+    return;
+  }
   const s = sel();
-  if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return;
   const r = s.getRangeAt(0);
 
   /* ── Tanpa teks terpilih ──
@@ -302,7 +306,10 @@ export function bungkusSorotKomposisi(n) {
 /* Pindah blok membatalkan sorotan yang menunggu — sama seperti font. */
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
+  if (!seleksiDiEditor()) return;
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
+  if (blokTerakhir && blokTerakhir !== b) {
+    _pending = null; _lekat = null; _modeBawaan = false;
+  }
   blokTerakhir = b;
 });

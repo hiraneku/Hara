@@ -10,8 +10,8 @@
    Tiga font pertama dimuat dari Google Fonts, jadi pasti tampil di perangkat
    mana pun selama ada internet. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025074430';
-import { refresh } from './cleanup.js?v=20261025074430';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261025081850';
+import { refresh } from './cleanup.js?v=20261025081850';
 
 export const FONTS = [
   { grup:'dasar',  id: '',          nama: 'Bawaan',          stack: '',                                                   ket: 'Mengikuti tema aplikasi' },
@@ -205,8 +205,12 @@ export function fontPerluBungkus() {
 export function setFont(id) {
   const d = docEl();
   if (!d) return;
+  if (!seleksiDiEditor()) ensureCaret();
+  if (!seleksiDiEditor()) {
+    _pending = id || null; _lekat = id || null; _modeBawaan = false;
+    return;
+  }
   const s = sel();
-  if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return;
   const r = s.getRangeAt(0);
 
   /* ── Tanpa teks terpilih ──
@@ -381,8 +385,11 @@ export function bungkusFontPending() {
 /* Pindah blok membatalkan font yang menunggu — sama seperti tebal/miring. */
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
+  if (!seleksiDiEditor()) return;
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
+  if (blokTerakhir && blokTerakhir !== b) {
+    _pending = null; _lekat = null; _modeBawaan = false;
+  }
   blokTerakhir = b;
 });
 

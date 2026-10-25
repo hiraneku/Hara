@@ -2,7 +2,7 @@
    Data versi lama (5 pita, kunci v1) dipindahkan otomatis saat pertama dibaca.
    Diterapkan ke mesin audio lewat mesin.setEq(). */
 
-import { normalisasiEq, migrasiEqLama, namaPresetValid, EQ_KUSTOM_MAKS, EQ_AWAL } from './logika.js?v=20261025074430';
+import { normalisasiEq, migrasiEqLama, namaPresetValid, EQ_KUSTOM_MAKS, EQ_AWAL } from './logika.js?v=20261025081850';
 
 const KUNCI = 'hara.v2.musik.eq';
 const KUNCI_LAMA = 'hara.v1.musik.eq';

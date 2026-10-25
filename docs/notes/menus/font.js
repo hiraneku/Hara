@@ -5,9 +5,9 @@
    kecil — jadi bentuk hurufnya terlihat sebelum dipilih. */
 
 import { FONTS, FONT_GRUP, fontSekarang, fontTersedia, namaUtama, fontPending }
-  from '../editor/font.js?v=20261025074430';
-import { esc } from '../../core/dom.js?v=20261025074430';
-import { t as tr } from '../../core/i18n.js?v=20261025074430';
+  from '../editor/font.js?v=20261025081850';
+import { esc } from '../../core/dom.js?v=20261025081850';
+import { t as tr } from '../../core/i18n.js?v=20261025081850';
 
 const CONTOH = 'AaBbGg 123';
 
