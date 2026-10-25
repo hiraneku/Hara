@@ -600,6 +600,12 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .wsas-c.kosong{background:
   linear-gradient(135deg,transparent 44%,var(--faint) 46%,var(--faint) 54%,transparent 56%)}
 
+/* menu warna lebih tinggi dari popup biasa: Pakai & Bawaan harus bisa
+   dijangkau tanpa menggulung dan tanpa mengetuk area di luar popup
+   (ketukan di luar menutup menu). Tetap bisa digulung bila layar sangat pendek. */
+.pop.pop-warna{max-height:min(calc(100vh - 24px),580px)}
+@supports (height:100dvh){.pop.pop-warna{max-height:min(calc(100dvh - 24px),580px)}}
+
 /* strip warna umum: satu baris memanjang, digeser kalau panjang.
    Hitam → putih ada di ujung kiri, lalu warna-warna umum. */
 .wpal{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding:8px 14px 12px;

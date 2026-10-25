@@ -60,3 +60,19 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 - B1b (anotasi dan sumber asli terpisah) menunggu persetujuan pengguna.
 - Jalankan uji mutasi M1–M4 untuk B1a bila pengguna minta.
 - Rapikan bar tombol PDF (ikon).
+
+## Perbaikan · Menu warna teks (di luar urutan B1–B8)
+
+- **Gejala:** menu warna teks "tidak bekerja". Setelah warna dipilih, teks tidak berubah dan menu tertutup.
+- **Akar masalah (diukur di Chromium):** isi menu warna setinggi 507–525 px, sedangkan popup dibatasi 420 px dan area yang terlihat hanya sampai 432 px. Tombol **Pakai** (y 430–464) hampir tertutup, dan **Bawaan** (y 477–538) sama sekali tidak terlihat. Ketukan pada area itu dianggap "klik di luar" dan menutup menu, sehingga warna tidak diterapkan.
+- **Perbaikan:**
+  - `docs/styles/notes.css`: kelas `.pop.pop-warna` dengan batas tinggi `min(100vh/100dvh − 24px, 580px)`. Semua kontrol terlihat tanpa menggulung.
+  - `docs/notes/menus/pop.js`: `setPopIsi` memberi kelas `pop-warna` hanya kalau isinya menu warna. Di `openPop`, menu warna yang tidak muat di atas jangkar dipindah ke bawah jangkar, tetap di dalam layar. Menu lain tidak berubah.
+- **Dependensi:** tidak ada ID lain. Menyentuh `pop.js` yang dipakai semua popup, jadi perubahannya dibatasi hanya untuk kelas `pop-warna`.
+- **Cara uji:**
+  - Browser Chromium (harness di luar repo, `warna-semua.mjs`), dua mode: desktop 1280×800 dan HP 390×760 dengan sentuhan sungguhan. Hasil: **22/22 lulus** di keduanya, tanpa galat JS. Mencakup bilah teks → swatch, roda + Pakai, kolom kode rgb(), sasaran Sorotan (`span.wsr`), Bawaan, dan bilah utama tanpa seleksi lalu mengetik.
+  - Pembanding: dengan batas lama 420 px disimulasikan, **5 pengujian gagal** tepat di Pakai dan Bawaan. Jadi uji ini memang menangkap bug-nya.
+  - `warna-atas.mjs`: blok teks dekat atas layar. Menu pindah ke bawah dan tetap di dalam layar, di desktop dan HP.
+  - `tools/uji/menu-warna.mjs` (baru): **7/7 lulus**.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-warna.log`).
+- **Catatan:** bilah utama di HP punya tombol warna di luar layar (perlu digeser horizontal). Itu perilaku bilah yang sudah ada, bukan bug menu warna, dan belum diubah.
