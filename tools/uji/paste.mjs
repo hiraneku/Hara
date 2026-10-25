@@ -30,6 +30,8 @@ const click=el=>el&&el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
 const gb=g=>d.querySelector(`.mb-g[data-g="${g}"]`);
 const DOC=()=>d.querySelector('.ed-doc');
 const sleep=(ms=25)=>new Promise(r=>setTimeout(r,ms));
+/* tunggu kondisi (paste gambar asinkron: kompresi + IndexedDB); tanpa waktu tetap agar tidak flaky di bawah beban paralel */
+const tungguKondisi=async(fn,ms=4000)=>{const b=Date.now()+ms; let v=await fn(); while(!v&&Date.now()<b){await sleep(15); v=await fn();} return v;};
 const bersih=t=>t.replace(/[\u200b\u00a0]/g,'');
 go('notes'); click(d.querySelector('[data-open="w"]'));
 const N=()=>{saveNow();return state.notes.find(x=>x.id===state.openId);};
@@ -230,14 +232,12 @@ console.log('══ 15. PASTE GAMBAR -> IndexedDB ══');
     getData:()=>'' };
   DOC().dispatchEvent(ev);
   ok('paste gambar dicegah', ev.defaultPrevented);
-  await sleep(120);
+  await tungguKondisi(()=>!!DOC().querySelector('img[data-blob]'));
   ok('blok gambar tersisip', !!DOC().querySelector('.b-img'), JSON.stringify(DOC().innerHTML.slice(0,110)));
   const img=DOC().querySelector('img[data-blob]');
   ok('punya data-blob', !!img);
-  if(img){
-    const ada=await B.ambilBlob(img.getAttribute('data-blob'));
-    ok('berkas masuk IndexedDB', !!ada);
-  }
+  const masukIdb=await tungguKondisi(async()=>{const i=DOC().querySelector('img[data-blob]'); return !!(i&&await B.ambilBlob(i.getAttribute('data-blob')));});
+  ok('berkas masuk IndexedDB', masukIdb);
   saveNow();
   const simpan=JSON.stringify(N().blocks);
   ok('TIDAK menyimpan base64', !/base64|data:image/.test(simpan), simpan.slice(0,100));
@@ -252,7 +252,7 @@ console.log('══ 15. PASTE GAMBAR -> IndexedDB ══');
     items:[{kind:'file',type:'image/png',getAsFile:()=>berkas}],
     getData:t=>t==='text/plain'?'jangan pakai ini':'' };
   DOC().dispatchEvent(ev2);
-  await sleep(120);
+  await tungguKondisi(()=>!!DOC().querySelector('.b-img'));
   ok('gambar diutamakan', !!DOC().querySelector('.b-img') && !/jangan pakai/.test(DOC().textContent),
      JSON.stringify(DOC().textContent.slice(0,60)));
 
@@ -264,7 +264,7 @@ console.log('══ 15. PASTE GAMBAR -> IndexedDB ══');
     items:[{kind:'string',type:'text/plain',getAsFile:()=>null}],
     getData:t=>t==='text/plain'?'teks biasa':'' };
   DOC().dispatchEvent(ev3);
-  await sleep(30);
+  await tungguKondisi(()=>/teks biasa/.test(DOC().textContent));
   ok('teks biasa tetap teks', /teks biasa/.test(DOC().textContent) && !DOC().querySelector('.b-img'),
      JSON.stringify(DOC().textContent.slice(0,50)));
 }
@@ -272,3 +272,5 @@ console.log('══ 15. PASTE GAMBAR -> IndexedDB ══');
 console.log('\n════════ HASIL ════════');
 if(!gagal.length) console.log(`SEMUA ${P} LOLOS`);
 else { console.log(`${F} GAGAL / ${P+F}`); gagal.forEach(x=>console.log('  ✗',x)); }
+/* sinyal kegagalan untuk npm test (A5): exit 1 bila ada cek gagal */
+if (gagal.length) process.exit(1);

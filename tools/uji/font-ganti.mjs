@@ -121,3 +121,5 @@ type('z');
 const kosong=[...BLK().querySelectorAll('.fnt')].filter(x=>x.textContent==='');
 ok('tidak ada span font kosong', kosong.length===0, `jumlah=${kosong.length} html=${JSON.stringify(BLK().innerHTML)}`);
 console.log(F?`\n${F} GAGAL / ${P+F}`:`\nSEMUA ${P} LOLOS`);
+/* sinyal kegagalan untuk npm test (A5): exit 1 bila ada cek gagal */
+if (F) process.exit(1);

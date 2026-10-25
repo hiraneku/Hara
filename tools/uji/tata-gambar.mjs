@@ -175,7 +175,9 @@ if (BAG === 'B') {
   state.notes.splice(0);
   state.notes.push(catatanBergambar('g1'));
   await simpanBlob('f-g1', new w.Blob(['x'], { type: 'image/png' }));
-  await openNote('g1'); await sleep(120);
+  await openNote('g1');
+  /* src gambar diisi asinkron dari IndexedDB: tunggu kondisi, bukan waktu tetap (flaky di bawah beban paralel) */
+  for (const batas = Date.now() + 4000; !DOC().querySelector('img[data-blob][src]') && Date.now() < batas;) await sleep(15);
   ok('B1 editor punya figur + gambar', !!fig() && !!DOC().querySelector('img[data-blob][src]'));
 
   const lebarKolom = sembunyi(DOC());

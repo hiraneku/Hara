@@ -136,3 +136,5 @@ for(const m1 of MARKS) for(const m2 of MARKS){
 console.log('\n════════ HASIL ════════');
 if(!gagal.length) console.log('SEMUA LOLOS');
 else { console.log(gagal.length+' GAGAL:'); gagal.forEach(x=>console.log('  ✗',x)); }
+/* sinyal kegagalan untuk npm test (A5): exit 1 bila ada cek gagal */
+if (gagal.length) process.exit(1);
