@@ -19,7 +19,8 @@
 
 export const VERSI_GORESAN = 4;
 export const VERSI_DIDUKUNG = [1, 2, 3, 4];
-export const ALAT_GORESAN = ['pena', 'stabilo', 'garis', 'panah', 'kotak', 'hapus'];
+/* "elips" dan "poligon" dibuat oleh pengenalan bentuk (A4). Keduanya tetap data yang bisa diedit. */
+export const ALAT_GORESAN = ['pena', 'stabilo', 'garis', 'panah', 'kotak', 'elips', 'poligon', 'hapus'];
 export const LATAR_GORESAN = ['putih', 'gelap'];
 /* Gaya sapuan pena (A3). Tinta = bawaan. Kuas lebih tebal dan agak transparan, pensil lebih tipis dan pudar. */
 export const GAYA_GORESAN = ['tinta', 'kuas', 'pensil'];

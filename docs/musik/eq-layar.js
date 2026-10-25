@@ -2,17 +2,17 @@
    sepuluh pita, preset bawaan dan buatan sendiri, saklar aktif, dan reset.
    Pengaturan bersifat global (satu set untuk semua lagu) dan disimpan lewat eq.js. */
 
-import { cur, go } from '../core/router.js?v=20261024185135';
-import { t as tr } from '../core/i18n.js?v=20261024185135';
-import { toast } from '../core/toast.js?v=20261024185135';
-import { esc } from '../core/dom.js?v=20261024185135';
-import * as M from './mesin.js?v=20261024185135';
-import * as E from './eq.js?v=20261024185135';
+import { cur, go } from '../core/router.js?v=20261025011852';
+import { t as tr } from '../core/i18n.js?v=20261025011852';
+import { toast } from '../core/toast.js?v=20261025011852';
+import { esc } from '../core/dom.js?v=20261025011852';
+import * as M from './mesin.js?v=20261025011852';
+import * as E from './eq.js?v=20261025011852';
 import {
   EQ_FREKUENSI, EQ_MIN, EQ_MAX, EQ_LANGKAH, EQ_Q_MIN, EQ_Q_MAX, EQ_KUSTOM_MAKS, EQ_NAMA_MAKS,
   PRESET_EQ, NAMA_PRESET_EQ, klampEq, klampQ, labelFrekuensi, kurvaEq,
-} from './logika.js?v=20261024185135';
-import { ikon } from './ikon.js?v=20261024185135';
+} from './logika.js?v=20261025011852';
+import { ikon } from './ikon.js?v=20261025011852';
 
 const GRAF_W = 320, GRAF_H = 150, GRAF_DB = 20;
 const GRAF_HZ_MIN = 20, GRAF_HZ_MAX = 20000;

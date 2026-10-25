@@ -92,7 +92,7 @@
   - Uji mutasi 2: gaya tidak disimpan di goresan. 1 uji gagal, lalu dipulihkan.
   - Uji mutasi 3: pemeriksaan duplikat preset dinonaktifkan. 5 uji gagal, lalu dipulihkan.
   - `node tools/uji/sketsa-goresan.mjs`: 21/21 (setelah harapan uji diperbarui).
-  - `npm test` penuh: lihat catatan hasil di bawah.
+  - `npm test` penuh: exit 0, 10 suite lulus (run terakhir sebelum commit, termasuk `sketsa-pena` 41/41).
 - **Belum diuji:**
   - Tampilan kuas dan pensil secara visual. Chromium tidak tersedia di sandbox, dan jsdom tidak menjalankan canvas. Renderer hanya diperiksa lewat `faktorGaya()` dan pembacaan kode.
   - Pena di HP sungguhan.
@@ -100,7 +100,38 @@
 - **Batasan:** kuas dan pensil hanya mengubah lebar dan transparansi. Tekanan stylus belum dipakai, dan tekstur pensil belum ada. Preset tidak disinkronkan lintas perangkat (menunggu D2).
 - **Status:** A3 *Partially implemented* (preset pena ada di sketsa, belum di halaman catatan biasa).
 
+## Perubahan 5 — A4 Shape recognition
+
+- **ID:** A4.
+- **Alasan urutan:** §6.1 menempatkan A4 setelah A3. §6.2 menyebut A3, A4, dan A5 memakai model data yang sama dari A1. Hasil pengenalan disimpan sebagai goresan yang bisa diedit, tidak sebagai gambar. Dependensi: A1 (goresan sebagai data), A3 (gaya pena; bentuk memakai gaya tinta).
+- **Kondisi awal (audit):** `kotak`, `garis`, dan `panah` hanya alat manual. Tidak ada deteksi bentuk dari coretan.
+- **Keputusan desain (§1.4 dokumen koreksi):**
+  - Pemicu: ujung ditahan diam 650 ms saat masih menekan (stylus atau jari). Gerak lebih dari 12 px membatalkan pengenalan dan coretan lanjut seperti biasa.
+  - Bentuk tampil dulu di bar "Bentuk dikenali: …" dengan dua pilihan: **Pakai bentuk** atau **Coretan asli**.
+  - Algoritme lokal tanpa AI atau layanan cloud (`docs/notes/editor/bentuk.js`).
+- **Yang berubah:**
+  - `docs/notes/editor/bentuk.js` (baru): pengenalan murni logika. Urutan uji: garis, lalu elips/lingkaran (kesesuaian dengan kotak pembatas), lalu persegi/persegi panjang/segitiga/poligon (Douglas-Peucker, 3 sampai 6 sudut tajam). Coretan acak, pendek (kurang dari 8 titik), dan terbuka tidak dikenali.
+  - `docs/notes/editor/goresan.js`: dua alat baru di `ALAT_GORESAN`: `elips` (dua titik sudut kotak pembatas) dan `poligon` (daftar titik). Format tetap v4.
+  - `docs/notes/editor/sketsa.js`: pemicu tahan, bar bentuk, dan tombol **Pakai bentuk** / **Coretan asli**. Render canvas dan SVG untuk `elips` dan `poligon`. Pencegahan menu konteks di kanvas (tekan-tahan lama di Android).
+  - `docs/styles/notes.css`: bar bentuk (`.sk-bentuk`).
+  - `tools/uji/sketsa-bentuk.mjs` (baru): 12 uji unit dan 17 uji integrasi (jsdom). Hasil: 29/29.
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-bentuk.mjs`: 29/29 lulus.
+  - Uji ambang (skrip sementara di luar repo, `/tmp`): lingkaran dan elips dengan gangguan tangan 3, 6, dan 9 px (20 bentuk per kasus). Persegi, persegi panjang, dan segitiga dengan gangguan 1,5 dan 3 px: semua dikenali benar.
+  - Uji mutasi 1: timer tahan dimatikan. 8 uji gagal, lalu dipulihkan.
+  - Uji mutasi 2: gerak jauh tidak membatalkan pengenalan. 2 uji gagal, lalu dipulihkan.
+  - Uji mutasi 3: tombol Coretan asli saat masih ditahan dikembalikan ke versi lama. 1 uji gagal, lalu dipulihkan. Mutasi ini menangkap bug yang ditemukan saat uji pertama: bentuk belum masuk jejak saat masih ditahan, sehingga pengembalian tidak berjalan.
+  - `npm test` penuh: exit 0, 10 suite lulus (termasuk `sketsa-bentuk` 29/29), dijalankan dengan stempel versi final.
+- **Keterbatasan yang diketahui:**
+  - **Heksagon dikenali sebagai elips.** Pada ambang yang cukup longgar untuk lingkaran tangan, heksagon juga lolos sebagai elips. Mengetatkan ambang membuat lingkaran dengan gangguan 6 px gagal sekitar 40% dari percobaan, jadi ambang dibiarkan. Pengguna bisa memilih **Coretan asli**.
+  - **Panah belum dikenali dari coretan.** Garis dan panah sulit dibedakan dari satu coretan. Panah tetap dibuat dengan alat Panah.
+  - Lingkaran yang tidak tertutup (celah lebih dari 15% panjang coretan) tidak dikenali.
+  - Pengenalan hanya untuk alat Pena, bukan Stabilo atau alat bentuk manual.
+  - Belum diuji di HP: waktu tahan 650 ms terasa pas di perangkat sungguhan atau tidak.
+  - Chromium tidak tersedia di sandbox, jadi tampilan `elips` dan `poligon` di canvas belum dilihat langsung. Renderer hanya diperiksa lewat kode dan jalur SVG.
+- **Status:** A4 *Partially implemented* (di sketsa, untuk garis, elips, lingkaran, persegi, persegi panjang, segitiga, dan poligon).
+
 ## Berikutnya
 
-- A4 Shape recognition (urutan §6.1 setelah A3). Dependensi: model goresan dari A1 dan A3.
+- A5 Layer system (urutan §6.1 setelah A4). Dependensi: model objek dari A1 dan A2, dan aturan §6.2 agar A3–A5 memakai model data yang sama.
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

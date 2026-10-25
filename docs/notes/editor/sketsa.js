@@ -4,17 +4,22 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261024185135';
-import { toast } from '../../core/toast.js?v=20261024185135';
-import { t as tr } from '../../core/i18n.js?v=20261024185135';
-import { ensureCaret, caretEnd } from './caret.js?v=20261024185135';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261024185135';
-import { refresh } from './cleanup.js?v=20261024185135';
-import { snap } from './history.js?v=20261024185135';
-import { pasangGambar } from './image.js?v=20261024185135';
-import { pastikanKolomAkhir } from './blocks.js?v=20261024185135';
-import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261024185135';
-import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261024185135';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025011852';
+import { toast } from '../../core/toast.js?v=20261025011852';
+import { t as tr } from '../../core/i18n.js?v=20261025011852';
+import { ensureCaret, caretEnd } from './caret.js?v=20261025011852';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261025011852';
+import { refresh } from './cleanup.js?v=20261025011852';
+import { snap } from './history.js?v=20261025011852';
+import { pasangGambar } from './image.js?v=20261025011852';
+import { pastikanKolomAkhir } from './blocks.js?v=20261025011852';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261025011852';
+import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261025011852';
+import { kenaliBentuk } from './bentuk.js?v=20261025011852';
+
+/* A4: berapa lama ujung dibiarkan diam sebelum coretan dikenali sebagai bentuk. */
+const JEDA_TAHAN_MS = 650;
+const JARAK_BATAL_TAHAN = 12;
 
 const LEBAR = 720;
 const TINGGI = 460;
@@ -47,6 +52,14 @@ function svgDariJejak(jejak, latar, w = LEBAR, h = TINGGI) {
     const gy = st.alat === 'pena' ? faktorGaya(st.gaya) : { skala: 1, alpha: 1 };
     const op = st.alat === 'stabilo' ? 0.36 : gy.alpha;
     const lebar = st.ukuran * gy.skala;
+    if (st.alat === 'elips' && st.pts.length >= 2) {
+      const a = st.pts[0], b = st.pts[st.pts.length - 1];
+      const rx = Math.abs(b.x - a.x) / 2, ry = Math.abs(b.y - a.y) / 2;
+      return `<ellipse cx="${Math.min(a.x, b.x) + rx}" cy="${Math.min(a.y, b.y) + ry}" rx="${rx}" ry="${ry}" fill="none" stroke="${st.warna}" stroke-width="${st.ukuran}"/>`;
+    }
+    if (st.alat === 'poligon' && st.pts.length >= 3) {
+      return `<polygon points="${st.pts.map(p => `${p.x},${p.y}`).join(' ')}" fill="none" stroke="${st.warna}" stroke-width="${st.ukuran}" stroke-linejoin="round"/>`;
+    }
     if (st.alat === 'kotak' && st.pts.length >= 2) {
       const a = st.pts[0], b = st.pts[st.pts.length - 1];
       const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
@@ -175,6 +188,23 @@ function gambarSatuJejak(ctx, st) {
 
   const a = st.pts[0];
   const b = st.pts[st.pts.length - 1];
+  if (st.alat === 'elips' && st.pts.length >= 2) {
+    const rx = Math.abs(b.x - a.x) / 2, ry = Math.abs(b.y - a.y) / 2;
+    ctx.beginPath();
+    ctx.ellipse(Math.min(a.x, b.x) + rx, Math.min(a.y, b.y) + ry, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if (st.alat === 'poligon' && st.pts.length >= 3) {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    for (let i = 1; i < st.pts.length; i++) ctx.lineTo(st.pts[i].x, st.pts[i].y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
   if (st.alat === 'garis' || st.alat === 'panah') {
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -313,6 +343,8 @@ export function bukaStudioSketsa(figEdit = null) {
   let kh = TINGGI;
   let zoom = 1;
   let geser = null;
+  /* A4: bentuk yang sedang dipratinjau atau baru dipakai. asli = coretan sebelum dikenali. */
+  let bentukSementara = null;
 
   overlay.innerHTML = `
     <div class="sk-box">
@@ -323,6 +355,11 @@ export function bukaStudioSketsa(figEdit = null) {
       </div>
       <div class="sk-stage">
         <canvas id="sk-canvas" width="${LEBAR}" height="${TINGGI}"></canvas>
+      </div>
+      <div class="sk-bentuk" id="sk-bentuk" hidden>
+        <span class="sk-bentuk-nama" id="sk-bentuk-nama" aria-live="polite"></span>
+        <button type="button" class="sk-tool" id="sk-bentuk-batal">${tr('Coretan asli')}</button>
+        <button type="button" class="sk-tool on" id="sk-bentuk-pakai">${tr('Pakai bentuk')}</button>
       </div>
       <div class="sk-bar">
         <div class="sk-row">
@@ -499,6 +536,43 @@ export function bukaStudioSketsa(figEdit = null) {
     renderUlang();
   };
 
+  /* A4: pengenalan bentuk. Ujung yang ditahan diam sebentar mengganti coretan dengan bentuk rapi.
+     Bentuk tampil dulu; pengguna bisa memakai bentuk atau kembali ke coretan asli. */
+  const barBentuk = overlay.querySelector('#sk-bentuk');
+  const sembunyiBentuk = () => { if (barBentuk) barBentuk.hidden = true; };
+  const tampilBentuk = nama => {
+    if (!barBentuk) return;
+    barBentuk.querySelector('#sk-bentuk-nama').textContent = tr('Bentuk dikenali') + ': ' + tr(nama);
+    barBentuk.hidden = false;
+  };
+  let timerTahan = null;
+  let titikTahan = null;
+  const hentikanTimerTahan = () => { clearTimeout(timerTahan); timerTahan = null; };
+  const mulaiTimerTahan = () => {
+    hentikanTimerTahan();
+    timerTahan = setTimeout(tahanTerdeteksi, JEDA_TAHAN_MS);
+  };
+  const tahanTerdeteksi = () => {
+    timerTahan = null;
+    if (!aktif || alat !== 'pena' || bentukSementara) return;
+    const hasil = kenaliBentuk(aktif.pts);
+    if (!hasil) return;
+    const asli = aktif;
+    const bentuk = { alat: hasil.alat, warna: asli.warna, ukuran: asli.ukuran, gaya: 'tinta', pts: hasil.pts };
+    bentukSementara = { asli, bentuk, nama: hasil.nama };
+    titikTahan = asli.pts[asli.pts.length - 1];
+    aktif = bentuk;
+    tampilBentuk(hasil.nama);
+    renderUlang();
+  };
+  /* Jari bergerak lagi setelah ditahan: kembali ke coretan asli dan lanjut menggambar. */
+  const batalkanTahanBentuk = () => {
+    if (!bentukSementara) return;
+    aktif = bentukSementara.asli;
+    bentukSementara = null;
+    sembunyiBentuk();
+  };
+
   /* A3: preset gaya pena. Bawaan dan kustom muncul di satu baris; kustom bisa disimpan dan dihapus. */
   const barPreset = overlay.querySelector('#sk-presets-baris');
   const presetCocok = p => alat === 'pena' && p.warna === warna && p.ukuran === ukuran && p.gaya === gaya;
@@ -633,8 +707,12 @@ export function bukaStudioSketsa(figEdit = null) {
     };
   };
 
+  /* Tekan-tahan lama di Android bisa memunculkan menu konteks dan mengganggu coretan */
+  cv.addEventListener('contextmenu', e => e.preventDefault());
   cv.addEventListener('pointerdown', e => {
     e.preventDefault();
+    sembunyiBentuk();
+    bentukSementara = null;
     if (alat === 'geser') {
       /* A6: alat Geser menggeser area tampilan yang di-zoom, tidak menggambar */
       geser = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop };
@@ -657,6 +735,7 @@ export function bukaStudioSketsa(figEdit = null) {
     }
     tumpukRedo.length = 0;
     aktif = { alat, warna, ukuran, ...(alat === 'pena' ? { gaya } : {}), pts: [p] };
+    mulaiTimerTahan();
     renderUlang();
   });
   cv.addEventListener('pointermove', e => {
@@ -679,10 +758,18 @@ export function bukaStudioSketsa(figEdit = null) {
     }
     if (!aktif) return;
     e.preventDefault();
-    aktif.pts.push(titikDariEvent(e));
+    const p = titikDariEvent(e);
+    if (bentukSementara) {
+      /* Gerak kecil saat menahan (getaran jari) diabaikan; gerak jauh membatalkan pengenalan */
+      if (Math.hypot(p.x - titikTahan.x, p.y - titikTahan.y) <= JARAK_BATAL_TAHAN) return;
+      batalkanTahanBentuk();
+    }
+    aktif.pts.push(p);
+    mulaiTimerTahan();
     renderUlang();
   });
   const akhiriGoresan = () => {
+    hentikanTimerTahan();
     if (geser) { geser = null; return; }
     if (seret) { seret = null; return; }
     if (!aktif) return;
@@ -763,7 +850,29 @@ export function bukaStudioSketsa(figEdit = null) {
       renderUlang();
       return;
     }
+    if (e.target.closest('#sk-bentuk-batal')) {
+      if (bentukSementara) {
+        if (aktif === bentukSementara.bentuk) {
+          /* masih ditahan: bentuk belum masuk jejak, cukup kembalikan coretan yang sedang digambar */
+          batalkanTahanBentuk();
+        } else {
+          const i = jejak.indexOf(bentukSementara.bentuk);
+          if (i >= 0) jejak[i] = bentukSementara.asli;
+        }
+        bentukSementara = null;
+        renderUlang();
+      }
+      sembunyiBentuk();
+      return;
+    }
+    if (e.target.closest('#sk-bentuk-pakai')) {
+      bentukSementara = null;
+      sembunyiBentuk();
+      return;
+    }
     if (e.target.closest('#sk-undo')) {
+      bentukSementara = null;
+      sembunyiBentuk();
       if (jejak.length) { tumpukRedo.push(jejak.pop()); renderUlang(); }
       return;
     }
@@ -772,6 +881,8 @@ export function bukaStudioSketsa(figEdit = null) {
       return;
     }
     if (e.target.closest('#sk-bersih')) {
+      bentukSementara = null;
+      sembunyiBentuk();
       jejak.length = 0;
       objek.length = 0;
       pilihanId = null;

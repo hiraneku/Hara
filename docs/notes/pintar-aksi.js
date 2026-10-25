@@ -8,18 +8,18 @@
    • Ringkasan TIDAK dibuat dari catatan terkunci, karena hasilnya menjadi catatan baru
      yang tidak terkunci — isi catatan terkunci akan bocor. */
 
-import { state, save } from '../core/store.js?v=20261024185135';
-import { makeNote, makeBlock, plainText } from './note-model.js?v=20261024185135';
-import { toast } from '../core/toast.js?v=20261024185135';
-import { go } from '../core/router.js?v=20261024185135';
-import { flush } from '../core/autosave.js?v=20261024185135';
-import { esc } from '../core/dom.js?v=20261024185135';
-import { t as tr } from '../core/i18n.js?v=20261024185135';
-import { terlihat, punyaKunci } from './kunci.js?v=20261024185135';
-import { findNote, openNote } from './model.js?v=20261024185135';
-import { sinkronTag, semuaTag } from './tags.js?v=20261024185135';
-import { catatanSerupa, saranTag, ringkasan, tinjauanMingguan } from './pintar.js?v=20261024185135';
-import { uraiTugas } from './pengingat.js?v=20261024185135';
+import { state, save } from '../core/store.js?v=20261025011852';
+import { makeNote, makeBlock, plainText } from './note-model.js?v=20261025011852';
+import { toast } from '../core/toast.js?v=20261025011852';
+import { go } from '../core/router.js?v=20261025011852';
+import { flush } from '../core/autosave.js?v=20261025011852';
+import { esc } from '../core/dom.js?v=20261025011852';
+import { t as tr } from '../core/i18n.js?v=20261025011852';
+import { terlihat, punyaKunci } from './kunci.js?v=20261025011852';
+import { findNote, openNote } from './model.js?v=20261025011852';
+import { sinkronTag, semuaTag } from './tags.js?v=20261025011852';
+import { catatanSerupa, saranTag, ringkasan, tinjauanMingguan } from './pintar.js?v=20261025011852';
+import { uraiTugas } from './pengingat.js?v=20261025011852';
 
 /* Catatan yang boleh dipakai fitur pintar: aktif, tidak diarsip, tidak di sampah,
    dan terlihat (tidak terkunci, atau sudah dibuka di sesi ini). */

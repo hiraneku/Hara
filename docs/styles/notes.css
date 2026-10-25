@@ -2179,6 +2179,10 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .sk-sizes{display:flex;gap:5px;margin-left:auto}
 /* A3: titik warna pada tombol preset pena */
 .sk-pdot{width:12px;height:12px;border-radius:999px;flex:none;border:1px solid rgba(0,0,0,.15)}
+/* A4: bar hasil pengenalan bentuk (pakai bentuk atau kembali ke coretan asli) */
+.sk-bentuk{display:flex;align-items:center;gap:8px;padding:6px 10px;flex-wrap:wrap;background:var(--accent-weak);border-top:1px solid var(--border)}
+.sk-bentuk[hidden]{display:none}
+.sk-bentuk-nama{flex:1 1 auto;min-width:0;font-weight:600;font-size:13px}
 .sk-spacer{flex:1}
 
 /* #11 Pratinjau Kartu Gambar */
