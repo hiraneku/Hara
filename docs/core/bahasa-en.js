@@ -1088,4 +1088,6 @@ export const EN = {
   "Hanya di versi ini: {h} baris · Hanya di sekarang: {t} baris": "Only in this version: {h} lines · Only in current: {t} lines",
   "… {n} baris lagi tidak ditampilkan.": "… {n} more lines not shown.",
   "Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.": "No versions saved for this note yet. Versions are saved automatically every 5 minutes while you edit, and kept for 30 days.",
+  "Sematkan di bar": "Pin to bar",
+  "Maksimal {n} alat disematkan — lepas salah satu dulu.": "Up to {n} tools can be pinned — unpin one first.",
 };

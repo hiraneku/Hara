@@ -1,20 +1,20 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20261025024750';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261025024750';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261025024750';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261025024750';
-import { slashMenu } from '../menus/slash.js?v=20261025024750';
-import { wlMenu }    from '../menus/wikilink.js?v=20261025024750';
-import { tagMenu }   from '../menus/tag.js?v=20261025024750';
-import { linkMenu }  from '../menus/link.js?v=20261025024750';
-import { fontMenu } from '../menus/font.js?v=20261025024750';
-import { warnaMenu } from '../menus/warna.js?v=20261025024750';
-import { calloutMenu } from '../menus/callout.js?v=20261025024750';
-import { snap } from '../editor/history.js?v=20261025024750';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261025024750';
-import { tersembunyi, getar } from './prefs.js?v=20261025024750';
-import { HELP, HELP_GRUP } from './help.js?v=20261025024750';
-import { t as tr } from '../../core/i18n.js?v=20261025024750';
+import { BAR, GROUPS } from './config.js?v=20261025030052';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261025030052';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261025030052';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261025030052';
+import { slashMenu } from '../menus/slash.js?v=20261025030052';
+import { wlMenu }    from '../menus/wikilink.js?v=20261025030052';
+import { tagMenu }   from '../menus/tag.js?v=20261025030052';
+import { linkMenu }  from '../menus/link.js?v=20261025030052';
+import { fontMenu } from '../menus/font.js?v=20261025030052';
+import { warnaMenu } from '../menus/warna.js?v=20261025030052';
+import { calloutMenu } from '../menus/callout.js?v=20261025030052';
+import { snap } from '../editor/history.js?v=20261025030052';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261025030052';
+import { prefs, tersembunyi, tersemat, getar } from './prefs.js?v=20261025030052';
+import { HELP, HELP_GRUP } from './help.js?v=20261025030052';
+import { t as tr } from '../../core/i18n.js?v=20261025030052';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -33,15 +33,37 @@ export function kembaliKeMenu() {
   gantiIsiPop(menuTerakhir.g ? groupMenu(menuTerakhir.g) : menuTerakhir.html);
 }
 
+/* Satu tombol bar (datar atau kelompok). */
+function tombolBar(b) {
+  if (b.g) return `<button class="mb mb-g" data-g="${b.g}" title="${tr(b.title || '')}">
+        <span class="gl">${b.label}</span>${CHEV}</button>`;
+  return `<button class="mb${b.accent ? ' acc' : ''}" data-m="${b.m}" title="${tr(b.title || '')}">${b.label}</button>`;
+}
+
 export function renderBar() {
   const box = document.querySelector('.mech-in');
   if (!box) return;
+  /* A9: alat yang disematkan DIPINDAH ke awal bar (sesudah Batalkan/Ulangi),
+     tidak digandakan. Alat yang disembunyikan tidak tampil di mana pun. */
+  const htmlSemat = prefs.sematan
+    .filter(k => !tersembunyi(k))
+    .map(k => BAR.find(b => !b.sep && (b.g || b.m) === k))
+    .filter(Boolean)
+    .map(tombolBar)
+    .join('');
+  let sudahSisip = false;
   box.innerHTML = BAR.map(b => {
-    if (b.sep) return '<div class="mb-sep"></div>';
-    if (tersembunyi(b.g || b.m)) return '';
-    if (b.g) return `<button class="mb mb-g" data-g="${b.g}" title="${tr(b.title || '')}">
-        <span class="gl">${b.label}</span>${CHEV}</button>`;
-    return `<button class="mb${b.accent ? ' acc' : ''}" data-m="${b.m}" title="${tr(b.title || '')}">${b.label}</button>`;
+    if (b.sep) {
+      if (!sudahSisip) {
+        sudahSisip = true;
+        /* pemisah di kedua sisi zona sematan, hanya bila zona itu tidak kosong */
+        return '<div class="mb-sep"></div>' + htmlSemat + (htmlSemat ? '<div class="mb-sep"></div>' : '');
+      }
+      return '<div class="mb-sep"></div>';
+    }
+    const kunci = b.g || b.m;
+    if (tersembunyi(kunci) || tersemat(kunci)) return '';
+    return tombolBar(b);
   }).join('');
   rapikanSep(box);
   bindBar();
@@ -141,10 +163,10 @@ function jalankan(m, btn) {
   if (m === 'slash') return openPop(slashMenu(), btn);
   if (m === 'wl')    return openPop(wlMenu(),    btn);
   if (m === 'tag')   return openPop(tagMenu(),   btn);
-  if (m === 'tagwarna') { import('../tagwarna.js?v=20261025024750').then(({panelTag}) => panelTag(btn)); return; }
+  if (m === 'tagwarna') { import('../tagwarna.js?v=20261025030052').then(({panelTag}) => panelTag(btn)); return; }
   if (m === 'gal') {
     const mb = document.querySelector('.mb-g.open');
-    import('../galeri.js?v=20261025024750').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
+    import('../galeri.js?v=20261025030052').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
     return;
   }
   if (m === 'link')  return openPop(linkMenu(),  btn);

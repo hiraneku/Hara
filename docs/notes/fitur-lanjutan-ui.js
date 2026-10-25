@@ -8,27 +8,27 @@
  * - Pindah Ruang / Folder & Riwayat Versi Lokal Catatan
  */
 
-import { state, save } from '../core/store.js?v=20261025024750';
-import { go, cur } from '../core/router.js?v=20261025024750';
-import { flush } from '../core/autosave.js?v=20261025024750';
-import { toast } from '../core/toast.js?v=20261025024750';
-import { stamp } from '../core/dom.js?v=20261025024750';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261025024750';
-import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261025024750';
+import { state, save } from '../core/store.js?v=20261025030052';
+import { go, cur } from '../core/router.js?v=20261025030052';
+import { flush } from '../core/autosave.js?v=20261025030052';
+import { toast } from '../core/toast.js?v=20261025030052';
+import { stamp } from '../core/dom.js?v=20261025030052';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261025030052';
+import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261025030052';
 export { hentikanBaca };
-import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261025024750';
-import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261025024750';
-import { openNote } from './model.js?v=20261025024750';
-import { waktuTenggat } from './pengingat.js?v=20261025024750';
-import { terlihat } from './kunci.js?v=20261025024750';
-import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261025024750';
-import { openPop, closeAll } from './menus/pop.js?v=20261025024750';
+import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261025030052';
+import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261025030052';
+import { openNote } from './model.js?v=20261025030052';
+import { waktuTenggat } from './pengingat.js?v=20261025030052';
+import { terlihat } from './kunci.js?v=20261025030052';
+import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261025030052';
+import { openPop, closeAll } from './menus/pop.js?v=20261025030052';
 import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalender,
-         setKelompok, setKalenderKunci } from './papan.js?v=20261025024750';
+         setKelompok, setKalenderKunci } from './papan.js?v=20261025030052';
 import {
   daftarRuang, tambahRuang, pindahkanCatatanKeRuang,
   ambilVersiCatatan, pulihkanVersiCatatan, bandingVersiDenganSekarang,
-} from './ruang.js?v=20261025024750';
+} from './ruang.js?v=20261025030052';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const KODE_BAHASA = { id: 'id-ID', en: 'en-US', ja: 'ja-JP' };

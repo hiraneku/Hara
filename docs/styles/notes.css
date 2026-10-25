@@ -770,6 +770,10 @@ body.zen #cari-note{top:16px}
 .row .pinx:focus-visible{outline:2px solid var(--accent);opacity:1}
 .row .pinx.on{color:var(--accent);opacity:1}
 .row .pinx.on:hover{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+/* A9: pin di Pengaturan bar dipakai sebagai <button>, jadi gaya bawaan tombol dibersihkan */
+.row button.pinx{background:none;border:0;padding:0;font:inherit;color:var(--faint)}
+.row button.pinx:disabled{opacity:.25;cursor:default}
+.row button.pinx.on{color:var(--accent)}
 
 /* A6 — pilihan warna aksen di Pengaturan (nilai palet di tokens.css) */
 .aksen{display:flex;flex-wrap:wrap;gap:10px;align-items:center}

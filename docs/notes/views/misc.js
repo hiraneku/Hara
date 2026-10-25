@@ -1,19 +1,19 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261025024750';
-import { esc, stamp } from '../../core/dom.js?v=20261025024750';
-import { rowFor } from './row.js?v=20261025024750';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261025024750';
-import { AK, akSekarang } from '../../core/theme.js?v=20261025024750';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261025024750';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261025024750';
-import { terlihat } from '../kunci.js?v=20261025024750';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261025024750';
-import { petaNamaRuang } from '../ruang.js?v=20261025024750';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261025024750';
-import { namaSekarang } from '../../home/nama.js?v=20261025024750';
-import { renderSimpanSaringanHtml } from '../saringan.js?v=20261025024750';
+import { state } from '../../core/store.js?v=20261025030052';
+import { esc, stamp } from '../../core/dom.js?v=20261025030052';
+import { rowFor } from './row.js?v=20261025030052';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261025030052';
+import { AK, akSekarang } from '../../core/theme.js?v=20261025030052';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261025030052';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261025030052';
+import { terlihat } from '../kunci.js?v=20261025030052';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261025030052';
+import { petaNamaRuang } from '../ruang.js?v=20261025030052';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261025030052';
+import { namaSekarang } from '../../home/nama.js?v=20261025030052';
+import { renderSimpanSaringanHtml } from '../saringan.js?v=20261025030052';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */

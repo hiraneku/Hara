@@ -1055,4 +1055,6 @@ export const JA = {
   "Hanya di versi ini: {h} baris · Hanya di sekarang: {t} baris": "このバージョンのみ: {h} 行 · 現在のみ: {t} 行",
   "… {n} baris lagi tidak ditampilkan.": "…さらに {n} 行は表示されていません。",
   "Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.": "このノートの保存済みバージョンはまだありません。編集中は5分ごとに自動で記録され、30日間保存されます。",
+  "Sematkan di bar": "バーにピン留め",
+  "Maksimal {n} alat disematkan — lepas salah satu dulu.": "ピン留めできるのは{n}個までです。先に1つ外してください。",
 };

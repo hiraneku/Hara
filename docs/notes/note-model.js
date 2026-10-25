@@ -28,9 +28,9 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261025024750';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261025024750';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025024750';
+import { t as tr } from '../core/i18n.js?v=20261025030052';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261025030052';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025030052';
 
 export const BLOCK_TYPES = [
   'paragraph',

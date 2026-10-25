@@ -4,11 +4,11 @@
      -> 10 pita peaking -> kompresor (node yang sama dengan pemutar) -> tulis berkas.
    Efek bisa dimatikan; bila mati, suara asli dipakai tanpa penguatan. */
 
-import * as S from './simpan.js?v=20261025024750';
-import * as E from './eq.js?v=20261025024750';
-import { VOLUME } from './mesin.js?v=20261025024750';
-import { SAMPEL_HZ, namaEkspor } from './ekspor-dsp.js?v=20261025024750';
-import { EQ_FREKUENSI } from './logika.js?v=20261025024750';
+import * as S from './simpan.js?v=20261025030052';
+import * as E from './eq.js?v=20261025030052';
+import { VOLUME } from './mesin.js?v=20261025030052';
+import { SAMPEL_HZ, namaEkspor } from './ekspor-dsp.js?v=20261025030052';
+import { EQ_FREKUENSI } from './logika.js?v=20261025030052';
 
 export const KBPS_PILIHAN = [128, 192, 320];
 export const FORMAT_PILIHAN = ['wav', 'mp3'];

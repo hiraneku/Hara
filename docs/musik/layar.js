@@ -3,18 +3,18 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261025024750';
-import { esc } from '../core/dom.js?v=20261025024750';
-import { t as tr } from '../core/i18n.js?v=20261025024750';
-import { toast } from '../core/toast.js?v=20261025024750';
-import * as M from './mesin.js?v=20261025024750';
-import * as S from './simpan.js?v=20261025024750';
-import * as L from './logika.js?v=20261025024750';
-import * as A from './aksi.js?v=20261025024750';
-import { ikon } from './ikon.js?v=20261025024750';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261025024750';
-import { segarSampul } from './sampul-dom.js?v=20261025024750';
-import { ambilSet } from './set.js?v=20261025024750';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261025030052';
+import { esc } from '../core/dom.js?v=20261025030052';
+import { t as tr } from '../core/i18n.js?v=20261025030052';
+import { toast } from '../core/toast.js?v=20261025030052';
+import * as M from './mesin.js?v=20261025030052';
+import * as S from './simpan.js?v=20261025030052';
+import * as L from './logika.js?v=20261025030052';
+import * as A from './aksi.js?v=20261025030052';
+import { ikon } from './ikon.js?v=20261025030052';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261025030052';
+import { segarSampul } from './sampul-dom.js?v=20261025030052';
+import { ambilSet } from './set.js?v=20261025030052';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {

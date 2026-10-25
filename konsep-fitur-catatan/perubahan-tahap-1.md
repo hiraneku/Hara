@@ -222,7 +222,40 @@
   - Uji otomatis di repo bersifat struktural dan logika. Tata letak piksel tidak dijalankan di `npm test`, karena browser tidak dipasang sebagai dependensi repo.
 - **Status:** A8 *Partially implemented* (sketsa). Editor catatan biasa belum.
 
+## Perubahan 8 — A9 Pinned toolbar tools
+
+- **ID:** A9.
+- **Alasan urutan:** §6.1 menempatkan A9 setelah A8. Verifikasi ulang kode: audit menulis *Missing*, dan itu benar untuk alat editor. Pencarian `sematkan`/`pin`/`favorit` hanya menemukan sematan **catatan** (daftar catatan dan menu "···"), bukan sematan **alat** di bar. Jadi A9 tidak sama dengan fitur yang sudah ada, dan tidak ada yang digandakan.
+- **Dependensi:** preferensi bar (`docs/notes/bar/prefs.js`, `hara.bar.v1`) yang sudah ada untuk "sembunyikan kontrol". Sematan memakai daftar kontrol yang sama (`BISA_SEMBUNYI`). Tidak ada dependensi ke A1–A8 atau ke data catatan.
+- **Keputusan desain:**
+  - Alat yang disematkan **dipindah** ke awal bar, sesudah Batalkan/Ulangi, bukan disalin. Alasannya: `cleanup.js` mencari tombol datar dengan `querySelector`, sehingga salinan kedua tidak akan ikut menyala.
+  - Urutan sematan = urutan pin. Alat lain tetap dalam urutan asli.
+  - Batas **6** sematan (`MAKS_SEMATAN`). Pelanggaran memunculkan toast.
+  - Alat yang disembunyikan tidak tampil meski disematkan, dan sematannya tetap tersimpan. Tombol pin-nya nonaktif saat disembunyikan, tetapi sematan yang sudah ada tetap bisa dilepas.
+  - Sematan diatur di **Pengaturan → Bar** (tombol pin di setiap baris). Tidak ada tombol sematan langsung di bar, karena tekan lama tombol datar sudah dipakai untuk penjelasan.
+  - Hanya bar editor catatan. Bar sketsa (`#sk-*`) tidak diubah.
+- **Yang berubah:**
+  - `docs/notes/bar/prefs.js`: `sematan`, `MAKS_SEMATAN`, `bersihSematan`, `tersemat`, `toggleSematan`.
+  - `docs/notes/bar/render.js`: `renderBar` memindahkan alat yang disematkan; `tombolBar` dipisah sebagai fungsi.
+  - `docs/notes/index.js`: tombol pin di baris Pengaturan, handler klik, dan impor.
+  - `docs/styles/notes.css`: reset gaya tombol untuk `.row button.pinx` (memakai `.pinx` yang sudah ada).
+  - `docs/core/bahasa-en.js`, `docs/core/bahasa-ja.js`: dua kunci baru (`Sematkan di bar`, teks batas).
+  - `tools/uji/bar-sematan.mjs` (baru): 35 uji jsdom.
+  - Stempel `?v=` menjadi `20261025030052` (124 berkas).
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/bar-sematan.mjs`: **35/35 lulus**. Mencakup pindah ke awal tanpa duplikat, urutan, batas 6 dan penolakan ke-7, alat tersembunyi, penyimpanan dan pembersihan data rusak, serta tombol pin di Pengaturan.
+  - Uji mutasi (dipulihkan dan diverifikasi `cmp`): M1 sematan digandakan → 32/35 (3 gagal). M2 batas 6 dihapus → 27/35 (8 gagal). M3 batas saat muat dihapus → 34/35 (1 gagal).
+  - **Browser** (Chromium headless, di luar repo, `a9.mjs`): urutan bar nyata sebelum dan sesudah menyematkan `Tebal`, `Gaya paragraf`, dan `Miring` menjadi `undo redo | b gaya i | slash | link | …`. Tidak ada galat JS. Screenshot diperiksa: bar dan baris Pengaturan (ikon pin; yang aktif berwarna aksen).
+  - Pemisah di kedua sisi zona sematan ditambahkan setelah screenshot pertama menunjukkan `i /` menempel. Uji ulang 35/35.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-a9.log`), 78 berkas uji, 0 baris ✗, GAGAL, atau FAIL.
+- **Keterbatasan yang diketahui:**
+  - Pengujian dilakukan di Chromium desktop dengan viewport ponsel, **bukan di HP sungguhan**. Sentuhan dan keyboard Android belum diuji di perangkat.
+  - Sematan hanya bisa diatur lewat Pengaturan, bukan langsung dari bar.
+  - Tombol sematan di bar tidak diberi uji klik (hanya pengujian DOM dan `renderBar`). Tombol yang dipindah memakai handler `bindBar` yang sama dengan tombol biasa.
+  - Batas 6 adalah keputusan awal. Bisa diubah jika terlalu sempit atau terlalu longgar.
+- **Status:** A9 *Implemented* untuk bar editor catatan. Sematan di bar sketsa belum ada.
+
 ## Berikutnya
 
-- A9 Pinned toolbar, B7 Templat kertas kustom (urutan §6.1 setelah A8).
+- B7 Templat kertas kustom (urutan §6.1 setelah A9).
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.
