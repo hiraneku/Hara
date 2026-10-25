@@ -46,6 +46,13 @@ body.drag-blk{cursor:grabbing;user-select:none}
 /* blok kosong tetap punya tinggi & bisa diketuk, tanpa perlu <br> */
 .ed-doc>*:not(.b-div){min-height:1.65em}
 .ed-doc>.b-code{min-height:1.6em}
+/* Spasi yang diketik harus tetap spasi biasa. Dengan white-space normal,
+   Chromium (termasuk IME Android) menghapus spasi di depan kata yang baru
+   disisipkan di dalam span warna/sorotan ("halo dunia" -> "halodunia").
+   pre-wrap menonaktifkannya. Hanya blok teks — blok lain (tabel, rumus,
+   gambar) punya markup yang tidak boleh ikut menampilkan spasi. */
+.ed-doc>.b-p,.ed-doc>.b-todo,.ed-doc>.b-li,.ed-doc>.b-ol,.ed-doc>.b-quote,
+.ed-doc>.b-cal,.ed-doc>h1,.ed-doc>h2,.ed-doc>h3{white-space:pre-wrap}
 .ed-doc>*:first-child:last-child:empty::before,
 .ed-doc>[data-ph]:only-child:empty::before{content:attr(data-ph);color:var(--faint)}
 .ed-doc .b-code{margin:6px 0}

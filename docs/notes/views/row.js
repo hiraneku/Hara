@@ -19,14 +19,14 @@
    tanpa judul asli / cuplikan / tag / thumbnail — hanya penanda gembok.
    excerptOf hanya dipanggil untuk catatan yang boleh dilihat, supaya
    isi tidak bocor lewat teks tersembunyi di DOM. */
-import { esc, stamp } from '../../core/dom.js?v=20261025071610';
-import { excerptOf } from '../note-model.js?v=20261025071610';
-import { tandaUntukCatatan, chipTag } from '../label.js?v=20261025071610';
-import { tagUntukTampil } from '../tags.js?v=20261025071610';
-import { terlihat } from '../kunci.js?v=20261025071610';
-import { sorotHtml } from '../cari.js?v=20261025071610';
-import { namaRuangUntuk } from '../ruang.js?v=20261025071610';
-import { t as tr } from '../../core/i18n.js?v=20261025071610';
+import { esc, stamp } from '../../core/dom.js?v=20261025074430';
+import { excerptOf } from '../note-model.js?v=20261025074430';
+import { tandaUntukCatatan, chipTag } from '../label.js?v=20261025074430';
+import { tagUntukTampil } from '../tags.js?v=20261025074430';
+import { terlihat } from '../kunci.js?v=20261025074430';
+import { sorotHtml } from '../cari.js?v=20261025074430';
+import { namaRuangUntuk } from '../ruang.js?v=20261025074430';
+import { t as tr } from '../../core/i18n.js?v=20261025074430';
 
 /* Miniatur gambar pertama milik catatan; kosong bila tak ada gambar. */
 const thumbOf = n => {

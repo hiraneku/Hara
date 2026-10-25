@@ -1,21 +1,21 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20261025071610';
-import { setBlock, indent } from './blocks.js?v=20261025071610';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark } from './marks.js?v=20261025071610';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025071610';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025071610';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025071610';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025071610';
-import { onTitle } from '../model.js?v=20261025071610';
-import { tanganiPaste } from './paste.js?v=20261025071610';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025071610';
-import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung } from './warna.js?v=20261025071610';
-import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung } from './sorotan.js?v=20261025071610';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025071610';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261025071610';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025071610';
-import { toast } from '../../core/toast.js?v=20261025071610';
-import { t as tr } from '../../core/i18n.js?v=20261025071610';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20261025074430';
+import { setBlock, indent } from './blocks.js?v=20261025074430';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025074430';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025074430';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025074430';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025074430';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025074430';
+import { onTitle } from '../model.js?v=20261025074430';
+import { tanganiPaste } from './paste.js?v=20261025074430';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025074430';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025074430';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025074430';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025074430';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261025074430';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025074430';
+import { toast } from '../../core/toast.js?v=20261025074430';
+import { t as tr } from '../../core/i18n.js?v=20261025074430';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -56,15 +56,17 @@ function cekPemicuGaring(){
   bukaSlash(n, r.startOffset);
 }
 
-function terapkanFormatAktif(){
-  if(pending.size){ wrapTypedPending(); return; }
+function terapkanFormatAktif(n=1){
+  /* n > 1: hasil komposisi IME (n karakter sekaligus), lihat komposisi.js */
+  const bungkus = () => (n > 1 ? wrapMarkKomposisi(n) : wrapTypedPending());
+  if(pending.size){ bungkus(); return; }
   if(!sticky.size) return;
   const s=sel();
   if(!(s&&s.rangeCount)) return;
   const perlu=[...sticky].filter(m=>!markAround(m,s.getRangeAt(0).startContainer));
   if(!perlu.length) return;
   perlu.forEach(m=>pending.add(m));
-  wrapTypedPending();
+  bungkus();
 }
 
 export function bindEditor() {
@@ -94,15 +96,22 @@ export function bindEditor() {
      komposisi teks dibiarkan apa adanya; begitu komposisi selesai, tag
      dirapikan (autoTagDalam) dan tampilan disegarkan. */
   document.addEventListener('compositionstart',()=>{ if(docEl()) setKomposisi(true); });
-  document.addEventListener('compositionend',()=>{
+  document.addEventListener('compositionend',e=>{
     if(!docEl()) return;
+    /* jumlah karakter hasil komposisi (teks committed ada di e.data) */
+    const n=(e.data||'').length;
     /* biarkan input yang menyusul (bila ada) lewat tanpa mengubah DOM;
        perapian dijalankan setelahnya */
     setTimeout(()=>{
       setKomposisi(false);
       /* format yang menyala (tebal/miring/…) baru dibungkus sekarang —
-         selama komposisi DOM sengaja tidak disentuh */
-      if(pending.size || sticky.size){ try{ terapkanFormatAktif(); }catch(err){} }
+         selama komposisi DOM sengaja tidak disentuh. Semua n karakter
+         hasil komposisi, bukan hanya karakter terakhir. */
+      if(pending.size || sticky.size){ try{ terapkanFormatAktif(n); }catch(err){} }
+      if(n){
+        try{ bungkusWarnaKomposisi(n); }catch(err){}
+        try{ bungkusSorotKomposisi(n); }catch(err){}
+      }
       try{ autoTagDalam(curBlock()); }catch(err){ /* jangan ganggu ketikan */ }
       try{ autoFormat(); }catch(err){}
       refresh();

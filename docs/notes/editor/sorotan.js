@@ -16,9 +16,10 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025071610';
-import { refresh } from './cleanup.js?v=20261025071610';
-import { normalizeWarna } from './warna.js?v=20261025071610';
+import { docEl, sel, curBlock } from './caret.js?v=20261025074430';
+import { refresh } from './cleanup.js?v=20261025074430';
+import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
+import { normalizeWarna } from './warna.js?v=20261025074430';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -277,6 +278,26 @@ export function bungkusSorotanPending() {
   return el;
 }
 
+
+/* Setelah komposisi IME selesai: n karakter hasil komposisi ikut disorot
+   kalau ada sorotan yang menunggu, atau sorotan lekat tapi teksnya mendarat
+   di luar span sorotan. Lihat komposisi.js dan bungkusWarnaKomposisi. */
+export function bungkusSorotKomposisi(n) {
+  if (_pending === HAPUS) { _pending = null; return false; }
+  if (_modeBawaan && !_pending) return false;
+  const hex = _pending || _lekat;
+  if (!hex) return false;
+  _pending = null;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = sorotAround(s.getRangeAt(0).startContainer);
+  if (host && host.getAttribute('data-sorotan') === hex) return false;
+  return bungkusTerakhir(n, frag => {
+    const el = buatSpan(hex);
+    el.appendChild(frag);
+    return el;
+  });
+}
 
 /* Pindah blok membatalkan sorotan yang menunggu — sama seperti font. */
 let blokTerakhir = null;

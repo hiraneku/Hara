@@ -3,8 +3,8 @@
    Hanya blok dasar; command lanjutan sengaja tidak dimasukkan.
    Bisa difilter dengan mengetik, dipilih lewat sentuh maupun papan ketik. */
 
-import { esc } from '../../core/dom.js?v=20261025071610';
-import { t as tr } from '../../core/i18n.js?v=20261025071610';
+import { esc } from '../../core/dom.js?v=20261025074430';
+import { t as tr } from '../../core/i18n.js?v=20261025074430';
 
 /* [ikon, nama, pintasan markdown, aksi, kata kunci pencarian] */
 export const SLASH = [

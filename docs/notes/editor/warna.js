@@ -14,8 +14,9 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025071610';
-import { refresh } from './cleanup.js?v=20261025071610';
+import { docEl, sel, curBlock } from './caret.js?v=20261025074430';
+import { refresh } from './cleanup.js?v=20261025074430';
+import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -352,6 +353,27 @@ export function bungkusWarnaPending() {
   return el;
 }
 
+
+/* Setelah komposisi IME selesai: n karakter hasil komposisi ikut diwarnai
+   kalau ada warna yang menunggu, atau warna lekat tapi teksnya mendarat di
+   luar span warna. Mode Bawaan belum didukung untuk komposisi (lihat
+   komposisi.js). */
+export function bungkusWarnaKomposisi(n) {
+  if (_pending === HAPUS) { _pending = null; return false; }
+  if (_modeBawaan && !_pending) return false;
+  const hex = _pending || _lekat;
+  if (!hex) return false;
+  _pending = null;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = warnaAround(s.getRangeAt(0).startContainer);
+  if (host && host.getAttribute('data-warna') === hex) return false;
+  return bungkusTerakhir(n, frag => {
+    const el = buatSpan(hex);
+    el.appendChild(frag);
+    return el;
+  });
+}
 
 /* Pindah blok membatalkan warna yang menunggu — sama seperti font. */
 let blokTerakhir = null;

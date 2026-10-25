@@ -5,13 +5,13 @@
    PageUp/PageDown. Zoom: − / + (langkah tetap) dan Pas lebar. Anotasi belum ada
    di langkah ini (B1b). */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261025071610';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261025074430';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261025071610';
-import { esc } from '../../core/dom.js?v=20261025071610';
-import { t as tr } from '../../core/i18n.js?v=20261025071610';
+} from './logika.js?v=20261025074430';
+import { esc } from '../../core/dom.js?v=20261025074430';
+import { t as tr } from '../../core/i18n.js?v=20261025074430';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 

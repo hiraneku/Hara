@@ -8,13 +8,13 @@
    Semua angka diturunkan dari blocks saat panel dibuka — tidak ada
    nilai yang disimpan ganda, jadi tidak mungkin basi setelah disunting. */
 
-import { state } from '../core/store.js?v=20261025071610';
-import { esc } from '../core/dom.js?v=20261025071610';
-import { t as tr, LOKALE } from '../core/i18n.js?v=20261025071610';
-import { openPop } from './menus/pop.js?v=20261025071610';
-import { sheet, shAksi } from './sheet.js?v=20261025071610';
-import { plainText } from './note-model.js?v=20261025071610';
-import { tagUntukTampil } from './tags.js?v=20261025071610';
+import { state } from '../core/store.js?v=20261025074430';
+import { esc } from '../core/dom.js?v=20261025074430';
+import { t as tr, LOKALE } from '../core/i18n.js?v=20261025074430';
+import { openPop } from './menus/pop.js?v=20261025074430';
+import { sheet, shAksi } from './sheet.js?v=20261025074430';
+import { plainText } from './note-model.js?v=20261025074430';
+import { tagUntukTampil } from './tags.js?v=20261025074430';
 
 export function statistikCatatan(note) {
   const blocks = Array.isArray(note?.blocks) ? note.blocks : [];

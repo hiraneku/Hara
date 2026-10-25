@@ -1,7 +1,8 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025071610';
-import { refresh } from './cleanup.js?v=20261025071610';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025074430';
+import { refresh } from './cleanup.js?v=20261025074430';
+import { bungkusTerakhir } from './komposisi.js?v=20261025074430';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };
@@ -155,6 +156,17 @@ export function wrapTypedPending(){
   nr.collapse(true);
   sel().removeAllRanges(); sel().addRange(nr);
   return true;
+}
+/* Sama seperti wrapTypedPending, tetapi untuk n karakter sekaligus — dipakai
+   setelah komposisi IME selesai (teks hasil komposisi = n karakter). */
+export function wrapMarkKomposisi(n){
+  const marks=[...pending]; pending.clear();
+  if(!marks.length) return false;
+  return bungkusTerakhir(n, frag => {
+    let outer=frag;
+    marks.forEach(m=>{ const e=markEl(m); e.appendChild(outer); outer=e; });
+    return outer;
+  });
 }
 /* Mark LEKAT yang caret-nya sedang berada DI LUAR elemennya — sediakan
    wadah kosong di posisi caret supaya karakter berikutnya langsung masuk.

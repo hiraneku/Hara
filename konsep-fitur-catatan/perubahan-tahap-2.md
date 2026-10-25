@@ -102,3 +102,28 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Tes ketik lengkap ada di `/home/user/unduh/a8-browser/` (di luar repo), bukan di `npm test`.
   - Belum diuji: Ctrl+U dan Ctrl+Shift+X lewat keyboard. Tombol bilah untuk garis bawah dan coret belum diuji ulang di jalur `toggleMark` yang baru.
   - Belum diverifikasi: apakah tombol bilah untuk melepas tebal pada seleksi penuh juga kena galat `setStartBefore` di versi sebelum perbaikan ini.
+
+## Perbaikan · Ketik dengan keyboard HP (IME) dan spasi (di luar urutan B1–B8)
+
+- **Gejala (dilaporkan pengguna):** di catatan kosong dengan warna aktif, huruf hanya berwarna setelah spasi plus huruf ditekan berulang. Spasi juga menumpuk. Keluhan ini memengaruhi semua format, bukan hanya warna.
+- **Akar masalah (diukur di Chromium, IME disimulasikan lewat CDP `Input.imeSetComposition`):**
+  1. Saat komposisi IME selesai, `compositionend` hanya membungkus **satu karakter** dan hanya untuk format marks. Warna dan sorotan yang menunggu tidak pernah diterapkan pada teks IME. Hasil awal: `halo` polos untuk warna dan sorotan, dan tebal hanya mengenai `o`.
+  2. Spasi di dalam span berwarna adalah spasi biasa. Chromium menghapusnya saat kata baru disisipkan (`"halo dunia"` menjadi `"halodunia"`). Di luar span, spasi disimpan sebagai `&nbsp;` dan aman.
+  3. Versi sebelumnya juga menghilangkan separuh spasi saat mengetik cepat (8 spasi menjadi 4).
+- **Perbaikan:**
+  - `docs/notes/editor/komposisi.js` (baru): `rentangTerakhir(n)` dan `bungkusTerakhir(n, bungkus)`. Membungkus n karakter sebelum caret, bisa melintasi beberapa text node. Modul ini tidak mengimpor cleanup.js supaya tidak menambah siklus impor.
+  - `docs/notes/editor/events.js`: `compositionend` memakai `e.data.length` sebagai n. Format marks, warna, dan sorotan yang menunggu dibungkus untuk n karakter itu.
+  - `docs/notes/editor/marks.js`: `wrapMarkKomposisi(n)`.
+  - `docs/notes/editor/warna.js` dan `sorotan.js`: `bungkusWarnaKomposisi(n)` dan `bungkusSorotKomposisi(n)`. Melewati teks yang sudah berada di span dengan warna yang sama.
+  - `docs/styles/notes.css`: `white-space: pre-wrap` untuk blok teks (`.b-p`, `.b-todo`, `.b-li`, `.b-ol`, `.b-quote`, `.b-cal`, `h1–h3`). Blok lain (tabel, rumus, gambar) tidak diubah.
+- **Dependensi:** lanjutan dari perbaikan ketik di `7abe65a`/`c7b08bd`. Tidak ada ID roadmap.
+- **Cara uji (Chromium headless, harness di luar repo, hasil nyata):**
+  - HP 390×760 dengan ketukan sentuh, IME lewat CDP: `halo` untuk plain, warna, sorotan, dan tebal. Hasil: benar, tanpa `￼`.
+  - Urutan campuran IME dan tombol: `halo`, spasi, `dunia`, spasi, `apa kabar`. Warna dan sorotan: `halo dunia apa kabar` seluruhnya berwarna. Tebal: benar.
+  - 8 spasi lalu `halo` dengan tombol: 8 spasi tersimpan dan `halo` berwarna.
+  - Regresi `ketik-format` (DELAY 0 dan 80, semua mode), `ENTER=1`, `ketik3`, `ketik-bawaan` (warna dan sorotan), `ctrl-format` 4/4, `warna-semua` desktop 22/22 dan HP 22/22.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-ime.log`).
+- **Belum terbukti:**
+  - **Karakter `￼` (U+FFFC) tidak bisa direproduksi di Chromium desktop.** Dugaan: Chromium Android menampilkan elemen atomik (misalnya tombol pegangan blok `button.blk-h` di setiap blok) sebagai `￼`. Dugaan ini belum diverifikasi. Perlu uji di HP Android sungguhan.
+  - Mode Bawaan belum didukung untuk komposisi IME. Teks IME yang mendarat di span warna tetap berwarna.
+  - Klik mouse di blok kosong di desktop memindahkan kursor ke `DIV@0` di `blocks`, dan ketikan tidak masuk. Sudah ada sebelum perubahan ini (`a8e87d7` dan base sesi). Di HP dengan ketukan sentuh tidak terjadi.
