@@ -76,3 +76,29 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - `tools/uji/menu-warna.mjs` (baru): **7/7 lulus**.
   - `npm test` penuh: exit 0 (`/tmp/npmtest-warna.log`).
 - **Catatan:** bilah utama di HP punya tombol warna di luar layar (perlu digeser horizontal). Itu perilaku bilah yang sudah ada, bukan bug menu warna, dan belum diubah.
+
+## Perbaikan · Cara mengetik dengan format (di luar urutan B1–B8)
+
+- **Gejala:** format warna dan sorotan yang menunggu tidak langsung aktif. Pengguna harus menekan spasi plus huruf berulang kali. Hasilnya teks berserpihan, misalnya `Awal` + `<span>erah merah</span>`. Ctrl+B di blok baru juga tidak membuat teks tebal.
+- **Akar masalah (diukur di Chromium):**
+  1. Warna dan sorotan lekat: karakter pertama masuk ke dalam span, karakter kedua keluar ke luar span, sisanya masuk span baru.
+  2. Mode Bawaan di tengah ketikan: browser menaruh huruf berikutnya kembali ke ujung span lama, karena kursor tepat di batas dua elemen.
+  3. Ctrl+B/I/U memicu perintah native `formatBold` dkk. Di blok kosong perintah itu tidak berefek, dan aplikasi tidak menangkapnya.
+  4. `toggleMark` membuat galat `setStartBefore` saat melepas format dari seluruh isi, karena `normalize()` membuang node yang masih dipakai range.
+- **Perbaikan:**
+  - `docs/notes/editor/warna.js` dan `sorotan.js`: `warnaIkutUjung()` dan `sorotIkutUjung()`. Keduanya bernilai true saat format lekat ada dan kursor di ujung span, atau saat mode Bawaan aktif. Dipakai di `events.js` sehingga karakter ditulis manual lewat jalur bungkus.
+  - `docs/notes/editor/events.js`: `beforeinput` menangkap `formatBold`, `formatItalic`, `formatUnderline`, dan `formatStrikeThrough`, lalu memanggil `toggleMark`, sama seperti tombol bilah. Termasuk `snap()` agar Ctrl+Z tetap bekerja.
+  - `docs/notes/editor/marks.js`: range dibuat sebelum `normalize()`.
+- **Dependensi:** tidak ada ID roadmap. Menyentuh jalur ketik umum, jadi dibatasi pada kondisi lekat, Bawaan, dan format native.
+- **Cara uji (browser Chromium, harness di luar repo, hasil nyata):**
+  - Ketik kalimat 75 karakter, DELAY 0 dan 80, mode warna, sorotan, Ctrl+B, Ctrl+I, tombol Tebal dan Miring bilah. Semua benar, tidak ada huruf hilang, spasi awal tetap ada.
+  - Alur Enter (`ENTER=1`): format tetap benar di blok baru.
+  - Bawaan di tengah ketikan, warna dan sorotan: `Awal biru satu hitam dua tiga`, dengan warna hanya pada "biru satu".
+  - Ctrl+B dan Ctrl+I pada teks yang diblok membungkus, lalu Ctrl+B kedua melepas. Ctrl+Z membatalkan miring. 4/4 lulus, tanpa galat JS.
+  - `warna-semua.mjs`: desktop 22/22 dan HP 22/22.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-ketik.log`).
+- **Catatan:**
+  - Pesan commit `7abe65a` menulis "37 modul ketik". Itu keliru. 37 adalah jumlah lolos dari salah satu tes. Yang benar: `npm test` exit 0.
+  - Tes ketik lengkap ada di `/home/user/unduh/a8-browser/` (di luar repo), bukan di `npm test`.
+  - Belum diuji: Ctrl+U dan Ctrl+Shift+X lewat keyboard. Tombol bilah untuk garis bawah dan coret belum diuji ulang di jalur `toggleMark` yang baru.
+  - Belum diverifikasi: apakah tombol bilah untuk melepas tebal pada seleksi penuh juga kena galat `setStartBefore` di versi sebelum perbaikan ini.
