@@ -1081,4 +1081,13 @@ export const JA = {
   "Templat kertas disimpan": "用紙テンプレートを保存しました",
   "Templat ini sudah tersimpan": "このテンプレートは保存済みです",
   "Templat kertas sudah penuh (maks 8)": "用紙テンプレートは上限（8件）です",
+  "Buka PDF": "PDFを開く",
+  "Halaman sebelumnya": "前のページ",
+  "Halaman berikutnya": "次のページ",
+  "Pas lebar": "幅に合わせる",
+  "Memuat PDF…": "PDFを読み込んでいます…",
+  "Peramban ini terlalu lama untuk menampilkan PDF. Perbarui peramban atau WebView.": "このブラウザは古すぎてPDFを表示できません。ブラウザまたはWebViewを更新してください。",
+  "PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.": "PDFを開けません。ファイルが壊れているか、パスワードで保護されている可能性があります。",
+  "PDF dilindungi kata sandi dan belum bisa dibuka.": "PDFはパスワードで保護されているため、まだ開けません。",
+  "Peramban ini tidak bisa menggambar PDF.": "このブラウザではPDFを描画できません。",
 };

@@ -2174,6 +2174,19 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
   color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
 .fl-info{flex:1;min-width:0}
 .fl-btn{flex:none;height:34px;padding:0 12px;font-size:12.5px}
+/* B1a: penampil PDF (lihat docs/notes/pdf/penampil.js). Overlay penuh di atas sketsa (z 230). */
+.pdfv{position:fixed;inset:0;z-index:230;background:var(--bg);display:flex;flex-direction:column;color:var(--text)}
+.pdfv-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;padding-top:calc(8px + env(safe-area-inset-top))}
+.pdfv-nama{flex:1 1 120px;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdfv-b{min-width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:18px;line-height:1;cursor:pointer}
+.pdfv-b:disabled{opacity:.4;cursor:default}
+.pdfv-teks{height:34px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:13px;cursor:pointer}
+.pdfv-hal,.pdfv-zoom{font-size:13px;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.pdfv-isi{flex:1;overflow:auto;padding:12px;background:#8a8a85;display:flex;flex-direction:column;align-items:center;-webkit-overflow-scrolling:touch}
+.pdfv-kanvas{display:block;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:none}
+.pdfv-info{color:#fff;font-size:14px;margin:auto;text-align:center;padding:16px}
+.pdfv-galat{background:var(--surface);color:var(--text);border-radius:12px;padding:16px 18px}
+
 
 /* #3 Kanvas Sketsa Layar Penuh & #14 Graf Interaktif Sentuh */
 .sketsa-modal{position:fixed;inset:0;z-index:220;background:rgba(0,0,0,.62);

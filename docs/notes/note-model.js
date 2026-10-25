@@ -28,9 +28,10 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261025051852';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261025051852';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025051852';
+import { t as tr } from '../core/i18n.js?v=20261025061829';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261025061829';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025061829';
+import { adalahPdf } from './pdf/logika.js?v=20261025061829';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -356,6 +357,7 @@ export function blockToHtml(b) {
     return `<div class="b-file" contenteditable="false" data-blob="${blobId}" data-name="${nama}" data-size="${uk}" data-mime="${mime}"${bid}${ref}${bgAttr}>` +
       `<span class="fl-ext">${escAttr(ekst)}</span>` +
       `<div class="fl-info"><div class="fl-name">${nama}</div><div class="fl-size">${ukuranTerbaca(uk)}</div></div>` +
+      `${adalahPdf(meta) ? `<button type="button" class="btn btn-sec fl-btn" data-file-buka>${tr('Buka PDF')}</button>` : ''}` +
       `<button type="button" class="btn btn-sec fl-btn" data-file-dl>${tr('Unduh')}</button>` +
       `<button type="button" class="bmk-act" data-file-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `${pegangan()}</div>`;

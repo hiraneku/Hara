@@ -6,8 +6,8 @@
    seleksi teks. Simpanan memakai urutan DOM, jadi urutan baru otomatis
    ikut tersimpan. */
 
-import { renumber } from './editor/blocks.js?v=20261025051852';
-import { saveSoon } from './editor/cleanup.js?v=20261025051852';
+import { renumber } from './editor/blocks.js?v=20261025061829';
+import { saveSoon } from './editor/cleanup.js?v=20261025061829';
 
 let aktif = null;
 

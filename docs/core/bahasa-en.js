@@ -1114,4 +1114,13 @@ export const EN = {
   "Templat kertas disimpan": "Paper template saved",
   "Templat ini sudah tersimpan": "This template is already saved",
   "Templat kertas sudah penuh (maks 8)": "Paper templates are full (max 8)",
+  "Buka PDF": "Open PDF",
+  "Halaman sebelumnya": "Previous page",
+  "Halaman berikutnya": "Next page",
+  "Pas lebar": "Fit width",
+  "Memuat PDF…": "Loading PDF…",
+  "Peramban ini terlalu lama untuk menampilkan PDF. Perbarui peramban atau WebView.": "This browser is too old to show PDFs. Update the browser or WebView.",
+  "PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.": "The PDF cannot be opened. The file may be damaged or password-protected.",
+  "PDF dilindungi kata sandi dan belum bisa dibuka.": "The PDF is password-protected and cannot be opened yet.",
+  "Peramban ini tidak bisa menggambar PDF.": "This browser cannot draw PDFs.",
 };
