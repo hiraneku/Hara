@@ -28,9 +28,9 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261025030052';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261025030052';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025030052';
+import { t as tr } from '../core/i18n.js?v=20261025043111';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261025043111';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025043111';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -131,6 +131,10 @@ export function makeBlock(patch = {}) {
 }
 
 /* Catatan baru yang selalu valid. */
+/* B7a: latar kertas catatan. 'polos' (tanpa latar) adalah bawaan dan tidak disimpan. */
+export const KERTAS_JENIS = ['titik', 'garis', 'grid'];
+export const kelasKertas = k => (KERTAS_JENIS.includes(k) ? `kertas-${k}` : '');
+
 export function makeNote(patch = {}) {
   const now = Date.now();
   const blocks = Array.isArray(patch.blocks) && patch.blocks.length
@@ -147,6 +151,8 @@ export function makeNote(patch = {}) {
       ? { tagsManual: patch.tagsManual.slice() } : {}),
     stickers: Array.isArray(patch.stickers) ? patch.stickers.map(s => ({ ...s })) : [],
     ...(patch.cover ? { cover: String(patch.cover) } : {}),
+    /* B7a: latar kertas. Polos (bawaan) tidak disimpan, sama seperti cover. */
+    ...(KERTAS_JENIS.includes(patch.kertas) ? { kertas: patch.kertas } : {}),
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,

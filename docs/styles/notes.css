@@ -649,6 +649,10 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 /* ════════ MODE BACA / TULIS ════════ */
 #mode{display:none}
 .ed.baca .ed-doc{outline:none;cursor:auto;-webkit-user-select:text;user-select:text}
+/* B7a: latar kertas per catatan (lihat docs/notes/kertas.js). Polos = tanpa kelas. */
+.ed-doc.kertas-titik{background-image:radial-gradient(circle,color-mix(in srgb,var(--faint) 60%,transparent) 1px,transparent 1.6px);background-size:22px 22px;background-position:0 0}
+.ed-doc.kertas-garis{background-image:linear-gradient(to bottom,transparent 27px,color-mix(in srgb,var(--border) 85%,transparent) 27px);background-size:100% 28px}
+.ed-doc.kertas-grid{background-image:linear-gradient(to right,color-mix(in srgb,var(--border) 80%,transparent) 1px,transparent 1px),linear-gradient(to bottom,color-mix(in srgb,var(--border) 80%,transparent) 1px,transparent 1px);background-size:22px 22px;background-position:0 0}
 .ed.baca .props{display:none}
 .ed.baca .blk-h{display:none!important}
 .ed.baca .ed-t{cursor:auto}

@@ -1057,4 +1057,8 @@ export const JA = {
   "Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.": "このノートの保存済みバージョンはまだありません。編集中は5分ごとに自動で記録され、30日間保存されます。",
   "Sematkan di bar": "バーにピン留め",
   "Maksimal {n} alat disematkan — lepas salah satu dulu.": "ピン留めできるのは{n}個までです。先に1つ外してください。",
+  "Latar kertas…": "用紙の背景…",
+  "Latar kertas catatan": "ノートの用紙背景",
+  "Grid": "グリッド",
+  "Latar kertas diperbarui": "用紙の背景を更新しました",
 };

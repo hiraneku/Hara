@@ -255,7 +255,42 @@
   - Batas 6 adalah keputusan awal. Bisa diubah jika terlalu sempit atau terlalu longgar.
 - **Status:** A9 *Implemented* untuk bar editor catatan. Sematan di bar sketsa belum ada.
 
+## Perubahan 9 — B7a Latar kertas catatan (langkah 1 dari 3)
+
+- **ID:** B7 (dikerjakan bertahap sesuai keputusan pengguna: cakupan (c)). Langkah ini: **B7a**, latar kertas per catatan.
+- **Alasan urutan:** §6.1 menempatkan B7 setelah A9. Verifikasi ulang kode: templat isi (Jurnal, Rapat, Belajar, dan templat tersimpan) sudah ada di `templat.js`, tetapi itu templat *isi*, bukan *kertas*. Latar titik, garis, dan polos hanya ada di sketsa. Halaman catatan biasa belum punya latar, dan grid serta Cornell belum ada.
+- **Dependensi:** model catatan (`note-model.js`, `makeNote`/`normalizeNote`) dan pola `cover` (sampul) yang sudah ada. Setter memakai `touch` dan `save` yang sama. Tidak ada dependensi ke A1–A9.
+- **Keputusan desain:**
+  - Latar disimpan per catatan sebagai `kertas` (`titik`, `garis`, `grid`). Polos adalah bawaan dan **tidak disimpan**, sehingga catatan lama tidak berubah.
+  - Latar hanya gambar CSS di `.ed-doc`. Isi blok tidak disentuh, dan pengubahan latar tidak menulis ulang blok.
+  - Aksi "Latar kertas…" ada di menu "···", dekat "Sampul catatan…". Pilihan aktif ditandai.
+  - Duplikasi catatan ikut menyalin latar. Templat isi tidak menyimpan latar (perilaku lama dipertahankan).
+- **Yang berubah:**
+  - `docs/notes/kertas.js` (baru): `setKertasCatatan`, `sinkronKertasDOM`, `bukaDialogKertasCatatan`.
+  - `docs/notes/note-model.js`: `KERTAS_JENIS`, `kelasKertas`, dan field `kertas` di `makeNote`.
+  - `docs/notes/views/editor.js`: class latar pada `.ed-doc` saat render.
+  - `docs/notes/menus/note-menu.js`: item "Latar kertas…".
+  - `docs/app.js`: aksi `kertas`.
+  - `docs/notes/model.js`: duplikasi menyalin `kertas`.
+  - `docs/styles/notes.css`: tiga aturan latar (`.ed-doc.kertas-titik`, `-garis`, `-grid`).
+  - `docs/core/bahasa-en.js`, `docs/core/bahasa-ja.js`: teks baru (4 kunci per bahasa).
+  - `tools/uji/catatan-kertas.mjs` (baru): 30 uji jsdom.
+  - Stempel `?v=` menjadi `20261025043111` (125 berkas).
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/catatan-kertas.mjs`: **30/30 lulus**. Mencakup model (polos tidak disimpan, jenis tak dikenal ditolak), setter (ubah, hapus, tolak, catatan tak ada, `updatedAt` berubah, isi blok tetap), editor (class ikut berubah tanpa muat ulang), normalisasi muat ulang, duplikasi, menu, dialog (4 pilihan, pilihan aktif, klik mengubah catatan), dan CSS.
+  - Uji mutasi (dipulihkan dan diverifikasi `cmp`): M1 `makeNote` membuang `kertas` → 25/30. M2 validasi jenis dihapus → 29/30. M3 class lama tidak dibersihkan → 28/30. M4 duplikasi tidak menyalin → 29/30. Semua tertangkap.
+  - **Browser** (Chromium headless, `b7a.mjs`, di luar repo): ketiga latar diterapkan (`kertas-titik`, `kertas-garis`, `kertas-grid`), `background-image` terhitung, tidak ada galat JS. Screenshot Grid dan Garis buku diperiksa: teks tetap terbaca di atas latar.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-b7a.log`), 79 berkas uji, 0 baris ✗, GAGAL, atau FAIL.
+- **Keterbatasan yang diketahui:**
+  - Pengujian di Chromium desktop dengan viewport ponsel, **bukan di HP sungguhan**.
+  - Jarak latar Garis buku (28 px) tidak selalu sejajar tepat dengan baris teks, karena tinggi baris bergantung pada ukuran huruf (`--tsx`). Penyelarasan penuh belum dikerjakan.
+  - Latar tidak ikut dicetak atau diekspor ke PDF (belum ditangani).
+  - Pilihan latar hanya dari menu "···". Belum ada tombol cepat di bar.
+  - Templat kertas buatan pengguna (spasi, warna, margin) belum ada. Itu B7c.
+  - Cornell belum ada. Itu B7b.
+- **Status:** B7 *Partially implemented*. B7a selesai. B7b (Cornell) dan B7c (templat kertas buatan pengguna) belum dikerjakan.
+
 ## Berikutnya
 
-- B7 Templat kertas kustom (urutan §6.1 setelah A9).
+- B7b Templat Cornell dan B7c templat kertas buatan pengguna (B7 bertahap, cakupan (c)). Tunggu persetujuan.
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

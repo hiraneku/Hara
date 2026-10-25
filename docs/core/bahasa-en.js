@@ -1090,4 +1090,8 @@ export const EN = {
   "Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.": "No versions saved for this note yet. Versions are saved automatically every 5 minutes while you edit, and kept for 30 days.",
   "Sematkan di bar": "Pin to bar",
   "Maksimal {n} alat disematkan — lepas salah satu dulu.": "Up to {n} tools can be pinned — unpin one first.",
+  "Latar kertas…": "Paper background…",
+  "Latar kertas catatan": "Note paper background",
+  "Grid": "Grid",
+  "Latar kertas diperbarui": "Paper background updated",
 };
