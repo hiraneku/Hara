@@ -1,21 +1,21 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20261025065303';
-import { setBlock, indent } from './blocks.js?v=20261025065303';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat } from './marks.js?v=20261025065303';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025065303';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025065303';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025065303';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025065303';
-import { onTitle } from '../model.js?v=20261025065303';
-import { tanganiPaste } from './paste.js?v=20261025065303';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025065303';
-import { bungkusWarnaPending, warnaPerluBungkus } from './warna.js?v=20261025065303';
-import { bungkusSorotanPending, sorotPerluBungkus } from './sorotan.js?v=20261025065303';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025065303';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261025065303';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025065303';
-import { toast } from '../../core/toast.js?v=20261025065303';
-import { t as tr } from '../../core/i18n.js?v=20261025065303';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable } from './caret.js?v=20261025071610';
+import { setBlock, indent } from './blocks.js?v=20261025071610';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark } from './marks.js?v=20261025071610';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025071610';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025071610';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025071610';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025071610';
+import { onTitle } from '../model.js?v=20261025071610';
+import { tanganiPaste } from './paste.js?v=20261025071610';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025071610';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung } from './warna.js?v=20261025071610';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung } from './sorotan.js?v=20261025071610';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025071610';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261025071610';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025071610';
+import { toast } from '../../core/toast.js?v=20261025071610';
+import { t as tr } from '../../core/i18n.js?v=20261025071610';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -111,6 +111,19 @@ export function bindEditor() {
 
   document.addEventListener('beforeinput',e=>{
     if(!inDoc(e.target)) return;
+    /* Ctrl+B / Ctrl+I / Ctrl+U / Ctrl+Shift+X: browser mengirim perintah
+       format NATIVE (formatBold dst). Di blok kosong perintah itu tidak
+       berefek, dan tidak lewat mekanik format aplikasi. Dialihkan ke
+       toggleMark — sama persis dengan tombol bilah. */
+    const FORMAT_NATIVE = { formatBold:'b', formatItalic:'i', formatUnderline:'u', formatStrikeThrough:'s' };
+    if(FORMAT_NATIVE[e.inputType]){
+      e.preventDefault();
+      if(isReplaying()) return;
+      snap();
+      toggleMark(FORMAT_NATIVE[e.inputType]);
+      refresh();
+      return;
+    }
     /* IME sedang mengompasisi: jangan sentuh DOM, biarkan browser/IME
        menangani teksnya (tag dirapikan setelah komposisi selesai) */
     if(sedangKomposisi()) return;
@@ -164,8 +177,12 @@ export function bindEditor() {
       const fontBungkus = fontPerluBungkus();
       const sorotBungkus = sorotPerluBungkus();
       const warnaBungkus = warnaPerluBungkus();
+      /* warna/sorotan lekat dengan caret di ujung span-nya: tulis manual ke
+         dalam span (browser bisa melempar karakter keluar span) */
+      const warnaIkut = warnaIkutUjung();
+      const sorotIkut = sorotIkutUjung();
 
-      if (markKeluar.length || tagUjung || fontBungkus || sorotBungkus || warnaBungkus) {
+      if (markKeluar.length || tagUjung || fontBungkus || sorotBungkus || warnaBungkus || warnaIkut || sorotIkut) {
         e.preventDefault();
         /* Bungkus dulu — untuk "Bawaan" fungsi mengembalikan null, itu
            wajar: ia hanya memecah keluar dari span, karakternya tetap

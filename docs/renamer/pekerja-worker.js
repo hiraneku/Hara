@@ -1,5 +1,5 @@
 /* Web Worker K29 — menjalankan runPipeline di luar thread UI. */
-import { runPipeline } from './engine.js?v=20261025065303';
+import { runPipeline } from './engine.js?v=20261025071610';
 
 self.onmessage = (e) => {
   const { id, items, rules, options } = e.data || {};

@@ -16,9 +16,9 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025065303';
-import { refresh } from './cleanup.js?v=20261025065303';
-import { normalizeWarna } from './warna.js?v=20261025065303';
+import { docEl, sel, curBlock } from './caret.js?v=20261025071610';
+import { refresh } from './cleanup.js?v=20261025071610';
+import { normalizeWarna } from './warna.js?v=20261025071610';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -78,6 +78,18 @@ export function sorotPerluBungkus() {
   if (_modeBawaan) return !!host;
   if (!_lekat) return false;
   return !host || host.getAttribute('data-sorotan') !== _lekat;
+}
+
+/* Caret di ujung span sorotan yang LEKAT (dan bukan mode Bawaan): karakter
+   berikutnya ditulis manual ke dalam span — lihat warnaIkutUjung(). */
+export function sorotIkutUjung() {
+  /* mode Bawaan: setiap karakter ditulis manual — lihat warnaIkutUjung() */
+  if (_modeBawaan) return true;
+  if (!_lekat) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = sorotAround(s.getRangeAt(0).startContainer);
+  return !!host && host.getAttribute('data-sorotan') === _lekat;
 }
 
 /* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai

@@ -14,8 +14,8 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025065303';
-import { refresh } from './cleanup.js?v=20261025065303';
+import { docEl, sel, curBlock } from './caret.js?v=20261025071610';
+import { refresh } from './cleanup.js?v=20261025071610';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -149,6 +149,22 @@ export function warnaPerluBungkus() {
   if (_modeBawaan) return !!host;
   if (!_lekat) return false;
   return !host || host.getAttribute('data-warna') !== _lekat;
+}
+
+/* Caret di ujung span warna yang LEKAT (dan bukan mode Bawaan): karakter
+   berikutnya harus ditulis manual ke dalam span. Browser kalau dibiarkan
+   sering melempar teks ke LUAR span di batas akhir elemen inline — akibatnya
+   huruf pertama hilang dari warna dan baru masuk sesudah karakter kedua. */
+export function warnaIkutUjung() {
+  /* Mode Bawaan: setiap karakter ditulis manual juga — browser bisa menaruh
+     huruf berikutnya kembali ke ujung span yang baru ditinggalkan (kursor
+     tepat di batas dua elemen). Pecah-keluarnya dilakukan oleh jalur manual. */
+  if (_modeBawaan) return true;
+  if (!_lekat) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = warnaAround(s.getRangeAt(0).startContainer);
+  return !!host && host.getAttribute('data-warna') === _lekat;
 }
 
 /* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai

@@ -1,7 +1,7 @@
 /* Format inline: tebal, miring, coret, sorot, kode inline.
    `pending` = niat format yang menyala tapi belum diketik. */
-import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025065303';
-import { refresh } from './cleanup.js?v=20261025065303';
+import { docEl, sel, curBlock, ensureCaret } from './caret.js?v=20261025071610';
+import { refresh } from './cleanup.js?v=20261025071610';
 
 export const MARKSEL = { b:'b,strong', i:'i,em', u:'u', s:'s,strike', hl:'.hl', code:'code.ic' };
 export const MARKTAG = { b:'b', i:'i', u:'u', s:'s', hl:'span', code:'code' };
@@ -102,12 +102,12 @@ export function toggleMark(m){
   if(on && whole){                       // seluruh isi mark terpilih -> buka
     const kids=Array.from(host.childNodes), par=host.parentNode;
     kids.forEach(k=>par.insertBefore(k,host));
+    /* Range dibuat SEBELUM normalize: normalize menggabung node teks dan
+       bisa membuang kids[0]; range hidup ikut tergeser oleh normalize. */
+    const nr=document.createRange();
+    if(kids.length){ nr.setStartBefore(kids[0]); nr.setEndAfter(kids[kids.length-1]); }
     host.remove(); par.normalize();
-    if(kids.length){
-      const nr=document.createRange();
-      nr.setStartBefore(kids[0]); nr.setEndAfter(kids[kids.length-1]);
-      sel().removeAllRanges(); sel().addRange(nr);
-    }
+    if(kids.length){ sel().removeAllRanges(); sel().addRange(nr); }
   } else {
     const frag=r.extractContents();
     unwrapAll(frag,m);
