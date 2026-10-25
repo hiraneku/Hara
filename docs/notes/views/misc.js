@@ -1,19 +1,20 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261025102350';
-import { esc, stamp } from '../../core/dom.js?v=20261025102350';
-import { rowFor } from './row.js?v=20261025102350';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261025102350';
-import { AK, akSekarang } from '../../core/theme.js?v=20261025102350';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261025102350';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261025102350';
-import { terlihat } from '../kunci.js?v=20261025102350';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261025102350';
-import { petaNamaRuang } from '../ruang.js?v=20261025102350';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261025102350';
-import { namaSekarang } from '../../home/nama.js?v=20261025102350';
-import { renderSimpanSaringanHtml } from '../saringan.js?v=20261025102350';
+import { state } from '../../core/store.js?v=20261025154950';
+import { logAktif } from '../log-ketik.js?v=20261025154950';
+import { esc, stamp } from '../../core/dom.js?v=20261025154950';
+import { rowFor } from './row.js?v=20261025154950';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261025154950';
+import { AK, akSekarang } from '../../core/theme.js?v=20261025154950';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261025154950';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261025154950';
+import { terlihat } from '../kunci.js?v=20261025154950';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261025154950';
+import { petaNamaRuang } from '../ruang.js?v=20261025154950';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261025154950';
+import { namaSekarang } from '../../home/nama.js?v=20261025154950';
+import { renderSimpanSaringanHtml } from '../saringan.js?v=20261025154950';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -248,6 +249,12 @@ set:()=>{ const akPilih = akSekarang() || '';
     <div class="row"><div class="row-b"><div class="row-t">${tr('Pembaruan aplikasi')}</div>
       <div class="row-s">${tr('Cek versi terbaru dari GitHub')}</div></div>
       <button type="button" class="btn btn-sec" data-cek-pembaruan>${tr('Cek sekarang')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Log ketik (diagnosis)')}</div>
+      <div class="row-s">${tr('Catat urutan tombol di editor. Hanya di perangkat ini, berisi teks yang kamu ketik.')}</div></div>
+      <button class="sw${logAktif() ? ' on' : ''}" data-log-ketik role="switch" aria-checked="${logAktif()}"><span></span></button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Lihat log ketik')}</div>
+      <div class="row-s">${tr('Buka isi log untuk disalin dan dikirim lewat chat')}</div></div>
+      <button type="button" class="btn btn-sec" data-log-lihat>${tr('Lihat')}</button></div>
   </div>
   <div class="sec"><h2>${tr('Tampilan')}</h2></div>
   <div class="card" style="margin-bottom:24px">

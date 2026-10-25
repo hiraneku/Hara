@@ -176,3 +176,16 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Regresi (`/home/user/uji-ime/regresi.mjs`), hasil sama sebelum dan sesudah: IME "halo" + spasi + IME "dunia" berwarna penuh; IME di tengah teks "Aw[xy]al"; tebal lewat IME "<b>halo</b>"; spasi dulu lalu warna dan IME.
   - `npm test` penuh: exit 0, 37/37 di `kondisi-tepi`.
 - **Belum terbukti:** urutan event keyboard Opera sebenarnya di HP belum dicatat. Tiruan di atas memodelkan dua kemungkinan (data kosong dan caret elemen). Perlu konfirmasi dari HP.
+
+## Alat diagnosis · Log ketik (Pengaturan → Aplikasi)
+
+- **Alasan:** keluhan "huruf pertama tidak berwarna" di HP (Opera) tidak bisa direproduksi di Chromium sandbox. Perbaikan sebelumnya (`243ca3f`) memakai urutan event tiruan dan belum terbukti di perangkat. Yang dibutuhkan adalah urutan event asli dari HP.
+- **Apa:** saklar "Log ketik (diagnosis)" dan tombol "Lihat". Saat saklar aktif, setiap event keyboard di editor (keydown, keyup, beforeinput, input, composition\*) dicatat bersama isi editor setelah `input` dan `compositionend`. Log disimpan di memori (maks 600 baris) dan di localStorage hanya untuk saklar. Log dapat disalin dari jendela yang dibuka tombol "Lihat".
+- **Privasi:** log berisi teks yang diketik. Tidak dikirim ke mana pun. Saklar mati secara default dan mati lagi kalau dimatikan.
+- **File:** `docs/notes/log-ketik.js` (baru), `docs/notes/index.js` (sambungan klik), `docs/notes/views/misc.js` (dua baris di kartu Aplikasi).
+- **Cara uji (Chromium headless, hasil nyata, `/home/user/uji-ime/log-uji.mjs`):**
+  - Saklar dari Pengaturan: aktif setelah klik, localStorage `1`.
+  - Catatan kosong, warna aktif, IME "halo": log berisi urutan `compositionstart → compositionupdate → beforeinput → input → compositionend data="halo"` dan isi editor berwarna.
+  - Jendela "Lihat": menampilkan isi log.
+  - Setelah saklar dimatikan dan mengetik "xyz": jumlah baris log tidak bertambah (34 sebelum dan sesudah).
+  - Galat JS: tidak ada.

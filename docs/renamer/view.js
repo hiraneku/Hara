@@ -4,14 +4,14 @@
  * Desain bersih, proporsional, lurus (tidak miring), dan nyaman untuk jempol.
  */
 
-import { esc } from '../core/dom.js?v=20261025102350';
-import { t as tr } from '../core/i18n.js?v=20261025102350';
+import { esc } from '../core/dom.js?v=20261025154950';
+import { t as tr } from '../core/i18n.js?v=20261025154950';
 import {
   RULE_TYPES,
   RULE_METADATA,
   FILE_STATUS,
   formatFileSize,
-} from './model.js?v=20261025102350';
+} from './model.js?v=20261025154950';
 
 export function renderRuleInputs(rule) {
   const p = rule.params || {};

@@ -8,7 +8,7 @@
  * Modul ini murni logika (tanpa DOM) supaya bisa diuji di Node.
  */
 
-import { GAYA_GORESAN } from './goresan.js?v=20261025102350';
+import { GAYA_GORESAN } from './goresan.js?v=20261025154950';
 
 export const KUNCI_PRESET = 'hara.pena.v1';
 export const MAKS_PRESET_KUSTOM = 8;
