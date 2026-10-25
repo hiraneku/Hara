@@ -317,7 +317,48 @@
   - Cetak atau ekspor PDF belum diuji.
 - **Status:** B7 *Partially implemented*. B7a dan B7b selesai. B7c (templat kertas buatan pengguna) belum dikerjakan.
 
+## Perubahan 11 — B7c Templat kertas kustom (langkah 3 dari 3)
+
+- **ID:** B7 (cakupan (c), dikerjakan bertahap). Langkah ini: **B7c**, templat kertas buatan sendiri dengan pengaturan spasi, warna, dan margin. Disetujui pengguna: "Untuk B7b dan B7c ya setuju".
+- **Alasan urutan:** dikerjakan setelah B7a (model `kertas` dan dialog) dan B7b (Cornell), karena B7c memperluas model dan dialog B7a.
+- **Dependensi:** B7a (`kertas.js`, `KERTAS_JENIS`, class `.ed-doc`). Tidak ada dependensi ke A1–A9 atau B7b.
+- **Keputusan desain (diputuskan agen, perlu dicek pengguna):**
+  - Pola tetap titik, garis buku, atau grid. Templat kustom adalah pola + pengaturan, bukan jenis latar baru yang terpisah.
+  - Spasi 16–48 px (langkah 2 px, bawaan 28 px sama dengan Garis buku).
+  - Warna dari lima pilihan tetap (abu-abu, biru, hijau, merah, cokelat). Nilai hex hanya dari daftar tetap, jadi aman masuk ke CSS.
+  - Margin: Tanpa, Sempit (48 px), Sedang (72 px), Lebar (96 px). Margin menggeser teks ke kanan lewat padding kiri, lalu menggambar garis tipis. Teks tidak tertimpa garis.
+  - Data per catatan: `kertas: 'kustom'` dan `kertasAtur: {pola, spasi, warna, margin}`. Pengaturan hanya disimpan bila valid. Pengaturan dibersihkan saat catatan diganti ke jenis lain.
+  - Templat yang dipakai ulang disimpan di localStorage `hara.kertas.v1`, maksimal 8, tanpa duplikat. Pola ini sama dengan preset kustom pena (A3).
+- **Yang berubah:**
+  - `docs/notes/note-model.js`: `KERTAS_POLA`, `KERTAS_JENIS` (+ `kustom`), `KERTAS_SPASI`, `KERTAS_WARNA`, `KERTAS_MARGIN`, `sanitasiAturKertas`, `kelasKertasNote`, `variabelKertasNote`, `gayaKertasNote`, dan field `kertasAtur` di `makeNote`.
+  - `docs/notes/kertas.js`: `setKertasCatatan(id, jenis, atur)`, `sinkronKertasDOM` (kelas dan variabel `--kt-*`), `muatTemplatKertas`, `simpanTemplatKertas`, dialog dengan mode daftar dan form, penangkap klik dan isian yang dipasang ulang setiap dialog dibuka.
+  - `docs/notes/views/editor.js`: kelas dan `style` inline dari model.
+  - `docs/notes/model.js`: duplikasi ikut menyalin `kertasAtur`.
+  - `docs/styles/notes.css`: aturan `.ed-doc.kertas-kustom-{titik,garis,grid}`, `.kertas-kustom-margin`, dan gaya dialog `.kt-*`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 18 kunci baru per bahasa (kunci yang sudah ada dipakai ulang).
+  - `tools/uji/kertas-kustom.mjs` (baru): 69 uji jsdom.
+  - Stempel `?v=` menjadi `20261025051852` (125 berkas). Perubahan non-stempel hanya di tujuh berkas di atas dan berkas uji baru.
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/kertas-kustom.mjs`: **69/69 lulus**. Mencakup sanitasi (pola, spasi dijepit 16–48, warna dan margin dari daftar), makeNote, kelas dan variabel CSS, setter, editor (tanpa muat ulang), templat tersimpan (duplikat, maks 8, entri rusak, data tidak terbaca), dialog (4 preset tetap, tombol Templat kustom, form, Pakai, Simpan, Kembali, templat tersimpan bisa dipakai), muat ulang, duplikasi, dan CSS.
+  - Uji mutasi (tiap berkas dipulihkan dan diverifikasi dengan `cmp` atau perbandingan isi): M1 spasi tidak dijepit → 67/69. M2 makeNote membuang pengaturan → 63/69. M3 kelas margin hilang → 66/69. M4 duplikasi tidak menyalin pengaturan → 68/69. M5 isian spasi tidak masuk draft → 62/69. M6 sinkron tidak memasang variabel → 68/69. M7 duplikat templat diterima → 67/69. M8 batas templat tidak berlaku → 68/69. M9 garis margin tanpa posisi → 68/69. M10 ganti pola tidak membersihkan pengaturan → 68/69. **Semua 10 tertangkap.** Setelah pemulihan: 69/69.
+  - Regresi B7a: `catatan-kertas.mjs` **30/30**. B7b: `templat-cornell.mjs` **19/19**. Bahasa: `bahasa.mjs` **41/41** (paritas EN dan JA).
+  - **Browser** (Chromium headless, `b7c.mjs` di luar repo, viewport 390×700): tiga contoh kustom diterapkan tanpa galat JS. Variabel `--kt-*` terpasang inline. Gradasi terhitung (`background-size` 28px, 20px, 40px). Garis margin di 72 px dan padding kiri 84 px (`72 + 12`). Screenshot `b7c-garis-margin.png`, `b7c-grid.png`, `b7c-titik-lebar.png`, dan `b7c-dialog.png` diperiksa: garis margin tampil dan teks mulai di kanannya. Form dialog menampilkan pola, spasi, lima warna, margin, dan tiga tombol.
+  - `node tools/version.mjs`: stempel `20261025051852`.
+  - `npm test` penuh: **exit 0** (`/tmp/npmtest-b7c.log`), 81 berkas uji (termasuk `kertas-kustom`), 0 baris GAGAL, ✗, atau FAIL.
+- **Keterbatasan yang diketahui:**
+  - Templat tersimpan belum bisa dihapus. Batas 8 sudah berlaku. Menghapus atau mengganti nama templat belum tersedia.
+  - Garis Garis buku dan Kustom garis memakai spasi yang sama dengan latar. Tinggi baris teks tidak selalu sejajar dengan garis (sama seperti B7a).
+  - Margin hanya mengubah ruang kiri catatan. Belum ada margin atas atau bawah.
+  - Latar kustom belum dicetak atau diekspor ke PDF (belum diuji).
+  - Pengujian browser di Chromium desktop dengan viewport ponsel, **bukan di HP sungguhan**.
+- **Status:** B7 *Implemented (dengan keterbatasan di atas)*. B7a, B7b, dan B7c selesai.
+
+## Status Tahap 1
+
+Semua ID Tahap 1 sudah dikerjakan dan dipush: A1, A2, A6, A7, A3, A4, A5, A8, A9, dan B7 (B7a, B7b, B7c). Setiap bagian di atas mencantumkan ID, alasan urutan, dependensi, file, dan hasil uji.
+
 ## Berikutnya
 
-- B7c: templat kertas buatan pengguna (spasi, warna, margin). Cakupan (c) sudah disetujui, dikerjakan dengan pola yang sama (uji, mutasi, `npm test`, commit terpisah).
+- Tahap 2 menurut urutan §6.1: B1, B5, B3, B4, B2, B6, B8. Belum dimulai. Tunggu persetujuan pengguna per ID, seperti tahap sebelumnya.
+- Hal terbuka dari Tahap 1: URL Worker di `docs/musik/ekspor.js` dan `docs/renamer/pekerja.js` belum diperbarui `version.mjs`. Status B8 belum konsisten. Status "Partially implemented" A6 dan A7 belum diverifikasi. Uji heksagon A4 belum di-assert. Uji visual kuas, pensil, bentuk, dan layer belum ada. Belum ada uji di perangkat Android.
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

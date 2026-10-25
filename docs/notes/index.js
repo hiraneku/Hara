@@ -1,77 +1,77 @@
 /* Modul Catatan — mendaftarkan diri ke core.
    Pola yang sama nanti dipakai tools/reminder dan tools/tasks. */
-import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20261025050736';
-import { notesView, pasangMuatLebih, tambahBatasDaftar } from './views/list.js?v=20261025050736';
-import { berandaView } from '../home/beranda.js?v=20261025050736';
-import { editorView } from './views/editor.js?v=20261025050736';
+import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20261025051852';
+import { notesView, pasangMuatLebih, tambahBatasDaftar } from './views/list.js?v=20261025051852';
+import { berandaView } from '../home/beranda.js?v=20261025051852';
+import { editorView } from './views/editor.js?v=20261025051852';
 import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar,
-         setKueriCari } from './views/misc.js?v=20261025050736';
-import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar } from './views/tugas.js?v=20261025050736';
-import { bindEditor } from './editor/events.js?v=20261025050736';
-import { renderBar }  from './bar/render.js?v=20261025050736';
-import { pasangPerilakuBar, kembalikanBarKeAwal } from './bar/perilaku.js?v=20261025050736';
-import { bindPop, closeAll, openPop } from './menus/pop.js?v=20261025050736';
+         setKueriCari } from './views/misc.js?v=20261025051852';
+import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar } from './views/tugas.js?v=20261025051852';
+import { bindEditor } from './editor/events.js?v=20261025051852';
+import { renderBar }  from './bar/render.js?v=20261025051852';
+import { pasangPerilakuBar, kembalikanBarKeAwal } from './bar/perilaku.js?v=20261025051852';
+import { bindPop, closeAll, openPop } from './menus/pop.js?v=20261025051852';
 import { saveNow, updateCount, syncBtns, bacaEditor, tulisKeCatatan, saveSoon }
-  from './editor/cleanup.js?v=20261025050736';
+  from './editor/cleanup.js?v=20261025051852';
 import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang,
          adaPerubahanTertunda }
-  from '../core/autosave.js?v=20261025050736';
-import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20261025050736';
-import { toast } from '../core/toast.js?v=20261025050736';
-import { esc } from '../core/dom.js?v=20261025050736';
-import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20261025050736';
-import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20261025050736';
-import { pending, sticky, mati } from './editor/marks.js?v=20261025050736';
-import { docEl, caretEnd } from './editor/caret.js?v=20261025050736';
-import { resetHistory, pulihkanRiwayat } from './editor/history.js?v=20261025050736';
-import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20261025050736';
-import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20261025050736';
-import { BISA_SEMBUNYI, MAKS_SEMATAN, prefs, tersembunyi, tersemat, toggleTampil, toggleSematan, setGetar } from './bar/prefs.js?v=20261025050736';
-import { renderBar as gambarBar } from './bar/render.js?v=20261025050736';
-import { state, sinkronWelcome } from '../core/store.js?v=20261025050736';
-import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20261025050736';
+  from '../core/autosave.js?v=20261025051852';
+import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20261025051852';
+import { toast } from '../core/toast.js?v=20261025051852';
+import { esc } from '../core/dom.js?v=20261025051852';
+import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20261025051852';
+import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20261025051852';
+import { pending, sticky, mati } from './editor/marks.js?v=20261025051852';
+import { docEl, caretEnd } from './editor/caret.js?v=20261025051852';
+import { resetHistory, pulihkanRiwayat } from './editor/history.js?v=20261025051852';
+import { pasangGambar, hapusGambar, bersihkanBlobYatim, pasangThumbDaftar } from './editor/image.js?v=20261025051852';
+import { bebaskanUrl, pakaiRuang, ukuranTerbaca } from '../core/blobs.js?v=20261025051852';
+import { BISA_SEMBUNYI, MAKS_SEMATAN, prefs, tersembunyi, tersemat, toggleTampil, toggleSematan, setGetar } from './bar/prefs.js?v=20261025051852';
+import { renderBar as gambarBar } from './bar/render.js?v=20261025051852';
+import { state, sinkronWelcome } from '../core/store.js?v=20261025051852';
+import { labelMode, toggle as toggleTema, setAk } from '../core/theme.js?v=20261025051852';
 import { purgeSampahOtomatis, pulihkanSampah, hapusPermanen, buatNoteBerjudul, openNote,
          sematDariList, hapusNoteDariList, arsipNoteId }
-  from './model.js?v=20261025050736';
-import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20261025050736';
+  from './model.js?v=20261025051852';
+import { toggleModeBaca, sinkronModeBaca, modeBacaBerlaku } from './mode-baca.js?v=20261025051852';
 import { bindBacaPlus, terapkanUkuranLayar, tutupCari, matikanZen }
-  from './baca-plus.js?v=20261025050736';
-import { bindDaftarIsi } from './daftar-isi.js?v=20261025050736';
-import { bindCariGanti } from './cari-ganti.js?v=20261025050736';
-import { bindSaringan } from './saringan.js?v=20261025050736';
-import { bindKilasBalik } from './kilas-balik.js?v=20261025050736';
-import { bindLipatBagian } from './lipat-bagian.js?v=20261025050736';
-import { setUrut, menuUrut, namaUrut } from './urut.js?v=20261025050736';
-import { bukaJurnalHari } from './harian.js?v=20261025050736';
-import { layarKunciView, bindKunci, punyaKunci } from './kunci.js?v=20261025050736';
-import { bindSwipe } from './swipe.js?v=20261025050736';
-import { bindPilih } from './pilih.js?v=20261025050736';
-import { bindBilahTeks } from './editor/bilah-teks.js?v=20261025050736';
-import { bindBlokModern, tampilkanPillWikilink, pasangAudio } from './editor/blok-modern.js?v=20261025050736';
-import { bindBlokGenerasiBaru } from './editor/blok-generasi-baru.js?v=20261025050736';
+  from './baca-plus.js?v=20261025051852';
+import { bindDaftarIsi } from './daftar-isi.js?v=20261025051852';
+import { bindCariGanti } from './cari-ganti.js?v=20261025051852';
+import { bindSaringan } from './saringan.js?v=20261025051852';
+import { bindKilasBalik } from './kilas-balik.js?v=20261025051852';
+import { bindLipatBagian } from './lipat-bagian.js?v=20261025051852';
+import { setUrut, menuUrut, namaUrut } from './urut.js?v=20261025051852';
+import { bukaJurnalHari } from './harian.js?v=20261025051852';
+import { layarKunciView, bindKunci, punyaKunci } from './kunci.js?v=20261025051852';
+import { bindSwipe } from './swipe.js?v=20261025051852';
+import { bindPilih } from './pilih.js?v=20261025051852';
+import { bindBilahTeks } from './editor/bilah-teks.js?v=20261025051852';
+import { bindBlokModern, tampilkanPillWikilink, pasangAudio } from './editor/blok-modern.js?v=20261025051852';
+import { bindBlokGenerasiBaru } from './editor/blok-generasi-baru.js?v=20261025051852';
 import {
   bindNavigasiFokus, pulihkanPosisiGulir, perbaruiGarisProgresBaca, terapkanFokusDOM, sinkronSampulDOM,
-} from './navigasi-fokus.js?v=20261025050736';
-import { bindHamoji } from './hamoji.js?v=20261025050736';
-import { pasangPratinjauTautan } from './pratinjau-tautan.js?v=20261025050736';
-import { setRuangAktif, tambahRuang, hapusRuang, toggleModeTampilDaftar } from './ruang.js?v=20261025050736';
-import { bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih, bukaTabelProperti } from './fitur-lanjutan-ui.js?v=20261025050736';
-import { bukaStatistik } from './statistik-ui.js?v=20261025050736';
-import { bindTagWarna } from './tagwarna.js?v=20261025050736';
-import { bindGaleri } from './galeri.js?v=20261025050736';
-import { menuTemplat, terapkanTemplat, hapusTemplat, formIsianTemplat } from './templat.js?v=20261025050736';
-import { pasangSeret } from './drag.js?v=20261025050736';
-import { muatPanels, tautkanSebutan, setLangkahGraf } from './panels.js?v=20261025050736';
-import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20261025050736';
-import { setTag, stt } from './views/data.js?v=20261025050736';
-import { simpanRiwayat, hapusRiwayat } from './cari.js?v=20261025050736';
-import { aturMutu, opsiMutu } from './mutu-gambar.js?v=20261025050736';
-import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20261025050736';
-import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20261025050736';
-import { t as tr, setBahasa, terjemahStatis } from '../core/i18n.js?v=20261025050736';
+} from './navigasi-fokus.js?v=20261025051852';
+import { bindHamoji } from './hamoji.js?v=20261025051852';
+import { pasangPratinjauTautan } from './pratinjau-tautan.js?v=20261025051852';
+import { setRuangAktif, tambahRuang, hapusRuang, toggleModeTampilDaftar } from './ruang.js?v=20261025051852';
+import { bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih, bukaTabelProperti } from './fitur-lanjutan-ui.js?v=20261025051852';
+import { bukaStatistik } from './statistik-ui.js?v=20261025051852';
+import { bindTagWarna } from './tagwarna.js?v=20261025051852';
+import { bindGaleri } from './galeri.js?v=20261025051852';
+import { menuTemplat, terapkanTemplat, hapusTemplat, formIsianTemplat } from './templat.js?v=20261025051852';
+import { pasangSeret } from './drag.js?v=20261025051852';
+import { muatPanels, tautkanSebutan, setLangkahGraf } from './panels.js?v=20261025051852';
+import { bindTataGambar, bersihkanPilihanGambar } from './tata-gambar.js?v=20261025051852';
+import { setTag, stt } from './views/data.js?v=20261025051852';
+import { simpanRiwayat, hapusRiwayat } from './cari.js?v=20261025051852';
+import { aturMutu, opsiMutu } from './mutu-gambar.js?v=20261025051852';
+import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20261025051852';
+import { cariJudul, judulSpan, tandaiTautan } from './wikilink.js?v=20261025051852';
+import { t as tr, setBahasa, terjemahStatis } from '../core/i18n.js?v=20261025051852';
 import { cadanganJson, eksporSemuaMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
-  from './data-io.js?v=20261025050736';
+  from './data-io.js?v=20261025051852';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {

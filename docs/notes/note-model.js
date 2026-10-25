@@ -28,9 +28,9 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261025050736';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261025050736';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025050736';
+import { t as tr } from '../core/i18n.js?v=20261025051852';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261025051852';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261025051852';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -131,9 +131,57 @@ export function makeBlock(patch = {}) {
 }
 
 /* Catatan baru yang selalu valid. */
-/* B7a: latar kertas catatan. 'polos' (tanpa latar) adalah bawaan dan tidak disimpan. */
-export const KERTAS_JENIS = ['titik', 'garis', 'grid'];
-export const kelasKertas = k => (KERTAS_JENIS.includes(k) ? `kertas-${k}` : '');
+/* B7a: latar kertas catatan. 'polos' (tanpa latar) adalah bawaan dan tidak disimpan.
+   B7c: 'kustom' = salah satu pola (titik/garis/grid) dengan spasi, warna, dan margin
+   sendiri. Pengaturannya disimpan di `kertasAtur`, hanya bila kertas === 'kustom'.
+   Warna dan margin hanya boleh dari daftar tetap di bawah (nilai ini masuk ke CSS). */
+export const KERTAS_POLA = ['titik', 'garis', 'grid'];
+export const KERTAS_JENIS = [...KERTAS_POLA, 'kustom'];
+export const KERTAS_SPASI = { min: 16, max: 48, bawaan: 28 };
+export const KERTAS_WARNA = { abu: '#8b9099', biru: '#4a7bd0', hijau: '#4f9a6a', merah: '#d0554f', coklat: '#9a7450' };
+export const KERTAS_MARGIN = [0, 48, 72, 96];
+export const kelasKertas = k => (KERTAS_POLA.includes(k) ? `kertas-${k}` : '');
+
+/* Membersihkan pengaturan kustom. Spasi di luar batas dijepit, warna/margin tak dikenal
+   memakai bawaan. Mengembalikan null bila bukan objek atau pola tidak dikenal. */
+export function sanitasiAturKertas(a) {
+  if (!a || typeof a !== 'object' || !KERTAS_POLA.includes(a.pola)) return null;
+  const s = Math.round(Number(a.spasi));
+  const spasi = Number.isFinite(s)
+    ? Math.min(KERTAS_SPASI.max, Math.max(KERTAS_SPASI.min, s)) : KERTAS_SPASI.bawaan;
+  const warna = Object.prototype.hasOwnProperty.call(KERTAS_WARNA, a.warna) ? a.warna : 'abu';
+  const m = Number(a.margin);
+  const margin = KERTAS_MARGIN.includes(m) ? m : 0;
+  return { pola: a.pola, spasi, warna, margin };
+}
+
+/* Kelas CSS latar catatan: B7a (titik/garis/grid) dan B7c (kustom). Teks kosong = polos. */
+export function kelasKertasNote(n) {
+  if (!n || !KERTAS_JENIS.includes(n.kertas)) return '';
+  if (n.kertas !== 'kustom') return kelasKertas(n.kertas);
+  const a = sanitasiAturKertas(n.kertasAtur);
+  if (!a) return '';
+  return ['kertas-kustom', `kertas-kustom-${a.pola}`, a.margin ? 'kertas-kustom-margin' : '']
+    .filter(Boolean).join(' ');
+}
+
+/* Variabel CSS (--kt-*) untuk latar kustom; null bila bukan kustom. */
+export function variabelKertasNote(n) {
+  if (!n || n.kertas !== 'kustom') return null;
+  const a = sanitasiAturKertas(n.kertasAtur);
+  if (!a) return null;
+  return {
+    '--kt-spasi': `${a.spasi}px`,
+    '--kt-warna': KERTAS_WARNA[a.warna],
+    '--kt-margin': `${a.margin}px`,
+  };
+}
+
+/* Atribut style untuk .ed-doc. Nilainya selalu dari daftar tetap, jadi aman ditulis apa adanya. */
+export function gayaKertasNote(n) {
+  const v = variabelKertasNote(n);
+  return v ? Object.entries(v).map(([k, x]) => `${k}:${x}`).join(';') : '';
+}
 
 export function makeNote(patch = {}) {
   const now = Date.now();
@@ -151,8 +199,11 @@ export function makeNote(patch = {}) {
       ? { tagsManual: patch.tagsManual.slice() } : {}),
     stickers: Array.isArray(patch.stickers) ? patch.stickers.map(s => ({ ...s })) : [],
     ...(patch.cover ? { cover: String(patch.cover) } : {}),
-    /* B7a: latar kertas. Polos (bawaan) tidak disimpan, sama seperti cover. */
-    ...(KERTAS_JENIS.includes(patch.kertas) ? { kertas: patch.kertas } : {}),
+    /* B7a/B7c: latar kertas. Polos (bawaan) tidak disimpan, sama seperti cover.
+       'kustom' hanya disimpan bila pengaturannya valid. */
+    ...(patch.kertas === 'kustom' && sanitasiAturKertas(patch.kertasAtur)
+      ? { kertas: 'kustom', kertasAtur: sanitasiAturKertas(patch.kertasAtur) }
+      : KERTAS_POLA.includes(patch.kertas) ? { kertas: patch.kertas } : {}),
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,

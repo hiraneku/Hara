@@ -16,9 +16,9 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261025050736';
-import { refresh } from './cleanup.js?v=20261025050736';
-import { normalizeWarna } from './warna.js?v=20261025050736';
+import { docEl, sel, curBlock } from './caret.js?v=20261025051852';
+import { refresh } from './cleanup.js?v=20261025051852';
+import { normalizeWarna } from './warna.js?v=20261025051852';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {

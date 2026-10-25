@@ -653,6 +653,21 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .ed-doc.kertas-titik{background-image:radial-gradient(circle,color-mix(in srgb,var(--faint) 60%,transparent) 1px,transparent 1.6px);background-size:22px 22px;background-position:0 0}
 .ed-doc.kertas-garis{background-image:linear-gradient(to bottom,transparent 27px,color-mix(in srgb,var(--border) 85%,transparent) 27px);background-size:100% 28px}
 .ed-doc.kertas-grid{background-image:linear-gradient(to right,color-mix(in srgb,var(--border) 80%,transparent) 1px,transparent 1px),linear-gradient(to bottom,color-mix(in srgb,var(--border) 80%,transparent) 1px,transparent 1px);background-size:22px 22px;background-position:0 0}
+/* B7c: templat kertas kustom (lihat kertas.js). Spasi, warna, dan margin datang dari
+   variabel --kt-* yang dipasang inline di .ed-doc. Margin menggeser teks ke kanan
+   (ruang kiri), jadi garis margin tidak menimpa tulisan. */
+.ed-doc.kertas-kustom{--kt-warna-a:color-mix(in srgb,var(--kt-warna,#8b9099) 55%,transparent)}
+.ed-doc.kertas-kustom-titik{background-image:radial-gradient(circle,var(--kt-warna-a) 1px,transparent 1.6px);background-size:var(--kt-spasi,28px) var(--kt-spasi,28px);background-position:0 0}
+.ed-doc.kertas-kustom-garis{background-image:linear-gradient(to bottom,transparent calc(var(--kt-spasi,28px) - 1px),var(--kt-warna-a) calc(var(--kt-spasi,28px) - 1px));background-size:100% var(--kt-spasi,28px)}
+.ed-doc.kertas-kustom-grid{background-image:linear-gradient(to right,var(--kt-warna-a) 1px,transparent 1px),linear-gradient(to bottom,var(--kt-warna-a) 1px,transparent 1px);background-size:var(--kt-spasi,28px) var(--kt-spasi,28px);background-position:0 0}
+.ed-doc.kertas-kustom-margin{position:relative;padding-left:calc(var(--kt-margin,0px) + 12px)}
+.ed-doc.kertas-kustom-margin::before{content:'';position:absolute;top:0;bottom:0;left:var(--kt-margin,0px);width:1px;background:var(--kt-warna-a);pointer-events:none}
+/* dialog templat kertas kustom */
+.kt-isi{padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+.kt-baris{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
+.kt-warnas{display:flex;gap:6px}
+.kt-warna{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0}
+.kt-warna.sel{outline:2px solid currentColor;outline-offset:2px}
 .ed.baca .props{display:none}
 .ed.baca .blk-h{display:none!important}
 .ed.baca .ed-t{cursor:auto}
