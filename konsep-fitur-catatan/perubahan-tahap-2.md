@@ -155,3 +155,24 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Keluhan 1 di HP Android sungguhan. Perlu langkah persis dari pengguna (lihat catatan di bawah).
   - Chromium kadang menyisipkan `<font color="…">` di sekitar teks hasil komposisi IME saat caret berada di span berwarna yang sudah dikosongkan (BS sampai kosong lalu mengetik). Warnanya tetap benar, dan struktur ini belum diperiksa lebih lanjut.
   - Karakter `￼` (U+FFFC) di HP belum direproduksi. Lihat entri sebelumnya.
+
+## Perbaikan · Huruf pertama di catatan kosong tidak berwarna (keluhan Opera)
+
+- **Gejala (dilaporkan pengguna, Opera di HP):** catatan baru, warna diaktifkan, lalu mengetik huruf pertama. Huruf itu tidak berwarna. Kalau spasi diketik dulu, warna langsung aktif. Keyboard biasa dan IME di Chromium tidak mengalami ini.
+- **Akar masalah (direproduksi dengan tiruan urutan event, lihat di bawah):** huruf pertama masuk lewat komposisi IME. Pembungkus warna di `compositionend` bergantung pada dua hal yang bisa meleset di keyboard HP:
+  1. Jumlah karakter `n` diambil dari `e.data`. Kalau `e.data` kosong saat `compositionend`, `n = 0` dan tidak ada yang dibungkus.
+  2. `rentangTerakhir()` menolak caret yang berada di level elemen. Setelah komposisi, browser bisa menaruh caret di elemen blok, dan itu juga membuat tidak ada yang dibungkus.
+- **Perbaikan:**
+  - `docs/notes/editor/komposisi.js`: `panjangTeks(blok)` baru. `rentangTerakhir(n)` menerima caret teks maupun elemen.
+  - `docs/notes/editor/events.js`: `compositionstart` mencatat blok dan panjang teksnya. `compositionend` menghitung `n` dari selisih panjang teks, dengan `e.data` sebagai cadangan.
+- **Dependensi:** lanjutan dari `e1934a9`. Tidak ada ID roadmap.
+- **Cara uji (Chromium headless, hasil nyata):**
+  - Catatan kosong, warna aktif, huruf pertama lewat tiruan urutan event (`/home/user/uji-ime/kosong.mjs`):
+    - `compositionend` data "h", caret di teks: berwarna (sebelum dan sesudah).
+    - `compositionend` data KOSONG, caret di teks: sebelum TIDAK berwarna, sesudah berwarna.
+    - `compositionend` data KOSONG, caret di elemen: sebelum TIDAK berwarna, sesudah berwarna.
+    - `compositionend` data "h", caret di elemen: sebelum TIDAK berwarna, sesudah berwarna.
+    - Keyboard biasa dan IME CDP: berwarna (sebelum dan sesudah).
+  - Regresi (`/home/user/uji-ime/regresi.mjs`), hasil sama sebelum dan sesudah: IME "halo" + spasi + IME "dunia" berwarna penuh; IME di tengah teks "Aw[xy]al"; tebal lewat IME "<b>halo</b>"; spasi dulu lalu warna dan IME.
+  - `npm test` penuh: exit 0, 37/37 di `kondisi-tepi`.
+- **Belum terbukti:** urutan event keyboard Opera sebenarnya di HP belum dicatat. Tiruan di atas memodelkan dua kemungkinan (data kosong dan caret elemen). Perlu konfirmasi dari HP.

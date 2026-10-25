@@ -8,15 +8,25 @@
 
    Modul ini sengaja tidak mengimpor cleanup.js/marks.js supaya tidak
    menambah siklus impor (warna.js, sorotan.js, marks.js saling memakainya). */
-import { sel, curBlock } from './caret.js?v=20261025081850';
+import { sel, curBlock } from './caret.js?v=20261025102350';
+
+/* Panjang teks sebuah blok, tanpa karakter nol-lebar. Dipakai untuk
+   menghitung berapa karakter yang BENAR-BENAR masuk selama komposisi. */
+export function panjangTeks(blok) {
+  return (blok.textContent || '').replace(/\u200b/g, '').length;
+}
 
 /* Rentang yang berisi n karakter TERAKHIR sebelum caret, di dalam blok
-   yang sama. Bisa melintasi beberapa text node. null kalau tidak ada. */
+   yang sama. Bisa melintasi beberapa text node. null kalau tidak ada.
+
+   Caret boleh berupa TEKS maupun ELEMEN. Setelah komposisi di HP, browser
+   sering menaruh caret di level elemen (blok itu sendiri, offset n). Dulu
+   caret elemen ditolak, sehingga huruf pertama tidak pernah dibungkus. */
 export function rentangTerakhir(n) {
   const s = sel();
   if (!(s && s.rangeCount) || !(n > 0)) return null;
   const r = s.getRangeAt(0);
-  if (!r.collapsed || r.startContainer.nodeType !== 3) return null;
+  if (!r.collapsed) return null;
   const blok = curBlock();
   if (!blok || !blok.contains(r.startContainer)) return null;
   const pra = document.createRange();
@@ -28,6 +38,7 @@ export function rentangTerakhir(n) {
   const jalan = document.createTreeWalker(blok, NodeFilter.SHOW_TEXT);
   let nd;
   while ((nd = jalan.nextNode())) {
+    if (!pra.intersectsNode(nd)) break;          // sudah melewati caret
     const len = nd === r.startContainer ? r.startOffset : nd.data.length;
     if (sisa < len) {
       const rr = document.createRange();
@@ -36,7 +47,6 @@ export function rentangTerakhir(n) {
       return rr;
     }
     sisa -= len;
-    if (nd === r.startContainer) break;
   }
   return null;
 }

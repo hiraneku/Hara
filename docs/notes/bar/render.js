@@ -1,20 +1,20 @@
 /* Gambar bar dari config + pasang penangan klik. */
-import { BAR, GROUPS } from './config.js?v=20261025081850';
-import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261025081850';
-import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261025081850';
-import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261025081850';
-import { slashMenu } from '../menus/slash.js?v=20261025081850';
-import { wlMenu }    from '../menus/wikilink.js?v=20261025081850';
-import { tagMenu }   from '../menus/tag.js?v=20261025081850';
-import { linkMenu }  from '../menus/link.js?v=20261025081850';
-import { fontMenu } from '../menus/font.js?v=20261025081850';
-import { warnaMenu } from '../menus/warna.js?v=20261025081850';
-import { calloutMenu } from '../menus/callout.js?v=20261025081850';
-import { snap } from '../editor/history.js?v=20261025081850';
-import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261025081850';
-import { prefs, tersembunyi, tersemat, getar } from './prefs.js?v=20261025081850';
-import { HELP, HELP_GRUP } from './help.js?v=20261025081850';
-import { t as tr } from '../../core/i18n.js?v=20261025081850';
+import { BAR, GROUPS } from './config.js?v=20261025102350';
+import { ACTIONS, TANPA_SNAP } from './actions.js?v=20261025102350';
+import { docEl, ensureCaret, curBlock, kunciKeyboard } from '../editor/caret.js?v=20261025102350';
+import { openPop, closeAll, setPopIsi } from '../menus/pop.js?v=20261025102350';
+import { slashMenu } from '../menus/slash.js?v=20261025102350';
+import { wlMenu }    from '../menus/wikilink.js?v=20261025102350';
+import { tagMenu }   from '../menus/tag.js?v=20261025102350';
+import { linkMenu }  from '../menus/link.js?v=20261025102350';
+import { fontMenu } from '../menus/font.js?v=20261025102350';
+import { warnaMenu } from '../menus/warna.js?v=20261025102350';
+import { calloutMenu } from '../menus/callout.js?v=20261025102350';
+import { snap } from '../editor/history.js?v=20261025102350';
+import { ketikaFontMuat, fontMasihMuat } from '../editor/font.js?v=20261025102350';
+import { prefs, tersembunyi, tersemat, getar } from './prefs.js?v=20261025102350';
+import { HELP, HELP_GRUP } from './help.js?v=20261025102350';
+import { t as tr } from '../../core/i18n.js?v=20261025102350';
 
 const CHEV = '<svg class="chev"><use href="#i-chev"/></svg>';
 
@@ -163,10 +163,10 @@ function jalankan(m, btn) {
   if (m === 'slash') return openPop(slashMenu(), btn);
   if (m === 'wl')    return openPop(wlMenu(),    btn);
   if (m === 'tag')   return openPop(tagMenu(),   btn);
-  if (m === 'tagwarna') { import('../tagwarna.js?v=20261025081850').then(({panelTag}) => panelTag(btn)); return; }
+  if (m === 'tagwarna') { import('../tagwarna.js?v=20261025102350').then(({panelTag}) => panelTag(btn)); return; }
   if (m === 'gal') {
     const mb = document.querySelector('.mb-g.open');
-    import('../galeri.js?v=20261025081850').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
+    import('../galeri.js?v=20261025102350').then(({bukaGaleri}) => bukaGaleri(mb || document.querySelector('.ed-doc')));
     return;
   }
   if (m === 'link')  return openPop(linkMenu(),  btn);

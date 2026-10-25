@@ -1,21 +1,22 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261025081850';
-import { setBlock, indent } from './blocks.js?v=20261025081850';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025081850';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025081850';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025081850';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025081850';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025081850';
-import { onTitle } from '../model.js?v=20261025081850';
-import { tanganiPaste } from './paste.js?v=20261025081850';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025081850';
-import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025081850';
-import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025081850';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025081850';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261025081850';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025081850';
-import { toast } from '../../core/toast.js?v=20261025081850';
-import { t as tr } from '../../core/i18n.js?v=20261025081850';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261025102350';
+import { setBlock, indent } from './blocks.js?v=20261025102350';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025102350';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025102350';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025102350';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025102350';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025102350';
+import { onTitle } from '../model.js?v=20261025102350';
+import { tanganiPaste } from './paste.js?v=20261025102350';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025102350';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025102350';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025102350';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025102350';
+import { panjangTeks } from './komposisi.js?v=20261025102350';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261025102350';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025102350';
+import { toast } from '../../core/toast.js?v=20261025102350';
+import { t as tr } from '../../core/i18n.js?v=20261025102350';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -95,11 +96,23 @@ export function bindEditor() {
      "hilang" dan huruf lanjutan menempel ke dalam tag. Jadi: selama
      komposisi teks dibiarkan apa adanya; begitu komposisi selesai, tag
      dirapikan (autoTagDalam) dan tampilan disegarkan. */
-  document.addEventListener('compositionstart',()=>{ if(docEl()) setKomposisi(true); });
+  /* Posisi awal komposisi: blok dan panjang teksnya. Dipakai untuk menghitung
+     berapa karakter yang benar-benar masuk. Jangan bergantung pada e.data
+     saja — di beberapa keyboard HP e.data kosong saat compositionend. */
+  let kompAwal=null;
+  document.addEventListener('compositionstart',()=>{
+    if(!docEl()) return;
+    setKomposisi(true);
+    const b=curBlock();
+    kompAwal = b ? { blok:b, len:panjangTeks(b) } : null;
+  });
   document.addEventListener('compositionend',e=>{
     if(!docEl()) return;
-    /* jumlah karakter hasil komposisi (teks committed ada di e.data) */
-    const n=(e.data||'').length;
+    /* jumlah karakter hasil komposisi: selisih panjang teks blok sejak
+       compositionstart; e.data hanya cadangan kalau selisih tidak terbaca */
+    const awal=kompAwal; kompAwal=null;
+    const dariDom = (awal && awal.blok===curBlock()) ? panjangTeks(awal.blok)-awal.len : 0;
+    const n = dariDom>0 ? dariDom : (e.data||'').length;
     /* biarkan input yang menyusul (bila ada) lewat tanpa mengubah DOM;
        perapian dijalankan setelahnya */
     setTimeout(()=>{
