@@ -12,8 +12,8 @@
 
    Murni: hanya membaca state. Tidak menulis apa pun. */
 
-import { state } from '../core/store.js?v=20261025020026';
-import { terlihat } from './kunci.js?v=20261025020026';
+import { state } from '../core/store.js?v=20261025024750';
+import { terlihat } from './kunci.js?v=20261025024750';
 
 /* Teks polos satu blok (tanpa markup), dipangkas. */
 export const teksPolos = b => {

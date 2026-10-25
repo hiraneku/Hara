@@ -1,8 +1,8 @@
 /* Pengaturan efek pemutar: disimpan di localStorage (global, satu set untuk semua lagu)
    dan diterapkan ke mesin lewat aturEfek(). Pola sama dengan eq.js. */
 
-import { normalisasiEfek, ubahEfekPure } from './efek-data.js?v=20261025020026';
-import { aturEfek } from './mesin.js?v=20261025020026';
+import { normalisasiEfek, ubahEfekPure } from './efek-data.js?v=20261025024750';
+import { aturEfek } from './mesin.js?v=20261025024750';
 
 const KUNCI = 'hara.v2.musik.efek';
 let cache = null;

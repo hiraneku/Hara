@@ -17,7 +17,7 @@
  * Koordinat berada di ruang logis kanvas (LEBAR x TINGGI), sama seperti di sketsa.js.
  */
 
-import { bersihkanLapisan, idLapisanValid, lapisanAwal, ID_LAPISAN_DASAR } from './lapisan.js?v=20261025020026';
+import { bersihkanLapisan, idLapisanValid, lapisanAwal, ID_LAPISAN_DASAR } from './lapisan.js?v=20261025024750';
 
 /* v5 (A5): daftar "lapisan" di level sketsa; setiap goresan dan objek punya field "lapisan".
    v4 dan sebelumnya dibaca sebagai satu lapisan bawaan. */

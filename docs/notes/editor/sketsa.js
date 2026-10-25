@@ -4,19 +4,19 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025020026';
-import { toast } from '../../core/toast.js?v=20261025020026';
-import { t as tr } from '../../core/i18n.js?v=20261025020026';
-import { ensureCaret, caretEnd } from './caret.js?v=20261025020026';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261025020026';
-import { refresh } from './cleanup.js?v=20261025020026';
-import { snap } from './history.js?v=20261025020026';
-import { pasangGambar } from './image.js?v=20261025020026';
-import { pastikanKolomAkhir } from './blocks.js?v=20261025020026';
-import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261025020026';
-import { lapisanAwal, bisaDiedit, tambahLapisan, hapusLapisan, pindahLapisan, urutanGambar, urutanRender } from './lapisan.js?v=20261025020026';
-import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261025020026';
-import { kenaliBentuk } from './bentuk.js?v=20261025020026';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261025024750';
+import { toast } from '../../core/toast.js?v=20261025024750';
+import { t as tr } from '../../core/i18n.js?v=20261025024750';
+import { ensureCaret, caretEnd } from './caret.js?v=20261025024750';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261025024750';
+import { refresh } from './cleanup.js?v=20261025024750';
+import { snap } from './history.js?v=20261025024750';
+import { pasangGambar } from './image.js?v=20261025024750';
+import { pastikanKolomAkhir } from './blocks.js?v=20261025024750';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261025024750';
+import { lapisanAwal, bisaDiedit, tambahLapisan, hapusLapisan, pindahLapisan, urutanGambar, urutanRender } from './lapisan.js?v=20261025024750';
+import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261025024750';
+import { kenaliBentuk } from './bentuk.js?v=20261025024750';
 
 /* A4: berapa lama ujung dibiarkan diam sebelum coretan dikenali sebagai bentuk. */
 const JEDA_TAHAN_MS = 650;
@@ -478,10 +478,13 @@ export function bukaStudioSketsa(figEdit = null) {
   };
 
   /* A6: skala pas layar (sama dengan tampilan awal), dikali zoom */
+  /* A8: di landscape pendek, kanvas mengisi tinggi stage (bukan 54% tinggi layar), supaya zoom 100% tidak melompat */
+  const landscapePendek = () => !!(window.matchMedia && window.matchMedia('(orientation: landscape) and (max-height: 600px)').matches);
   const skalaPasLayar = () => {
     const lebarTersedia = stage ? stage.clientWidth - 16 : 0;
     if (lebarTersedia <= 0) return 1;
-    const tinggiTersedia = (window.innerHeight || 800) * 0.54;
+    const tinggiStage = stage ? stage.clientHeight - 16 : 0;
+    const tinggiTersedia = landscapePendek() && tinggiStage > 0 ? tinggiStage : (window.innerHeight || 800) * 0.54;
     return Math.min(lebarTersedia / kw, tinggiTersedia / kh);
   };
 
@@ -491,11 +494,14 @@ export function bukaStudioSketsa(figEdit = null) {
       cv.style.width = '';
       cv.style.height = '';
       cv.style.maxHeight = '';
+      cv.style.maxWidth = '';
     } else {
       const skala = skalaPasLayar() * zoom;
       cv.style.width = Math.round(kw * skala) + 'px';
       cv.style.height = Math.round(kh * skala) + 'px';
       cv.style.maxHeight = 'none';
+      /* A8: di landscape CSS memberi max-width:100%; zoom harus bisa melebihi lebar stage (digulir) */
+      cv.style.maxWidth = 'none';
       cv.style.aspectRatio = 'auto';
     }
     const tombol = overlay.querySelector('#sk-zoom-reset');

@@ -181,7 +181,48 @@
   - Di jsdom, `canvas.getContext` tidak tersedia. Karena itu render canvas sebenarnya tidak dijalankan. Yang diuji adalah urutan render (`urutanRender`), bukan piksel.
 - **Status:** A5 *Partially implemented* (di sketsa; blok catatan biasa belum).
 
+## Perubahan 7 — A8 Landscape workspace
+
+- **ID:** A8.
+- **Alasan urutan:** §6.1 menempatkan A8 setelah A5. Tata letak sketsa sekarang memuat banyak baris alat (preset A3, lapisan A5, zoom A6, ukuran kanvas A7), sehingga masalah landscape makin terasa.
+- **Dependensi:** A6 (zoom dan `skalaPasLayar`), A3 dan A5 (baris preset dan lapisan di bar), A4 (bar bentuk).
+- **Kondisi awal (audit) dan verifikasi ulang:** audit menulis *Missing* karena pencarian `orientation`/`landscape` tidak menemukan apa pun. Verifikasi ulang: memang tidak ada aturan orientasi di CSS atau JS. Tetapi kebutuhannya nyata. Diukur di browser headless (Chromium 153), pada landscape ponsel 844×390, bar alat setinggi 339 px diletakkan di y=306–645. Dari 49 tombol, hanya **8** yang terlihat penuh. Sisanya terpotong.
+  - Penyebab: `.sk-stage` punya `min-height: 240px` dan `.sk-box` punya `max-height: 96dvh` dengan `overflow: hidden`. Bar tidak bisa digulir, jadi bagian bawahnya tidak terjangkau.
+  - Rotasi sudah didukung: `AndroidManifest.xml` mencantumkan `orientation` di `configChanges`, dan tidak ada kunci orientasi. Yang kurang hanya tata letaknya.
+- **Keputusan desain:**
+  - Aturan hanya berlaku untuk `(orientation: landscape) and (max-height: 600px)`. Portrait dan tablet landscape tidak berubah.
+  - Landscape pendek: kanvas di kiri, mengisi tinggi yang tersedia. Panel alat di kanan (lebar `min(340px, 42%)`) yang bisa digulir vertikal. Baris alat tetap bisa digeser horizontal. Bar bentuk A4 tampil di kolom kiri, di bawah kanvas.
+  - Tidak ada kunci orientasi paksa. Hara tetap bisa diputar.
+  - Zoom: di landscape pendek, `skalaPasLayar` memakai tinggi stage (bukan 54% tinggi layar), sehingga zoom 100% tidak melompat. `terapkanZoom` juga melepas `max-width` saat zoom aktif, agar kanvas yang di-zoom bisa lebih lebar dari stage dan digulir.
+- **Yang berubah:**
+  - `docs/styles/notes.css`: blok `@media (orientation: landscape) and (max-height: 600px)` setelah `.sk-bentuk-nama`.
+  - `docs/notes/editor/sketsa.js`: `landscapePendek()`, penyesuaian `skalaPasLayar`, dan `cv.style.maxWidth` di `terapkanZoom`.
+  - `tools/uji/sketsa-landscape.mjs` (baru): 17 uji (CSS dan integrasi jsdom).
+  - Stempel `?v=` menjadi `20261025024750` (124 berkas).
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/sketsa-landscape.mjs`: **17/17 lulus**.
+  - Uji mutasi (dipulihkan dan diverifikasi `cmp`): M1 panel alat dipindah ke kolom kiri → 16/17, tertangkap. M2 zoom tidak melepas `max-width` → 16/17, tertangkap.
+  - **Pengukuran browser** (Chromium headless dari paket npm `@sparticuz/chromium`, dijalankan di luar repo di `/home/user/unduh/a8-browser/ukur.mjs`). Sebelum dan sesudah:
+
+    | Viewport | Tombol terlihat penuh | Ukuran kanvas |
+    |---|---|---|
+    | Landscape ponsel 844×390 | 8/49 → **49/49** | 742×211 → 488×312 |
+    | Landscape kecil 740×360 | 8/49 → **49/49** | 706×194 → 413×264 |
+    | Portrait ponsel 390×844 | 49/49 → 49/49 (identik) | 356×227 (sama) |
+    | Tablet landscape 1180×820 | 49/49 → 49/49 (identik) | 742×443 (sama) |
+
+  - **Interaksi browser** (`interaksi.mjs`): 12/12 lulus di landscape dan portrait. Mencakup goresan pena yang tampak di kanvas (piksel berwarna terdeteksi), zoom + yang memperbesar kanvas dengan rasio 1.25 (landscape 488→610, portrait 356→445), zoom 100% yang kembali ke ukuran awal, dan pemilihan alat Kotak. Sebelum perbaikan `max-width`, zoom di landscape gagal (488→488). Itu ditemukan oleh uji ini dan sudah diperbaiki.
+  - **Bar bentuk** (`bentuk.mjs`, bar ditampilkan paksa hanya untuk pengukuran tata letak): di landscape 844×390, bar bentuk ada di bawah kanvas dan di kolom kiri, dan tombol-tombolnya terlihat penuh.
+  - Screenshot yang diperiksa: `/home/user/unduh/a8-sesudah-landscape-phone.png` dan `/home/user/unduh/a8-bentuk-landscape.png`.
+  - `npm test` penuh: exit 0 (`/tmp/npmtest-a8.log`), 77 berkas uji (76 sebelumnya + `sketsa-landscape.mjs`), 0 baris ✗ atau GAGAL.
+- **Keterbatasan yang diketahui:**
+  - Pengujian dilakukan di Chromium desktop headless dengan viewport ponsel, **bukan di HP sungguhan**. Sentuhan, notch, dan address bar Android belum diuji di perangkat.
+  - Baris alat horizontal menyembunyikan scrollbar (sudah begitu sejak A3). Pengguna perlu tahu bahwa baris bisa digeser. Itu belum diuji dengan pengguna.
+  - Hanya sketsa yang disesuaikan. Editor catatan biasa, Graf, musik, dan renamer belum diperiksa di landscape.
+  - Uji otomatis di repo bersifat struktural dan logika. Tata letak piksel tidak dijalankan di `npm test`, karena browser tidak dipasang sebagai dependensi repo.
+- **Status:** A8 *Partially implemented* (sketsa). Editor catatan biasa belum.
+
 ## Berikutnya
 
-- A8 Landscape workspace, A9 Pinned toolbar, B7 Templat kertas kustom (urutan §6.1 setelah A5).
+- A9 Pinned toolbar, B7 Templat kertas kustom (urutan §6.1 setelah A8).
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.
