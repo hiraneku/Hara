@@ -290,7 +290,34 @@
   - Cornell belum ada. Itu B7b.
 - **Status:** B7 *Partially implemented*. B7a selesai. B7b (Cornell) dan B7c (templat kertas buatan pengguna) belum dikerjakan.
 
+## Perubahan 10 — B7b Templat Cornell (langkah 2 dari 3)
+
+- **ID:** B7 (cakupan (c), dikerjakan bertahap). Langkah ini: **B7b**, Cornell sebagai templat bawaan. Disetujui pengguna: "Untuk B7b dan B7c ya setuju".
+- **Alasan urutan:** B7a (latar kertas) sudah selesai, dan Cornell butuh latar yang sama. Cornell dikerjakan sebelum B7c karena memakai pola templat bawaan yang sudah ada, sehingga risikonya paling kecil.
+- **Dependensi:** registri templat bawaan di `templat.js` dan tipe blok tabel (`elToBlock` / `blocksToDom` di `note-model.js`). Tidak ada dependensi ke B7a. Templat tidak mengatur latar kertas (perilaku sama dengan templat lain).
+- **Keputusan desain:**
+  - Cornell dibuat dari blok tabel yang sudah ada: header Petunjuk | Catatan, lalu 6 baris kosong, lalu heading Ringkasan dan satu paragraf. Tidak ada tipe blok baru.
+  - Judul catatan memakai awalan Cornell (id "Cornell", en "Cornell", ja "コーネル"). Judul kolom dan Ringkasan ada dalam tiga bahasa.
+  - Lebar kedua kolom sama dan tidak bisa diatur. Baris bisa ditambah dari tabel seperti tabel biasa.
+- **Yang berubah:**
+  - `docs/notes/templat.js`: entri bawaan `cornell`, `PREFIX_CORNELL`, `tabelCornell`, `HTML_CORNELL`.
+  - `docs/core/bahasa-en.js`, `docs/core/bahasa-ja.js`: 2 kunci per bahasa (`Catatan Cornell`, dan kalimat keterangan).
+  - `tools/uji/templat-cornell.mjs` (baru): 19 uji jsdom.
+  - Stempel `?v=` menjadi `20261025050736` (125 berkas). Perubahan non-stempel hanya di tiga berkas di atas (diperiksa dengan membandingkan HEAD setelah `?v=` dinormalisasi).
+- **Cara uji yang dijalankan:**
+  - `node tools/uji/templat-cornell.mjs`: **19/19 lulus**. Mencakup terdaftar sebagai bawaan, templat lain tetap ada, menu memuat `b:cornell`, menerapkan membuat satu catatan yang dibuka, tabel Petunjuk | Catatan dengan 6 baris kosong, Ringkasan di bawah tabel, id blok unik, sel tabel bisa diedit (6 × 2 = 12), muat ulang tidak mengubah struktur, dua penerapan menghasilkan id tidak kembar, dan bahasa Inggris (Cue | Notes, Summary, judul Cornell, nama menu diterjemahkan).
+  - Uji mutasi (dipulihkan, diverifikasi `cmp`): M1 tanpa baris isi → 17/19. M2 header kanan salah → 18/19. M3 id templat salah → 4/19 (gagal berantai). M4 header Inggris salah → 18/19. Semua tertangkap.
+  - Uji bahasa terkait: `bahasa.mjs` 41/41 (kunci EN dan JA sama), `welcome-bahasa.mjs` 23/23, `baca-todo-tpl.mjs` 25/25, `templat-variabel.mjs` lulus (exit 0).
+  - `node tools/version.mjs`: stempel `20261025050736`.
+  - `npm test` penuh: **exit 0** (`/tmp/npmtest-b7b.log`), 80 berkas uji (termasuk `templat-cornell`), 0 baris GAGAL, ✗, atau FAIL.
+- **Keterbatasan yang diketahui:**
+  - Kolom Petunjuk dan Catatan sama lebar. Tata letak Cornell asli biasanya memakai kolom kiri yang lebih sempit. Ini belum bisa diatur.
+  - Cornell tidak otomatis memakai latar garis. Pengguna memilih latar lewat menu "···" (fitur B7a).
+  - Belum diuji di browser (`b7a.mjs` tidak dijalankan untuk B7b). Pengujian hanya lewat jsdom, struktur DOM, dan model data.
+  - Cetak atau ekspor PDF belum diuji.
+- **Status:** B7 *Partially implemented*. B7a dan B7b selesai. B7c (templat kertas buatan pengguna) belum dikerjakan.
+
 ## Berikutnya
 
-- B7b Templat Cornell dan B7c templat kertas buatan pengguna (B7 bertahap, cakupan (c)). Tunggu persetujuan.
+- B7c: templat kertas buatan pengguna (spasi, warna, margin). Cakupan (c) sudah disetujui, dikerjakan dengan pola yang sama (uji, mutasi, `npm test`, commit terpisah).
 - Keputusan yang perlu Anda cek: objek bebas di halaman catatan biasa (bukan hanya sketsa) akan dibahas sebelum dikerjakan, karena menyentuh model blok catatan.

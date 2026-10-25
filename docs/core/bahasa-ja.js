@@ -1061,4 +1061,6 @@ export const JA = {
   "Latar kertas catatan": "ノートの用紙背景",
   "Grid": "グリッド",
   "Latar kertas diperbarui": "用紙の背景を更新しました",
+  "Catatan Cornell": "コーネル式ノート",
+  "Petunjuk di kiri, catatan di kanan, ringkasan di bawah": "左にキーワード、右にノート、下にまとめ",
 };

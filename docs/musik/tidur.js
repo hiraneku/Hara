@@ -5,8 +5,8 @@
    Keadaan timer hanya di memori (tidak disimpan ulang setelah aplikasi ditutup).
    Pilihan terakhir (mode dan menit) disimpan di pengaturan Musik. */
 
-import * as M from './mesin.js?v=20261025043111';
-import { TIDUR_MENIT_MAKS } from './logika.js?v=20261025043111';
+import * as M from './mesin.js?v=20261025050736';
+import { TIDUR_MENIT_MAKS } from './logika.js?v=20261025050736';
 
 export const FADE_TIDUR_DETIK = 10;
 

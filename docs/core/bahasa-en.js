@@ -1094,4 +1094,6 @@ export const EN = {
   "Latar kertas catatan": "Note paper background",
   "Grid": "Grid",
   "Latar kertas diperbarui": "Paper background updated",
+  "Catatan Cornell": "Cornell notes",
+  "Petunjuk di kiri, catatan di kanan, ringkasan di bawah": "Cues on the left, notes on the right, summary below",
 };

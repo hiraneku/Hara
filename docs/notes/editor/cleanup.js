@@ -1,22 +1,22 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20261025043111';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261025043111';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261025043111';
-import { MARKSEL, markActive, pending } from './marks.js?v=20261025043111';
-import { state, save, simpanTahan } from '../../core/store.js?v=20261025043111';
-import { findNote } from '../model.js?v=20261025043111';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261025043111';
-import { sinkronTag } from '../tags.js?v=20261025043111';
-import { tandaiTautan } from '../wikilink.js?v=20261025043111';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261025043111';
-import { cur } from '../../core/router.js?v=20261025043111';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261025043111';
-import { GROUPS } from '../bar/config.js?v=20261025043111';
-import { warnaSekarang, warnaPending } from './warna.js?v=20261025043111';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20261025043111';
-import { rekamVersiCatatan } from '../ruang.js?v=20261025043111';
-import { teksProgresTargetKata } from '../navigasi-fokus.js?v=20261025043111';
-import { t as tr, LOKALE } from '../../core/i18n.js?v=20261025043111';
+import { docEl, sel, curBlock } from './caret.js?v=20261025050736';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261025050736';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261025050736';
+import { MARKSEL, markActive, pending } from './marks.js?v=20261025050736';
+import { state, save, simpanTahan } from '../../core/store.js?v=20261025050736';
+import { findNote } from '../model.js?v=20261025050736';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261025050736';
+import { sinkronTag } from '../tags.js?v=20261025050736';
+import { tandaiTautan } from '../wikilink.js?v=20261025050736';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261025050736';
+import { cur } from '../../core/router.js?v=20261025050736';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261025050736';
+import { GROUPS } from '../bar/config.js?v=20261025050736';
+import { warnaSekarang, warnaPending } from './warna.js?v=20261025050736';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20261025050736';
+import { rekamVersiCatatan } from '../ruang.js?v=20261025050736';
+import { teksProgresTargetKata } from '../navigasi-fokus.js?v=20261025050736';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20261025050736';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;

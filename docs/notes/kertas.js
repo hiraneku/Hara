@@ -5,12 +5,12 @@
    `cover`, sehingga catatan lama tidak berubah. Latar digambar CSS di `.ed-doc`;
    isi blok tidak disentuh. Templat isi (templat.js) tidak ikut menyimpan latar. */
 
-import { state, save } from '../core/store.js?v=20261025043111';
-import { touch, KERTAS_JENIS, kelasKertas } from './note-model.js?v=20261025043111';
-import { openPop, closeAll } from './menus/pop.js?v=20261025043111';
-import { toast } from '../core/toast.js?v=20261025043111';
-import { esc } from '../core/dom.js?v=20261025043111';
-import { t as tr } from '../core/i18n.js?v=20261025043111';
+import { state, save } from '../core/store.js?v=20261025050736';
+import { touch, KERTAS_JENIS, kelasKertas } from './note-model.js?v=20261025050736';
+import { openPop, closeAll } from './menus/pop.js?v=20261025050736';
+import { toast } from '../core/toast.js?v=20261025050736';
+import { esc } from '../core/dom.js?v=20261025050736';
+import { t as tr } from '../core/i18n.js?v=20261025050736';
 
 const PILIHAN = [
   ['polos', 'Polos'],

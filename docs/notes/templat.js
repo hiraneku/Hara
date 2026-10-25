@@ -22,14 +22,14 @@
    otomatis; nama lain ({proyek}, …) meminta isian sebelum catatan
    dibuat (lihat templat-var.js). Templat tanpa isian langsung dibuat. */
 
-import { state } from '../core/store.js?v=20261025043111';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261025043111';
-import { go } from '../core/router.js?v=20261025043111';
-import { esc } from '../core/dom.js?v=20261025043111';
-import { toast } from '../core/toast.js?v=20261025043111';
-import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261025043111';
-import { judulJurnalHari } from './harian.js?v=20261025043111';
-import { isianDiperlukan, gantiVariabel } from './templat-var.js?v=20261025043111';
+import { state } from '../core/store.js?v=20261025050736';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261025050736';
+import { go } from '../core/router.js?v=20261025050736';
+import { esc } from '../core/dom.js?v=20261025050736';
+import { toast } from '../core/toast.js?v=20261025050736';
+import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261025050736';
+import { judulJurnalHari } from './harian.js?v=20261025050736';
+import { isianDiperlukan, gantiVariabel } from './templat-var.js?v=20261025050736';
 
 const KUNCI = 'hara.v1.tpl';
 
@@ -75,6 +75,14 @@ const BAWAAN = [
     ket: 'Materi + latihan yang dicentang',
     judul: () => PREFIX_BELAJAR[bahasaSekarang()],
     html: () => HTML_BELAJAR[bahasaSekarang()] || HTML_BELAJAR.id,
+  },
+  {
+    /* B7b: tata letak Cornell — tabel Petunjuk | Catatan, lalu Ringkasan di bawah */
+    id: 'cornell',
+    nama: 'Catatan Cornell',
+    ket: 'Petunjuk di kiri, catatan di kanan, ringkasan di bawah',
+    judul: () => PREFIX_CORNELL[bahasaSekarang()] || PREFIX_CORNELL.id,
+    html: () => HTML_CORNELL[bahasaSekarang()] || HTML_CORNELL.id,
   },
 ];
 
@@ -146,6 +154,18 @@ const HTML_RAPAT = {
 <div class="b-todo"></div>`,
 };
 const PREFIX_BELAJAR = { id: 'Belajar', en: 'Learning', ja: '勉強' };
+
+/* B7b: Cornell. Tabel dua kolom (header + 6 baris kosong) memakai tipe blok
+   tabel yang sudah ada; kolom bisa diisi dan baris bisa ditambah dari tabel. */
+const PREFIX_CORNELL = { id: 'Cornell', en: 'Cornell', ja: 'コーネル' };
+const tabelCornell = (kiri, kanan) =>
+  `<div class="b-table" contenteditable="false"><table><thead><tr><th>${kiri}</th><th>${kanan}</th></tr></thead>` +
+  `<tbody>${'<tr><td></td><td></td></tr>'.repeat(6)}</tbody></table></div>`;
+const HTML_CORNELL = {
+  id: `\n${tabelCornell('Petunjuk', 'Catatan')}\n<div class="b-h2">Ringkasan</div>\n<div class="b-p"></div>`,
+  en: `\n${tabelCornell('Cue', 'Notes')}\n<div class="b-h2">Summary</div>\n<div class="b-p"></div>`,
+  ja: `\n${tabelCornell('キーワード', 'ノート')}\n<div class="b-h2">まとめ</div>\n<div class="b-p"></div>`,
+};
 const HTML_BELAJAR = {
   id: `
 <div class="b-h2">Materi</div>
