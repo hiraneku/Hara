@@ -1,22 +1,22 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261026025826';
-import { setBlock, indent } from './blocks.js?v=20261026025826';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261026025826';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261026025826';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261026025826';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261026025826';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261026025826';
-import { onTitle } from '../model.js?v=20261026025826';
-import { tanganiPaste } from './paste.js?v=20261026025826';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261026025826';
-import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi, warnaUntukKomposisi } from './warna.js?v=20261026025826';
-import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261026025826';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261026025826';
-import { panjangTeks } from './komposisi.js?v=20261026025826';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261026025826';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261026025826';
-import { toast } from '../../core/toast.js?v=20261026025826';
-import { t as tr } from '../../core/i18n.js?v=20261026025826';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261026034335';
+import { setBlock, indent } from './blocks.js?v=20261026034335';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261026034335';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261026034335';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261026034335';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261026034335';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261026034335';
+import { onTitle } from '../model.js?v=20261026034335';
+import { tanganiPaste } from './paste.js?v=20261026034335';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261026034335';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi, warnaUntukKomposisi } from './warna.js?v=20261026034335';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261026034335';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261026034335';
+import { panjangTeks, posisiKaret } from './komposisi.js?v=20261026034335';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261026034335';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261026034335';
+import { toast } from '../../core/toast.js?v=20261026034335';
+import { t as tr } from '../../core/i18n.js?v=20261026034335';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:
@@ -105,7 +105,9 @@ export function bindEditor() {
     if(!docEl()) return;
     setKomposisi(true);
     const b=curBlock();
-    kompAwal = b ? { blok:b, len:panjangTeks(b) } : null;
+    /* pos: posisi kursor dalam blok saat komposisi mulai. Pembungkusan di
+       compositionend memakai ini, bukan kursor saat itu (lihat komposisi.js). */
+    kompAwal = b ? { blok:b, len:panjangTeks(b), pos:posisiKaret(b) } : null;
     /* Keluhan 1 (opsi A, versi aman): kalau warna menyala dan blok hanya
        berisi spasi (catatan kosong, atau spasi di awal), warna DIPASANG KE
        ELEMEN BLOK selama komposisi, bukan ke node teks. Node teks dan posisi
@@ -128,7 +130,9 @@ export function bindEditor() {
     /* jumlah karakter hasil komposisi: selisih panjang teks blok sejak
        compositionstart; e.data hanya cadangan kalau selisih tidak terbaca */
     const awal=kompAwal; kompAwal=null;
-    const dariDom = (awal && awal.blok===curBlock()) ? panjangTeks(awal.blok)-awal.len : 0;
+    /* hitung dari blok awal, BUKAN curBlock(): kursor setelah komposisi di HP
+       bisa sudah pindah, dan dulu itu membuat n jatuh ke e.data (sering kosong) */
+    const dariDom = awal ? panjangTeks(awal.blok)-awal.len : 0;
     const n = dariDom>0 ? dariDom : (e.data||'').length;
     /* biarkan input yang menyusul (bila ada) lewat tanpa mengubah DOM;
        perapian dijalankan setelahnya */
@@ -139,8 +143,8 @@ export function bindEditor() {
          hasil komposisi, bukan hanya karakter terakhir. */
       if(pending.size || sticky.size){ try{ terapkanFormatAktif(n); }catch(err){} }
       if(n){
-        try{ bungkusWarnaKomposisi(n); }catch(err){}
-        try{ bungkusSorotKomposisi(n); }catch(err){}
+        try{ bungkusWarnaKomposisi(n, awal); }catch(err){}
+        try{ bungkusSorotKomposisi(n, awal); }catch(err){}
       }
       /* warna sementara blok (opsi A) dilepas SETELAH pembungkusan di atas,
          supaya huruf komposisi tidak sempat tampil hitam */

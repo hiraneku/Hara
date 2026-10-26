@@ -124,7 +124,7 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 ## Berikutnya
 
 - Uji B1b di HP (Opera Android) setelah APK atau Pages terbaru tersedia.
-- Uji B1 di HP (Opera Android): anotasi, ekspor, dan keluhan 1 opsi A.
+- Uji B1 di HP (Opera Android): anotasi, ekspor, dan keluhan 1 (opsi A + perbaikan pembungkusan komposisi).
 
 ## Perubahan 14 · B1c — Ekspor PDF yang sudah dianotasi (§1.5)
 
@@ -270,6 +270,31 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Kode: `docs/notes/editor/events.js` (`kompWarnaBlok`, `compositionstart`, `compositionend`), `docs/notes/editor/warna.js` (`warnaUntukKomposisi()` baru).
   - **Uji (Chromium, simulasi IME lewat CDP `Input.imeSetComposition`, `ime-a.mjs` di luar repo): 8/8 lulus.** Huruf pertama sudah berwarna merah (`rgb(229, 57, 53)`) sebelum komposisi selesai. Versi HEAD gagal di cek itu (warna `rgb(28, 27, 24)`, hitam). "halo" utuh berwarna tanpa karakter sampah. Spasi lalu "dua" berwarna biru tanpa sampah.
   - **Batasan:** sorotan belum masuk opsi ini (warna blok akan menyorot seluruh lebar blok). Sorotan, tebal, miring, dan font tetap dibungkus di `compositionend`. Blok yang sudah berisi teks juga belum. Hasil di Opera Android BELUM diuji, karena simulasi Chromium tidak sama dengan keyboard HP.
+
+## Perbaikan · Komposisi IME: pembungkusan memakai posisi awal, dan urutan teks di span bersarang (keluhan 1, lanjutan)
+
+- **ID:** keluhan 1 (di luar urutan B1–B8). Lanjutan dari opsi A (`4cce2fd`). Bukan ID roadmap baru.
+- **Alasan urutan:** keluhan 1 masih terjadi di HP setelah `4cce2fd`, jadi diperbaiki dulu sebelum B5.
+- **Gejala:** di HP (Opera Android), huruf pertama catatan baru tetap tidak berwarna. Setelah spasi, warna baru aktif.
+- **Akar masalah (dibuktikan di Chromium, mode `cend2` di `spasi.mjs`, di luar repo):**
+  1. `dariDom` hanya dihitung kalau blok komposisi sama dengan blok kursor saat itu. Kalau kursor sudah pindah, `n` jatuh ke `e.data`, yang di HP sering kosong. Akibatnya tidak ada yang dibungkus.
+  2. Pembungkus memakai posisi kursor saat `compositionend`. Kalau kursor ada di `ed-doc`, pembungkusan gagal. Huruf `h` tertinggal sebagai teks polos, lalu warna blok dilepas, sehingga hitam.
+- **Perbaikan:**
+  - `docs/notes/editor/komposisi.js`: `posisiKaret`, `rentangPosisi`, `bungkusRentang`, `bungkusKomposisi`. Pembungkusan memakai posisi yang dicatat saat `compositionstart`, bukan kursor saat itu. `bungkusTerakhir` tetap ada sebagai cadangan.
+  - `docs/notes/editor/events.js`: `compositionstart` mencatat `pos`. `dariDom` dihitung dari blok awal. `awal` diteruskan ke pembungkus warna dan sorotan.
+  - `docs/notes/editor/warna.js`, `sorotan.js`: `bungkusWarnaKomposisi(n, awal)` dan `bungkusSorotKomposisi(n, awal)`.
+  - **Bug lama yang ditemukan saat uji (ada di HEAD juga):** `docs/notes/editor/cleanup.js`, bagian "ratakan span bersarang", memindahkan span dalam ke luar induknya. Akibatnya teks tertukar: `Aw[xy]al` menjadi `Awal[xy]`. Sekarang induk dipecah jadi dua salinan (warna/font sama), span dalam di tengahnya, dan kursor dipulihkan. Perbaikan ini berlaku untuk semua span bersarang (warna, sorotan, font), bukan hanya komposisi IME.
+  - `tools/uji/pdf-anotasi.mjs`: stempel `store.js` yang ditulis mati diganti pembacaan dari `app.js`. Tanpa ini, setiap `tools/version.mjs` membuat uji ini gagal (2 kegagalan).
+- **Dependensi:** opsi A (`4cce2fd`), komposisi (`6ec9d1a`), dan cleanup span bersarang (`cleanup.js`). Tidak ada dependensi ke ID lain.
+- **File yang berubah:** `komposisi.js`, `events.js`, `warna.js`, `sorotan.js`, `cleanup.js`, `tools/uji/komposisi-kursor.mjs` (baru), `tools/uji/warna-bersarang.mjs` (baru), `tools/uji/pdf-anotasi.mjs`, dan stempel `?v=` (128 berkas).
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/komposisi-kursor.mjs` (baru, jsdom, event komposisi tiruan): **5/5 lulus**. Versi HEAD (`4cce2fd`): **3/5**. Kasus yang gagal di HEAD: catatan kosong dengan kursor pindah ke `ed-doc`, dan "tengah kata + kursor ke ed-doc".
+  - `node tools/uji/warna-bersarang.mjs` (baru, jsdom): **6/6 lulus**. Versi HEAD: **2/6**. Kasus tengah, awal, dan sorotan bersarang gagal di HEAD, dan caret tetap di tempat setelah pecah.
+  - Chromium (harness di luar repo): mode `cend2`, `cend`, `elemen`, `komposisi`, `ketik`, dan `tengah` lulus tanpa galat. `cend2`: `h`, spasi, dan `a` semuanya merah. `tengah`: `Aw` merah, `xy a` biru, `al` merah.
+  - `ime-a.mjs` **8/8**. `anot.mjs` **21/21**. `eks.mjs` **7/7**.
+  - `npm test` penuh: **exit 0**, `SEMUA 37 LOLOS`, termasuk dua uji baru.
+- **Catatan:** skenario `rekomp` di harness menghasilkan spasi ganda (`h  a`). Itu juga terjadi di HEAD, jadi bagian dari skenario harness, bukan efek perubahan ini.
+- **Belum terbukti:** keluhan 1 **belum terbukti di Opera HP**. Status tetap terbuka sampai pengguna menguji di HP. Keluhan 2 (warna mati saat keyboard turun) belum ditangani di bagian ini.
 
 ## Alat diagnosis · Log ketik (Pengaturan → Aplikasi)
 

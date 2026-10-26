@@ -14,9 +14,9 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261026025826';
-import { refresh } from './cleanup.js?v=20261026025826';
-import { bungkusTerakhir } from './komposisi.js?v=20261026025826';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261026034335';
+import { refresh } from './cleanup.js?v=20261026034335';
+import { bungkusKomposisi } from './komposisi.js?v=20261026034335';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -375,7 +375,7 @@ export function warnaUntukKomposisi() {
    kalau ada warna yang menunggu, atau warna lekat tapi teksnya mendarat di
    luar span warna. Mode Bawaan belum didukung untuk komposisi (lihat
    komposisi.js). */
-export function bungkusWarnaKomposisi(n) {
+export function bungkusWarnaKomposisi(n, awal) {
   if (_pending === HAPUS) { _pending = null; return false; }
   if (_modeBawaan && !_pending) return false;
   const hex = _pending || _lekat;
@@ -385,7 +385,7 @@ export function bungkusWarnaKomposisi(n) {
   if (!(s && s.rangeCount)) return false;
   const host = warnaAround(s.getRangeAt(0).startContainer);
   if (host && host.getAttribute('data-warna') === hex) return false;
-  return bungkusTerakhir(n, frag => {
+  return bungkusKomposisi(awal, n, frag => {
     const el = buatSpan(hex);
     el.appendChild(frag);
     return el;

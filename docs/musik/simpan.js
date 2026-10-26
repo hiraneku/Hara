@@ -7,8 +7,8 @@
 
    Lagu tetap ada setelah aplikasi ditutup dan dibuka lagi. */
 
-import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261026025826';
-import { ambilSet } from './set.js?v=20261026025826';
+import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261026034335';
+import { ambilSet } from './set.js?v=20261026034335';
 
 const DB = 'hara-musik';
 const TOKO = 'berkas';

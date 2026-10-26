@@ -1,22 +1,22 @@
 /* Kebersihan DOM + hitungan huruf/kata + status tombol + autosave. */
-import { docEl, sel, curBlock } from './caret.js?v=20261026025826';
-import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261026025826';
-import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261026025826';
-import { MARKSEL, markActive, pending } from './marks.js?v=20261026025826';
-import { state, save, simpanTahan } from '../../core/store.js?v=20261026025826';
-import { findNote } from '../model.js?v=20261026025826';
-import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261026025826';
-import { sinkronTag } from '../tags.js?v=20261026025826';
-import { tandaiTautan } from '../wikilink.js?v=20261026025826';
-import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261026025826';
-import { cur } from '../../core/router.js?v=20261026025826';
-import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261026025826';
-import { GROUPS } from '../bar/config.js?v=20261026025826';
-import { warnaSekarang, warnaPending } from './warna.js?v=20261026025826';
-import { sorotSekarang, sorotPending } from './sorotan.js?v=20261026025826';
-import { rekamVersiCatatan } from '../ruang.js?v=20261026025826';
-import { teksProgresTargetKata } from '../navigasi-fokus.js?v=20261026025826';
-import { t as tr, LOKALE } from '../../core/i18n.js?v=20261026025826';
+import { docEl, sel, curBlock } from './caret.js?v=20261026034335';
+import { renumber, pastikanKolomAkhir } from './blocks.js?v=20261026034335';
+import { seimbangkanGagangGambar } from '../tata-gambar.js?v=20261026034335';
+import { MARKSEL, markActive, pending } from './marks.js?v=20261026034335';
+import { state, save, simpanTahan } from '../../core/store.js?v=20261026034335';
+import { findNote } from '../model.js?v=20261026034335';
+import { domToBlocks, touch, pastikanBlockId, pastikanGandel } from '../note-model.js?v=20261026034335';
+import { sinkronTag } from '../tags.js?v=20261026034335';
+import { tandaiTautan } from '../wikilink.js?v=20261026034335';
+import { tandaiBerubah, flush } from '../../core/autosave.js?v=20261026034335';
+import { cur } from '../../core/router.js?v=20261026034335';
+import { canUndo, canRedo, record, isReplaying } from './history.js?v=20261026034335';
+import { GROUPS } from '../bar/config.js?v=20261026034335';
+import { warnaSekarang, warnaPending } from './warna.js?v=20261026034335';
+import { sorotSekarang, sorotPending } from './sorotan.js?v=20261026034335';
+import { rekamVersiCatatan } from '../ruang.js?v=20261026034335';
+import { teksProgresTargetKata } from '../navigasi-fokus.js?v=20261026034335';
+import { t as tr, LOKALE } from '../../core/i18n.js?v=20261026034335';
 
 export function cleanup(){
   const d=docEl(); if(!d) return;
@@ -55,8 +55,34 @@ export function cleanup(){
       const sisaTeks = Array.from(induk.childNodes).some(
         n => n !== sarang && (n.textContent || '').replace(/[\u200b\u00a0]/g, '') !== '');
       if (sisaTeks) {
-        /* pindahkan span dalam keluar, tepat setelah induk */
-        induk.after(sarang);
+        /* PECAH induk: teks sebelum dan sesudah span dalam masing-masing
+           memakai salinan induk (warna/font sama), span dalam di tengahnya.
+           Urutan huruf tetap. (Dulu span dalam hanya dipindah ke luar induk,
+           sehingga "Aw[xy]al" berubah jadi "Awal[xy]" — teks ikut tertukar.) */
+        /* Memindah node yang memuat caret membuat caret jatuh ke titik pelepasan
+           (level blok). Karena itu caret dicatat dulu, lalu dipulihkan. */
+        const s2 = sel();
+        const caretDalam = s2 && s2.rangeCount && s2.isCollapsed && induk.contains(s2.anchorNode);
+        const jangkarNode = caretDalam ? s2.anchorNode : null;
+        const jangkarOff = caretDalam ? s2.anchorOffset : 0;
+        const sebelum = induk.cloneNode(false);
+        const sesudah = induk.cloneNode(false);
+        let duluDariSarang = true;
+        Array.from(induk.childNodes).forEach(n => {
+          if (n === sarang) { duluDariSarang = false; return; }
+          (duluDariSarang ? sebelum : sesudah).appendChild(n);
+        });
+        const bagian = [];
+        if (sebelum.childNodes.length) bagian.push(sebelum);
+        bagian.push(sarang);
+        if (sesudah.childNodes.length) bagian.push(sesudah);
+        induk.replaceWith(...bagian);
+        if (caretDalam && jangkarNode.isConnected && d.contains(jangkarNode)) {
+          const rk = document.createRange();
+          rk.setStart(jangkarNode, Math.min(jangkarOff, jangkarNode.nodeType === 3 ? jangkarNode.length : jangkarNode.childNodes.length));
+          rk.collapse(true);
+          s2.removeAllRanges(); s2.addRange(rk);
+        }
       } else {
         /* induk cuma membungkus span dalam -> buang induknya */
         induk.replaceWith(sarang);

@@ -134,7 +134,10 @@ console.log('── cadangan (data-io.js)');
     if (dom.window[k] !== undefined) globalThis[k] = dom.window[k];
   globalThis.localStorage ??= dom.window.localStorage;
   const dataIo = await import('../../docs/notes/data-io.js');
-  const { state } = await import('../../docs/core/store.js?v=20261026025826');
+  /* stempel dibaca dari app.js (bukan ditulis mati), supaya store.js yang diimpor
+     uji adalah instansi yang sama dengan aplikasi setelah tools/version.mjs */
+  const STEMPEL = fs.readFileSync(new URL('../../docs/app.js', import.meta.url), 'utf8').match(/\?v=(\d+)/)[1];
+  const { state } = await import(`../../docs/core/store.js?v=${STEMPEL}`);
   const blokFile = { id: 'b1', type: 'file', content: '', meta: { blobId: idPdf, name: 'uji.pdf', size: 4096, mime: 'application/pdf' } };
   state.notes = [{ id: 'n1', title: 'uji', blocks: [blokFile] }];
   const { teks } = await dataIo.cadanganJson();

@@ -16,10 +16,10 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261026025826';
-import { refresh } from './cleanup.js?v=20261026025826';
-import { bungkusTerakhir } from './komposisi.js?v=20261026025826';
-import { normalizeWarna } from './warna.js?v=20261026025826';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261026034335';
+import { refresh } from './cleanup.js?v=20261026034335';
+import { bungkusKomposisi } from './komposisi.js?v=20261026034335';
+import { normalizeWarna } from './warna.js?v=20261026034335';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -286,7 +286,7 @@ export function bungkusSorotanPending() {
 /* Setelah komposisi IME selesai: n karakter hasil komposisi ikut disorot
    kalau ada sorotan yang menunggu, atau sorotan lekat tapi teksnya mendarat
    di luar span sorotan. Lihat komposisi.js dan bungkusWarnaKomposisi. */
-export function bungkusSorotKomposisi(n) {
+export function bungkusSorotKomposisi(n, awal) {
   if (_pending === HAPUS) { _pending = null; return false; }
   if (_modeBawaan && !_pending) return false;
   const hex = _pending || _lekat;
@@ -296,7 +296,7 @@ export function bungkusSorotKomposisi(n) {
   if (!(s && s.rangeCount)) return false;
   const host = sorotAround(s.getRangeAt(0).startContainer);
   if (host && host.getAttribute('data-sorotan') === hex) return false;
-  return bungkusTerakhir(n, frag => {
+  return bungkusKomposisi(awal, n, frag => {
     const el = buatSpan(hex);
     el.appendChild(frag);
     return el;
