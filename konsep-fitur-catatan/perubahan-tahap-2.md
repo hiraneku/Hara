@@ -337,3 +337,42 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Jendela "Lihat": menampilkan isi log.
   - Setelah saklar dimatikan dan mengetik "xyz": jumlah baris log tidak bertambah (34 sebelum dan sesudah).
   - Galat JS: tidak ada.
+
+## Perubahan 15 · B5 — Pencarian teks dokumen (cakupan: di dalam viewer PDF)
+
+- **ID:** B5 (Document search), Tahap 2, urutan kedua setelah B1 (§6.1 nomor 2).
+- **Alasan urutan:** §6.1 meminta B5 dimulai dari teks yang sudah tersedia, tanpa menunggu OCR. Teks PDF bisa dibaca langsung dengan pdf.js (sudah ada dari B1a).
+- **Dependensi:** B1a (pdf.js dan viewer), B1b (komentar anotasi ikut dicari). Tidak bergantung pada B6 (OCR).
+- **Cakupan yang dipilih:** pencarian hanya di dalam viewer PDF. Pencarian global di kolom pencarian catatan belum diubah (`docs/notes/cari.js` tetap). Itu bisa menjadi langkah lanjutan bila diminta.
+- **Yang dicari:**
+  - teks lapisan teks setiap halaman PDF;
+  - teks komentar anotasi (B1b). Hasilnya ditandai "komentar di halaman N" dan tidak punya kotak sorot.
+  - Tidak dicari: sorot, garis, dan coretan (tidak punya teks). Halaman hasil pindai tanpa lapisan teks belum bisa dicari (tugas B6).
+- **Perilaku:**
+  - pencarian tidak peka huruf besar/kecil dan tidak peka aksen (`Émile` cocok dengan `emile`);
+  - spasi berlebih dianggap satu spasi, dan kata yang terpecah antar-item teks tetap ketemu;
+  - Enter atau tombol "Cari" memulai pencarian. Tombol "‹" dan "›" berpindah antar-hasil dan membungkus di ujung;
+  - hasil membuka halaman yang dimaksud dan menyorot semua kemunculan di halaman itu, dengan hasil aktif berwarna lebih kuat;
+  - teks dibaca sekali per dokumen, lalu disimpan selama viewer terbuka. Halaman yang gagal dibaca dilewati dan dihitung di status;
+  - PDF tanpa teks sama sekali diberi pesan yang jelas, bukan "tidak ditemukan" biasa;
+  - panah kiri/kanan dan PageUp/PageDown di kolom pencarian dipakai untuk kursor, tidak untuk pindah halaman. Escape tetap menutup viewer.
+- **File:**
+  - `docs/notes/pdf/cari-pdf.js` (baru): logika murni. Normalisasi kueri, indeks halaman, pencarian, kotak sorot, dan navigasi hasil.
+  - `docs/notes/pdf/penampil.js`: bar pencarian, pembacaan teks halaman, sorotan, dan penanganan tombol.
+  - `docs/styles/notes.css`: gaya kolom pencarian dan kotak sorot.
+  - `docs/core/bahasa-en.js`, `docs/core/bahasa-ja.js`: 9 teks baru.
+  - `tools/uji/pdf-cari.mjs` (baru): 29 pengujian logika.
+  - Stempel versi diperbarui dengan `node tools/version.mjs`.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/pdf-cari.mjs`: **29/29 lulus**.
+  - `node tools/uji/pdf-penampil.mjs` (38), `pdf-anotasi.mjs` (32/32), `pdf-ekspor.mjs` (26/26): lulus.
+  - `npm test` penuh: **exit 0**, tanpa FAIL.
+  - Chromium, viewer PDF sungguhan dengan pdf.js (harness di luar repo `/home/user/uji-b5/uji.mjs`, ukuran layar 412×892 mobile): **22/22 lulus**. Mencakup: hasil dan status, tombol berikutnya/sebelumnya dengan pembungkusan, sorotan dan hasil aktif, aksen dan huruf besar, kata terpecah dua operasi teks, tidak ditemukan, kolom dikosongkan, panah di kolom tidak pindah halaman, Escape menutup, PDF tanpa teks, komentar anotasi, dan tidak ada galat halaman.
+  - Tangkapan layar `shot-cari-1.png`: kotak sorot tepat di atas kata "Catatan" dan status "1 dari 2 · halaman 1".
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).** Uji di Chromium emulasi mobile saja.
+  - Kotak sorot dihitung per item teks dengan proporsi karakter. Bisa sedikit meleset pada font dengan lebar huruf tidak rata.
+  - Halaman yang diputar (rotasi 90/270) belum diuji. Kotak sorotnya kemungkinan salah.
+  - Hasil dibatasi 500 kemunculan.
+  - Pencarian global dari kolom pencarian catatan belum ada.
+  - Komentar anotasi masih memakai `prompt` dan `alert` (keterbatasan B1b, tidak berubah).

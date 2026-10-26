@@ -1090,4 +1090,13 @@ export const JA = {
   "PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.": "PDFを開けません。ファイルが壊れているか、パスワードで保護されている可能性があります。",
   "PDF dilindungi kata sandi dan belum bisa dibuka.": "PDFはパスワードで保護されているため、まだ開けません。",
   "Peramban ini tidak bisa menggambar PDF.": "このブラウザではPDFを描画できません。",
+  "Cari di PDF": "PDFを検索",
+  "Mencari…": "検索中…",
+  "Membaca teks halaman": "ページのテキストを読み込み中",
+  "PDF ini tidak punya teks yang bisa dicari. Halaman hasil pindai belum bisa dicari.": "このPDFには検索できるテキストがありません。スキャンされたページはまだ検索できません。",
+  "Tidak ditemukan": "見つかりません",
+  "halaman tidak bisa dibaca": "ページを読み込めませんでした",
+  "komentar di halaman": "ページのコメント",
+  "halaman": "ページ",
+  "dari": "/",
 };

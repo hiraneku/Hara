@@ -7,19 +7,22 @@
    Anotasi (B1b): coret, sorot, garis, dan komentar. Disimpan TERPISAH dari
    PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261026043151';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261026051921';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261026043151';
+} from './logika.js?v=20261026051921';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261026043151';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261026043151';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261026043151';
-import { esc } from '../../core/dom.js?v=20261026043151';
-import { t as tr } from '../../core/i18n.js?v=20261026043151';
+} from './anotasi.js?v=20261026051921';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261026051921';
+import {
+  bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
+} from './cari-pdf.js?v=20261026051921';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261026051921';
+import { esc } from '../../core/dom.js?v=20261026051921';
+import { t as tr } from '../../core/i18n.js?v=20261026051921';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -78,6 +81,7 @@ async function tampilkanHalaman(s) {
   wadah.appendChild(kanvas);
   if (s.blobId) wadah.appendChild(buatLapisanAnot(s, cssW, cssH));
   isi.replaceChildren(wadah);
+  gambarSorotCari(s);
   isi.scrollTop = 0;
   s.render = page.render({ canvasContext: ctx, viewport: vp });
   try {
@@ -119,6 +123,13 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       <button type="button" class="pdfv-teks" data-pdf="pas">${esc(tr('Pas lebar'))}</button>
       <button type="button" class="pdfv-teks" data-pdf="tutup">${esc(tr('Tutup'))}</button>
     </div>
+    <div class="pdfv-bar pdfv-bar2 pdfv-bar-cari">
+      <input type="search" class="pdfv-cari-input" data-pdf-cari-input placeholder="${esc(tr('Cari di PDF'))}" aria-label="${esc(tr('Cari di PDF'))}" autocomplete="off" enterkeyhint="search">
+      <button type="button" class="pdfv-teks" data-cari="cari">${esc(tr('Cari'))}</button>
+      <button type="button" class="pdfv-b" data-cari="prev" aria-label="${esc(tr('Hasil sebelumnya'))}">‹</button>
+      <button type="button" class="pdfv-b" data-cari="next" aria-label="${esc(tr('Hasil berikutnya'))}">›</button>
+      <span class="pdfv-status" data-cari-status aria-live="polite"></span>
+    </div>
     ${opsi.blobId ? `
     <div class="pdfv-bar pdfv-bar2" data-anot-bar>
       <button type="button" class="pdfv-teks" data-anot="coret">${esc(tr('Coret'))}</button>
@@ -140,13 +151,17 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     anot: [],                      /* seluruh anotasi dokumen ini */
     alat: null,                    /* 'coret' | 'sorot' | 'garis' | 'komentar' | null */
     lapisan: null, ukuran: null, sementara: null,
+    lib: null,                     /* modul pdf.js yang sudah dimuat (untuk Util) */
+    cari: { kueri: '', indeksJanji: null, gagal: 0, hasil: [], posisi: -1 },
   };
   aktif = s;
 
   s.kunciTombol = e => {
     if (aktif !== s) return;
-    if (e.key === 'Escape') { e.preventDefault(); tutupPenampilPdf(); }
-    else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); pindahHalaman(s, halamanBerikut(s.halaman, s.total)); }
+    if (e.key === 'Escape') { e.preventDefault(); tutupPenampilPdf(); return; }
+    /* Di kolom pencarian, panah dipakai untuk menggerakkan kursor, bukan pindah halaman. */
+    if (e.target && e.target.matches && e.target.matches('input, textarea')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); pindahHalaman(s, halamanBerikut(s.halaman, s.total)); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); pindahHalaman(s, halamanSebelumnya(s.halaman, s.total)); }
   };
   document.addEventListener('keydown', s.kunciTombol, true);
@@ -160,6 +175,14 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
   window.addEventListener('resize', s.ubahUkuran);
 
   overlay.addEventListener('click', e => {
+    const alatCari = e.target.closest('[data-cari]');
+    if (alatCari && aktif === s) {
+      const j = alatCari.dataset.cari;
+      if (j === 'cari') cariUi(s);
+      else if (j === 'next') langkahHit(s, hasilBerikut);
+      else if (j === 'prev') langkahHit(s, hasilSebelumnya);
+      return;
+    }
     const alatAnot = e.target.closest('[data-anot]');
     if (alatAnot && aktif === s) {
       const j = alatAnot.dataset.anot;
@@ -180,6 +203,14 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     else if (aksi === 'pas') { s.pas = true; tampilkanHalaman(s); }
   });
 
+  const kolomCari = overlay.querySelector('[data-pdf-cari-input]');
+  kolomCari.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); cariUi(s); }
+  });
+  kolomCari.addEventListener('input', () => {
+    if (!kolomCari.value.trim()) { resetCari(s); setStatusCari(s, ''); }
+  });
+
   let lib;
   try {
     lib = await muatPdfJs();
@@ -188,6 +219,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     return;
   }
   if (aktif !== s) return;
+  s.lib = lib;
 
   const task = lib.getDocument({ data: new Uint8Array(data), isEvalSupported: false, useSystemFonts: false });
   s.task = task;
@@ -217,6 +249,136 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
 /* pdf.js 6.x: dokumen dilepas lewat PDFDocumentLoadingTask.destroy() (PDFDocumentProxy tidak punya destroy). */
 function lepaskanTugas(task) {
   try { task?.destroy()?.catch?.(() => {}); } catch {}
+}
+
+/* ── Pencarian teks (B5) ── */
+
+/* Kotak satu item teks dalam koordinat 0–1 terhadap halaman (rotasi 0). */
+function kotakItem(it, vp, lib) {
+  const m = lib.Util.transform(vp.transform, it.transform);
+  const tinggi = Math.hypot(m[2], m[3]);
+  return { x: m[4] / vp.width, y: (m[5] - tinggi) / vp.height, w: it.width / vp.width, h: tinggi / vp.height };
+}
+
+/* Teks semua halaman dibaca sekali per dokumen, lalu disimpan. Halaman yang gagal
+   dibaca dilewati dan dihitung di s.cari.gagal. Mengembalikan null bila penampil
+   sudah ditutup di tengah jalan. */
+function pastikanIndeks(s) {
+  if (!s.cari.indeksJanji) {
+    s.cari.indeksJanji = (async () => {
+      const daftar = [];
+      for (let i = 1; i <= s.total; i++) {
+        setStatusCari(s, `${tr('Membaca teks halaman')} ${i} / ${s.total}`);
+        let indeks;
+        try {
+          const page = await s.doc.getPage(i);
+          const vp = page.getViewport({ scale: 1 });
+          const isi = await page.getTextContent();
+          indeks = bangunIndeks(isi.items
+            .filter(it => typeof it.str === 'string')
+            .map(it => ({ str: it.str, eol: !!it.hasEOL, box: kotakItem(it, vp, s.lib) })));
+          page.cleanup();
+        } catch {
+          s.cari.gagal++;
+          indeks = bangunIndeks([]);
+        }
+        if (aktif !== s) return null;
+        daftar.push({ halaman: i, jenis: 'teks', indeks });
+      }
+      return daftar;
+    })();
+  }
+  return s.cari.indeksJanji;
+}
+
+async function cariUi(s) {
+  if (!s.doc) return;
+  const kueri = s.overlay.querySelector('[data-pdf-cari-input]').value;
+  if (!normalisasiCari(kueri)) { resetCari(s); setStatusCari(s, ''); return; }
+  s.cari.kueri = kueri;
+  setStatusCari(s, tr('Mencari…'));
+  const daftar = await pastikanIndeks(s);
+  if (aktif !== s || !daftar) return;
+  s.cari.hasil = kumpulkanHasil([...daftar, ...daftarKomentar(s.anot)], kueri);
+  s.cari.posisi = s.cari.hasil.length ? 0 : -1;
+  if (!s.cari.hasil.length) {
+    const adaTeks = daftar.some(d => d.indeks.norm.length > 0);
+    gambarSorotCari(s);
+    const pesan = adaTeks
+      ? tr('Tidak ditemukan')
+      : tr('PDF ini tidak punya teks yang bisa dicari. Halaman hasil pindai belum bisa dicari.');
+    setStatusCari(s, pesan + (s.cari.gagal ? ` · ${s.cari.gagal} ${tr('halaman tidak bisa dibaca')}` : ''));
+    return;
+  }
+  tampilkanHit(s);
+}
+
+function resetCari(s) {
+  s.cari.kueri = '';
+  s.cari.hasil = [];
+  s.cari.posisi = -1;
+  gambarSorotCari(s);
+}
+
+function setStatusCari(s, pesan) {
+  const el = s.overlay.querySelector('[data-cari-status]');
+  if (el) el.textContent = pesan;
+}
+
+function statusHit(s) {
+  const n = s.cari.hasil.length;
+  const h = s.cari.hasil[s.cari.posisi];
+  const lokasi = h.jenis === 'komentar'
+    ? `${tr('komentar di halaman')} ${h.halaman}`
+    : `${tr('halaman')} ${h.halaman}`;
+  return `${s.cari.posisi + 1} ${tr('dari')} ${n} · ${lokasi}`
+    + (s.cari.gagal ? ` · ${s.cari.gagal} ${tr('halaman tidak bisa dibaca')}` : '');
+}
+
+/* Membuka halaman hasil yang aktif (bila beda) lalu menyorot kotaknya. */
+function tampilkanHit(s) {
+  const h = s.cari.hasil[s.cari.posisi];
+  if (!h) return;
+  if (h.halaman !== s.halaman) {
+    s.halaman = h.halaman;
+    labelHalaman(s);
+    tampilkanHalaman(s);
+  } else {
+    gambarSorotCari(s);
+  }
+  setStatusCari(s, statusHit(s));
+}
+
+function langkahHit(s, fungsi) {
+  const n = s.cari.hasil.length;
+  if (!n) return;
+  s.cari.posisi = fungsi(s.cari.posisi, n);
+  tampilkanHit(s);
+}
+
+/* Kotak sorot untuk semua hasil di halaman ini. Hasil yang aktif diberi warna lebih kuat.
+   Hasil komentar tidak punya kotak. */
+function gambarSorotCari(s) {
+  const wadah = s.overlay.querySelector('.pdfv-kwrap');
+  if (!wadah) return;
+  wadah.querySelector('.pdfv-cari-layer')?.remove();
+  const diHalaman = s.cari.hasil.filter(h => h.halaman === s.halaman && h.kotak.length);
+  if (!diHalaman.length) return;
+  const aktifHit = s.cari.hasil[s.cari.posisi];
+  const layer = document.createElement('div');
+  layer.className = 'pdfv-cari-layer';
+  for (const h of diHalaman) {
+    for (const k of h.kotak) {
+      const kotak = document.createElement('div');
+      kotak.className = 'pdfv-cari-kotak' + (h === aktifHit ? ' on' : '');
+      kotak.style.left = `${k.x * 100}%`;
+      kotak.style.top = `${k.y * 100}%`;
+      kotak.style.width = `${k.w * 100}%`;
+      kotak.style.height = `${k.h * 100}%`;
+      layer.appendChild(kotak);
+    }
+  }
+  wadah.appendChild(layer);
 }
 
 /* ── Anotasi ── */

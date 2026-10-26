@@ -18,7 +18,7 @@
    jsdom tidak punya PointerEvent — suite menguji tombol aksi
    (data-sw-*) langsung dan tidak menguji pointer gesture. */
 
-import { sedangPilih } from './pilih.js?v=20261026043151';
+import { sedangPilih } from './pilih.js?v=20261026051921';
 
 const AMBANG_MULAI = 10;    /* px gerak sebelum dianggap sapuan */
 const AMBANG_BUKA = -92;    /* px: lewat ini = terbuka penuh */

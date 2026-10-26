@@ -1123,4 +1123,13 @@ export const EN = {
   "PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.": "The PDF cannot be opened. The file may be damaged or password-protected.",
   "PDF dilindungi kata sandi dan belum bisa dibuka.": "The PDF is password-protected and cannot be opened yet.",
   "Peramban ini tidak bisa menggambar PDF.": "This browser cannot draw PDFs.",
+  "Cari di PDF": "Search in PDF",
+  "Mencari…": "Searching…",
+  "Membaca teks halaman": "Reading page text",
+  "PDF ini tidak punya teks yang bisa dicari. Halaman hasil pindai belum bisa dicari.": "This PDF has no searchable text. Scanned pages cannot be searched yet.",
+  "Tidak ditemukan": "Not found",
+  "halaman tidak bisa dibaca": "pages could not be read",
+  "komentar di halaman": "comment on page",
+  "halaman": "page",
+  "dari": "of",
 };

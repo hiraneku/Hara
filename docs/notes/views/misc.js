@@ -1,20 +1,20 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261026043151';
-import { logAktif } from '../log-ketik.js?v=20261026043151';
-import { esc, stamp } from '../../core/dom.js?v=20261026043151';
-import { rowFor } from './row.js?v=20261026043151';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261026043151';
-import { AK, akSekarang } from '../../core/theme.js?v=20261026043151';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261026043151';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261026043151';
-import { terlihat } from '../kunci.js?v=20261026043151';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261026043151';
-import { petaNamaRuang } from '../ruang.js?v=20261026043151';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261026043151';
-import { namaSekarang } from '../../home/nama.js?v=20261026043151';
-import { renderSimpanSaringanHtml } from '../saringan.js?v=20261026043151';
+import { state } from '../../core/store.js?v=20261026051921';
+import { logAktif } from '../log-ketik.js?v=20261026051921';
+import { esc, stamp } from '../../core/dom.js?v=20261026051921';
+import { rowFor } from './row.js?v=20261026051921';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261026051921';
+import { AK, akSekarang } from '../../core/theme.js?v=20261026051921';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261026051921';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261026051921';
+import { terlihat } from '../kunci.js?v=20261026051921';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261026051921';
+import { petaNamaRuang } from '../ruang.js?v=20261026051921';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261026051921';
+import { namaSekarang } from '../../home/nama.js?v=20261026051921';
+import { renderSimpanSaringanHtml } from '../saringan.js?v=20261026051921';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */

@@ -8,14 +8,14 @@
    dipanggil tiap layar editor selesai digambar agar ukuran tersimpan
    langsung berlaku. */
 
-import { toast } from '../core/toast.js?v=20261026043151';
-import { closeAll } from './menus/pop.js?v=20261026043151';
-import { docEl } from './editor/caret.js?v=20261026043151';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261026043151';
-import { bukaDaftarIsi } from './daftar-isi.js?v=20261026043151';
-import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261026043151';
-import { t as tr } from '../core/i18n.js?v=20261026043151';
-import { bukaCariGanti } from './cari-ganti.js?v=20261026043151';
+import { toast } from '../core/toast.js?v=20261026051921';
+import { closeAll } from './menus/pop.js?v=20261026051921';
+import { docEl } from './editor/caret.js?v=20261026051921';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261026051921';
+import { bukaDaftarIsi } from './daftar-isi.js?v=20261026051921';
+import { cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261026051921';
+import { t as tr } from '../core/i18n.js?v=20261026051921';
+import { bukaCariGanti } from './cari-ganti.js?v=20261026051921';
 
 const KUNCI_UKUR = 'hara.baca.ukur.v1';
 /* Skala paragraf: 15px ↔ 24px (butir A1). Paragraf dasar 16px. */

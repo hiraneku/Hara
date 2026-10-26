@@ -2207,6 +2207,10 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .pdfv-bar2{padding-top:6px;padding-bottom:6px}
 .pdfv-bar2 .pdfv-teks.on{background:var(--accent,#1e88e5);color:#fff;border-color:transparent}
 .pdfv-status{font-size:12px;color:var(--text-muted,var(--text));flex:1 1 100%}
+.pdfv-cari-input{flex:1 1 160px;min-width:0;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:14px}
+.pdfv-cari-layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.pdfv-cari-kotak{position:absolute;background:rgba(255,213,0,.4);mix-blend-mode:multiply}
+.pdfv-cari-kotak.on{background:rgba(255,120,0,.5);outline:2px solid #e65100}
 
 
 /* #3 Kanvas Sketsa Layar Penuh & #14 Graf Interaktif Sentuh */

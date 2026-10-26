@@ -12,18 +12,18 @@
  *    - Pembaruan warna langsung (live update) ke stiker yang sedang dipilih di kanvas
  */
 
-import { state } from '../core/store.js?v=20261026043151';
-import { touch } from './note-model.js?v=20261026043151';
-import { saveSoon } from './editor/cleanup.js?v=20261026043151';
-import { openPop, closeAll } from './menus/pop.js?v=20261026043151';
-import { esc } from '../core/dom.js?v=20261026043151';
-import { toast } from '../core/toast.js?v=20261026043151';
-import { t as tr } from '../core/i18n.js?v=20261026043151';
-import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261026043151';
-import { refresh } from './editor/cleanup.js?v=20261026043151';
-import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261026043151';
-import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261026043151';
-import { bukaStudioGambar } from './hamoji-gambar.js?v=20261026043151';
+import { state } from '../core/store.js?v=20261026051921';
+import { touch } from './note-model.js?v=20261026051921';
+import { saveSoon } from './editor/cleanup.js?v=20261026051921';
+import { openPop, closeAll } from './menus/pop.js?v=20261026051921';
+import { esc } from '../core/dom.js?v=20261026051921';
+import { toast } from '../core/toast.js?v=20261026051921';
+import { t as tr } from '../core/i18n.js?v=20261026051921';
+import { ensureCaret, sel, docEl } from './editor/caret.js?v=20261026051921';
+import { refresh } from './editor/cleanup.js?v=20261026051921';
+import { normalizeWarna, hslKeRgb } from './editor/warna.js?v=20261026051921';
+import { WARNA_UMUM, hexKeHsl, hslKeHex } from './menus/warna.js?v=20261026051921';
+import { bukaStudioGambar } from './hamoji-gambar.js?v=20261026051921';
 
 const STORAGE_MODE_KEY = 'hara.hamoji.mode';
 const STORAGE_CUSTOM_KEY = 'hara.hamoji.custom';
