@@ -7,18 +7,19 @@
    Anotasi (B1b): coret, sorot, garis, dan komentar. Disimpan TERPISAH dari
    PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261026024309';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261026025826';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261026024309';
+} from './logika.js?v=20261026025826';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261026024309';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261026024309';
-import { esc } from '../../core/dom.js?v=20261026024309';
-import { t as tr } from '../../core/i18n.js?v=20261026024309';
+} from './anotasi.js?v=20261026025826';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261026025826';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261026025826';
+import { esc } from '../../core/dom.js?v=20261026025826';
+import { t as tr } from '../../core/i18n.js?v=20261026025826';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -125,6 +126,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       <button type="button" class="pdfv-teks" data-anot="garis">${esc(tr('Garis'))}</button>
       <button type="button" class="pdfv-teks" data-anot="komentar">${esc(tr('Komentar'))}</button>
       <button type="button" class="pdfv-teks" data-anot-batal>${esc(tr('Batal'))}</button>
+      <button type="button" class="pdfv-teks" data-anot-ekspor>${esc(tr('Ekspor PDF'))}</button>
       <span class="pdfv-status" data-anot-status aria-live="polite"></span>
     </div>` : ''}
     <div class="pdfv-isi" data-pdf-isi><p class="pdfv-info">${esc(tr('Memuat PDF…'))}</p></div>`;
@@ -166,6 +168,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       return;
     }
     if (e.target.closest('[data-anot-batal]') && aktif === s) { batalAnotHalaman(s); return; }
+    if (e.target.closest('[data-anot-ekspor]') && aktif === s) { eksporAnot(s, nama); return; }
     const b = e.target.closest('[data-pdf]');
     if (!b || aktif !== s || b.disabled) return;
     const aksi = b.dataset.pdf;
@@ -307,6 +310,64 @@ function tambahAnotDanSimpan(s, a) {
   s.anot = tambahAnotasi(s.anot, a);
   gambarAnot(s);
   return simpanAnotUi(s);
+}
+
+/* Ekspor PDF hasil anotasi (B1c). Tiap halaman dirender ke gambar, anotasinya
+   digambar di atasnya, lalu semua ditulis ke PDF baru lewat ekspor-pdf.js.
+   PDF asli tidak diubah. Berkas diunduh lewat tautan biasa. */
+async function eksporAnot(s, nama) {
+  if (s.mengekspor || !s.doc) return;
+  s.mengekspor = true;
+  try {
+    const halaman = [];
+    for (let i = 1; i <= s.total; i++) {
+      setStatusAnot(s, `${tr('Mengekspor halaman')} ${i} / ${s.total}`);
+      const page = await s.doc.getPage(i);
+      const v1 = page.getViewport({ scale: 1 });
+      const skala = Math.min(2, 2200 / Math.max(v1.width, v1.height));
+      const vp = page.getViewport({ scale: skala });
+      const kanvas = document.createElement('canvas');
+      kanvas.width = Math.round(vp.width);
+      kanvas.height = Math.round(vp.height);
+      const ctx = kanvas.getContext('2d');
+      if (!ctx) throw new Error('kanvas tidak tersedia');
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const daftar = anotasiHalaman(s.anot, i);
+      gambarAnotasiKanvas(ctx, kanvas.width, kanvas.height, daftar);
+      const blob = await new Promise((res, rej) =>
+        kanvas.toBlob(b => (b ? res(b) : rej(new Error('jpeg'))), 'image/jpeg', 0.9));
+      const jpeg = new Uint8Array(await blob.arrayBuffer());
+      halaman.push({
+        w: v1.width, h: v1.height, pxW: kanvas.width, pxH: kanvas.height, jpeg,
+        komentar: daftar.filter(a => a.jenis === 'komentar').map(a => ({ x: a.x, y: a.y, teks: a.teks })),
+      });
+      kanvas.width = 0;
+      kanvas.height = 0;
+    }
+    const pdf = tulisPdfGambar(halaman);
+    unduhBerkas(new Blob([pdf], { type: 'application/pdf' }), namaEkspor(nama));
+    setStatusAnot(s, tr('PDF hasil anotasi sudah dibuat'));
+  } catch (err) {
+    setStatusAnot(s, tr('Ekspor gagal. Coba lagi.'));
+  } finally {
+    s.mengekspor = false;
+  }
+}
+
+function namaEkspor(nama) {
+  const dasar = String(nama || 'PDF').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'PDF';
+  return dasar + '-anotasi.pdf';
+}
+
+function unduhBerkas(blob, nama) {
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = nama;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
 function batalAnotHalaman(s) {

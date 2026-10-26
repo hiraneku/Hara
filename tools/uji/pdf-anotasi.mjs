@@ -134,7 +134,7 @@ console.log('── cadangan (data-io.js)');
     if (dom.window[k] !== undefined) globalThis[k] = dom.window[k];
   globalThis.localStorage ??= dom.window.localStorage;
   const dataIo = await import('../../docs/notes/data-io.js');
-  const { state } = await import('../../docs/core/store.js?v=20261026024309');
+  const { state } = await import('../../docs/core/store.js?v=20261026025826');
   const blokFile = { id: 'b1', type: 'file', content: '', meta: { blobId: idPdf, name: 'uji.pdf', size: 4096, mime: 'application/pdf' } };
   state.notes = [{ id: 'n1', title: 'uji', blocks: [blokFile] }];
   const { teks } = await dataIo.cadanganJson();

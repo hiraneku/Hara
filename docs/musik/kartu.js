@@ -2,12 +2,12 @@
    terakhir yang diputar dengan sampulnya. Ketuk badan kartu → layar Musik;
    tombol putar → lanjut/jeda lagu itu. */
 
-import { esc } from '../core/dom.js?v=20261026024309';
-import { t as tr } from '../core/i18n.js?v=20261026024309';
-import * as M from './mesin.js?v=20261026024309';
-import * as S from './simpan.js?v=20261026024309';
-import { formatWaktu, laguTerakhir } from './logika.js?v=20261026024309';
-import { ikon } from './ikon.js?v=20261026024309';
+import { esc } from '../core/dom.js?v=20261026025826';
+import { t as tr } from '../core/i18n.js?v=20261026025826';
+import * as M from './mesin.js?v=20261026025826';
+import * as S from './simpan.js?v=20261026025826';
+import { formatWaktu, laguTerakhir } from './logika.js?v=20261026025826';
+import { ikon } from './ikon.js?v=20261026025826';
 
 /* Lagu yang ditampilkan: yang terakhir diputar, atau yang terakhir diimpor. */
 function laguKartu() {

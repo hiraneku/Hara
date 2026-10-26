@@ -7,7 +7,7 @@
      { id, label, hint?, cari?: 'kata kunci tambahan', jalan: () => void }
    Satu-satunya tombol global di sini adalah Ctrl/⌘+K dan Esc. */
 
-import { t as tr } from './i18n.js?v=20261026024309';
+import { t as tr } from './i18n.js?v=20261026025826';
 
 const sumber = [];
 let terbuka = false;

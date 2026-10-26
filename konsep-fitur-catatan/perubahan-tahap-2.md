@@ -48,7 +48,7 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 - JPEG2000 dan JBIG2 tidak didukung.
 - Peramban lama tidak bisa menampilkan PDF sama sekali (muncul pesan, bukan render).
 - Tombol zoom dan navigasi di bar atas masih kasar secara visual (ikon `+`, `−`, `‹`, `›` terlihat tidak rata di screenshot). Belum diperbaiki.
-- (Diperbarui setelah B1b) Anotasi sudah ada (lihat B1b). Ekspor PDF yang dianotasi belum ada (B1c).
+- (Diperbarui setelah B1c) Anotasi (B1b) dan ekspor PDF hasil anotasi (B1c) sudah ada.
 
 ## Status
 
@@ -107,7 +107,7 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 
 ## Keterbatasan yang diketahui (B1b)
 
-- **Ekspor PDF yang dianotasi belum ada** (B1c).
+- ~~Ekspor PDF yang dianotasi belum ada~~ (sudah ada di B1c, lihat Perubahan 14).
 - Komentar memakai `window.prompt` dan `window.alert`. Ini sederhana dan bisa terlihat kasar di HP. Kotak komentar yang proper belum dibuat.
 - Tidak ada hapus per anotasi atau edit. Hanya Batal (anotasi terakhir di halaman aktif).
 - Terjemahan en dan ja untuk string baru belum ditambahkan. Teksnya tampil dalam bahasa Indonesia sebagai fallback.
@@ -117,13 +117,36 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 
 - B1a: **Implemented**.
 - B1b: **Implemented**, dengan keterbatasan di atas dan belum diuji di HP sungguhan.
-- B1c (ekspor PDF yang dianotasi): **belum dikerjakan.**
+- B1c (ekspor PDF yang dianotasi): **Implemented** (lihat Perubahan 14). Teks hasil ekspor tidak bisa dipilih.
+- **B1 selesai** (B1a, B1b, B1c). Belum diuji di HP.
 - B5, B3, B4, B2, B6, B8: belum dikerjakan.
 
 ## Berikutnya
 
 - Uji B1b di HP (Opera Android) setelah APK atau Pages terbaru tersedia.
-- B1c (ekspor PDF yang dianotasi, §1.5) menunggu persetujuan pengguna.
+- Uji B1 di HP (Opera Android): anotasi, ekspor, dan keluhan 1 opsi A.
+
+## Perubahan 14 · B1c — Ekspor PDF yang sudah dianotasi (§1.5)
+
+- **ID:** B1 (PDF import dan anotasi). Ini **B1c**: ekspor PDF hasil anotasi. Ini bagian terakhir B1.
+- **Alasan urutan:** dikerjakan setelah B1b, karena ekspor butuh anotasi yang sudah tersimpan. Disetujui pengguna dengan "lanjut".
+- **Dependensi:** B1a (penampil dan pdf.js), B1b (anotasi). Tidak ada dependensi ke ID lain.
+- **Cara yang dipilih (paling pasti dan sederhana, sesuai keputusan pengguna):** setiap halaman dirender ke gambar JPEG lewat pdf.js. Anotasi (coret, sorot, garis, penanda komentar) digambar di atas gambar. Gambar-gambar itu ditulis ke PDF baru oleh penulis kecil sendiri. Komentar juga disimpan sebagai anotasi PDF asli (`/Text`) yang berisi teksnya. Tidak ada pustaka baru.
+- **Yang berubah:**
+  - `docs/notes/pdf/ekspor-pdf.js` (baru): `teksPdfUtf16`, `tulisPdfGambar`, `gambarAnotasiKanvas`.
+  - `docs/notes/pdf/penampil.js`: tombol "Ekspor PDF" di bilah anotasi, fungsi `eksporAnot`, `namaEkspor` (`<nama>-anotasi.pdf`), `unduhBerkas`. Status menampilkan kemajuan per halaman.
+  - `tools/uji/pdf-ekspor.mjs` (baru): 26 pengujian Node.
+  - Stempel `?v=` menjadi `20261026025826` (128 berkas).
+- **Batasan jujur:**
+  - **Teks halaman di PDF hasil ekspor TIDAK bisa dipilih atau dicari** (halaman sudah berupa gambar). PDF asli tidak diubah.
+  - Ukuran berkas besar: gambar JPEG per halaman, skala sampai 2× dengan sisi terpanjang sekitar 2200 piksel.
+  - Komentar tampil sebagai penanda di gambar dan sebagai anotasi `/Text`. Penanda `/Text` dibuka dengan ketuk, tergantung pembaca PDF.
+  - Hasil belum disimpan kembali sebagai lampiran di catatan. Unduhan langsung.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/pdf-ekspor.mjs`: **26/26 lulus.** Mencakup teks UTF-16, struktur xref (setiap offset menunjuk ke `N 0 obj`), `startxref`, jumlah halaman, MediaBox, gambar DCT, anotasi `/Text` dan teksnya, penolakan input rusak, dan penggambar anotasi.
+  - **Chromium (`eks.mjs` di luar repo): 7/7 lulus.** Berkas terunduh sebagai `uji-anotasi.pdf`. PDF sumber tidak berubah (hash sama). Berkas hasil bisa dibuka dan dirender ulang di penampil.
+  - **Pembaca PDF independen (pypdf 6.21.2, di luar repo):** 2 halaman, MediaBox 300×400, gambar 600×800 RGB, satu anotasi `/Text` di halaman 1 dengan isi "ekspor komentar", dan halaman 2 tanpa komentar. Gambar halaman 1 diperiksa: sorot kuning dan penanda biru tampil.
+- **Belum diuji:** ekspor PDF besar (banyak halaman), ekspor di HP, dan pembukaan hasil di pembaca PDF selain pdf.js dan pypdf.
 
 ## Perbaikan · Menu warna teks (di luar urutan B1–B8)
 
@@ -240,6 +263,13 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Regresi (`/home/user/uji-ime/regresi.mjs`), hasil sama sebelum dan sesudah: IME "halo" + spasi + IME "dunia" berwarna penuh; IME di tengah teks "Aw[xy]al"; tebal lewat IME "<b>halo</b>"; spasi dulu lalu warna dan IME.
   - `npm test` penuh: exit 0, 37/37 di `kondisi-tepi`.
 - **Belum terbukti:** urutan event keyboard Opera sebenarnya di HP belum dicatat. Tiruan di atas memodelkan dua kemungkinan (data kosong dan caret elemen). Perlu konfirmasi dari HP.
+
+- **Opsi A (dipilih pengguna, 2 langkah):**
+  - Percobaan pertama, **gagal dan dibuang:** membuat span kosong di `compositionstart`. Di Chromium, huruf komposisi tetap ditulis ke teks lama di luar span, jadi huruf pertama tetap tidak berwarna saat komposisi. Akhir teks benar hanya karena pembungkusan di `compositionend`. Pendekatan ini TIDAK dipakai.
+  - Perbaikan yang dipakai: di `compositionstart`, bila blok hanya berisi spasi (catatan kosong, atau spasi di awal) dan warna menyala, warna **dipasang ke elemen blok** (`style.color`) selama komposisi. Node teks dan kursor tidak disentuh. Warna blok dilepas di `compositionend`, SETELAH pembungkusan.
+  - Kode: `docs/notes/editor/events.js` (`kompWarnaBlok`, `compositionstart`, `compositionend`), `docs/notes/editor/warna.js` (`warnaUntukKomposisi()` baru).
+  - **Uji (Chromium, simulasi IME lewat CDP `Input.imeSetComposition`, `ime-a.mjs` di luar repo): 8/8 lulus.** Huruf pertama sudah berwarna merah (`rgb(229, 57, 53)`) sebelum komposisi selesai. Versi HEAD gagal di cek itu (warna `rgb(28, 27, 24)`, hitam). "halo" utuh berwarna tanpa karakter sampah. Spasi lalu "dua" berwarna biru tanpa sampah.
+  - **Batasan:** sorotan belum masuk opsi ini (warna blok akan menyorot seluruh lebar blok). Sorotan, tebal, miring, dan font tetap dibungkus di `compositionend`. Blok yang sudah berisi teks juga belum. Hasil di Opera Android BELUM diuji, karena simulasi Chromium tidak sama dengan keyboard HP.
 
 ## Alat diagnosis · Log ketik (Pengaturan → Aplikasi)
 

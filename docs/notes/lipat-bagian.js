@@ -15,10 +15,10 @@
      plus Lipat semua / Buka semua;
    - di Mode Baca, mengetuk area chevron di kiri heading juga melipat. */
 
-import { state } from '../core/store.js?v=20261026024309';
-import { onAfterRender, cur } from '../core/router.js?v=20261026024309';
-import { docEl } from './editor/caret.js?v=20261026024309';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261026024309';
+import { state } from '../core/store.js?v=20261026025826';
+import { onAfterRender, cur } from '../core/router.js?v=20261026025826';
+import { docEl } from './editor/caret.js?v=20261026025826';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261026025826';
 
 const KUNCI = 'hara.lipat.v1';
 const MAKS_CATATAN = 300;

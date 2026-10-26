@@ -3,15 +3,15 @@
    - Crossfade (saklar dan durasi 1–10 detik).
    Pengaturan disimpan lewat set.js; keadaan sleep timer hanya di memori (tidur.js). */
 
-import { cur, go } from '../core/router.js?v=20261026024309';
-import { t as tr } from '../core/i18n.js?v=20261026024309';
-import { toast } from '../core/toast.js?v=20261026024309';
-import * as M from './mesin.js?v=20261026024309';
-import * as A from './aksi.js?v=20261026024309';
-import * as T from './tidur.js?v=20261026024309';
-import { ambilSet, ubahSet } from './set.js?v=20261026024309';
-import { ikon } from './ikon.js?v=20261026024309';
-import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261026024309';
+import { cur, go } from '../core/router.js?v=20261026025826';
+import { t as tr } from '../core/i18n.js?v=20261026025826';
+import { toast } from '../core/toast.js?v=20261026025826';
+import * as M from './mesin.js?v=20261026025826';
+import * as A from './aksi.js?v=20261026025826';
+import * as T from './tidur.js?v=20261026025826';
+import { ambilSet, ubahSet } from './set.js?v=20261026025826';
+import { ikon } from './ikon.js?v=20261026025826';
+import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261026025826';
 
 /* Label singkat agar muat dalam tiga kolom pada layar kecil. */
 const LABEL_TIDUR = { waktu: 'Waktu', lagu: 'Lagu ini', daftar: 'Daftar habis' };
