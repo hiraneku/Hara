@@ -2199,6 +2199,14 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .pdfv-kanvas{display:block;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:none}
 .pdfv-info{color:#fff;font-size:14px;margin:auto;text-align:center;padding:16px}
 .pdfv-galat{background:var(--surface);color:var(--text);border-radius:12px;padding:16px 18px}
+/* Anotasi PDF (B1b): lapisan SVG di atas kanvas; hanya aktif saat alat dipilih */
+.pdfv-kwrap{position:relative;flex:none;line-height:0}
+.pdfv-anot{position:absolute;left:0;top:0;pointer-events:none;touch-action:none;overflow:visible}
+.pdfv-anot.aktif{pointer-events:auto}
+.pdfv-anot .komen{pointer-events:auto;cursor:pointer;stroke:#fff;stroke-width:2}
+.pdfv-bar2{padding-top:6px;padding-bottom:6px}
+.pdfv-bar2 .pdfv-teks.on{background:var(--accent,#1e88e5);color:#fff;border-color:transparent}
+.pdfv-status{font-size:12px;color:var(--text-muted,var(--text));flex:1 1 100%}
 
 
 /* #3 Kanvas Sketsa Layar Penuh & #14 Graf Interaktif Sentuh */

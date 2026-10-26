@@ -2,16 +2,16 @@
    pengaturan, dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi
    lagu lama sebelum berpindah, lalu muat lagu baru. */
 
-import { toast } from '../core/toast.js?v=20261025154950';
-import { t as tr } from '../core/i18n.js?v=20261025154950';
-import * as M from './mesin.js?v=20261025154950';
-import * as S from './simpan.js?v=20261025154950';
-import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261025154950';
-import { ambilSampul, pembacaBlob } from './sampul.js?v=20261025154950';
-import * as D from './daftar.js?v=20261025154950';
-import * as T from './tidur.js?v=20261025154950';
-import { ambilSet, ubahSet } from './set.js?v=20261025154950';
-import { pilihBerikut, urutkanAcak } from './mode.js?v=20261025154950';
+import { toast } from '../core/toast.js?v=20261026024309';
+import { t as tr } from '../core/i18n.js?v=20261026024309';
+import * as M from './mesin.js?v=20261026024309';
+import * as S from './simpan.js?v=20261026024309';
+import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261026024309';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261026024309';
+import * as D from './daftar.js?v=20261026024309';
+import * as T from './tidur.js?v=20261026024309';
+import { ambilSet, ubahSet } from './set.js?v=20261026024309';
+import { pilihBerikut, urutkanAcak } from './mode.js?v=20261026024309';
 
 /* Antrean putar: null = urutan pustaka; array id = urutan daftar putar yang sedang diputar. */
 let antrean = null;

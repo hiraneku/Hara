@@ -1,22 +1,22 @@
 /* Semua penangan kejadian editor: mengetik, tombol papan ketik, seleksi. */
-import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261025154950';
-import { setBlock, indent } from './blocks.js?v=20261025154950';
-import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261025154950';
-import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261025154950';
-import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261025154950';
-import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261025154950';
-import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261025154950';
-import { onTitle } from '../model.js?v=20261025154950';
-import { tanganiPaste } from './paste.js?v=20261025154950';
-import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261025154950';
-import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261025154950';
-import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261025154950';
-import { record, snap, undo, redo, isReplaying } from './history.js?v=20261025154950';
-import { panjangTeks } from './komposisi.js?v=20261025154950';
-import { ulangSetelahCentang } from '../pengingat.js?v=20261025154950';
-import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261025154950';
-import { toast } from '../../core/toast.js?v=20261025154950';
-import { t as tr } from '../../core/i18n.js?v=20261025154950';
+import { docEl, sel, curBlock, caretEnd, bukaKeyboard, nearestEditable, seleksiDiEditor } from './caret.js?v=20261026024309';
+import { setBlock, indent } from './blocks.js?v=20261026024309';
+import { pending, sticky, mati, flushPending, wrapTypedPending, markAround, markPerluKeluar, keluarDariMark, bungkusMarkLekat, toggleMark, wrapMarkKomposisi } from './marks.js?v=20261026024309';
+import { autoFormat, autoTagDalam, cobaTagUjungEnter, cobaPembatasAkhir, tutupTagSebelum, tagUjungCaret, keluarDariUjungTag, tagCaretDalam, pecahSetelahTag } from './markdown.js?v=20261026024309';
+import { refresh, updateCount, syncBtns, saveNow } from './cleanup.js?v=20261026024309';
+import { setKomposisi, sedangKomposisi } from '../label-tag.js?v=20261026024309';
+import { slashAktif, bukaSlash, perbaruiSlash, tutupSlash, geserPilihan, pilihanSlash, garingLayak } from '../menus/slash-trigger.js?v=20261026024309';
+import { onTitle } from '../model.js?v=20261026024309';
+import { tanganiPaste } from './paste.js?v=20261026024309';
+import { bungkusFontPending, fontPerluBungkus } from './font.js?v=20261026024309';
+import { bungkusWarnaPending, warnaPerluBungkus, warnaIkutUjung, bungkusWarnaKomposisi } from './warna.js?v=20261026024309';
+import { bungkusSorotanPending, sorotPerluBungkus, sorotIkutUjung, bungkusSorotKomposisi } from './sorotan.js?v=20261026024309';
+import { record, snap, undo, redo, isReplaying } from './history.js?v=20261026024309';
+import { panjangTeks } from './komposisi.js?v=20261026024309';
+import { ulangSetelahCentang } from '../pengingat.js?v=20261026024309';
+import { cobaHitungInlineSekarang } from '../alat-cerdas.js?v=20261026024309';
+import { toast } from '../../core/toast.js?v=20261026024309';
+import { t as tr } from '../../core/i18n.js?v=20261026024309';
 
 /* Terapkan format yang sedang aktif (pending sekali-pakai + sticky yang
    melekat) ke karakter yang baru saja diketik. Dipakai dua jalur:

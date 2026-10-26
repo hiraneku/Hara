@@ -48,18 +48,82 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 - JPEG2000 dan JBIG2 tidak didukung.
 - Peramban lama tidak bisa menampilkan PDF sama sekali (muncul pesan, bukan render).
 - Tombol zoom dan navigasi di bar atas masih kasar secara visual (ikon `+`, `−`, `‹`, `›` terlihat tidak rata di screenshot). Belum diperbaiki.
-- Anotasi, simpan hasil anotasi, dan ekspor PDF yang dianotasi belum ada (B1b).
+- (Diperbarui setelah B1b) Anotasi sudah ada (lihat B1b). Ekspor PDF yang dianotasi belum ada (B1c).
 
 ## Status
 
 - B1a: **Implemented** (penampil dan vendor), dengan keterbatasan di atas.
-- B1: **Sebagian**. Menunggu persetujuan pengguna untuk B1b (anotasi).
+- B1: lihat bagian B1b di atas. B1b sudah dikerjakan (lihat "Status (B1)").
 
 ## Berikutnya
 
 - B1b (anotasi dan sumber asli terpisah) menunggu persetujuan pengguna.
 - Jalankan uji mutasi M1–M4 untuk B1a bila pengguna minta.
 - Rapikan bar tombol PDF (ikon).
+
+## Perubahan 13 · B1b — Anotasi PDF (coret, sorot, garis, komentar)
+
+- **ID:** B1 (PDF import dan anotasi). Ini **B1b**, bagian kedua. Isinya: alat coret, sorot, garis, dan komentar per halaman PDF. **Ekspor PDF yang sudah dianotasi (§1.5) belum ada** dan ditunda ke B1c.
+- **Alasan urutan:** B1b mengikuti B1a karena anotasi butuh penampil yang sudah jalan. Disetujui pengguna dengan "Oke b1b dulu saja".
+- **Dependensi:** B1a (`penampil.js`). Penyimpanan memakai blob IndexedDB (`core/blobs.js`). Sapuan blob yatim (`notes/editor/image.js`) dan cadangan JSON (`notes/data-io.js`) ikut diubah, lihat di bawah.
+- **Keputusan desain:**
+  - **PDF asli tidak diubah.** Anotasi disimpan sebagai blob JSON terpisah dengan kunci `anot-<blobId>`. Hash blob PDF sudah diuji sama sebelum dan sesudah anotasi.
+  - **Koordinat ternormalisasi 0–1 per halaman** (bukan piksel), jadi posisi tetap benar saat zoom berubah.
+  - **Model blok catatan tidak diubah.** Hanya blok `file` yang meneruskan `blobId` ke penampil.
+- **Yang berubah:**
+  - `docs/notes/pdf/anotasi.js` (baru, murni tanpa DOM): `kunciAnotasi`, `titikTernormal`, `anotasiValid`, `buatAnotasi`, `tambahAnotasi`, `anotasiHalaman`, `batalTerakhirHalaman`, `bacaAnotasi`, `tulisAnotasi`. Batas komentar 500 karakter.
+  - `docs/notes/pdf/anotasi-simpan.js` (baru): `muatAnotasi`, `simpanAnotasi` lewat `core/blobs.js`.
+  - `docs/notes/pdf/penampil.js`: opsi `bukaPenampilPdf(data, nama, { blobId })`. Bilah kedua dengan tombol Coret, Sorot, Garis, Komentar, Batal, dan status. Lapisan SVG `.pdfv-anot` di atas kanvas. Bilah hanya tampil jika ada `blobId`.
+  - `docs/notes/editor/blok-generasi-baru.js`: `bukaPdfDariBlok` meneruskan `data-blob` sebagai `blobId`.
+  - `docs/notes/editor/image.js`: `bersihkanBlobYatim` menganggap `anot-<id>` dipakai selama `<id>` dipakai. Tanpa ini, anotasi akan disapu setelah 24 jam.
+  - `docs/notes/data-io.js`: `idBlobDipakai` ikut mengembalikan `anot-<id>`, sehingga anotasi ikut dicadangkan. Tanpa ini, cadangan JSON kehilangan anotasi. Kesalahan ini ditemukan lewat uji dan sudah diperbaiki.
+  - `docs/styles/notes.css`: blok `.pdfv-kwrap`, `.pdfv-anot`, `.pdfv-bar2`, `.pdfv-status`.
+  - `tools/uji/pdf-anotasi.mjs` (baru): 32 pengujian Node (jsdom untuk bagian cadangan).
+  - Stempel `?v=` menjadi `20261026024309` (128 berkas, karena `version.mjs` menstempel seluruh `docs/`).
+- **Cara kerja:** pilih alat (tombol aktif, lapisan SVG bisa disentuh), lalu seret di halaman. Komentar: ketuk halaman, isi teks di kotak. Anotasi komentar diketuk lagi (saat tidak ada alat aktif) untuk membaca teksnya. Batal menghapus anotasi terakhir di halaman aktif saja. Setiap perubahan langsung disimpan.
+
+## Cara uji yang dijalankan (B1b)
+
+- **Node (`node tools/uji/pdf-anotasi.mjs`): 32/32 lulus.** Mencakup koordinat dan penjepitan, bentuk data yang diterima dan ditolak, batal hanya di halaman aktif, parsing data rusak, penyimpanan di IndexedDB palsu, hash PDF asli tidak berubah, dan cadangan (`anot-<id>` ikut, blob yatim tidak ikut).
+  - **Uji mutasi cadangan:** dengan `data-io.js` versi lama (HEAD), uji cadangan gagal (1 gagal, 31 lulus). Dengan versi baru, 32/32 lulus.
+- **Browser Chromium (`anot.mjs`, harness di luar repo, viewport ponsel 390×844, DPR 2): 21/21 lulus.**
+  - Jalur nyata: PDF disimpan lalu dibuka lewat `bukaPdfDariBlok`.
+  - Keempat jenis anotasi tergambar di halaman 1 (sorot, garis, coret, komentar). Screenshot diperiksa: sorot kuning tetap membiarkan teks "Halaman 1" terbaca.
+  - Anotasi per halaman: halaman 2 mulai kosong. Batal di halaman 2 tidak menyentuh halaman 1. Batal di halaman kosong hanya memberi pesan.
+  - Zoom: dua kali "+" mengubah lebar kanvas dari 366 ke 450 piksel, dan posisi relatif anotasi tetap sama (x 0,15, lebar 0,40).
+  - Muat ulang aplikasi, buka lagi: empat anotasi muncul kembali dan teks komentar utuh.
+  - Hash PDF asli sama sebelum dan sesudah anotasi.
+  - Sapuan blob yatim (usia dimanipulasi jadi 48 jam): blob yatim terhapus. Anotasi dan PDF yang masih dirujuk tetap ada. Setelah catatan dihapus, PDF dan anotasinya ikut disapu.
+  - Tidak ada galat JavaScript di halaman.
+  - Galat yang ditemukan saat uji dan sudah diperbaiki: uji zoom awalnya terlalu lemah (satu langkah zoom hanya menambah 9 piksel karena mode awal "Pas lebar"). Uji sudah diubah menjadi dua langkah. Ini perbaikan uji, bukan kode fitur.
+- **`npm test` penuh: exit 0**, "SEMUA 37 LOLOS" (`/tmp/npmtest-b1b.log`). Dijalankan di worktree bersih `wt-b1b`.
+
+## Belum diuji (B1b)
+
+- **Belum diuji di HP Android sungguhan.** Sentuhan di Chromium hanya lewat mouse. Pointer events dan `touch-action: none` sudah diset, tetapi belum dibuktikan di Opera HP.
+- **Pemulihan dari cadangan JSON** (impor) belum diuji end-to-end. Yang diuji hanya ekspor dan bahwa kunci `anot-<id>` ikut.
+- Uji mutasi M1–M4 untuk `pdf-anotasi.mjs` belum dijalankan.
+- Uji file PDF besar dan PDF dengan banyak anotasi belum dilakukan.
+
+## Keterbatasan yang diketahui (B1b)
+
+- **Ekspor PDF yang dianotasi belum ada** (B1c).
+- Komentar memakai `window.prompt` dan `window.alert`. Ini sederhana dan bisa terlihat kasar di HP. Kotak komentar yang proper belum dibuat.
+- Tidak ada hapus per anotasi atau edit. Hanya Batal (anotasi terakhir di halaman aktif).
+- Terjemahan en dan ja untuk string baru belum ditambahkan. Teksnya tampil dalam bahasa Indonesia sebagai fallback.
+- Ikon bilah tombol masih kasar (sama dengan catatan B1a).
+
+## Status (B1)
+
+- B1a: **Implemented**.
+- B1b: **Implemented**, dengan keterbatasan di atas dan belum diuji di HP sungguhan.
+- B1c (ekspor PDF yang dianotasi): **belum dikerjakan.**
+- B5, B3, B4, B2, B6, B8: belum dikerjakan.
+
+## Berikutnya
+
+- Uji B1b di HP (Opera Android) setelah APK atau Pages terbaru tersedia.
+- B1c (ekspor PDF yang dianotasi, §1.5) menunggu persetujuan pengguna.
 
 ## Perbaikan · Menu warna teks (di luar urutan B1–B8)
 

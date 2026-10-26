@@ -2,16 +2,16 @@
    dimuat (atau terakhir dimainkan) sebagai WAV atau MP3, dengan pilihan tempo/nada
    dan ekualiser. Proses berat ada di ekspor.js dan worker-nya. */
 
-import { cur, go } from '../core/router.js?v=20261025154950';
-import { t as tr } from '../core/i18n.js?v=20261025154950';
-import { toast } from '../core/toast.js?v=20261025154950';
-import { esc } from '../core/dom.js?v=20261025154950';
-import * as M from './mesin.js?v=20261025154950';
-import * as S from './simpan.js?v=20261025154950';
-import * as E from './eq.js?v=20261025154950';
-import { persenTempo, labelPitch, formatUkuran } from './logika.js?v=20261025154950';
-import { ikon } from './ikon.js?v=20261025154950';
-import { eksporLagu, simpanBerkas, KBPS_PILIHAN, FORMAT_PILIHAN } from './ekspor.js?v=20261025154950';
+import { cur, go } from '../core/router.js?v=20261026024309';
+import { t as tr } from '../core/i18n.js?v=20261026024309';
+import { toast } from '../core/toast.js?v=20261026024309';
+import { esc } from '../core/dom.js?v=20261026024309';
+import * as M from './mesin.js?v=20261026024309';
+import * as S from './simpan.js?v=20261026024309';
+import * as E from './eq.js?v=20261026024309';
+import { persenTempo, labelPitch, formatUkuran } from './logika.js?v=20261026024309';
+import { ikon } from './ikon.js?v=20261026024309';
+import { eksporLagu, simpanBerkas, KBPS_PILIHAN, FORMAT_PILIHAN } from './ekspor.js?v=20261026024309';
 
 const LABEL_TAHAP = {
   dekode: 'Membaca berkas',

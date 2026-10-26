@@ -7,19 +7,19 @@
  * #6 Blok Lampiran Berkas Offline (/file — simpan PDF/dokumen ke IndexedDB blobs + unduh/buka)
  */
 
-import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261025154950';
-import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261025154950';
-import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261025154950';
-import { openPop, closeAll } from '../menus/pop.js?v=20261025154950';
-import { refresh, saveNow } from './cleanup.js?v=20261025154950';
-import { snap } from './history.js?v=20261025154950';
-import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261025154950';
-import { state } from '../../core/store.js?v=20261025154950';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261025154950';
-import { toast } from '../../core/toast.js?v=20261025154950';
-import { esc } from '../../core/dom.js?v=20261025154950';
-import { t as tr } from '../../core/i18n.js?v=20261025154950';
-import { bukaPenampilPdf } from '../pdf/penampil.js?v=20261025154950';
+import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261026024309';
+import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261026024309';
+import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261026024309';
+import { openPop, closeAll } from '../menus/pop.js?v=20261026024309';
+import { refresh, saveNow } from './cleanup.js?v=20261026024309';
+import { snap } from './history.js?v=20261026024309';
+import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261026024309';
+import { state } from '../../core/store.js?v=20261026024309';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261026024309';
+import { toast } from '../../core/toast.js?v=20261026024309';
+import { esc } from '../../core/dom.js?v=20261026024309';
+import { t as tr } from '../../core/i18n.js?v=20261026024309';
+import { bukaPenampilPdf } from '../pdf/penampil.js?v=20261026024309';
 
 const SIMBOL_MATH = {
   '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
@@ -288,7 +288,8 @@ export function pilihLampiranBerkas() {
   inp.click();
 }
 
-/* Buka PDF dari blok lampiran di penampil (B1a). Berkas asli tidak diubah. */
+/* Buka PDF dari blok lampiran di penampil (B1a). Berkas asli tidak diubah;
+   anotasinya disimpan terpisah (B1b). */
 export async function bukaPdfDariBlok(box) {
   const blob = await ambilBlob(box.getAttribute('data-blob'));
   if (!blob) {
@@ -296,7 +297,8 @@ export async function bukaPdfDariBlok(box) {
     return false;
   }
   const data = await blob.arrayBuffer();
-  await bukaPenampilPdf(data, box.getAttribute('data-name') || 'PDF');
+  /* blobId dikirim supaya anotasi PDF ikut dimuat dan disimpan (B1b) */
+  await bukaPenampilPdf(data, box.getAttribute('data-name') || 'PDF', { blobId: box.getAttribute('data-blob') });
   return true;
 }
 
@@ -571,10 +573,10 @@ export function bindBlokGenerasiBaru() {
       const k = qk.dataset.qk;
       if (k === 'jam') sisipCapJamSekarang();
       else if (k === 'calc') {
-        import('../alat-cerdas.js?v=20261025154950').then(m => m.cobaHitungInlineSekarang(true));
+        import('../alat-cerdas.js?v=20261026024309').then(m => m.cobaHitungInlineSekarang(true));
       }
       else if (k === 'teks') {
-        import('../alat-cerdas.js?v=20261025154950').then(m => m.bukaAlatTeksPintar());
+        import('../alat-cerdas.js?v=20261026024309').then(m => m.bukaAlatTeksPintar());
       }
       else if (k === 'blok') bukaMenuAksiBlok();
     }
