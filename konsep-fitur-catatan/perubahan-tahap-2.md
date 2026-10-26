@@ -296,6 +296,35 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 - **Catatan:** skenario `rekomp` di harness menghasilkan spasi ganda (`h  a`). Itu juga terjadi di HEAD, jadi bagian dari skenario harness, bukan efek perubahan ini.
 - **Belum terbukti:** keluhan 1 **belum terbukti di Opera HP**. Status tetap terbuka sampai pengguna menguji di HP. Keluhan 2 (warna mati saat keyboard turun) belum ditangani di bagian ini.
 
+## Perbaikan · Spasi saat komposisi belum ditutup (keluhan 1, lanjutan kedua)
+
+- **ID:** keluhan 1 (di luar urutan B1–B8). Lanjutan dari perbaikan di atas. Pengguna melaporkan gejala masih sama di HP.
+- **Gejala (dilaporkan pengguna):** huruf pertama catatan baru berwarna saat diketik, lalu jadi putih setelah spasi ditekan. Kata berikutnya berwarna.
+- **Akar masalah (direproduksi di Chromium, urutan event keyboard HP):**
+  - Saat spasi ditekan ketika huruf pertama masih dalam komposisi, browser **tidak mengirim `compositionend`**. Urutannya: `keydown` (spasi), lalu `beforeinput` dan `input` `insertText`.
+  - Handler `keydown` hanya mematikan bendera komposisi. Komposisi tidak diakhiri, sehingga huruf pertama tidak pernah dibungkus warnanya. Warna sementara di elemen blok (opsi A) ikut hilang, dan huruf tampil polos.
+  - Sebelumnya perbaikan `compositionend` tidak pernah dijalankan untuk kasus ini. Itu sebabnya perbaikan sebelumnya tidak menyelesaikan keluhan di HP.
+- **Perbaikan (`docs/notes/editor/events.js`):**
+  1. `akhiriKomposisi(...)`: satu jalur untuk mengakhiri komposisi (format, warna, sorotan, perapian). Dipakai oleh `compositionend` (ditunda sebentar) dan oleh dua pemicu di bawah (langsung).
+  2. `keydown`: tombol biasa saat komposisi masih aktif mengakhiri komposisi dulu, baru tombolnya diproses. Tombol IME (`keyCode` 229, `Unidentified`) dan modifier tidak ikut.
+  3. `input` non-komposisi (`insertText`, `insertParagraph`, `insertLineBreak`) saat bendera komposisi masih menyala: komposisi diakhiri, rentangnya sampai kursor setelah input. Jadi `h ` (huruf dan spasi) dibungkus bersama.
+  4. Ujung komposisi dicatat dari `input` `insertCompositionText`. `rentangKomposisi` menghitung rentang dari posisi, dengan koreksi kalau `compositionstart` datang setelah teks sudah masuk (urutan event berbeda di beberapa keyboard).
+- **Dependensi:** perbaikan komposisi sebelumnya (`235979d`), `komposisi.js` (`posisiKaret`, `rentangPosisi`, `bungkusKomposisi`), dan opsi A.
+- **File:** `docs/notes/editor/events.js`, `tools/uji/komposisi-kursor.mjs` (kasus 5 dan 6 baru), dan stempel `?v=` (128 berkas).
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/komposisi-kursor.mjs`: **8/8 lulus**. Di HEAD (`235979d`): **5/8**. Kasus baru 5 dan 6 gagal di HEAD dengan `"h "` tanpa warna, dan lulus di versi ini.
+  - `node tools/uji/warna-bersarang.mjs`: **6/6 lulus**.
+  - Chromium, harness HP di luar repo (`hp.mjs`, urutan event mirip keyboard HP):
+    - `spasi-saat-komposisi` (komposisi `h`, spasi ditekan saat masih komposisi, lalu `a`): **"h " merah dan "a" merah**. Di HEAD: `h ` dan `a` tidak berwarna.
+    - `h-spasi-commit`, `h-lalu-tombol`, `ed-doc-h-spasi`, `catatan-baru-warna`, `spasi-key`, `spasi-di-komposisi`: huruf pertama berwarna, spasi ikut berwarna.
+    - `tengah` (`Aw[xy]al`, lalu spasi dan `a`): `Aw` merah, `xy a` biru, `al` merah.
+  - `npm test` penuh: **exit 0**, `SEMUA 37 LOLOS`.
+- **Batasan jujur:**
+  - **Belum diuji di Opera Android.** Chromium memodelkan urutan event, bukan keyboard sungguhan. Keluhan 1 dianggap selesai hanya setelah pengguna menguji di HP.
+  - `Input.insertText` di Chromium memperlakukan teks sebagai pengganti komposisi. Pada `spasi-insert` (`' '` saja) teks `halo` digantikan spasi oleh browser, bukan oleh editor. Itu tidak dipakai sebagai bukti.
+  - **Temuan terbuka, belum ditangani:** setelah kursor dipindah ke level `ed-doc` (bukan di dalam blok), ketikan berikutnya masuk ke luar blok (teks langsung di `ed-doc`). Perilaku ini sama di HEAD. Ketuk biasa di HP menaruh kursor di dalam blok, jadi tidak terpicu di sana, tetapi perlu ditelusuri.
+  - Keluhan 2 (warna mati saat keyboard turun) belum ditangani.
+
 ## Alat diagnosis · Log ketik (Pengaturan → Aplikasi)
 
 - **Alasan:** keluhan "huruf pertama tidak berwarna" di HP (Opera) tidak bisa direproduksi di Chromium sandbox. Perbaikan sebelumnya (`243ca3f`) memakai urutan event tiruan dan belum terbukti di perangkat. Yang dibutuhkan adalah urutan event asli dari HP.

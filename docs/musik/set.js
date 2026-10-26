@@ -2,7 +2,7 @@
    pustaka lagu di localStorage. Pengaturan lain di masa depan cukup
    ditambahkan ke SET_AWAL dan ke daftar bagian di pengaturan.js. */
 
-import { normalisasiSet, SET_AWAL } from './logika.js?v=20261026034335';
+import { normalisasiSet, SET_AWAL } from './logika.js?v=20261026043151';
 
 const KUNCI = 'hara.v1.musik.set';
 

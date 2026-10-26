@@ -7,6 +7,9 @@
    1. catatan kosong, kursor pindah ke ed-doc setelah compositionend → "h" merah;
    2. "Awal", komposisi "xy" di posisi 2 (tengah) → "xy" merah, "Aw" & "al" tetap;
    3. "Awal", komposisi "x" di akhir → "x" merah, teks lain tidak berubah.
+   4. tengah kata + kursor ke ed-doc sebelum pembungkusan → "xy" biru.
+   5. spasi (keydown + insertText) saat komposisi belum ditutup, tanpa compositionend → "h " merah.
+   6. sama, tanpa keydown → "h " biru.
    Jalankan: node tools/uji/komposisi-kursor.mjs */
 import {JSDOM} from 'jsdom';
 import fs from 'fs';
@@ -38,6 +41,10 @@ const M='#e53935', B='#1e88e5';
 const sel=()=>w.getSelection();
 const karet=(node,off)=>{const r=d.createRange();r.setStart(node,off);r.collapse(true);sel().removeAllRanges();sel().addRange(r);};
 const kompEv=(tipe,data)=>{const ev=new w.Event(tipe,{bubbles:true});ev.data=data;DOC().dispatchEvent(ev);};
+const inputEv=(el,tipe,data)=>{const ev=new w.Event('input',{bubbles:true});ev.inputType=tipe;ev.data=data;el.dispatchEvent(ev);};
+const keyEv=(el,key,kc)=>{const ev=new w.Event('keydown',{bubbles:true,cancelable:true});ev.key=key;ev.keyCode=kc;el.dispatchEvent(ev);};
+/* sisipkan teks di posisi caret yang berlaku SAAT ITU (seperti browser) */
+const sisipKaret=t=>{const r=sel().getRangeAt(0);const n=r.startContainer;if(n.nodeType===3){n.insertData(r.startOffset,t);karet(n,r.startOffset+t.length);}else{const tx=d.createTextNode(t);n.insertBefore(tx,n.childNodes[r.startOffset]||null);karet(tx,t.length);}};
 /* potongan teks blok: teks + warna terhitung induknya */
 const potongan=blok=>{const o=[];const jalan=n=>{for(const c of n.childNodes){if(c.nodeType===3){if(c.textContent)o.push([c.textContent,(c.parentElement.closest('[data-warna]')||{getAttribute:()=>'-'}).getAttribute('data-warna')||'-']);}else if(c.nodeType===1&&!c.classList.contains('blk-h'))jalan(c);}};jalan(blok);return o;};
 const teksWarna=(blok,t)=>{ /* warna yang dipakai untuk teks t (potongan persis) */
@@ -102,6 +109,44 @@ const blokBaru=html=>{DOC().innerHTML=`<div class="b-p">${html}</div>`;return DO
   karet(DOC(),0);
   await sleep(120);
   ok('tengah + kursor ke ed-doc: xy biru, teks utuh', b.textContent==='Awxyal' && teksWarna(b,'xy')===B && teksWarna(b,'Aw')!==B && teksWarna(b,'al')!==B, JSON.stringify(potongan(b)));
+}
+
+/* 5. spasi (keydown + insertText) datang saat komposisi belum ditutup browser:
+      TIDAK ada compositionend. Dulu huruf pertama tidak pernah dibungkus. */
+{
+  const b=blokBaru('');
+  const tn=d.createTextNode(''); b.appendChild(tn);
+  karet(tn,0);
+  await sleep(20);
+  wrn.setWarna('#e53935');
+  kompEv('compositionstart','');
+  tn.insertData(0,'h'); karet(tn,1);
+  inputEv(b,'insertCompositionText','h');
+  keyEv(b,' ',32);
+  sisipKaret(' ');
+  inputEv(b,'insertText',' ');
+  await sleep(120);
+  ok('spasi tanpa compositionend: "h " berwarna merah', b.textContent==='h ' && teksWarna(b,'h ')===M, JSON.stringify(potongan(b)));
+  /* ketikan sesudahnya ikut berwarna (warna tidak mati) */
+  sisipKaret('a');
+  inputEv(b,'insertText','a');
+  await sleep(60);
+  ok('ketikan sesudah spasi tetap berwarna', b.textContent==='h a' && teksWarna(b,'h a')===M, JSON.stringify(potongan(b)));
+}
+/* 6. sama seperti 5, tetapi tanpa keydown (IME Android sering tidak mengirim keydown) */
+{
+  const b=blokBaru('');
+  const tn=d.createTextNode(''); b.appendChild(tn);
+  karet(tn,0);
+  await sleep(20);
+  wrn.setWarna('#1e88e5');
+  kompEv('compositionstart','');
+  tn.insertData(0,'h'); karet(tn,1);
+  inputEv(b,'insertCompositionText','h');
+  sisipKaret(' ');
+  inputEv(b,'insertText',' ');
+  await sleep(120);
+  ok('input insertText tanpa keydown menutup komposisi: "h " berwarna biru', b.textContent==='h ' && teksWarna(b,'h ')===B, JSON.stringify(potongan(b)));
 }
 
 console.log(`\nHASIL KOMPOSISI-KURSOR: ${no-g} lulus, ${g} gagal`);
