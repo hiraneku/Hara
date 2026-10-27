@@ -12,12 +12,13 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20261026051921';
-import { cur } from '../core/router.js?v=20261026051921';
-import { touch } from './note-model.js?v=20261026051921';
-import { terlihat } from './kunci.js?v=20261026051921';
-import { t as tr } from '../core/i18n.js?v=20261026051921';
-import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261026051921';
+import { state, save } from '../core/store.js?v=20261027024334';
+import { cur } from '../core/router.js?v=20261027024334';
+import { touch } from './note-model.js?v=20261027024334';
+import { terlihat } from './kunci.js?v=20261027024334';
+import { t as tr } from '../core/i18n.js?v=20261027024334';
+import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261027024334';
+import { pisahTautan } from './wikilink.js?v=20261027024334';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -46,9 +47,9 @@ function wlDariBlok(b) {
     if (prev && prev.nodeType === 3 && /!$/.test(prev.data)) return;       /* K10: rujukan blok */
     const m = /^\[\[(.+?)\]\]$/.exec((sn.textContent || '').trim());
     if (!m) return;
-    const [judul, alias] = m[1].split('|');
-    const j = (judul || '').trim();
-    if (j) lihat({ judul: j, alias: (alias || '').trim() });
+    const alias = (m[1].split('|')[1] || '').trim();
+    const j = pisahTautan(m[1]).judul || '';   /* B3: #Bagian tidak ikut sebagai judul */
+    if (j) lihat({ judul: j, alias });
   });
   return hasil;
 }

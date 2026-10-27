@@ -2,13 +2,13 @@
    kartu musik (lagu terakhir diputar), dan bilah alat
    (Catatan & Pengingat). Dipasang sebagai tampilan layar 'home'. */
 
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261026051921';
-import { cur, go, onAfterRender } from '../core/router.js?v=20261026051921';
-import { bukaMenuFitur, pasangMenuFitur } from './menu-fitur.js?v=20261026051921';
-import { toast } from '../core/toast.js?v=20261026051921';
-import { namaSekarang, setNama } from './nama.js?v=20261026051921';
-import { kartuMusikHtml } from '../musik/kartu.js?v=20261026051921';
-import { togglePutarMusik } from '../musik/index.js?v=20261026051921';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261027024334';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261027024334';
+import { bukaMenuFitur, pasangMenuFitur } from './menu-fitur.js?v=20261027024334';
+import { toast } from '../core/toast.js?v=20261027024334';
+import { namaSekarang, setNama } from './nama.js?v=20261027024334';
+import { kartuMusikHtml } from '../musik/kartu.js?v=20261027024334';
+import { togglePutarMusik } from '../musik/index.js?v=20261027024334';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

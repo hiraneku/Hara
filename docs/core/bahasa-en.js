@@ -1132,4 +1132,5 @@ export const EN = {
   "komentar di halaman": "comment on page",
   "halaman": "page",
   "dari": "of",
+  "Bagian tidak ditemukan. Catatan dibuka dari awal.": "Section not found. The note was opened from the top.",
 };

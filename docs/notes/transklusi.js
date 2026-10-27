@@ -12,8 +12,9 @@
 
    Murni: hanya membaca state. Tidak menulis apa pun. */
 
-import { state } from '../core/store.js?v=20261026051921';
-import { terlihat } from './kunci.js?v=20261026051921';
+import { state } from '../core/store.js?v=20261027024334';
+import { terlihat } from './kunci.js?v=20261027024334';
+import { pisahTautan } from './wikilink.js?v=20261027024334';
 
 /* Teks polos satu blok (tanpa markup), dipangkas. */
 export const teksPolos = b => {
@@ -81,7 +82,7 @@ const judulTautanKeluar = n => {
     w.querySelectorAll('span.wl').forEach(sn => {
       const m = /^\[\[(.+?)\]\]$/.exec((sn.textContent || '').trim());
       if (!m) return;
-      const j = (m[1].split('|')[0] || '').trim().toLowerCase();
+      const j = (pisahTautan(m[1]).judul || '').trim().toLowerCase();
       if (j) out.add(j);
     });
   });

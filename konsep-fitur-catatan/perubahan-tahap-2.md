@@ -376,3 +376,36 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Hasil dibatasi 500 kemunculan.
   - Pencarian global dari kolom pencarian catatan belum ada.
   - Komentar anotasi masih memakai `prompt` dan `alert` (keterbatasan B1b, tidak berubah).
+
+## Perubahan 16 · B3 — Tautan ke bagian dalam catatan (`[[Judul#Bagian]]`, `[[Judul#^ref]]`)
+
+- **ID:** B3 (Internal hyperlinks), Tahap 2, urutan ketiga setelah B5 (§6.1 nomor 3).
+- **Alasan urutan:** §6.1 meminta B3 dan B8 memakai target navigasi yang stabil. Target blok (`^ref` dan id blok) sudah ada sejak tautan blok dibuat, jadi B3 bisa dikerjakan tanpa menunggu yang lain.
+- **Dependensi:** tautan blok (`blockref.js`, `data-ref`), wikilink (`wikilink.js`), dan lompat ke blok (`lompatKe`).
+- **Temuan audit yang diperbaiki:** `[[Judul#Bagian]]` sudah bisa diketik, tetapi `Judul#Bagian` dicari sebagai judul catatan. Akibatnya tautan tampak mati, dan klik membuat catatan sampah bernama `Judul#Bagian`. Ini terbukti di Chromium pada kode sebelum perubahan (lihat di bawah).
+- **Perilaku sekarang:**
+  - `[[Judul#Bagian]]`: buka catatan `Judul`, lalu gulir dan sorot heading yang judulnya sama. Pencocokan abaikan besar-kecil, spasi ganda, dan entitas HTML.
+  - `[[Judul#^ref]]`: buka catatan dan sorot blok dengan rujukan `ref`.
+  - Bagian yang tidak ada: catatan dibuka dari awal dan muncul pesan "Bagian tidak ditemukan. Catatan dibuka dari awal."
+  - Tautan mati `[[Hilang#Apa]]`: klik membuat catatan `Hilang` (judul dasar), bukan `Hilang#Apa`.
+  - Judul yang memang mengandung `#` (misalnya catatan `C#`) tetap dikenali sebagai judul utuh.
+  - Alias `[[Judul#Bagian|Label]]` tetap berfungsi, alias diabaikan saat mencari.
+  - Pil "Buka «Judul»" di editor (klik biasa) juga membuka bagian yang dituju.
+- **File:**
+  - `docs/notes/wikilink.js`: `pisahTautan`, `bagianSpan`, `cariBagian`. `judulSpan` kini mengembalikan judul dasar.
+  - `docs/notes/lompat-tautan.js` (baru): `lompatKe` dipindahkan dari `index.js`, ditambah `bukaSasaranTautan`.
+  - `docs/notes/index.js`, `docs/notes/editor/blok-modern.js`: klik tautan dan pil memakai `bukaSasaranTautan`.
+  - `docs/notes/panels.js`, `docs/notes/transklusi.js`, `docs/notes/navigasi-fokus.js`: memakai judul dasar untuk panel tautan keluar, tautan yatim, dan navigasi fokus.
+  - `docs/core/bahasa-en.js`, `docs/core/bahasa-ja.js`: 1 teks baru.
+  - `tools/uji/wikilink-bagian.mjs` (baru): 20 pengujian logika.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/wikilink-bagian.mjs`: **20/20 lulus**.
+  - `npm test` penuh (setelah `node tools/version.mjs`): **exit 0**, tanpa FAIL.
+  - Chromium, aplikasi sungguhan dengan dua catatan (harness di luar repo `/home/user/uji-b3/uji-b3.mjs`, ukuran layar HP): **13/13 lulus** pada kode ini. Mencakup: Ctrl+klik heading, Ctrl+klik `^ref`, bagian tidak ada, tautan biasa, klik tautan mati, dan pil.
+  - Pembanding: kode sebelum perubahan (`5be705e`) dengan harness yang sama hanya lulus **4/13**. Selain itu, klik tautan bagian membuat catatan sampah `Kuliah#Tidak ada`, `Kuliah#^a3f2`, dan `Kuliah#Judul & Dua`.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).** Uji di Chromium dengan emulasi layar HP.
+  - **Belum ada: tautan ke halaman dokumen PDF** (mis. "halaman 4 di PDF ini"). Bagian B3 ini belum dikerjakan. Perlu keputusan sintaksnya dulu.
+  - Menu `[[` belum menawarkan heading. Pengguna mengetik `#Bagian` sendiri.
+  - Panel "Tautan keluar" membuka catatan dari awal, tanpa bagiannya.
+  - Harness Chromium di atas butuh jeda tunggu eksplisit. Pada pengujian awal, hasil sempat tidak stabil karena catatan belum selesai dimuat sebelum klik.

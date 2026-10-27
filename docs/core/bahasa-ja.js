@@ -1099,4 +1099,5 @@ export const JA = {
   "komentar di halaman": "ページのコメント",
   "halaman": "ページ",
   "dari": "/",
+  "Bagian tidak ditemukan. Catatan dibuka dari awal.": "セクションが見つかりません。ノートは先頭から開きました。",
 };
