@@ -409,3 +409,22 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Menu `[[` belum menawarkan heading. Pengguna mengetik `#Bagian` sendiri.
   - Panel "Tautan keluar" membuka catatan dari awal, tanpa bagiannya.
   - Harness Chromium di atas butuh jeda tunggu eksplisit. Pada pengujian awal, hasil sempat tidak stabil karena catatan belum selesai dimuat sebelum klik.
+
+## Verifikasi · B4 — Tautan eksternal (tanpa perubahan kode)
+
+- **Tujuan:** memeriksa kondisi nyata B4 sebelum memutuskan cakupan. Hanya membaca kode dan merender data uji di jsdom.
+- **Yang sudah ada dan sudah aman:**
+  - Menu tautan teks (`docs/notes/menus/link.js`): `rapikan()` hanya meloloskan `http(s):`, `mailto:`, dan `tel:`. Teks lain diubah menjadi `https://…`, jadi skema `javascript:` dari input dialog tidak bisa lolos. Tautan baru memakai `target="_blank" rel="noopener"`.
+  - Dialog Kartu Tautan (`/bookmark`, `blok-generasi-baru.js`): URL dipaksa ke `https://` bila belum ada skema http(s).
+  - Impor Markdown bookmark (`data-io.js`): regex hanya menerima `https?:`.
+  - Tempelan (`paste.js`, `tempel-mekanik.js`): `tautanAman()` membuang skema selain `https?:`, `mailto:`, `tel:`.
+- **Temuan: impor cadangan JSON tidak memfilter URL.**
+  - `siapImporJson` → `normalizeNotes` → `normalizeNote` menyalin blok apa adanya.
+  - Uji render (`blocksToDom`, jsdom): bookmark dengan `url: "javascript:alert(1)"` menghasilkan `href="javascript:alert(1)"`. Blok paragraf dengan `<a class="lk" href="javascript:alert(2)">` juga lolos utuh.
+  - Ini berisiko bila pengguna membuka berkas cadangan yang tidak dipercaya. Belum diuji apakah peramban menjalankan skripnya saat diklik.
+- **Belum ada:** tautan pada objek gambar atau tulisan (audit Tahap 0 juga mencatat ini).
+- **Usulan perbaikan (belum dikerjakan, menunggu persetujuan):**
+  1. Saring URL bookmark dan `href` tautan teks saat normalisasi impor, memakai `tautanAman()` yang sudah ada.
+  2. Saring juga saat render sebagai lapisan kedua (bookmark dengan URL tidak aman dirender sebagai `#`).
+  3. Uji: impor JSON berisi `javascript:` harus menghasilkan `href` yang aman, dan tautan `https` biasa tidak berubah.
+- **Cara uji (hasil nyata):** skrip jsdom di luar repo (`/home/user/uji-b4/cek-render.mjs`), output: `BOOKMARK href javascript ada di HTML: true`, `TAUTAN TEKS href javascript ada di HTML: true`.
