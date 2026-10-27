@@ -28,11 +28,11 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261027035256';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261027035256';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027035256';
-import { adalahPdf } from './pdf/logika.js?v=20261027035256';
-import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027035256';
+import { t as tr } from '../core/i18n.js?v=20261027040308';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261027040308';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027040308';
+import { adalahPdf } from './pdf/logika.js?v=20261027040308';
+import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027040308';
 
 export const BLOCK_TYPES = [
   'paragraph',

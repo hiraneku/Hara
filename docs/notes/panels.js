@@ -12,13 +12,13 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20261027035256';
-import { cur } from '../core/router.js?v=20261027035256';
-import { touch } from './note-model.js?v=20261027035256';
-import { terlihat } from './kunci.js?v=20261027035256';
-import { t as tr } from '../core/i18n.js?v=20261027035256';
-import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261027035256';
-import { pisahTautan } from './wikilink.js?v=20261027035256';
+import { state, save } from '../core/store.js?v=20261027040308';
+import { cur } from '../core/router.js?v=20261027040308';
+import { touch } from './note-model.js?v=20261027040308';
+import { terlihat } from './kunci.js?v=20261027040308';
+import { t as tr } from '../core/i18n.js?v=20261027040308';
+import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261027040308';
+import { pisahTautan } from './wikilink.js?v=20261027040308';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -48,7 +48,9 @@ function wlDariBlok(b) {
     const m = /^\[\[(.+?)\]\]$/.exec((sn.textContent || '').trim());
     if (!m) return;
     const alias = (m[1].split('|')[1] || '').trim();
-    const j = pisahTautan(m[1]).judul || '';   /* B3: #Bagian tidak ikut sebagai judul */
+    const pTaut = pisahTautan(m[1]);
+    if (pTaut.halaman) return;                 /* B3b: tautan halaman PDF bukan catatan */
+    const j = pTaut.judul || '';   /* B3: #Bagian tidak ikut sebagai judul */
     if (j) lihat({ judul: j, alias });
   });
   return hasil;

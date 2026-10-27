@@ -482,3 +482,33 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Pada gambar yang sedang dipilih, lencana berdekatan dengan gagang pindah di kiri-atas dan gagang ukuran di kanan-bawah. Posisinya tidak bertabrakan, tetapi perlu dicek di layar HP sungguhan.
   - Ekspor Markdown/HTML belum diperiksa apakah ikut membawa tautan gambar.
   - Celah atribut `on*` di isi HTML blok dari impor JSON (lihat Perubahan 17) **belum** diperbaiki.
+
+## Perubahan 19 · B3b — Tautan ke halaman PDF (`[[Nama.pdf#hal=4]]`)
+
+- **ID:** B3 (Internal hyperlinks), bagian "tautan ke halaman dokumen PDF" yang tertunda di Perubahan 16. Sintaks `[[Nama.pdf#hal=4]]` disetujui pengguna.
+- **Alasan urutan:** dikerjakan setelah B3 dan B4 karena memakai parser `#` dan jalur klik tautan yang sama dengan B3.
+- **Dependensi:** `wikilink.js` (`pisahTautan`, `tandaiTautan`), `lompat-tautan.js`, penampil PDF (`pdf/penampil.js`), dan blok `file` yang menyimpan lampiran PDF.
+- **Perilaku sekarang:**
+  - `[[Nama.pdf#hal=N]]` (N ≥ 1, huruf besar-kecil tidak berpengaruh) membuka lampiran PDF bernama `Nama.pdf` pada halaman N. Lampiran dicari di blok `file` semua catatan yang tidak dihapus.
+  - Halaman di atas jumlah halaman dijepit ke halaman terakhir.
+  - Ketuk biasa di mode tulis: muncul pil "Buka «Nama.pdf» · Halaman N". Ketuk pil membuka PDF. Ctrl/⌘/Alt+klik atau Mode Baca langsung membuka PDF.
+  - PDF belum dilampirkan: tautan tampil mati. Klik tidak membuat catatan baru bernama `Nama.pdf`. Sebagai gantinya muncul pesan "Berkas PDF tidak ditemukan. Lampirkan dulu di catatan.".
+  - `[[Nama.pdf]]` tanpa `#hal=` dan `[[Kuliah#hal=4]]` (judul bukan .pdf) tetap berperilaku seperti sebelumnya.
+  - Tautan PDF tidak masuk panel "Tautan keluar" atau daftar tautan yatim. Dengan begitu panel tidak menawarkan "Buat catatannya" untuk nama PDF.
+- **File:**
+  - `docs/notes/wikilink.js`: `pisahTautan` (kunci `halaman` hanya untuk tautan PDF), `cariBerkasPdf` (baru), `sasaranPdfSpan` (baru), `tandaiTautan` memakai berkas PDF untuk status mati.
+  - `docs/notes/lompat-tautan.js`: `bukaPdfSasaran` (baru).
+  - `docs/notes/pdf/penampil.js`: opsi `halaman` pada `bukaPenampilPdf`, dijepit ke jumlah halaman.
+  - `docs/notes/index.js`, `docs/notes/editor/blok-modern.js`: klik dan pil untuk tautan PDF. `tampilkanPillWikilink` punya label untuk PDF.
+  - `docs/notes/panels.js`: `wlDariBlok` melewati tautan PDF.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 2 teks baru.
+  - `tools/uji/wikilink-pdf.mjs` (baru): 18 pengujian logika.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/wikilink-pdf.mjs`: **18/18 lulus**. `node tools/uji/wikilink-bagian.mjs`: **20/20** (tidak berubah).
+  - Chromium, emulasi layar HP, aplikasi sungguhan, harness di luar repo (`/home/user/uji-tg/uji-tautan-pdf.mjs`) dengan PDF 5 halaman yang dibuat khusus: **13/13 lulus**.
+  - Untuk membuktikan halaman yang benar, kanvas dibandingkan dengan sidik referensi: halaman 4 dari tautan (lewat pil dan Ctrl+klik) sama dengan halaman 4 yang dibuka langsung, dan berbeda dari halaman 1.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).**
+  - Menu `[[` belum menawarkan berkas PDF atau halaman.
+  - Penampil PDF tidak memiliki lapisan teks di jalur ini, jadi verifikasi halaman memakai sidik kanvas, bukan membaca teks.
+  - Ekspor Markdown/HTML belum diperiksa untuk tautan PDF.

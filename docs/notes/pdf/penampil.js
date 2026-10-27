@@ -7,22 +7,22 @@
    Anotasi (B1b): coret, sorot, garis, dan komentar. Disimpan TERPISAH dari
    PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261027035256';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261027040308';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261027035256';
+} from './logika.js?v=20261027040308';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261027035256';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261027035256';
+} from './anotasi.js?v=20261027040308';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261027040308';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261027035256';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261027035256';
-import { esc } from '../../core/dom.js?v=20261027035256';
-import { t as tr } from '../../core/i18n.js?v=20261027035256';
+} from './cari-pdf.js?v=20261027040308';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261027040308';
+import { esc } from '../../core/dom.js?v=20261027040308';
+import { t as tr } from '../../core/i18n.js?v=20261027040308';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -145,7 +145,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
 
   const s = {
     overlay, doc: null, task: null, render: null,
-    halaman: 1, total: 0, zoom: ZOOM_BAWAAN, pas: true,
+    halaman: Math.max(1, Math.floor(Number(opsi.halaman)) || 1), total: 0, zoom: ZOOM_BAWAAN, pas: true,
     kunciTombol: null, ubahUkuran: null,
     blobId: opsi.blobId || null,   /* id blob PDF asli; anotasi disimpan dengan kunci turunannya */
     anot: [],                      /* seluruh anotasi dokumen ini */
@@ -238,6 +238,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
   if (aktif !== s) { lepaskanTugas(task); return; }
   s.doc = doc;
   s.total = doc.numPages;
+  s.halaman = halamanTerjepit(s.halaman, s.total);   /* B3b: halaman dari tautan bisa melebihi jumlah halaman */
   if (s.blobId) {
     try { s.anot = await muatAnotasi(s.blobId); }
     catch { setStatusAnot(s, tr('Anotasi tidak bisa dibaca. Ditampilkan kosong.')); }

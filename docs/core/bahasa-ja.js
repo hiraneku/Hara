@@ -1103,4 +1103,6 @@ export const JA = {
   "Tautan gambar": "画像のリンク",
   "Buka tautan": "リンクを開く",
   "Alamat tidak didukung. Pakai http, https, mailto, atau tel.": "このアドレスは使えません。http、https、mailto、tel のいずれかを使ってください。",
+  "Halaman": "ページ",
+  "Berkas PDF tidak ditemukan. Lampirkan dulu di catatan.": "PDFファイルが見つかりません。先にノートへ添付してください。",
 };

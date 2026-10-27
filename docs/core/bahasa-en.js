@@ -1136,4 +1136,6 @@ export const EN = {
   "Tautan gambar": "Image link",
   "Buka tautan": "Open link",
   "Alamat tidak didukung. Pakai http, https, mailto, atau tel.": "Address not supported. Use http, https, mailto, or tel.",
+  "Halaman": "Page",
+  "Berkas PDF tidak ditemukan. Lampirkan dulu di catatan.": "PDF file not found. Attach it to a note first.",
 };

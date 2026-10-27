@@ -4,11 +4,13 @@
    [[Judul#^ref]]. Dipindahkan dari index.js supaya modul editor juga bisa
    memakainya tanpa mengimpor index.js. */
 
-import { openNote } from './model.js?v=20261027035256';
-import { docEl } from './editor/caret.js?v=20261027035256';
-import { toast } from '../core/toast.js?v=20261027035256';
-import { t as tr } from '../core/i18n.js?v=20261027035256';
-import { cariBagian } from './wikilink.js?v=20261027035256';
+import { openNote } from './model.js?v=20261027040308';
+import { docEl } from './editor/caret.js?v=20261027040308';
+import { toast } from '../core/toast.js?v=20261027040308';
+import { t as tr } from '../core/i18n.js?v=20261027040308';
+import { cariBagian } from './wikilink.js?v=20261027040308';
+import { ambilBlob } from '../core/blobs.js?v=20261027040308';
+import { bukaPenampilPdf } from './pdf/penampil.js?v=20261027040308';
 
 /* Buka catatan, lalu gulir ke blok `bid` dan sorot sebentar. Tanpa `bid`, hanya membuka. */
 export function lompatKe(noteId, bid) {
@@ -38,4 +40,14 @@ export function bukaSasaranTautan(note, bagian) {
     return;
   }
   lompatKe(note.id, bid);
+}
+
+/* B3b: buka lampiran PDF pada halaman `halaman` (dari [[Nama.pdf#hal=N]]).
+   `p` dari sasaranPdfSpan(). Tanpa berkas: beri tahu pengguna, jangan membuat catatan. */
+export async function bukaPdfSasaran(p) {
+  if (!p || !p.berkas) { toast(tr('Berkas PDF tidak ditemukan. Lampirkan dulu di catatan.')); return; }
+  const blob = await ambilBlob(p.berkas.blobId);
+  if (!blob) { toast(tr('Berkas PDF tidak ditemukan. Lampirkan dulu di catatan.')); return; }
+  const data = await blob.arrayBuffer();
+  await bukaPenampilPdf(data, p.berkas.name, { blobId: p.berkas.blobId, halaman: p.halaman });
 }

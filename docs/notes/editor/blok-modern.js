@@ -10,19 +10,19 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261027035256';
-import { refresh } from './cleanup.js?v=20261027035256';
-import { snap } from './history.js?v=20261027035256';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261027035256';
-import { cariJudul, judulSpan, bagianSpan } from '../wikilink.js?v=20261027035256';
-import { bukaSasaranTautan } from '../lompat-tautan.js?v=20261027035256';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261027035256';
-import { newBlockId, blockToHtml } from '../note-model.js?v=20261027035256';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261027035256';
-import { esc } from '../../core/dom.js?v=20261027035256';
-import { toast } from '../../core/toast.js?v=20261027035256';
-import { t as tr } from '../../core/i18n.js?v=20261027035256';
-import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261027035256';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261027040308';
+import { refresh } from './cleanup.js?v=20261027040308';
+import { snap } from './history.js?v=20261027040308';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261027040308';
+import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261027040308';
+import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261027040308';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261027040308';
+import { newBlockId, blockToHtml } from '../note-model.js?v=20261027040308';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261027040308';
+import { esc } from '../../core/dom.js?v=20261027040308';
+import { toast } from '../../core/toast.js?v=20261027040308';
+import { t as tr } from '../../core/i18n.js?v=20261027040308';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261027040308';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -170,7 +170,7 @@ let _perekam = null;
 let _timerRekam = null;
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261027035256');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261027040308');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
@@ -284,6 +284,7 @@ let _aktifCodeEl = null;
 let _wlPill = null;
 let _aktifWlJudul = '';
 let _aktifWlBagian = '';   /* bagian #Heading / #^ref dari tautan yang sedang ditunjuk pil */
+let _aktifWlPdf = null;    /* B3b: sasaran halaman PDF ([[Nama.pdf#hal=N]]) yang ditunjuk pil */
 
 function pastikanCodeBar() {
   if (_codeBar && _codeBar.isConnected) return _codeBar;
@@ -341,6 +342,7 @@ export function sembunyikanOverlayModern() {
   _aktifCodeEl = null;
   _aktifWlJudul = '';
   _aktifWlBagian = '';
+  _aktifWlPdf = null;
 }
 
 function tampilkanCodeBarUntuk(codeEl) {
@@ -363,13 +365,21 @@ function tampilkanCodeBarUntuk(codeEl) {
   } catch (e) {}
 }
 
+/* B3b: teks label pil — nama PDF dan halamannya, atau judul catatan. */
+function sasaranPdfAktif(pdf, ada) {
+  if (pdf) return `${pdf.judul} · ${tr('Halaman')} ${pdf.halaman}`;
+  return ada ? ada.title : '';
+}
+
 export function tampilkanPillWikilink(wlEl) {
   const judul = judulSpan(wlEl);
   if (!judul) return;
-  const ada = cariJudul(judul);
-  if (!ada) return;
+  const pdf = sasaranPdfSpan(wlEl);   /* B3b: tautan halaman PDF */
+  const ada = pdf ? null : cariJudul(judul);
+  if (!ada && !(pdf && pdf.berkas)) return;
   _aktifWlJudul = judul;
   _aktifWlBagian = bagianSpan(wlEl);
+  _aktifWlPdf = pdf && pdf.berkas ? pdf : null;
   if (!_wlPill || !_wlPill.isConnected) {
     const p = document.createElement('div');
     p.id = 'wl-pill';
@@ -377,16 +387,18 @@ export function tampilkanPillWikilink(wlEl) {
     p.hidden = true;
     p.addEventListener('mousedown', e => e.preventDefault());
     p.addEventListener('click', () => {
+      const sasPdf = _aktifWlPdf;      /* disimpan dulu: sembunyikanOverlayModern() mengosongkannya */
       const target = cariJudul(_aktifWlJudul);
-      const bagian = _aktifWlBagian;   /* disimpan dulu: sembunyikanOverlayModern() mengosongkannya */
+      const bagian = _aktifWlBagian;
       sembunyikanOverlayModern();
+      if (sasPdf) { bukaPdfSasaran(sasPdf); return; }
       if (target) bukaSasaranTautan(target, bagian);
     });
     document.body.appendChild(p);
     _wlPill = p;
   }
   _wlPill.innerHTML = `<svg class="ico" style="width:13px;height:13px"><use href="#i-link2"/></svg>` +
-    `<span>${esc(tr('Buka'))} «${esc(ada.title)}»</span>` +
+    `<span>${esc(tr('Buka'))} «${esc(sasaranPdfAktif(_aktifWlPdf, ada))}»</span>` +
     `<svg class="ico" style="width:12px;height:12px"><use href="#i-arrow-ne"/></svg>`;
   _wlPill.hidden = false;
   try {

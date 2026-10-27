@@ -7,12 +7,12 @@
  * transparan (bisa digeser, diperbesar/diperkecil, dan diputar di atas catatan).
  */
 
-import { openPop } from './menus/pop.js?v=20261027035256';
-import { WARNA_UMUM } from './menus/warna.js?v=20261027035256';
-import { normalizeWarna } from './editor/warna.js?v=20261027035256';
-import { esc } from '../core/dom.js?v=20261027035256';
-import { toast } from '../core/toast.js?v=20261027035256';
-import { t as tr } from '../core/i18n.js?v=20261027035256';
+import { openPop } from './menus/pop.js?v=20261027040308';
+import { WARNA_UMUM } from './menus/warna.js?v=20261027040308';
+import { normalizeWarna } from './editor/warna.js?v=20261027040308';
+import { esc } from '../core/dom.js?v=20261027040308';
+import { toast } from '../core/toast.js?v=20261027040308';
+import { t as tr } from '../core/i18n.js?v=20261027040308';
 
 export const KANVAS_UKUR = 256;
 const MAKS_UNDO = 25;
