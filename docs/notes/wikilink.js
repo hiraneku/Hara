@@ -10,8 +10,8 @@
    `[[Judul#^ref]]` (blok yang diberi tanda rujukan). Hanya judulnya yang
    dicari di daftar catatan; bagiannya dicari di dalam catatan yang dibuka. */
 
-import { state } from '../core/store.js?v=20261027024334';
-import { tandaiLabelTag } from './label-tag.js?v=20261027024334';
+import { state } from '../core/store.js?v=20261027034225';
+import { tandaiLabelTag } from './label-tag.js?v=20261027034225';
 
 /* Judul catatan persis (abaikan besar-kecil), tanpa catatan yang dihapus. */
 export function cariJudul(judul) {

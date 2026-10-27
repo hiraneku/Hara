@@ -1,11 +1,11 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20261027024334';
-import { toggleMark } from '../editor/marks.js?v=20261027024334';
-import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20261027024334';
-import { refresh } from '../editor/cleanup.js?v=20261027024334';
-import { pilihGambar } from '../editor/image.js?v=20261027024334';
-import { toggleRef } from '../editor/blockref.js?v=20261027024334';
-import { insertToggle, insertTable, bukaPerekamMemoSuara } from '../editor/blok-modern.js?v=20261027024334';
+import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20261027034225';
+import { toggleMark } from '../editor/marks.js?v=20261027034225';
+import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20261027034225';
+import { refresh } from '../editor/cleanup.js?v=20261027034225';
+import { pilihGambar } from '../editor/image.js?v=20261027034225';
+import { toggleRef } from '../editor/blockref.js?v=20261027034225';
+import { insertToggle, insertTable, bukaPerekamMemoSuara } from '../editor/blok-modern.js?v=20261027034225';
 
 export const ACTIONS = {
   p:      () => setBlock('b-p'),

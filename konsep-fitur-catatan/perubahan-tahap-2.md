@@ -428,3 +428,27 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   2. Saring juga saat render sebagai lapisan kedua (bookmark dengan URL tidak aman dirender sebagai `#`).
   3. Uji: impor JSON berisi `javascript:` harus menghasilkan `href` yang aman, dan tautan `https` biasa tidak berubah.
 - **Cara uji (hasil nyata):** skrip jsdom di luar repo (`/home/user/uji-b4/cek-render.mjs`), output: `BOOKMARK href javascript ada di HTML: true`, `TAUTAN TEKS href javascript ada di HTML: true`.
+
+## Perubahan 17 · B4a — Keamanan tautan: `javascript:` ditolak di impor JSON dan render
+
+- **ID:** B4 (External hyperlinks), bagian keamanan. Dikerjakan sebagai B4a sebelum cakupan "Semua" (gambar dan objek tulisan) yang disetujui pengguna.
+- **Alasan urutan:** temuan verifikasi B4 (`435a737`): impor JSON menyalin href apa adanya. Alamat `javascript:` lolos ke `href` bookmark dan tautan teks. Ini celah XSS sebelum fitur tautan diperluas, jadi diperbaiki dulu.
+- **Dependensi:** `tautanAman` (dulu di `paste.js`/`tempel-mekanik.js`), `normalizeNote` (jalur model baru dan lama), `blockToHtml` (render).
+- **Perilaku sekarang:**
+  - Alamat tautan yang lolos hanya `http:`, `https:`, `mailto:`, dan `tel:`. Varian yang disamarkan (huruf besar, tab atau spasi di tengah skema, entitas `&#58;`) ditolak.
+  - Impor JSON: bookmark dengan alamat tidak aman disimpan dengan URL kosong. `href` tidak aman di isi blok dibuang, tetapi teks tautannya tetap.
+  - Render: bookmark tidak aman tampil dengan `href="#"` dan host "tautan". Lapisan kedua membersihkan `<a>` di isi blok saat ditampilkan.
+  - Dialog dan impor markdown tidak berubah, karena sudah memakai aturan yang sama.
+- **File:**
+  - `docs/notes/url-aman.js` (baru): `tautanAman(href)` dan `bersihkanHrefHtml(html)`.
+  - `docs/notes/editor/tempel-mekanik.js`: `tautanAman` sekarang re-export dari `url-aman.js`. Pemakai (`paste.js`) tidak berubah.
+  - `docs/notes/note-model.js`: `blockToHtml` membungkus `blockToHtmlMentah` dan memanggil `bersihkanHrefHtml`. Bookmark memakai `tautanAman`. `normalizeNote` memakai `bersihBlokTautan` untuk kedua jalur impor.
+  - `tools/uji/url-aman.mjs` (baru): 22 pengujian.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/url-aman.mjs`: **22/22 lulus**.
+  - Skrip verifikasi `/home/user/uji-b4/cek-render.mjs` terhadap kode ini: sebelumnya `javascript` ada di HTML (`true`) untuk bookmark dan tautan teks. Sekarang `false` untuk keduanya.
+  - `npm test` penuh: lihat hasil di pesan penyelesaian (setelah `node tools/version.mjs`).
+- **Keterbatasan jujur:**
+  - **Belum menyelesaikan semua celah impor JSON.** Atribut lain di isi HTML blok (`on*` seperti `<img onerror>`, `<iframe>`, `<svg onload>`) belum disaring. Uji ini tidak menyatakan isi HTML aman. Perlu persetujuan pengguna sebelum dikerjakan (lihat catatan "Temuan terbuka").
+  - Belum diuji di HP (Opera Android).
+  - Dialog bookmark tetap memaksa `https://` untuk alamat baru. Ini perilaku lama dan tidak diubah.

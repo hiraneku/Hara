@@ -28,10 +28,11 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261027024334';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261027024334';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027024334';
-import { adalahPdf } from './pdf/logika.js?v=20261027024334';
+import { t as tr } from '../core/i18n.js?v=20261027034225';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261027034225';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027034225';
+import { adalahPdf } from './pdf/logika.js?v=20261027034225';
+import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027034225';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -313,6 +314,11 @@ function renderMathHtmlRingan(mentah) {
 }
 
 export function blockToHtml(b) {
+  /* B4: lapisan kedua penyaringan href di tampilan (lapisan pertama di normalizeNote) */
+  return bersihkanHrefHtml(blockToHtmlMentah(b));
+}
+
+function blockToHtmlMentah(b) {
   const meta = b.meta || {};
   const gaya = meta.indent ? ` style="padding-left:${Number(meta.indent) || 0}px"` : '';
   const ref  = meta.ref ? ` data-ref="${escAttr(meta.ref)}"` : '';
@@ -330,12 +336,15 @@ export function blockToHtml(b) {
   }
 
   if (b.type === 'bookmark') {
-    const url = escAttr(meta.url || 'https://');
+    /* B4: alamat yang tidak aman tidak pernah jadi href; '#' sebagai pengganti */
+    const aman = tautanAman(meta.url);
+    const url = escAttr(aman || '#');
+    const urlData = escAttr(aman);
     let host = 'tautan';
-    try { host = new URL(meta.url || 'https://contoh.id').hostname.replace(/^www\./, ''); } catch {}
+    try { if (aman) host = new URL(aman).hostname.replace(/^www\./, ''); } catch {}
     const jdl = escAttr(meta.title || host);
     const ket = escAttr(meta.desc || '');
-    return `<div class="b-bmk" contenteditable="false" data-url="${url}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
+    return `<div class="b-bmk" contenteditable="false" data-url="${urlData}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
       `<a class="bmk-main" href="${url}" target="_blank" rel="noopener noreferrer">` +
       `<span class="bmk-ico" aria-hidden="true"><svg class="ico"><use href="#i-link"/></svg></span>` +
       `<span class="bmk-info">` +
@@ -773,6 +782,19 @@ export function htmlToBlocks(html) {
 
 /* Terima catatan bentuk apa pun (lama/baru/rusak) -> catatan valid.
    Idempoten: catatan yang sudah benar dikembalikan apa adanya. */
+/* B4: alamat tautan tidak aman dibuang dari data (bookmark dan href di isi blok). */
+function bersihBlokTautan(blok) {
+  if (!blok || typeof blok !== 'object') return blok;
+  let out = blok;
+  if (blok.type === 'bookmark' && blok.meta) {
+    out = { ...out, meta: { ...blok.meta, url: tautanAman(blok.meta.url) } };
+  }
+  if (typeof out.content === 'string' && /<a[\s>]/i.test(out.content)) {
+    out = { ...out, content: bersihkanHrefHtml(out.content) };
+  }
+  return out;
+}
+
 export function normalizeNote(raw) {
   if (!raw || typeof raw !== 'object') return makeNote();
 
@@ -785,7 +807,7 @@ export function normalizeNote(raw) {
         if (!b || b.type === 'code' || b.type === 'divider') return makeBlock(b);
         /* sapu sisa span tag rusak dari data lama (bug Enter membelah
            tag / span kosong) — isi teksnya tidak berubah */
-        return makeBlock({ ...b, content: sapuTagRusak(b.content) });
+        return bersihBlokTautan(makeBlock({ ...b, content: sapuTagRusak(b.content) }));
       }),
     });
   }
@@ -795,7 +817,7 @@ export function normalizeNote(raw) {
   return makeNote({
     id: raw.id,
     title: raw.title ?? raw.t ?? '',
-    blocks: htmlToBlocks(raw.html),
+    blocks: htmlToBlocks(raw.html).map(bersihBlokTautan),
     tags: raw.tags,
     tagsManual: raw.tagsManual,
     folderId: raw.folderId,

@@ -39,7 +39,8 @@
    Semua teks di-escape lewat esc() dan tautan disaring tautanAman(),
    jadi clipboard berisi <script> atau javascript: tidak bisa lolos. */
 
-import { esc } from '../../core/dom.js?v=20261027024334';
+import { esc } from '../../core/dom.js?v=20261027034225';
+import { tautanAman } from '../url-aman.js?v=20261027034225';
 
 /* Karakter penutup kata tag — sama dengan TUTUP_CHAR di markdown.js. */
 const TUTUP_TAG = new Set([' ', '\u00a0', '\t', ',', ';', ':', '!', '?',
@@ -51,11 +52,7 @@ const NAMA_TAG = /^[\p{L}\p{N}][\p{L}\p{N}_\/.-]*$/u;
 
 /* Alamat yang boleh jadi href. Skema lain (javascript:, data:, …)
    dibuang; teksnya tetap tampil sebagai teks biasa. */
-export function tautanAman(href) {
-  const u = String(href == null ? '' : href).trim();
-  if (!u) return '';
-  return /^(https?:|mailto:|tel:)/i.test(u) ? u : '';
-}
+export { tautanAman };   /* definisi ada di url-aman.js (B4) */
 
 /* Alamat telanjang → href yang sah: www.x → https://www.x, surel →
    mailto:. Sama dengan rapikan() di menus/link.js. */

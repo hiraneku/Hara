@@ -7,15 +7,15 @@
    Templat isi (templat.js) tidak ikut menyimpan latar.
    Templat kustom buatan sendiri disimpan di localStorage (maks 8), seperti preset pena (A3). */
 
-import { state, save } from '../core/store.js?v=20261027024334';
+import { state, save } from '../core/store.js?v=20261027034225';
 import {
   touch, KERTAS_JENIS, KERTAS_POLA, KERTAS_SPASI, KERTAS_WARNA, KERTAS_MARGIN,
   kelasKertasNote, variabelKertasNote, sanitasiAturKertas,
-} from './note-model.js?v=20261027024334';
-import { openPop, closeAll } from './menus/pop.js?v=20261027024334';
-import { toast } from '../core/toast.js?v=20261027024334';
-import { esc } from '../core/dom.js?v=20261027024334';
-import { t as tr } from '../core/i18n.js?v=20261027024334';
+} from './note-model.js?v=20261027034225';
+import { openPop, closeAll } from './menus/pop.js?v=20261027034225';
+import { toast } from '../core/toast.js?v=20261027034225';
+import { esc } from '../core/dom.js?v=20261027034225';
+import { t as tr } from '../core/i18n.js?v=20261027034225';
 
 export const KUNCI_TEMPLAT_KERTAS = 'hara.kertas.v1';
 export const MAKS_TEMPLAT_KERTAS = 8;
