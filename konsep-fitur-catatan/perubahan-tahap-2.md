@@ -452,3 +452,33 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Belum menyelesaikan semua celah impor JSON.** Atribut lain di isi HTML blok (`on*` seperti `<img onerror>`, `<iframe>`, `<svg onload>`) belum disaring. Uji ini tidak menyatakan isi HTML aman. Perlu persetujuan pengguna sebelum dikerjakan (lihat catatan "Temuan terbuka").
   - Belum diuji di HP (Opera Android).
   - Dialog bookmark tetap memaksa `https://` untuk alamat baru. Ini perilaku lama dan tidak diubah.
+
+## Perubahan 18 · B4b — Tautan pada gambar dan objek tulisan (cakupan "Semua")
+
+- **ID:** B4 (External hyperlinks), bagian "objek yang didukung". Disetujui pengguna dengan pilihan "Semua" (gambar dan objek tulisan). Dikerjakan setelah B4a (keamanan).
+- **Alasan urutan:** B4a menutup celah `javascript:` dulu, supaya fitur tautan baru langsung memakai penyaringan yang sama (`tautanAman`).
+- **Dependensi:** B4a (`url-aman.js`), model blok gambar (`note-model.js`), bilah mini gambar (`tata-gambar.js`), dan dialog `openPop` (`menus/pop.js`).
+- **Objek tulisan:** sketsa (goresan) dan gambar biasa sama-sama blok `image`. Keduanya memakai mekanisme yang sama.
+- **Perilaku sekarang:**
+  - Chip **Tautan** di bilah mini gambar (muncul saat gambar dipilih) membuka dialog. Isi alamat, lalu Simpan. Tanpa skema dianggap `https://`.
+  - Alamat yang diterima hanya `http`, `https`, `mailto`, dan `tel`. Lainnya ditolak dengan pesan "Alamat tidak didukung".
+  - Gambar yang punya tautan menampilkan lencana kecil (ikon tautan) di pojok kiri-bawah. Klik lencana membuka tautan di tab baru (`target="_blank"`, `rel="noopener noreferrer"`).
+  - Chip Tautan menyala saat gambar sudah punya tautan. Dialog punya tombol **Hapus tautan** untuk melepasnya.
+  - Tautan tersimpan sebagai `data-url` di figur, dan dibaca balik ke `meta.url`. Tautan bertahan saat catatan dimuat ulang (diuji).
+  - Sketsa yang diperbarui tetap mempertahankan tautannya, karena figurnya tidak dibangun ulang.
+- **File:**
+  - `docs/notes/tautan-gambar.js` (baru): `bukaDialogTautanGambar`, `terapkanTautanKeFigur`, `alamatDariInput`.
+  - `docs/notes/note-model.js`: render lencana (`badgeTautanGambar`), baca balik `data-url` di `elToBlock`, dan penyaringan impor untuk blok gambar.
+  - `docs/notes/tata-gambar.js`: chip `data-mlink` dan handler kliknya.
+  - `docs/styles/notes.css`: aturan `.img-tautan`, termasuk ukuran untuk gambar kecil.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 3 teks baru.
+  - `tools/uji/tautan-gambar.mjs` (baru): 18 pengujian logika.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/tautan-gambar.mjs`: **18/18 lulus**.
+  - Chromium, emulasi layar HP (412×915, sentuh), aplikasi sungguhan, harness di luar repo (`/home/user/uji-tg/uji-tautan-gambar.mjs`): **9/9 lulus**. Mencakup pasang tautan pada gambar dan sketsa, penolakan `javascript:`, klik lencana membuka tab baru, muat ulang, hapus tautan, dan tanpa galat JS.
+  - Tangkapan layar: lencana tampak di pojok kiri-bawah kedua figur. Gambar uji tampil "Gambar tidak ditemukan" karena blob uji memang kosong, bukan karena fitur ini.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP Opera Android.** Uji di Chromium dengan emulasi layar HP.
+  - Pada gambar yang sedang dipilih, lencana berdekatan dengan gagang pindah di kiri-atas dan gagang ukuran di kanan-bawah. Posisinya tidak bertabrakan, tetapi perlu dicek di layar HP sungguhan.
+  - Ekspor Markdown/HTML belum diperiksa apakah ikut membawa tautan gambar.
+  - Celah atribut `on*` di isi HTML blok dari impor JSON (lihat Perubahan 17) **belum** diperbaiki.

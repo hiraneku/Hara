@@ -28,11 +28,11 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261027034225';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261027034225';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027034225';
-import { adalahPdf } from './pdf/logika.js?v=20261027034225';
-import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027034225';
+import { t as tr } from '../core/i18n.js?v=20261027035256';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261027035256';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027035256';
+import { adalahPdf } from './pdf/logika.js?v=20261027035256';
+import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027035256';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -313,6 +313,13 @@ function renderMathHtmlRingan(mentah) {
   return s;
 }
 
+/* B4: lencana kecil di pojok kiri-bawah gambar yang punya tautan. Klik membuka tautan di tab baru. */
+export function badgeTautanGambar(url) {
+  const t = escAttr(tr('Buka tautan'));
+  return `<a class="img-tautan" href="${escAttr(url)}" target="_blank" rel="noopener noreferrer"` +
+    ` title="${t}" aria-label="${t}"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg></a>`;
+}
+
 export function blockToHtml(b) {
   /* B4: lapisan kedua penyaringan href di tampilan (lapisan pertama di normalizeNote) */
   return bersihkanHrefHtml(blockToHtmlMentah(b));
@@ -471,10 +478,14 @@ function blockToHtmlMentah(b) {
     const gorAttr = meta.goresan ? ` data-goresan="${escAttr(meta.goresan)}"` : '';
     const scanAttr = meta.scan ? ` data-scan="${escAttr(meta.scan)}"` : '';
     const origAttr = meta.origBlob ? ` data-orig-blob="${escAttr(meta.origBlob)}"` : '';
-    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${bgAttr}>` +
+    /* B4: tautan pada gambar/objek tulisan. Alamat tidak aman tidak pernah ditulis. */
+    const tautan = tautanAman(meta.url);
+    const urlAttr = tautan ? ` data-url="${escAttr(tautan)}"` : '';
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${urlAttr}${bgAttr}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
-      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
+      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>` +
+      `${tautan ? badgeTautanGambar(tautan) : ''}${pegangan()}</div>`;
   }
 
   if (b.type === 'todo') {
@@ -633,6 +644,10 @@ export function elToBlock(el) {
     if (ga === 'l' || ga === 'c' || ga === 'r') meta.align = ga;
     const gb = el.getAttribute && el.getAttribute('data-gb');
     if (gb === 'b') meta.zb = 'b';
+    /* B4: tautan gambar/objek tulisan; alamat tidak aman dibuang */
+    const tg = el.getAttribute && el.getAttribute('data-url');
+    const tgAman = tautanAman(tg);
+    if (tgAman) meta.url = tgAman;
   } else if (type === 'todo') {
     meta.checked = kelas.includes('done');
     /* waktu centang (ms) — untuk panel Tugas/Reminder (B9) */
@@ -786,7 +801,7 @@ export function htmlToBlocks(html) {
 function bersihBlokTautan(blok) {
   if (!blok || typeof blok !== 'object') return blok;
   let out = blok;
-  if (blok.type === 'bookmark' && blok.meta) {
+  if ((blok.type === 'bookmark' || blok.type === 'image') && blok.meta && blok.meta.url) {
     out = { ...out, meta: { ...blok.meta, url: tautanAman(blok.meta.url) } };
   }
   if (typeof out.content === 'string' && /<a[\s>]/i.test(out.content)) {

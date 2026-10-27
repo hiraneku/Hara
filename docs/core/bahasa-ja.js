@@ -1100,4 +1100,7 @@ export const JA = {
   "halaman": "ページ",
   "dari": "/",
   "Bagian tidak ditemukan. Catatan dibuka dari awal.": "セクションが見つかりません。ノートは先頭から開きました。",
+  "Tautan gambar": "画像のリンク",
+  "Buka tautan": "リンクを開く",
+  "Alamat tidak didukung. Pakai http, https, mailto, atau tel.": "このアドレスは使えません。http、https、mailto、tel のいずれかを使ってください。",
 };

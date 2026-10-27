@@ -420,6 +420,12 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 .b-img.img-pilih .img-x{opacity:1}
 .b-img.img-pilih .img-x:hover{background:rgba(160,44,44,.92)}
 .img-x svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
+/* B4: lencana tautan gambar/objek tulisan (pojok kiri-bawah, selalu terlihat) */
+.img-tautan{position:absolute;left:8px;bottom:8px;width:26px;height:26px;border-radius:999px;
+  background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:4;text-decoration:none}
+.img-tautan:hover{background:rgba(0,0,0,.75)}
+.img-tautan svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round}
+.b-img.sempit .img-tautan{width:24px;height:24px;left:6px;bottom:6px}
 /* gagang: pindah (kiri-atas) · ukuran (pojok kanan-bawah) · putar
    (mengambang di atas-tengah gambar).
    Area sentuh sengaja lebih lebar daripada tampilannya (halo ::before,

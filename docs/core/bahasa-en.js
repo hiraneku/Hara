@@ -1133,4 +1133,7 @@ export const EN = {
   "halaman": "page",
   "dari": "of",
   "Bagian tidak ditemukan. Catatan dibuka dari awal.": "Section not found. The note was opened from the top.",
+  "Tautan gambar": "Image link",
+  "Buka tautan": "Open link",
+  "Alamat tidak didukung. Pakai http, https, mailto, atau tel.": "Address not supported. Use http, https, mailto, or tel.",
 };
