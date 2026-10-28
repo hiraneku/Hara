@@ -2,10 +2,10 @@
    tanpa dukungan, salin teks markdown ke papan klip. Tidak mengubah
    data catatan apa pun. */
 
-import { state } from '../core/store.js?v=20261027040308';
-import { toast } from '../core/toast.js?v=20261027040308';
-import { markdownDariCatatan } from './data-io.js?v=20261027040308';
-import { t as tr } from '../core/i18n.js?v=20261027040308';
+import { state } from '../core/store.js?v=20261028021559';
+import { toast } from '../core/toast.js?v=20261028021559';
+import { markdownDariCatatan } from './data-io.js?v=20261028021559';
+import { t as tr } from '../core/i18n.js?v=20261028021559';
 
 export async function bagikanCatatan(id) {
   const n = id

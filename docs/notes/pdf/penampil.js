@@ -7,22 +7,22 @@
    Anotasi (B1b): coret, sorot, garis, dan komentar. Disimpan TERPISAH dari
    PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261027040308';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261028021559';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261027040308';
+} from './logika.js?v=20261028021559';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261027040308';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261027040308';
+} from './anotasi.js?v=20261028021559';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028021559';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261027040308';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261027040308';
-import { esc } from '../../core/dom.js?v=20261027040308';
-import { t as tr } from '../../core/i18n.js?v=20261027040308';
+} from './cari-pdf.js?v=20261028021559';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028021559';
+import { esc } from '../../core/dom.js?v=20261028021559';
+import { t as tr } from '../../core/i18n.js?v=20261028021559';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 

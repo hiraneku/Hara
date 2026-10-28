@@ -28,11 +28,12 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261027040308';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261027040308';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261027040308';
-import { adalahPdf } from './pdf/logika.js?v=20261027040308';
-import { tautanAman, bersihkanHrefHtml } from './url-aman.js?v=20261027040308';
+import { t as tr } from '../core/i18n.js?v=20261028021559';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261028021559';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261028021559';
+import { adalahPdf } from './pdf/logika.js?v=20261028021559';
+import { tautanAman } from './url-aman.js?v=20261028021559';
+import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261028021559';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -321,8 +322,10 @@ export function badgeTautanGambar(url) {
 }
 
 export function blockToHtml(b) {
-  /* B4: lapisan kedua penyaringan href di tampilan (lapisan pertama di normalizeNote) */
-  return bersihkanHrefHtml(blockToHtmlMentah(b));
+  /* B4/B4c: lapisan kedua penyaringan di tampilan (lapisan pertama di normalizeNote).
+     Markup aplikasi sendiri tidak memicu penyaringan; isi yang mencurigakan disaring. */
+  const h = blockToHtmlMentah(b);
+  return PERLU_SARING.test(h) ? bersihkanHtmlBlok(h) : h;
 }
 
 function blockToHtmlMentah(b) {
@@ -801,11 +804,13 @@ export function htmlToBlocks(html) {
 function bersihBlokTautan(blok) {
   if (!blok || typeof blok !== 'object') return blok;
   let out = blok;
+  /* B4c: isi HTML blok disaring (on*, <iframe>, <img onerror>, href/src berbahaya, dll).
+     Blok kode tidak disentuh: isinya teks, bukan markup. */
+  if (blok.type !== 'code' && typeof out.content === 'string' && out.content.includes('<')) {
+    out = { ...out, content: bersihkanHtmlBlok(out.content) };
+  }
   if ((blok.type === 'bookmark' || blok.type === 'image') && blok.meta && blok.meta.url) {
     out = { ...out, meta: { ...blok.meta, url: tautanAman(blok.meta.url) } };
-  }
-  if (typeof out.content === 'string' && /<a[\s>]/i.test(out.content)) {
-    out = { ...out, content: bersihkanHrefHtml(out.content) };
   }
   return out;
 }

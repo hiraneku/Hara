@@ -512,3 +512,31 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Menu `[[` belum menawarkan berkas PDF atau halaman.
   - Penampil PDF tidak memiliki lapisan teks di jalur ini, jadi verifikasi halaman memakai sidik kanvas, bukan membaca teks.
   - Ekspor Markdown/HTML belum diperiksa untuk tautan PDF.
+
+## Perubahan 20 · B4c — Saring HTML isi blok (sisa celah impor JSON)
+
+- **ID:** B4 (External hyperlinks), bagian keamanan lanjutan. Disetujui pengguna dengan "Ya, saring sekarang" setelah Perubahan 17 (B4a) menyisakan celah atribut lain.
+- **Alasan urutan:** B4a hanya menyaring `href`. Isi HTML blok masih disalin apa adanya, jadi `on*`, `<iframe>`, dan `<img onerror>` tetap masuk. Ini diperbaiki sebelum fitur baru.
+- **Dependensi:** `url-aman.js` (`tautanAman`), `note-model.js` (`normalizeNote`, `blockToHtml`), dan `editor/paste.js` (`tanganiPaste`, `htmlKeBaris`).
+- **Bukti celah sebelum perbaikan (Chromium, harness di luar repo):** impor JSON dengan `<img src="x" onerror="…">` menjalankan payload (`window.__xss = "img"`) dan `<iframe>` masuk ke DOM. Tempelan HTML dengan `<img onerror>` juga menjalankan payload.
+- **Perilaku sekarang:**
+  - Tag berbahaya dibuang beserta isinya: `script`, `style`, `iframe`, `frame`, `object`, `embed`, `applet`, `form`, `template`, `link`, `meta`, `base`, `math`, dan elemen animasi SVG (`animate`, `set`, …).
+  - Semua atribut `on*` dibuang.
+  - Atribut URL: `href` hanya http(s), mailto, tel, atau `#…` (aturan sama dengan `tautanAman`). `src` hanya http(s), blob:, `data:image/`, atau relatif. `<use href>` hanya ke simbol lokal `#…`. `style` yang memuat `expression(`, `javascript:`, atau `url(` ke luar dibuang.
+  - Atribut lain (`class`, `id`, `data-*`, `title`, `alt`, `target`, `style` biasa) dibiarkan. Isi normal tidak berubah.
+  - Impor: isi HTML setiap blok disaring, termasuk format lama. Blok kode tidak disentuh karena isinya teks.
+  - Render: lapisan kedua hanya dipicu bila teks mengandung pola berbahaya, jadi markup aplikasi tidak diproses ulang.
+  - Tempelan: `text/html` dari clipboard disaring sebelum diurai.
+- **File:**
+  - `docs/notes/html-aman.js` (baru): `bersihkanHtmlBlok`, `PERLU_SARING`.
+  - `docs/notes/note-model.js`: `normalizeNote` (`bersihBlokTautan`) dan `blockToHtml` memakai penyaring baru.
+  - `docs/notes/editor/paste.js`: `tanganiPaste` dan `htmlKeBaris` menyaring HTML clipboard.
+  - `tools/uji/html-aman.mjs` (baru): 33 pengujian.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/html-aman.mjs`: **33/33 lulus**.
+  - Chromium, emulasi layar HP, aplikasi sungguhan, harness di luar repo (`/home/user/uji-tg/uji-html-aman.mjs`): **10/10 lulus** pada kode ini. Mencakup impor, tempelan lewat event `paste`, dan muat ulang. Tidak ada payload yang terpicu.
+  - Pembanding `42d7216` (sebelum B4c) dengan harness yang sama: **4/10**. Payload `onerror` terpicu, dan iframe masuk ke DOM. Jadi uji ini memang bisa gagal.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).**
+  - Penyaringan `meta` selain URL (mis. judul kartu, label) tidak diubah. Field itu dirender lewat `esc`/`escAttr`, bukan HTML mentah. Ini belum diperiksa menyeluruh.
+  - Penyaring memakai daftar izin dan daftar buang yang masuk akal, bukan standar keamanan resmi. Bila nanti ada kebutuhan markup baru, daftarnya perlu ditinjau.

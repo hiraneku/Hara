@@ -22,11 +22,12 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261027040308';
-import { sisipGambar } from './image.js?v=20261027040308';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028021559';
+import { sisipGambar } from './image.js?v=20261028021559';
+import { bersihkanHtmlBlok } from '../html-aman.js?v=20261028021559';
 import { barisMekanik, teksKeBaris, bagiIndent, polaBaris, padUntuk,
   tautkanTeks, tautanAman, hrefDari, htmlTautan }
-  from './tempel-mekanik.js?v=20261027040308';
+  from './tempel-mekanik.js?v=20261028021559';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
@@ -298,7 +299,7 @@ export function htmlKeBaris(html) {
   const wadah = document.createElement('div');
   /* innerHTML pada elemen lepas TIDAK mengeksekusi <script> maupun
      memuat sumber daya, jadi aman sebagai tahap parsing. */
-  wadah.innerHTML = html;
+  wadah.innerHTML = bersihkanHtmlBlok(html);   /* B4c: lapisan kedua; tanganiPaste sudah menyaring */
 
   const keluar = [];
   pecahBaris(wadah, keluar, { jenis: 'p' });
@@ -603,7 +604,8 @@ export function tanganiPaste(e) {
   if (berkas) { sisipGambar(berkas); return true; }
 
   let html = '', teks = '';
-  try { html = cd.getData('text/html') || ''; } catch (err) {}
+  /* B4c: HTML clipboard disaring dulu (on*, <img onerror>, <iframe>, href/src berbahaya) sebelum diurai */
+  try { html = bersihkanHtmlBlok(cd.getData('text/html') || ''); } catch (err) {}
   try { teks = cd.getData('text/plain') || ''; } catch (err) {}
   if (!html && !teks) return false;
 
