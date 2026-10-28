@@ -878,17 +878,37 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Pilihan materi dan mode belajar** tidak bertahan setelah muat ulang halaman, seperti C5.
   - **Format frame** selalu JPEG (kualitas 0,92). Tidak ada opsi PNG.
 
+## Perubahan 29 · B8 lanjutan — Navigasi antar-hari dan tautan balik ke kalender
+
+- **ID:** B8 lanjutan (navigasi antar-hari di halaman jurnal dan tautan balik ke kalender). Bagian ini sebelumnya dikeluarkan dari cakupan B8. Pengguna memintanya secara eksplisit dan menyetujuinya lewat "uji semua yang perlu diuji lalu lanjut ke B8 lanjutan". Persetujuan hanya untuk B8 lanjutan.
+- **Perubahan:**
+  - Catatan jurnal (judulnya berformat tanggal) sekarang menampilkan bilah navigasi di atas judul: tombol **‹ tanggal sebelumnya**, **Lihat di kalender**, dan **tanggal berikutnya ›**. Catatan biasa tidak menampilkan bilah ini.
+  - Tombol sebelumnya/berikutnya pindah satu hari dengan cara yang sama seperti **Buka jurnal** di kalender: jurnal hari itu dibuka, atau dibuat bila belum ada. Isi yang belum tersimpan di-flush dulu sebelum pindah.
+  - **Lihat di kalender** membuka layar Tugas dengan tanggal jurnal itu sudah terpilih.
+  - `docs/notes/harian.js`: `tanggalJurnalAktif`, `jurnalBarHtml`, `navigasiJurnal`. `docs/notes/jurnal-tanggal.js`: pembantu tanggal dan `bukaJurnalTanggal`. `docs/notes/views/tugas.js` dan `views/editor.js` memasang handler `[data-jur]`. `docs/notes/index.js` meneruskan aksi ke `tampilkanKalenderTanggal`.
+  - `docs/styles/notes.css`: gaya `.jurnal-bar` dan `.jurnal-b`. `docs/core/bahasa-en.js`, `bahasa-ja.js`: teks baru untuk bilah navigasi.
+  - Stempel versi `20261029100000` (137 berkas).
+- **Keputusan yang perlu diketahui:** menelusuri hari dengan tombol sebelumnya/berikutnya bisa membuat jurnal kosong untuk hari yang belum punya catatan. Perilaku ini sama dengan **Buka jurnal**. Bila pengguna ingin navigasi hanya menuju jurnal yang sudah ada, perilakunya perlu diubah.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/jurnal-navigasi.mjs` (baru, masuk `npm test`): **27/0**. Mencakup parsing judul jurnal dalam tiga bahasa (en, id, ja), penolakan tanggal tidak valid (31 Februari, 30 Februari, bulan tak dikenal), tahun kabisat, catatan non-jurnal, dan pemeriksaan struktur bilah serta handler.
+  - `tools/uji/planner-kalender.mjs`: **35/0**. Pemeriksaan impor `bukaJurnalTanggal` dilonggarkan agar toleran terhadap urutan nama impor.
+  - Chromium headless, harness `/home/user/uji-hara/uji-b8-lanjut.mjs`: **22/22 lulus** (dijalankan dua kali, run kedua 22/22). Mencakup bilah di jurnal 15 Oktober dengan tombol 14 dan 16 Oktober, pindah bolak-balik tanpa jurnal ganda, isi yang diketik sebelum pindah tetap tersimpan, tombol kalender yang memilih hari itu, Buka jurnal dari kalender, catatan biasa tanpa bilah, dan HP 390 px tanpa scroll horizontal.
+  - `npm test` dijalankan ulang di worktree: **exit 0** (semua suite di `tools/uji/*.mjs` lolos, termasuk dua suite di atas).
+- **Keterbatasan jujur:**
+  - Navigasi bisa membuat jurnal kosong (lihat Keputusan di atas).
+  - **Android belum diuji.** Semua uji di Chromium headless desktop.
+  - Pergantian bulan dan tahun lewat klik belum diuji di Chromium (uji browser hanya di sekitar 14–16 Oktober).
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
 - B6: lanjutan core non-SIMD sudah dikerjakan sesuai keputusan pengguna. Pengujian Chromium
   SIMD 25/25 dan non-SIMD 25/25 (non-SIMD dengan deteksi SIMD dipaksa gagal, lihat bagian B6 lanjutan).
-- B8: lingkup yang diterapkan lihat di atas. Navigasi antar-hari dan tautan balik belum.
+- B8: termasuk navigasi antar-hari dan tautan balik ke kalender (Perubahan 29). Tahap 2 lengkap.
 - Uji akhir: `npm test` exit 0 (37/37 suite lolos). Node OCR 54/54. Node B8 35/35. Chromium B8 21/21.
   Chromium OCR SIMD 25/25 dan non-SIMD 25/25.
 
 ## Berikutnya
 
 - Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
-- Hal terbuka dari Tahap 2: navigasi antar-hari di halaman jurnal dan tautan balik ke kalender (B8),
-  uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.
+- Hal terbuka dari Tahap 2: uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.

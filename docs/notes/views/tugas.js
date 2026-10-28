@@ -5,20 +5,20 @@
    layar ini tidak pernah bisa berbeda dari catatan aslinya. Matriks dan
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
-import { state, save } from '../../core/store.js?v=20261028110000';
-import { esc } from '../../core/dom.js?v=20261028110000';
-import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261028110000';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261028110000';
-import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261028110000';
-import { rowFor } from './row.js?v=20261028110000';
-import { terlihat } from '../kunci.js?v=20261028110000';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261028110000';
-import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261028110000';
-import { toast } from '../../core/toast.js?v=20261028110000';
-import { touch, makeNote } from '../note-model.js?v=20261028110000';
-import { go, cur } from '../../core/router.js?v=20261028110000';
-import { flush } from '../../core/autosave.js?v=20261028110000';
-import { openNote } from '../model.js?v=20261028110000';
+import { state, save } from '../../core/store.js?v=20261029100000';
+import { esc } from '../../core/dom.js?v=20261029100000';
+import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261029100000';
+import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261029100000';
+import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261029100000';
+import { rowFor } from './row.js?v=20261029100000';
+import { terlihat } from '../kunci.js?v=20261029100000';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261029100000';
+import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261029100000';
+import { toast } from '../../core/toast.js?v=20261029100000';
+import { touch, makeNote } from '../note-model.js?v=20261029100000';
+import { go, cur } from '../../core/router.js?v=20261029100000';
+import { flush } from '../../core/autosave.js?v=20261029100000';
+import { openNote } from '../model.js?v=20261029100000';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
 const SEHARI = 86400000;
@@ -217,6 +217,15 @@ export function geserKalender(aksi, ms) {
     const d = new Date(kalPilih); kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   }
   if (cur === 'task') go('task');
+}
+
+/* B8 lanjutan: dari jurnal, buka layar Tugas dengan tanggal itu terpilih di kalender.
+   ms bisa tengah hari; dipangkas ke awal hari supaya cocok dengan sel kalender. */
+export function tampilkanKalenderTanggal(ms) {
+  kalPilih = awalHari(Number(ms));
+  const d = new Date(kalPilih);
+  kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  go('task');
 }
 
 /* ── K8 · ekspor & impor .ics ── */

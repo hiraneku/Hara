@@ -10,9 +10,9 @@
    `[[Judul#^ref]]` (blok yang diberi tanda rujukan). Hanya judulnya yang
    dicari di daftar catatan; bagiannya dicari di dalam catatan yang dibuka. */
 
-import { state } from '../core/store.js?v=20261028110000';
-import { tandaiLabelTag } from './label-tag.js?v=20261028110000';
-import { adalahPdf } from './pdf/logika.js?v=20261028110000';
+import { state } from '../core/store.js?v=20261029100000';
+import { tandaiLabelTag } from './label-tag.js?v=20261029100000';
+import { adalahPdf } from './pdf/logika.js?v=20261029100000';
 
 /* Judul catatan persis (abaikan besar-kecil), tanpa catatan yang dihapus. */
 export function cariJudul(judul) {

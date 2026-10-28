@@ -1,15 +1,16 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261028110000';
-import { findNote } from '../model.js?v=20261028110000';
-import { esc } from '../../core/dom.js?v=20261028110000';
-import { blocksToDom, kelasKertasNote, gayaKertasNote } from '../note-model.js?v=20261028110000';
-import { barisProps } from '../meta-ui.js?v=20261028110000';
-import { t as tr } from '../../core/i18n.js?v=20261028110000';
-import { renderStickersHtml } from '../hamoji.js?v=20261028110000';
-import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261028110000';
-import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261028110000';
-import { belajarBuka, belajarTutup } from '../belajar-materi.js?v=20261028110000';
+import { state } from '../../core/store.js?v=20261029100000';
+import { findNote } from '../model.js?v=20261029100000';
+import { esc } from '../../core/dom.js?v=20261029100000';
+import { blocksToDom, kelasKertasNote, gayaKertasNote } from '../note-model.js?v=20261029100000';
+import { barisProps } from '../meta-ui.js?v=20261029100000';
+import { t as tr } from '../../core/i18n.js?v=20261029100000';
+import { renderStickersHtml } from '../hamoji.js?v=20261029100000';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261029100000';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261029100000';
+import { belajarBuka, belajarTutup } from '../belajar-materi.js?v=20261029100000';
+import { jurnalBarHtml } from '../harian.js?v=20261029100000';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -38,6 +39,7 @@ const n=findNote(state.openId)||state.notes[0];
     <button type="button" class="ea-b ea-ico" data-et="zen" aria-label="${tr('Mode fokus')}" aria-pressed="false" title="${tr('Mode fokus — sembunyikan semua kecuali catatan')}"><svg class="ico"><use href="#i-zen"/></svg></button>
   </div>
   ${renderQuickKeysHtml()}
+  ${jurnalBarHtml(n)}
   <input class="ed-t" value="${esc(n.title)}" placeholder="${tr('Judul')}"
     aria-label="${tr('Judul catatan')}">
   <div class="props" id="props-box">

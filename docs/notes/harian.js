@@ -4,14 +4,17 @@
    dari catatan aktif; belum ada → dibuat dengan blok kosong siap tulis
    (pola templat bawaan jurnal). */
 
-import { state, save } from '../core/store.js?v=20261028110000';
-import { go } from '../core/router.js?v=20261028110000';
-import { toast } from '../core/toast.js?v=20261028110000';
-import { makeNote, makeBlock } from './note-model.js?v=20261028110000';
-import { openNote } from './model.js?v=20261028110000';
-import { terkunciAktif } from './kunci.js?v=20261028110000';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261028110000';
-import { judulJurnal, tanggalJurnal, cariJurnal } from './jurnal-tanggal.js?v=20261028110000';
+import { state, save } from '../core/store.js?v=20261029100000';
+import { go } from '../core/router.js?v=20261029100000';
+import { toast } from '../core/toast.js?v=20261029100000';
+import { makeNote, makeBlock } from './note-model.js?v=20261029100000';
+import { openNote, findNote } from './model.js?v=20261029100000';
+import { terkunciAktif } from './kunci.js?v=20261029100000';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261029100000';
+import { flush } from '../core/autosave.js?v=20261029100000';
+import { esc } from '../core/dom.js?v=20261029100000';
+import { judulJurnal, tanggalJurnal, cariJurnal, tanggalDariJudul } from './jurnal-tanggal.js?v=20261029100000';
+import { tampilkanKalenderTanggal } from './views/tugas.js?v=20261029100000';
 
 export function tanggalHariIni() {
   return tanggalJurnal(bahasaSekarang(), new Date());
@@ -71,4 +74,39 @@ export function bukaJurnalTanggal(t, hariIni = false) {
   toast(hariIni
     ? tr('Jurnal hari ini dibuat — selamat menulis')
     : tr('Jurnal {t} dibuat — selamat menulis', { t: tgl }));
+}
+
+/* ── B8 lanjutan: navigasi antar-hari di jurnal dan tautan balik ke kalender ── */
+
+/* Tanggal jurnal dari catatan yang sedang dibuka, atau null bila catatan itu bukan jurnal. */
+export function tanggalJurnalAktif() {
+  const n = state.openId ? findNote(state.openId) : null;
+  return n ? tanggalDariJudul(n.title) : null;
+}
+
+/* Bilah navigasi di atas judul, hanya untuk catatan jurnal. Kosong untuk catatan lain. */
+export function jurnalBarHtml(n) {
+  const t = n ? tanggalDariJudul(n.title) : null;
+  if (!t) return '';
+  const kini = bahasaSekarang();
+  const sebelum = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1);
+  const sesudah = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1);
+  const tglSebelum = tanggalJurnal(kini, sebelum);
+  const tglSesudah = tanggalJurnal(kini, sesudah);
+  return `<nav class="jurnal-bar" aria-label="${esc(tr('Navigasi jurnal'))}">
+    <button type="button" class="jurnal-b" data-jur="prev" aria-label="${esc(tr('Jurnal sebelumnya'))}: ${esc(tglSebelum)}">‹ ${esc(tglSebelum)}</button>
+    <button type="button" class="jurnal-b jurnal-kal" data-jur="kalender">${esc(tr('Lihat di kalender'))}</button>
+    <button type="button" class="jurnal-b" data-jur="next" aria-label="${esc(tr('Jurnal berikutnya'))}: ${esc(tglSesudah)}">${esc(tglSesudah)} ›</button>
+  </nav>`;
+}
+
+/* Dipanggil dari handler [data-jur]. prev/next pindah satu hari (buka atau buat jurnal, sama
+   seperti Buka jurnal di kalender). kalender membuka layar Tugas dengan hari itu terpilih. */
+export function navigasiJurnal(aksi) {
+  const t = tanggalJurnalAktif();
+  if (!t) return;
+  flush();                       /* isi yang belum tersimpan ikut tersimpan sebelum pindah */
+  if (aksi === 'kalender') return tampilkanKalenderTanggal(t.getTime());
+  const arah = aksi === 'next' ? 1 : -1;
+  bukaJurnalTanggal(new Date(t.getFullYear(), t.getMonth(), t.getDate() + arah));
 }

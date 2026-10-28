@@ -78,7 +78,7 @@ cek('penanda jurnal ada di sel hari', /kal-jurnal-titik/.test(tugas));
 const indeks = baca('docs/notes/index.js');
 cek('index.js menangani [data-kal-jurnal] sebelum [data-kal-hari]',
   indeks.indexOf('[data-kal-jurnal]') > 0 && indeks.indexOf('[data-kal-jurnal]') < indeks.indexOf('[data-kal-hari]'));
-cek('index.js mengimpor bukaJurnalTanggal', /import \{ bukaJurnalHari, bukaJurnalTanggal \}/.test(indeks));
+cek('index.js mengimpor bukaJurnalTanggal', /import \{[^}]*\bbukaJurnalTanggal\b[^}]*\} from '\.\/harian\.js/.test(indeks));
 const css = baca('docs/styles/notes.css');
 cek('CSS tombol dan penanda jurnal ada', /\.kal-jurnal\{/.test(css) && /\.kal-jurnal-titik\{/.test(css));
 

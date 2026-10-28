@@ -50,3 +50,33 @@ export function hariBerjurnal(notes, tahun, bulan, kini) {
   }
   return hasil;
 }
+
+/* Kebalikan dari judulJurnal (B8 lanjutan): tanggal dari judul catatan, atau null bila judulnya
+   bukan judul jurnal. Dicoba untuk semua bahasa. Tanggal yang tidak ada (mis. 31 Februari)
+   ditolak, jadi judul seperti itu tidak dianggap jurnal. */
+export function tanggalDariJudul(judul) {
+  const s = String(judul || '').trim();
+  for (const b of KODE_JURNAL) {
+    const awal = `${PREFIX[b]} · `;
+    if (!s.startsWith(awal)) continue;
+    const sisa = s.slice(awal.length);
+    let y, mo, d;
+    if (b === 'id') {
+      const m = sisa.match(/^(\d{1,2}) (\S+) (\d{4})$/);
+      if (!m) continue;
+      d = +m[1]; mo = BULAN.indexOf(m[2]); y = +m[3];
+    } else if (b === 'en') {
+      const m = sisa.match(/^(\S+) (\d{1,2}), (\d{4})$/);
+      if (!m) continue;
+      mo = BULAN_EN.indexOf(m[1]); d = +m[2]; y = +m[3];
+    } else {
+      const m = sisa.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
+      if (!m) continue;
+      y = +m[1]; mo = +m[2] - 1; d = +m[3];
+    }
+    if (mo < 0) continue;
+    const t = new Date(y, mo, d);
+    if (t.getFullYear() === y && t.getMonth() === mo && t.getDate() === d) return t;
+  }
+  return null;
+}

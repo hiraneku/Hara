@@ -4,8 +4,8 @@
    dengan id `blobId` TIDAK disentuh. Pembersih blob yatim (notes/editor/image.js)
    sudah diberi tahu supaya tidak menghapus kunci ini selama blob PDF-nya masih dipakai. */
 
-import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261028110000';
-import { bacaSusunan, tulisSusunan, kunciSusunan } from './susunan.js?v=20261028110000';
+import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261029100000';
+import { bacaSusunan, tulisSusunan, kunciSusunan } from './susunan.js?v=20261029100000';
 
 export async function muatSusunan(blobId, total) {
   if (!blobId) return bacaSusunan('', total);

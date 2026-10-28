@@ -2689,3 +2689,9 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
 
 /* C4: keterangan singkat bila frame video tidak bisa diambil (sumber lintas-asal tanpa CORS) */
 .belajar-hint{font-size:12px;line-height:1.35;color:var(--muted);max-width:260px}
+
+/* B8 lanjutan: bilah navigasi jurnal di atas judul (hanya catatan jurnal) */
+.jurnal-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin:4px 0 10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.jurnal-b{min-height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.jurnal-b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.jurnal-kal{color:var(--muted)}

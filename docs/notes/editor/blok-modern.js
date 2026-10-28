@@ -10,22 +10,22 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028110000';
-import { refresh } from './cleanup.js?v=20261028110000';
-import { snap } from './history.js?v=20261028110000';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261028110000';
-import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261028110000';
-import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261028110000';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261028110000';
-import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom } from '../note-model.js?v=20261028110000';
-import { state } from '../../core/store.js?v=20261028110000';
-import { simpan } from '../../core/autosave.js?v=20261028110000';
-import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam, tandaiRekam } from './perekam-suara.js?v=20261028110000';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261028110000';
-import { esc } from '../../core/dom.js?v=20261028110000';
-import { toast } from '../../core/toast.js?v=20261028110000';
-import { t as tr } from '../../core/i18n.js?v=20261028110000';
-import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261028110000';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261029100000';
+import { refresh } from './cleanup.js?v=20261029100000';
+import { snap } from './history.js?v=20261029100000';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261029100000';
+import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261029100000';
+import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261029100000';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261029100000';
+import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom } from '../note-model.js?v=20261029100000';
+import { state } from '../../core/store.js?v=20261029100000';
+import { simpan } from '../../core/autosave.js?v=20261029100000';
+import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam, tandaiRekam } from './perekam-suara.js?v=20261029100000';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261029100000';
+import { esc } from '../../core/dom.js?v=20261029100000';
+import { toast } from '../../core/toast.js?v=20261029100000';
+import { t as tr } from '../../core/i18n.js?v=20261029100000';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261029100000';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -207,7 +207,7 @@ function memoSelesai(noteId, { blobId, dur, judul, tanda = [] }) {
 }
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261028110000');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261029100000');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
