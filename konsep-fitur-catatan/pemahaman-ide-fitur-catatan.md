@@ -122,7 +122,7 @@ Format: **Konsep** — **Keputusan/koreksi** — **Status (Tahap 0)** — **Taha
 ### Kelompok C — Audio dan pembelajaran
 
 - **C1 Voice recording** — Rekam kuliah atau rapat dari dalam catatan. — *Implemented (stabil, uji Chromium 34/34):* sesi rekaman di perekam-suara.js, bilah rekam saat popup tertutup, potongan tiap detik, penghentian saat aplikasi disembunyikan, dan simpan ulang bila gagal. Belum diuji di Android sungguhan. — Tahap 3.
-- **C2 Audio-linked transcription** — Catatan bertanda waktu dulu (tanpa AI). Transkripsi otomatis menyusul. — *Missing:* blok audio belum punya penanda waktu. Dikte hanya untuk mengetik. — Tahap 3.
+- **C2 Audio-linked transcription** — Catatan bertanda waktu dulu (tanpa AI). Transkripsi otomatis menyusul. — *Implemented (dasar, uji Chromium 17/17):* tombol Tandai saat merekam dan memutar, daftar tanda yang bisa diklik untuk melompat, disimpan di meta.marks. Transkripsi otomatis belum. — Tahap 3.
 - **C3 Picture-in-picture learning** — Video di jendela mengambang sambil menulis, jika sumber dan platform mendukung. — *Missing.* — Tahap 3.
 - **C4 Video screenshot capture** — Ambil frame hanya untuk jenis sumber yang didukung. Uji tiap sumber. — *Missing.* — Tahap 3.
 - **C5 Course learning view** — Materi dan catatan berdampingan di dalam Hara. Di HP bisa tab/panel jika tidak muat. — *Missing.* — Tahap 3.

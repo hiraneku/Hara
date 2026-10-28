@@ -6,14 +6,15 @@
      Selesai dan Buang, sehingga pengguna tetap bisa mengetik di catatan (merekam sambil mengetik);
    - aplikasi yang disembunyikan (kunci layar, pindah aplikasi) menghentikan dan
      menyimpan rekaman yang sedang berjalan, supaya tidak hilang;
+   - penanda waktu (Tandai) saat merekam dicatat sebagai posisi detik rekaman;
    - potongan audio diminta tiap detik, jadi isi parsial tetap ada bila perekam gagal;
    - rekaman kosong tidak disimpan; bila penyimpanan gagal, rekaman tidak dibuang
      dan bisa dicoba lagi dari bilah.
    Hasil dikirim lewat callback onSelesai, sehingga modul ini tidak bergantung pada editor. */
 
-import { simpanBlob } from '../../core/blobs.js?v=20261028081025';
-import { toast } from '../../core/toast.js?v=20261028081025';
-import { t as tr } from '../../core/i18n.js?v=20261028081025';
+import { simpanBlob } from '../../core/blobs.js?v=20261028085413';
+import { toast } from '../../core/toast.js?v=20261028085413';
+import { t as tr } from '../../core/i18n.js?v=20261028085413';
 
 const KANDIDAT_MIME = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
 
@@ -44,7 +45,7 @@ export async function mulaiRekam({ judul = '', onSelesai }) {
     stream.getTracks().forEach(t => t.stop());
     throw e;
   }
-  const s = { rec, stream, potongan: [], mulai: Date.now(), judul, onSelesai, timer: null };
+  const s = { rec, stream, potongan: [], mulai: Date.now(), judul, onSelesai, timer: null, tanda: [] };
   sesi = s;
   rec.ondataavailable = ev => { if (ev.data && ev.data.size > 0) s.potongan.push(ev.data); };
   rec.onerror = () => { hentikanRekam(true); };
@@ -56,6 +57,16 @@ export async function mulaiRekam({ judul = '', onSelesai }) {
     throw e;
   }
   s.timer = setInterval(segarkanRekam, 500);
+  segarkanRekam();
+  return true;
+}
+
+/* C2 · Tandai posisi rekaman saat ini (detik sejak mulai). Mengembalikan false bila tidak merekam. */
+export function tandaiRekam() {
+  const s = sesi;
+  if (!s) return false;
+  const t = Math.max(0, Math.round(((Date.now() - s.mulai) / 1000) * 10) / 10);
+  s.tanda.push({ t, teks: '' });
   segarkanRekam();
   return true;
 }
@@ -73,7 +84,7 @@ export function hentikanRekam(simpan = true) {
     if (simpan) {
       const blob = new Blob(s.potongan, { type: s.rec.mimeType || 'audio/webm' });
       s.potongan = [];
-      if (blob.size > 0) simpanMemo({ blob, dur, judul: s.judul, onSelesai: s.onSelesai });
+      if (blob.size > 0) simpanMemo({ blob, dur, judul: s.judul, tanda: s.tanda, onSelesai: s.onSelesai });
       else toast(tr('Rekaman kosong, tidak ada yang disimpan'));
     }
     segarkanRekam();
@@ -100,7 +111,7 @@ async function simpanMemo(memo) {
     return;
   }
   tertunda = null;
-  memo.onSelesai({ blobId, dur: memo.dur, judul: memo.judul });
+  memo.onSelesai({ blobId, dur: memo.dur, judul: memo.judul, tanda: memo.tanda || [] });
   segarkanRekam();
 }
 
@@ -132,12 +143,15 @@ function pastikanBilah() {
   bilah.innerHTML = `
     <span class="aud-rec-dot" aria-hidden="true"></span>
     <span class="aud-rec-bar-teks"></span>
+    <button type="button" class="btn btn-sec" data-aud-bar="tanda"></button>
     <button type="button" class="btn btn-pri" data-aud-bar="aksi"></button>
     <button type="button" class="btn btn-sec" data-aud-bar="buang"></button>`;
   bilah.addEventListener('click', e => {
     const b = e.target.closest('[data-aud-bar]');
     if (!b) return;
-    if (b.dataset.audBar === 'aksi') {
+    if (b.dataset.audBar === 'tanda') {
+      if (tandaiRekam()) toast(tr('Tanda ditambahkan'));
+    } else if (b.dataset.audBar === 'aksi') {
       if (sesi) hentikanRekam(true);
       else simpanUlang();
     } else if (b.dataset.audBar === 'buang') {
@@ -164,10 +178,13 @@ export function segarkanRekam() {
   const teks = b.querySelector('.aud-rec-bar-teks');
   const aksi = b.querySelector('[data-aud-bar="aksi"]');
   const buang = b.querySelector('[data-aud-bar="buang"]');
+  const tanda = b.querySelector('[data-aud-bar="tanda"]');
+  tanda.hidden = !sesi;
   if (sesi) {
     teks.textContent = `${tr('Merekam')} ${formatWaktu(Math.floor((Date.now() - sesi.mulai) / 1000))}`;
     aksi.textContent = tr('Selesai & simpan');
     buang.textContent = tr('Buang');
+    tanda.textContent = tr('Tandai');
   } else if (tertunda) {
     teks.textContent = tr('Memo suara belum tersimpan');
     aksi.textContent = tr('Simpan lagi');

@@ -28,12 +28,12 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261028081025';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261028081025';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261028081025';
-import { adalahPdf } from './pdf/logika.js?v=20261028081025';
-import { tautanAman } from './url-aman.js?v=20261028081025';
-import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261028081025';
+import { t as tr } from '../core/i18n.js?v=20261028085413';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261028085413';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261028085413';
+import { adalahPdf } from './pdf/logika.js?v=20261028085413';
+import { tautanAman } from './url-aman.js?v=20261028085413';
+import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261028085413';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -118,6 +118,41 @@ export const newNoteId  = () => uid('n');
 const MAKS_OCR_GAMBAR = 20000;
 /* Teks OCR bisa berisi & dan <; escAttr hanya menangani tanda kutip, jadi ini melengkapinya. */
 const escOcr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+/* ── C2 · penanda waktu pada memo suara ──
+   meta.marks = [{ t: detik (0.1 dtk), teks }]. Diurutkan saat ditampilkan. */
+export function normalisasiTanda(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter(m => m && typeof m === 'object')
+    .map(m => ({
+      t: Math.max(0, Math.round((Number(m.t) || 0) * 10) / 10),
+      teks: String(m.teks || '').slice(0, 200),
+    }));
+}
+
+/* Baca penanda dari DOM blok audio (urutan DOM apa adanya). */
+export function bacaTandaDom(el) {
+  if (!el || !el.querySelectorAll) return [];
+  return Array.from(el.querySelectorAll('.aud-mark')).map(li => {
+    const inp = li.querySelector('.aud-mark-teks');
+    return { t: Number(li.getAttribute('data-t')) || 0, teks: inp ? inp.value : '' };
+  });
+}
+
+const formatDetik = d => `${String(Math.floor(d / 60)).padStart(2, '0')}:${String(Math.floor(d % 60)).padStart(2, '0')}`;
+
+/* Daftar penanda sebagai HTML. Selalu ada <ol> (meski kosong) supaya bisa diganti tanpa mencari tempatnya. */
+export function tandaAudioHtml(list) {
+  const daftar = normalisasiTanda(list).sort((a, b) => a.t - b.t);
+  const item = daftar.map(m =>
+    `<li class="aud-mark" data-t="${m.t}">` +
+    `<button type="button" class="aud-mark-t" data-aud-seek aria-label="${tr('Putar dari titik ini')}">${formatDetik(m.t)}</button>` +
+    `<input type="text" class="aud-mark-teks" value="${escAttr(m.teks)}" placeholder="${tr('Catatan di titik ini')}" aria-label="${tr('Catatan di titik ini')}">` +
+    `<button type="button" class="aud-mark-del" data-aud-mark-del aria-label="${tr('Hapus tanda')}" title="${tr('Hapus tanda')}">×</button>` +
+    `</li>`).join('');
+  return `<ol class="aud-marks" aria-label="${tr('Tanda waktu')}">${item}</ol>`;
+}
 
 export function makeBlock(patch = {}) {
   const type = BLOCK_TYPES.includes(patch.type) ? patch.type : 'paragraph';
@@ -249,7 +284,8 @@ export function plainText(note) {
         return b.meta.rows.map(r => r.join(' ')).join('\n').trim();
       }
       if (b.type === 'audio') {
-        return String((b.meta && b.meta.title) || '');
+        const m = b.meta || {};
+        return [String(m.title || ''), ...(Array.isArray(m.marks) ? m.marks.map(x => x && x.teks ? String(x.teks) : '') : [])].filter(Boolean).join(' ');
       }
       if (b.type === 'image') {
         return String((b.meta && b.meta.ocr) || '');
@@ -451,9 +487,10 @@ function blockToHtmlMentah(b) {
       `<button type="button" class="aud-btn" data-aud-play aria-label="${tr('Putar memo suara')}"><svg class="ico aud-i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="ico aud-i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>` +
       `<input type="text" class="aud-title" value="${judul}" aria-label="${tr('Judul memo')}">` +
       `<span class="aud-dur">${labelDur}</span>` +
+      `<button type="button" class="aud-mark-btn" data-aud-mark title="${tr('Tandai')}" aria-label="${tr('Tandai')}">${tr('Tandai')}</button>` +
       `<button type="button" class="aud-speed" data-aud-speed>1×</button>` +
       `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
-      `<audio preload="metadata"></audio>${pegangan()}</figure>`;
+      `<audio preload="metadata"></audio>${tandaAudioHtml(meta.marks)}${pegangan()}</figure>`;
   }
 
   if (b.type === 'image') {
@@ -615,6 +652,7 @@ export function elToBlock(el) {
     meta.blobId = el.getAttribute('data-blob') || '';
     meta.duration = Number(el.getAttribute('data-dur')) || 0;
     meta.title = inp ? inp.value : '';
+    meta.marks = normalisasiTanda(bacaTandaDom(el));
   } else if (type === 'math') {
     meta.expr = el.getAttribute('data-expr') || '';
   } else if (type === 'bookmark') {

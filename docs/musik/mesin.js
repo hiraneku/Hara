@@ -9,13 +9,13 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261028081025';
-import { buatRantaiEfek } from './efek-dsp.js?v=20261028081025';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261028085413';
+import { buatRantaiEfek } from './efek-dsp.js?v=20261028085413';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261028081025';
+} from './logika.js?v=20261028085413';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */

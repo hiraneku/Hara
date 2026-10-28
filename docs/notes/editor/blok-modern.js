@@ -10,22 +10,22 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028081025';
-import { refresh } from './cleanup.js?v=20261028081025';
-import { snap } from './history.js?v=20261028081025';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261028081025';
-import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261028081025';
-import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261028081025';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261028081025';
-import { newBlockId, blockToHtml, makeBlock, touch } from '../note-model.js?v=20261028081025';
-import { state } from '../../core/store.js?v=20261028081025';
-import { simpan } from '../../core/autosave.js?v=20261028081025';
-import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam } from './perekam-suara.js?v=20261028081025';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261028081025';
-import { esc } from '../../core/dom.js?v=20261028081025';
-import { toast } from '../../core/toast.js?v=20261028081025';
-import { t as tr } from '../../core/i18n.js?v=20261028081025';
-import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261028081025';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028085413';
+import { refresh } from './cleanup.js?v=20261028085413';
+import { snap } from './history.js?v=20261028085413';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261028085413';
+import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261028085413';
+import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261028085413';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261028085413';
+import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom } from '../note-model.js?v=20261028085413';
+import { state } from '../../core/store.js?v=20261028085413';
+import { simpan } from '../../core/autosave.js?v=20261028085413';
+import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam, tandaiRekam } from './perekam-suara.js?v=20261028085413';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261028085413';
+import { esc } from '../../core/dom.js?v=20261028085413';
+import { toast } from '../../core/toast.js?v=20261028085413';
+import { t as tr } from '../../core/i18n.js?v=20261028085413';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261028085413';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -139,7 +139,7 @@ function renderUlangTabel(bTable, rows) {
 }
 
 /* ════════ 3. BLOK MEMO SUARA OFFLINE (AUDIO) ════════ */
-export function insertAudioBlock(blobId, durasiDetik = 0, judul = '') {
+export function insertAudioBlock(blobId, durasiDetik = 0, judul = '', tanda = []) {
   const el = sisipkanBlokKhusus({
     id: newBlockId(),
     type: 'audio',
@@ -148,6 +148,7 @@ export function insertAudioBlock(blobId, durasiDetik = 0, judul = '') {
       blobId,
       duration: Math.max(0, Math.round(durasiDetik)),
       title: judul || tr('Memo suara'),
+      marks: normalisasiTanda(tanda),
     },
   });
   pasangAudio();
@@ -169,11 +170,22 @@ export async function pasangAudio() {
   }
 }
 
+/* C2 · Input di dalam blok memo (judul dan catatan tanda waktu) adalah kolom teks biasa.
+   Penangan keydown/beforeinput editor di .ed-doc akan mengambil fokus dan membuang
+   ketikan pertama, jadi keduanya dihentikan sebelum sampai ke editor. Event `input`
+   tetap lewat karena autosave bergantung padanya. */
+for (const jenis of ['keydown', 'beforeinput']) {
+  document.addEventListener(jenis, e => {
+    const t = e.target;
+    if (t && t.tagName === 'INPUT' && t.closest && t.closest('.b-audio')) e.stopPropagation();
+  }, true);
+}
+
 /* Sesi rekaman dipegang perekam-suara.js (tidak mati saat popup ditutup). */
-function memoSelesai(noteId, { blobId, dur, judul }) {
+function memoSelesai(noteId, { blobId, dur, judul, tanda = [] }) {
   const judulAkhir = judul || tr('Memo suara');
   if (noteId && state.openId === noteId && docEl()) {
-    insertAudioBlock(blobId, dur, judulAkhir);
+    insertAudioBlock(blobId, dur, judulAkhir, tanda);
     toast(tr('Memo suara disimpan ke catatan'));
     return;
   }
@@ -183,7 +195,7 @@ function memoSelesai(noteId, { blobId, dur, judul }) {
     n.blocks.push(makeBlock({
       type: 'audio',
       content: '',
-      meta: { blobId, duration: Math.max(0, Math.round(dur)), title: judulAkhir },
+      meta: { blobId, duration: Math.max(0, Math.round(dur)), title: judulAkhir, marks: normalisasiTanda(tanda) },
     }));
     touch(n);
     simpan();
@@ -195,7 +207,7 @@ function memoSelesai(noteId, { blobId, dur, judul }) {
 }
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261028081025');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261028085413');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
@@ -214,6 +226,7 @@ export async function bukaPerekamMemoSuara(anchor) {
         <span id="aud-waktu">00:00</span>
       </div>
       <div class="rn-actions-top" style="justify-content:flex-end;gap:8px">
+        <button type="button" class="btn btn-sec" id="aud-tanda"${sedang ? '' : ' disabled'}>${tr('Tandai')}</button>
         <button type="button" class="btn btn-sec" id="aud-batal">${tr(sedang ? 'Buang' : 'Batal')}</button>
         <button type="button" class="btn btn-pri" id="aud-mulai">${tr(sedang ? 'Selesai & Simpan' : 'Mulai rekam')}</button>
       </div>
@@ -223,6 +236,12 @@ export async function bukaPerekamMemoSuara(anchor) {
 
   const btnMulai = document.getElementById('aud-mulai');
   const btnBatal = document.getElementById('aud-batal');
+  const btnTanda = document.getElementById('aud-tanda');
+  if (btnTanda) {
+    btnTanda.onclick = () => {
+      if (tandaiRekam()) toast(tr('Tanda ditambahkan'));
+    };
+  }
 
   if (btnBatal) {
     btnBatal.onclick = () => {
@@ -245,11 +264,23 @@ export async function bukaPerekamMemoSuara(anchor) {
         if (!mulai) return;
         btnMulai.textContent = tr('Selesai & Simpan');
         if (btnBatal) btnBatal.textContent = tr('Buang');
+        if (btnTanda) btnTanda.disabled = false;
       } catch (err) {
         toast(tr('Izin mikrofon ditolak atau tidak tersedia'));
       }
     };
   }
+}
+
+/* C2 · penanda waktu memo: baca dari DOM, tulis ulang daftarnya (urutan dirapikan saat tampil). */
+function tulisTanda(box, daftar) {
+  const lama = box.querySelector('.aud-marks');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = tandaAudioHtml(daftar);
+  const baru = wrap.firstElementChild;
+  if (lama) lama.replaceWith(baru); else box.appendChild(baru);
+  const baca = modeBacaBerlaku();
+  baru.querySelectorAll('.aud-mark-teks').forEach(i => { i.readOnly = baca; });
 }
 
 /* Sinkronkan atribut editable di dalam blok toggle/tabel/audio sesuai Mode Baca / Tulis */
@@ -265,6 +296,7 @@ export function sinkronBacaBlokModern() {
     cell.setAttribute('contenteditable', String(!baca));
   });
   d.querySelectorAll('.b-audio .aud-title').forEach(inp => { inp.readOnly = baca; });
+  d.querySelectorAll('.b-audio .aud-mark-teks').forEach(inp => { inp.readOnly = baca; });
 }
 
 /* ════════ 4. BILAH KODE MENGAMBANG (#code-bar) & 5. PILL SENTUH WIKILINK (#wl-pill) ════════ */
@@ -500,6 +532,54 @@ export function bindBlokModern() {
       const next = urutan[(urutan.indexOf(aud.playbackRate) + 1) % urutan.length] || 1;
       aud.playbackRate = next;
       audSpeed.textContent = next + '×';
+      return;
+    }
+
+    /* 3b. Penanda waktu memo (C2): tandai posisi putar, lompat ke tanda, hapus tanda */
+    const audTanda = e.target.closest('[data-aud-mark]');
+    if (audTanda) {
+      if (modeBacaBerlaku()) return;
+      const box = audTanda.closest('.b-audio');
+      const aud = box && box.querySelector('audio');
+      if (!aud) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      const daftar = bacaTandaDom(box.querySelector('.aud-marks'));
+      snap();
+      daftar.push({ t: aud.currentTime || 0, teks: '' });
+      tulisTanda(box, daftar);
+      refresh();
+      toast(tr('Tanda ditambahkan'));
+      return;
+    }
+
+    const audSeek = e.target.closest('[data-aud-seek]');
+    if (audSeek) {
+      const box = audSeek.closest('.b-audio');
+      const li = audSeek.closest('.aud-mark');
+      const aud = box && box.querySelector('audio');
+      if (!aud || !li) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      aud.currentTime = Number(li.getAttribute('data-t')) || 0;
+      if (aud.paused) {
+        aud.play().catch(() => toast(tr('Berkas suara tidak dapat diputar')));
+        box.classList.add('playing');
+      }
+      return;
+    }
+
+    const audTandaDel = e.target.closest('[data-aud-mark-del]');
+    if (audTandaDel) {
+      if (modeBacaBerlaku()) return;
+      const box = audTandaDel.closest('.b-audio');
+      const li = audTandaDel.closest('.aud-mark');
+      if (!box || !li) return;
+      const daftar = bacaTandaDom(box.querySelector('.aud-marks'));
+      const i = Array.from(li.parentNode.children).indexOf(li);
+      if (i < 0) return;
+      snap();
+      daftar.splice(i, 1);
+      tulisTanda(box, daftar);
+      refresh();
       return;
     }
 

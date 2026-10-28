@@ -753,6 +753,37 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Belum ada jeda/lanjut rekaman.
   - Belum ada transkripsi. Itu C2 dan berikutnya.
 
+## Perubahan 25 · C2 — Catatan bertanda waktu pada memo suara (Tahap 3)
+
+- **ID:** C2 (Audio-linked transcription). Disetujui pengguna lewat pilihan \"C2 — Audio-linked transcription (disarankan)\".
+  Lingkup mengikuti §1.7 dan §2.6 konsep: catatan bertanda waktu dibuat pengguna, tanpa AI. Transkripsi otomatis tetap di luar lingkup.
+- **Perubahan:**
+  - Data: `meta.marks = [{ t: detik (0.1 dtk), teks }]` pada blok memo suara. Tidak ada kunci IDB baru.
+  - Saat merekam: tombol **Tandai** di popup dan di bilah rekam mencatat posisi detik rekaman. Tanda ikut tersimpan.
+  - Saat memutar: tombol **Tandai** di blok memo mencatat posisi putar sekarang.
+  - Daftar tanda di bawah memo: waktu bisa diklik untuk melompat dan memutar, teks bisa diedit, dan tanda bisa dihapus.
+  - Penyimpanan balik: `elToBlock` membaca daftar dari DOM (`bacaTandaDom`, `normalisasiTanda`). Teks pencarian (`plainText`)
+    mencakup catatan tanda. Ekspor Markdown memuat tanda sebagai baris `> - m:ss teks`.
+  - `docs/notes/note-model.js`: `tandaAudioHtml`, `normalisasiTanda`, `bacaTandaDom`.
+  - `docs/notes/editor/perekam-suara.js`: `tandaiRekam()`; bilah rekam punya tombol Tandai.
+  - `docs/notes/editor/blok-modern.js`: penangan Tandai, lompat, dan hapus tanda; `tulisTanda` mengganti daftar tanda.
+  - `docs/notes/data-io.js`: ekspor Markdown memuat tanda.
+  - `docs/styles/notes.css`: gaya `.aud-marks`, `.aud-mark-*`, `.aud-mark-btn`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 6 teks baru. Paritas en/ja 1148/1148.
+- **Perbaikan yang ditemukan saat uji (berlaku untuk semua kolom teks di blok memo):**
+  - Input di dalam blok memo (catatan tanda, dan juga judul memo yang sudah ada) kehilangan ketikan pertama.
+    Penangan keydown/beforeinput editor di `.ed-doc` mengambil fokus ke badan dokumen. Sekarang keduanya dihentikan
+    pada fase capture untuk input di dalam `.b-audio`. Event `input` tetap lewat, sehingga autosave berjalan.
+- **Cara uji (hasil nyata):**
+  - Chromium dengan mikrofon palsu, harness di luar repo (`/home/user/uji-c2/uji-c2-chromium.mjs`): **17/17 lulus**, tanpa galat halaman.
+    Mencakup tanda saat merekam (popup dan bilah), edit teks yang tersimpan setelah muat ulang, lompat ke tanda (±0,6 dtk) dengan pemutaran,
+    tanda saat memutar, hapus tanda yang persisten setelah muat ulang, dan `meta.marks` di data catatan.
+- **Keterbatasan jujur:**
+  - Ekspor Markdown dan teks pencarian untuk tanda belum diuji otomatis. Hanya diperiksa lewat kode.
+  - Mode baca (read-only) untuk kolom tanda belum diuji.
+  - Akurasi lompat bergantung pada peramban. Durasi webm dari perekam kadang tidak tersedia (Infinity). Pada uji Chromium ini lompat berhasil.
+  - Belum diuji di Android sungguhan.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.

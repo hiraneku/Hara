@@ -4,12 +4,12 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261028081025';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261028081025';
-import { sinkronTag } from '../notes/tags.js?v=20261028081025';
-import { bahasaSekarang, t as tr } from './i18n.js?v=20261028081025';
-import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261028081025';
-import { toast } from './toast.js?v=20261028081025';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261028085413';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261028085413';
+import { sinkronTag } from '../notes/tags.js?v=20261028085413';
+import { bahasaSekarang, t as tr } from './i18n.js?v=20261028085413';
+import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261028085413';
+import { toast } from './toast.js?v=20261028085413';
 
 const SCHEMA = 2;
 /* Penyimpanan utama: IndexedDB (lihat db-catatan.js). Kunci localStorage

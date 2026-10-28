@@ -18,21 +18,21 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261028081025';
-import { flush } from '../core/autosave.js?v=20261028081025';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261028081025';
-import { kunciAnotasi } from './pdf/anotasi.js?v=20261028081025';
-import { kunciSusunan } from './pdf/susunan.js?v=20261028081025';
-import { kunciOcr } from './ocr/ocr-teks.js?v=20261028081025';
-import { idBlobDariGoresan } from './editor/goresan.js?v=20261028081025';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261028081025';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261028081025';
-import { terlihat } from './kunci.js?v=20261028081025';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261028081025';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261028081025';
-import { t as tr } from '../core/i18n.js?v=20261028081025';
-import { extractZip } from '../renamer/unzip.js?v=20261028081025';
-import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261028081025';
+import { state, save, SCHEMA } from '../core/store.js?v=20261028085413';
+import { flush } from '../core/autosave.js?v=20261028085413';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261028085413';
+import { kunciAnotasi } from './pdf/anotasi.js?v=20261028085413';
+import { kunciSusunan } from './pdf/susunan.js?v=20261028085413';
+import { kunciOcr } from './ocr/ocr-teks.js?v=20261028085413';
+import { idBlobDariGoresan } from './editor/goresan.js?v=20261028085413';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261028085413';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261028085413';
+import { terlihat } from './kunci.js?v=20261028085413';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261028085413';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261028085413';
+import { t as tr } from '../core/i18n.js?v=20261028085413';
+import { extractZip } from '../renamer/unzip.js?v=20261028085413';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261028085413';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -248,7 +248,12 @@ function blokMd(b, noOl) {
       return [head, sep, ...body].join('\n');
     }
     case 'audio':
-      return `> Memo suara: ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
+      return [`> Memo suara: ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`,
+        ...(Array.isArray(meta.marks) ? meta.marks : []).map(m => {
+          const d = Number(m.t) || 0;
+          return `> - ${Math.floor(d / 60)}:${String(Math.floor(d % 60)).padStart(2, '0')} ${escT(m.teks || '')}`.trimEnd();
+        }),
+      ].join('\n');
     case 'math':
       return `$$\n${meta.expr || ''}\n$$`;
     case 'bookmark':

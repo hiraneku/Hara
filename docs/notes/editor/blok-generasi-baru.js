@@ -7,19 +7,19 @@
  * #6 Blok Lampiran Berkas Offline (/file — simpan PDF/dokumen ke IndexedDB blobs + unduh/buka)
  */
 
-import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261028081025';
-import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261028081025';
-import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261028081025';
-import { openPop, closeAll } from '../menus/pop.js?v=20261028081025';
-import { refresh, saveNow } from './cleanup.js?v=20261028081025';
-import { snap } from './history.js?v=20261028081025';
-import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261028081025';
-import { state } from '../../core/store.js?v=20261028081025';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261028081025';
-import { toast } from '../../core/toast.js?v=20261028081025';
-import { esc } from '../../core/dom.js?v=20261028081025';
-import { t as tr } from '../../core/i18n.js?v=20261028081025';
-import { bukaPenampilPdf } from '../pdf/penampil.js?v=20261028081025';
+import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261028085413';
+import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261028085413';
+import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261028085413';
+import { openPop, closeAll } from '../menus/pop.js?v=20261028085413';
+import { refresh, saveNow } from './cleanup.js?v=20261028085413';
+import { snap } from './history.js?v=20261028085413';
+import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261028085413';
+import { state } from '../../core/store.js?v=20261028085413';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261028085413';
+import { toast } from '../../core/toast.js?v=20261028085413';
+import { esc } from '../../core/dom.js?v=20261028085413';
+import { t as tr } from '../../core/i18n.js?v=20261028085413';
+import { bukaPenampilPdf } from '../pdf/penampil.js?v=20261028085413';
 
 const SIMBOL_MATH = {
   '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
@@ -573,10 +573,10 @@ export function bindBlokGenerasiBaru() {
       const k = qk.dataset.qk;
       if (k === 'jam') sisipCapJamSekarang();
       else if (k === 'calc') {
-        import('../alat-cerdas.js?v=20261028081025').then(m => m.cobaHitungInlineSekarang(true));
+        import('../alat-cerdas.js?v=20261028085413').then(m => m.cobaHitungInlineSekarang(true));
       }
       else if (k === 'teks') {
-        import('../alat-cerdas.js?v=20261028081025').then(m => m.bukaAlatTeksPintar());
+        import('../alat-cerdas.js?v=20261028085413').then(m => m.bukaAlatTeksPintar());
       }
       else if (k === 'blok') bukaMenuAksiBlok();
     }

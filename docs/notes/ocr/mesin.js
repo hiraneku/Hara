@@ -9,7 +9,7 @@
 
    Berkas di vendor dicatat di docs/vendor/tesseract/README.md. */
 
-import { itemDariHasil, SISI_OCR } from './ocr-teks.js?v=20261028081025';
+import { itemDariHasil, SISI_OCR } from './ocr-teks.js?v=20261028085413';
 
 const BASE = new URL('../../vendor/tesseract/', import.meta.url).href;
 const BAHASA = ['eng', 'ind'];
