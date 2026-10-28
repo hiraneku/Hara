@@ -5,8 +5,8 @@
    (notes/editor/image.js) sudah diberi tahu supaya tidak menghapus kunci ini
    selama blob PDF-nya masih dipakai. */
 
-import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261028073631';
-import { bacaAnotasi, tulisAnotasi, kunciAnotasi } from './anotasi.js?v=20261028073631';
+import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261028081025';
+import { bacaAnotasi, tulisAnotasi, kunciAnotasi } from './anotasi.js?v=20261028081025';
 
 export async function muatAnotasi(blobId) {
   if (!blobId) return [];

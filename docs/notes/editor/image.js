@@ -4,20 +4,20 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20261028073631';
-import { refresh } from './cleanup.js?v=20261028073631';
-import { pastikanKolomAkhir } from './blocks.js?v=20261028073631';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20261028081025';
+import { refresh } from './cleanup.js?v=20261028081025';
+import { pastikanKolomAkhir } from './blocks.js?v=20261028081025';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20261028073631';
-import { state } from '../../core/store.js?v=20261028073631';
-import { cur } from '../../core/router.js?v=20261028073631';
-import { toast } from '../../core/toast.js?v=20261028073631';
-import { t as tr } from '../../core/i18n.js?v=20261028073631';
-import { rencanaKecil } from '../mutu-gambar.js?v=20261028073631';
-import { idBlobDariGoresan } from './goresan.js?v=20261028073631';
-import { kunciAnotasi } from '../pdf/anotasi.js?v=20261028073631';
-import { kunciSusunan } from '../pdf/susunan.js?v=20261028073631';
-import { kunciOcr } from '../ocr/ocr-teks.js?v=20261028073631';
+  from '../../core/blobs.js?v=20261028081025';
+import { state } from '../../core/store.js?v=20261028081025';
+import { cur } from '../../core/router.js?v=20261028081025';
+import { toast } from '../../core/toast.js?v=20261028081025';
+import { t as tr } from '../../core/i18n.js?v=20261028081025';
+import { rencanaKecil } from '../mutu-gambar.js?v=20261028081025';
+import { idBlobDariGoresan } from './goresan.js?v=20261028081025';
+import { kunciAnotasi } from '../pdf/anotasi.js?v=20261028081025';
+import { kunciSusunan } from '../pdf/susunan.js?v=20261028081025';
+import { kunciOcr } from '../ocr/ocr-teks.js?v=20261028081025';
 
 /* Id blob dengan pola waktu+acak+urut (sama seperti id blok/catatan) —
    id model lama (`Date.now() % 100000` + counter sesi) bisa terbit lagi

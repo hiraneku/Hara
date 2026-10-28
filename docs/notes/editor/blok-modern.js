@@ -10,19 +10,22 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028073631';
-import { refresh } from './cleanup.js?v=20261028073631';
-import { snap } from './history.js?v=20261028073631';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261028073631';
-import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261028073631';
-import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261028073631';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261028073631';
-import { newBlockId, blockToHtml } from '../note-model.js?v=20261028073631';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261028073631';
-import { esc } from '../../core/dom.js?v=20261028073631';
-import { toast } from '../../core/toast.js?v=20261028073631';
-import { t as tr } from '../../core/i18n.js?v=20261028073631';
-import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261028073631';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028081025';
+import { refresh } from './cleanup.js?v=20261028081025';
+import { snap } from './history.js?v=20261028081025';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261028081025';
+import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261028081025';
+import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261028081025';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261028081025';
+import { newBlockId, blockToHtml, makeBlock, touch } from '../note-model.js?v=20261028081025';
+import { state } from '../../core/store.js?v=20261028081025';
+import { simpan } from '../../core/autosave.js?v=20261028081025';
+import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam } from './perekam-suara.js?v=20261028081025';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261028081025';
+import { esc } from '../../core/dom.js?v=20261028081025';
+import { toast } from '../../core/toast.js?v=20261028081025';
+import { t as tr } from '../../core/i18n.js?v=20261028081025';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261028081025';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -166,15 +169,39 @@ export async function pasangAudio() {
   }
 }
 
-let _perekam = null;
-let _timerRekam = null;
+/* Sesi rekaman dipegang perekam-suara.js (tidak mati saat popup ditutup). */
+function memoSelesai(noteId, { blobId, dur, judul }) {
+  const judulAkhir = judul || tr('Memo suara');
+  if (noteId && state.openId === noteId && docEl()) {
+    insertAudioBlock(blobId, dur, judulAkhir);
+    toast(tr('Memo suara disimpan ke catatan'));
+    return;
+  }
+  /* Catatan asal sudah tidak terbuka (pengguna pindah saat merekam): sisipkan ke datanya langsung. */
+  const n = noteId ? state.notes.find(x => x.id === noteId && !x.deletedAt) : null;
+  if (n && Array.isArray(n.blocks)) {
+    n.blocks.push(makeBlock({
+      type: 'audio',
+      content: '',
+      meta: { blobId, duration: Math.max(0, Math.round(dur)), title: judulAkhir },
+    }));
+    touch(n);
+    simpan();
+    toast(tr('Memo suara disimpan ke catatan'));
+    return;
+  }
+  hapusBlob(blobId).catch(() => {});
+  toast(tr('Catatan asal sudah tidak ada. Memo suara dibuang.'));
+}
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261028073631');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261028081025');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
   }
+  const sedang = sedangMerekam();
+  const noteId = state.openId;
   bukaPop(`
     <div class="rn-modal-box" style="max-width:340px">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -183,80 +210,42 @@ export async function bukaPerekamMemoSuara(anchor) {
       </div>
       <input type="text" class="rn-input-text" id="aud-judul" placeholder="${tr('Judul memo (opsional)')}" maxlength="60">
       <div class="aud-rec-status">
-        <span class="aud-rec-dot" id="aud-dot"></span>
+        <span class="aud-rec-dot${sedang ? ' on' : ''}" id="aud-dot"></span>
         <span id="aud-waktu">00:00</span>
       </div>
       <div class="rn-actions-top" style="justify-content:flex-end;gap:8px">
-        <button type="button" class="btn btn-sec" id="aud-batal">${tr('Batal')}</button>
-        <button type="button" class="btn btn-pri" id="aud-mulai">${tr('Mulai rekam')}</button>
+        <button type="button" class="btn btn-sec" id="aud-batal">${tr(sedang ? 'Buang' : 'Batal')}</button>
+        <button type="button" class="btn btn-pri" id="aud-mulai">${tr(sedang ? 'Selesai & Simpan' : 'Mulai rekam')}</button>
       </div>
     </div>
   `, anchor);
-
-  let mulaiMs = 0;
-  let potongan = [];
-  let stream = null;
-
-  const bersihkanStream = () => {
-    clearInterval(_timerRekam);
-    _timerRekam = null;
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
-    _perekam = null;
-  };
+  if (sedang) segarkanRekam();
 
   const btnMulai = document.getElementById('aud-mulai');
   const btnBatal = document.getElementById('aud-batal');
-  const elWaktu = document.getElementById('aud-waktu');
-  const elDot = document.getElementById('aud-dot');
 
   if (btnBatal) {
     btnBatal.onclick = () => {
-      if (_perekam && _perekam.state !== 'inactive') {
-        _perekam.onstop = null;
-        try { _perekam.stop(); } catch (e) {}
-      }
-      bersihkanStream();
+      if (sedangMerekam()) hentikanRekam(false);
       tutupPop();
     };
   }
 
   if (btnMulai) {
     btnMulai.onclick = async () => {
-      if (_perekam && _perekam.state === 'recording') {
-        _perekam.stop();
+      if (sedangMerekam()) {
+        hentikanRekam(true);
+        tutupPop();
         return;
       }
+      const judulInp = document.getElementById('aud-judul');
+      const judul = (judulInp ? judulInp.value : '').trim() || tr('Memo suara');
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        potongan = [];
-        const rec = new MediaRecorder(stream);
-        _perekam = rec;
-        mulaiMs = Date.now();
+        const mulai = await mulaiRekam({ judul, onSelesai: m => memoSelesai(noteId, m) });
+        if (!mulai) return;
         btnMulai.textContent = tr('Selesai & Simpan');
-        if (elDot) elDot.classList.add('on');
-        _timerRekam = setInterval(() => {
-          const dtk = Math.floor((Date.now() - mulaiMs) / 1000);
-          if (elWaktu) elWaktu.textContent = `${String(Math.floor(dtk / 60)).padStart(2, '0')}:${String(dtk % 60).padStart(2, '0')}`;
-        }, 500);
-        rec.ondataavailable = ev => { if (ev.data && ev.data.size > 0) potongan.push(ev.data); };
-        rec.onstop = async () => {
-          const dur = Math.max(1, Math.round((Date.now() - mulaiMs) / 1000));
-          const judulInp = document.getElementById('aud-judul');
-          const judul = (judulInp ? judulInp.value : '').trim() || tr('Memo suara');
-          bersihkanStream();
-          const blob = new Blob(potongan, { type: rec.mimeType || 'audio/webm' });
-          const blobId = 'aud_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          await simpanBlob(blobId, blob);
-          tutupPop();
-          insertAudioBlock(blobId, dur, judul);
-          toast(tr('Memo suara disimpan ke catatan'));
-        };
-        rec.start();
+        if (btnBatal) btnBatal.textContent = tr('Buang');
       } catch (err) {
-        bersihkanStream();
         toast(tr('Izin mikrofon ditolak atau tidak tersedia'));
       }
     };

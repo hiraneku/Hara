@@ -709,6 +709,50 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
     dengan kunci sungguhan.
   - Lingkup navigasi planner masih terbatas (lihat \"Di luar lingkup\").
 
+## Perubahan 24 · C1 — Voice recording yang stabil (Tahap 3)
+
+- **ID:** C1 (Voice recording). Disetujui pengguna lewat pilihan "C1 — Voice recording (disarankan)".
+- **Keadaan awal (audit):** blok memo suara sudah merekam dengan MediaRecorder dan menyimpan ke IndexedDB.
+  Namun ada beberapa celah:
+  - menutup popup (ketuk di luar, Esc) menghentikan kendali atas rekaman tetapi TIDAK menghentikan
+    perekam atau stream mikrofon. Mikrofon bisa tetap menyala tanpa tombol untuk mematikannya;
+  - rekaman tidak punya potongan berkala (`start()` tanpa interval), jadi hasil parsial hilang bila perekam gagal;
+  - galat penyimpanan tidak ditangani: popup tetap terbuka dan rekaman terbuang;
+  - rekaman kosong disimpan sebagai blok;
+  - format tidak dipilih dengan sadar (selalu tipe default).
+- **Perubahan:**
+  - `docs/notes/editor/perekam-suara.js` (baru): sesi rekaman dipegang modul, bukan popup.
+    - Menutup popup tidak menghentikan rekaman. Bilah kecil di bawah layar menampilkan waktu, tombol
+      **Selesai & simpan**, dan **Buang**. Ini memungkinkan merekam sambil mengetik.
+    - Potongan diminta tiap 1 dtk. Format dipilih dari daftar yang didukung (webm/opus, mp4, ogg).
+    - Aplikasi yang disembunyikan (`visibilitychange` hidden, `pagehide`) menghentikan dan menyimpan rekaman.
+    - Rekaman kosong tidak disimpan.
+    - Bila penyimpanan gagal, rekaman TIDAK dibuang. Bilah menampilkan **Simpan lagi** dan **Buang**.
+  - `docs/notes/editor/blok-modern.js`: `bukaPerekamMemoSuara` memakai modul di atas. Sisipan memo
+    diteruskan ke catatan asal. Bila pengguna sudah pindah catatan saat merekam, memo ditambahkan langsung
+    ke data catatan asal (`touch` + `simpan`), tidak ke DOM editor.
+  - `docs/styles/notes.css`: gaya `.aud-rec-bar`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 7 teks baru. Paritas en/ja 1142/1142, tanpa yang hilang.
+- **Cara uji (hasil nyata):**
+  - Chromium dengan perangkat mikrofon palsu (`--use-fake-device-for-media-stream`), harness di luar repo
+    (`/home/user/uji-c1/uji-c1-chromium.mjs`): **34/34 lulus**, tanpa galat halaman. Mencakup:
+    - rekaman dimulai dari popup, waktu di popup berjalan;
+    - ketuk di luar menutup popup, rekaman tetap berjalan, bilah tampil;
+    - mengetik di catatan saat merekam;
+    - Selesai → memo disisipkan, blob ada dan tidak kosong di IndexedDB, durasi tercatat;
+    - aplikasi disembunyikan → rekaman berhenti dan tersimpan;
+    - Buang → tidak ada memo baru;
+    - pindah layar saat merekam → rekaman jalan, memo masuk ke catatan asal;
+    - gagal simpan (IndexedDB dipaksa galat) → rekaman tertunda, bilah "belum tersimpan", Simpan lagi berhasil;
+    - muat ulang → memo tetap ada dan bisa diputar (`src` blob:).
+- **Keterbatasan jujur:**
+  - Belum diuji di Android sungguhan. Pemahaman awal meminta uji Android, termasuk merekam sambil mengetik.
+    Uji di sandbox memakai perangkat palsu dan Chromium desktop.
+  - Penghentian otomatis saat aplikasi disembunyikan bersifat best-effort. Browser mobile bisa menghentikan
+    halaman lebih cepat dari event yang sempat dijalankan.
+  - Belum ada jeda/lanjut rekaman.
+  - Belum ada transkripsi. Itu C2 dan berikutnya.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.

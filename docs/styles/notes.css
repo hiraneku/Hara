@@ -2027,6 +2027,13 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .code-float-bar{position:fixed;z-index:62;display:flex;align-items:center;gap:5px;padding:3px 5px;
   border-radius:8px;background:var(--surface);border:1px solid var(--border-strong);box-shadow:var(--shadow-pop)}
 .code-float-bar[hidden]{display:none!important}
+/* C1 · bilah rekam memo suara (muncul saat merekam tanpa popup, atau rekaman belum tersimpan) */
+.aud-rec-bar{position:fixed;left:50%;transform:translateX(-50%);z-index:62;display:flex;align-items:center;gap:8px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 76px);max-width:calc(100vw - 24px);padding:6px 8px 6px 12px;
+  border-radius:12px;background:var(--surface);border:1px solid var(--border-strong);box-shadow:var(--shadow-pop);font-size:13px}
+.aud-rec-bar[hidden]{display:none!important}
+.aud-rec-bar .aud-rec-bar-teks{white-space:nowrap;font-variant-numeric:tabular-nums}
+.aud-rec-bar .btn{height:30px;padding:0 10px;font-size:12px}
 .code-lang-sel{height:24px;border-radius:5px;border:1px solid var(--border);background:var(--sunken);
   color:var(--text);font-family:var(--mono);font-size:11px;padding:0 4px}
 .code-copy-btn{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;

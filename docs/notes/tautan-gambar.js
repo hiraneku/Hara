@@ -7,14 +7,14 @@
    Alamat yang lolos hanya yang diizinkan url-aman.js (http, https, mailto, tel).
    Dialog ini dipanggil dari chip "Tautan" di bilah mini gambar (tata-gambar.js). */
 
-import { openPop, closeAll } from './menus/pop.js?v=20261028073631';
-import { refresh } from './editor/cleanup.js?v=20261028073631';
-import { snap } from './editor/history.js?v=20261028073631';
-import { toast } from '../core/toast.js?v=20261028073631';
-import { esc } from '../core/dom.js?v=20261028073631';
-import { t as tr } from '../core/i18n.js?v=20261028073631';
-import { tautanAman } from './url-aman.js?v=20261028073631';
-import { badgeTautanGambar } from './note-model.js?v=20261028073631';
+import { openPop, closeAll } from './menus/pop.js?v=20261028081025';
+import { refresh } from './editor/cleanup.js?v=20261028081025';
+import { snap } from './editor/history.js?v=20261028081025';
+import { toast } from '../core/toast.js?v=20261028081025';
+import { esc } from '../core/dom.js?v=20261028081025';
+import { t as tr } from '../core/i18n.js?v=20261028081025';
+import { tautanAman } from './url-aman.js?v=20261028081025';
+import { badgeTautanGambar } from './note-model.js?v=20261028081025';
 
 /* Alamat tanpa skema dianggap https (sama dengan dialog kartu tautan). */
 export function alamatDariInput(raw) {

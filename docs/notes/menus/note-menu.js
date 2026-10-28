@@ -2,10 +2,10 @@
    Isi mengikuti keadaan catatan (label Sematkan/Lepas, Arsipkan/
    Kembalikan). Aksi dijalankan lewat delegasi klik global di app.js
    dengan atribut data-note-act. */
-import { state } from '../../core/store.js?v=20261028073631';
-import { esc } from '../../core/dom.js?v=20261028073631';
-import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261028073631';
-import { t as tr } from '../../core/i18n.js?v=20261028073631';
+import { state } from '../../core/store.js?v=20261028081025';
+import { esc } from '../../core/dom.js?v=20261028081025';
+import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261028081025';
+import { t as tr } from '../../core/i18n.js?v=20261028081025';
 
 export function menuCatatan() {
   const n = state.notes.find(x => x.id === state.openId);

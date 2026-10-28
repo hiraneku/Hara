@@ -3,12 +3,12 @@
    - Effect: view 'musik-effect', tujuh efek dalam satu kategori (Spatial & Ambience).
    - Visualizer: disiapkan sebagai pilihan, belum berfungsi ("Segera hadir"). */
 
-import { cur, go } from '../core/router.js?v=20261028073631';
-import { t as tr } from '../core/i18n.js?v=20261028073631';
-import { esc } from '../core/dom.js?v=20261028073631';
-import { ikon } from './ikon.js?v=20261028073631';
-import { EFEK, EFEK_KATEGORI, efekById, semuaParam, formatNilai } from './efek-data.js?v=20261028073631';
-import { ambilEfek, ubahEfek } from './efek.js?v=20261028073631';
+import { cur, go } from '../core/router.js?v=20261028081025';
+import { t as tr } from '../core/i18n.js?v=20261028081025';
+import { esc } from '../core/dom.js?v=20261028081025';
+import { ikon } from './ikon.js?v=20261028081025';
+import { EFEK, EFEK_KATEGORI, efekById, semuaParam, formatNilai } from './efek-data.js?v=20261028081025';
+import { ambilEfek, ubahEfek } from './efek.js?v=20261028081025';
 
 const PILIHAN = [
   { id: 'eq', judul: 'Ekualiser', sub: '10 pita, preamp, dan preset', ikon: 'eq', tersedia: true },
