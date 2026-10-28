@@ -816,6 +816,38 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Chromium C1 dan C2 tidak diuji ulang setelah perubahan ini. Harness lamanya hilang. Yang dijalankan ulang: `npm test` dan uji Node.
   - Belum diuji di Android sungguhan. Layout 760 px dan tinggi panel `calc(100dvh - 56px)` perlu dicek di HP.
 
+## Perubahan 27 · C3 — Picture-in-picture untuk video belajar (Tahap 3)
+
+- **ID:** C3 (Picture-in-picture learning). Disetujui pengguna lewat pilihan "Lanjut C3" (memilih ID secara eksplisit). Persetujuan hanya untuk C3. C4 belum disetujui.
+- **Perubahan:**
+  - Panel belajar (C5) mendapat sumber **video**. Dua jenis: berkas video lampiran catatan (lokal, `blob:`) dan **URL langsung** ke berkas video (`http`/`https`, lintas-asal).
+  - Tombol **Picture-in-picture** muncul hanya saat panel benar-benar memuat video. Tombol disembunyikan saat memuat, saat galat, dan saat sumber tidak didukung.
+  - Video di PiP tetap berputar saat mode belajar dimatikan, saat catatan diketik, dan saat panel digambar ulang. Panel memakai kembali video PiP yang sama saat mode dinyalakan lagi.
+  - Video dipindah ke wadah `#belajar-pip-tahan` yang diletakkan di luar layar, bukan `display:none`. Wadah `display:none` menjeda video di Chromium, jadi tidak dipakai.
+  - Iframe **tidak** menjadi sumber. `html-aman.js` (`bersihkanHtmlBlok`) membuang `<iframe>`, dan konten lintas-asal dalam iframe tidak bisa di-PiP.
+  - `docs/notes/belajar-materi.js`: `daftarMateri`, `pasangMateri`, `lepasMateri`, `muatVideo`, `togglePip`, `tambahUrl`, `muatPdf`, `kosongkanIsi`, `buangVideo`, `segarkanPip`.
+  - `docs/styles/notes.css`: blok gaya C3 di akhir berkas. `docs/core/bahasa-en.js`, `bahasa-ja.js`: 14 teks baru, 3 dihapus. Paritas en/ja 1164/1164.
+  - Stempel versi `20261028100000` (137 berkas).
+- **Cara uji (hasil nyata):**
+  - Chromium headless, harness `/home/user/uji-c3/uji-c3.mjs`: **40/40 lulus**, tanpa galat halaman (`pageerror` dan `console error` nol).
+  - **A. Sumber lokal** (blob video): PiP aktif, tombol berubah menjadi "Tutup PiP". Mode belajar dimatikan: PiP tetap aktif dan video terus berputar (3,54 → 4,75 dtk). Mengetik di catatan saat PiP aktif tidak menutupnya. Mode dinyalakan lagi: panel mengambil video PiP yang sama. Tombol Tutup menghentikan PiP.
+  - **B. URL langsung** (lintas-asal, `http://127.0.0.1:8178/video.webm`): masuk daftar materi, dimuat dan diputar, PiP aktif lalu bisa ditutup. URL tanpa `http(s)` ditolak dengan pesan dan tidak masuk daftar.
+  - **C. Iframe**: sanitasi membuang `<iframe>` dari blok catatan. Halaman yang berisi video dalam iframe menampilkan galat, bukan video. Tombol PiP tidak muncul dan tidak ada iframe di panel materi.
+  - **D. Sumber terbatas**: berkas rusak menampilkan galat, PiP tidak muncul, dan editor tetap bisa diketik. Format `video/x-msvideo` menampilkan "Format video ini tidak didukung peramban ini". URL 404 menampilkan galat. Lampiran yang blobnya hilang menampilkan pesan "tidak ditemukan".
+  - **E. Lebar 390 px** (HP): video tampil dan tidak melebihi lebar layar, tombol PiP tampil.
+  - Regresi: `uji-c5.mjs` **36/36**. `npm test` exit 0 (seluruh berkas di `tools/uji/`, 0 gagal).
+  - Probe: `pictureInPictureEnabled` true, MediaRecorder vp8 webm didukung, PiP pada video muted yang diputar berhasil.
+- **Temuan yang dikoreksi selama uji:**
+  - Video "ter-pause setelah mode belajar dimatikan" ternyata bukan bug pemindahan. Video uji awal hanya 2,5 detik, jadi `pause` terjadi saat klip berakhir. Fixture diganti menjadi video 15 detik (`serve/video.webm`, 44.862 byte). Pemindahan ke wadah offscreen terbukti tidak menjeda.
+  - Tombol PiP sempat tetap tampil saat sumber galat (iframe, berkas rusak). Diperbaiki: tombol hanya tampil bila panel memuat `<video>`.
+- **Keterbatasan jujur:**
+  - **Iframe tidak didukung.** Hara membuang iframe, dan konten lintas-asal dalam iframe tidak bisa di-PiP oleh peramban.
+  - **Auto-PiP tidak aktif.** PiP hanya lewat tombol. Tidak ada PiP otomatis saat pindah tab atau aplikasi.
+  - **Android belum diuji.** Uji dilakukan di Chromium headless (desktop). Dukungan PiP di Chrome Android dan di peramban lain (Safari, Firefox) belum diverifikasi.
+  - **Video untuk URL langsung bergantung pada sumber.** Hara tidak memeriksa CORS atau format. Jika peramban tidak bisa memutar sumber, galat ditampilkan.
+  - **Pilihan materi dan mode belajar** tidak disimpan setelah muat ulang halaman (hanya di memori sesi), seperti C5.
+  - **C4 (screenshot frame) belum disetujui** dan tidak ada di perubahan ini.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
@@ -827,6 +859,6 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 
 ## Berikutnya
 
-- Tahap 2 sudah selesai sesuai urutan. Tahap 3 (C1–C5) belum dimulai dan menunggu persetujuan pengguna per ID.
+- Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, dan C3 sudah dikerjakan. C4 belum disetujui dan menunggu persetujuan pengguna.
 - Hal terbuka dari Tahap 2: navigasi antar-hari di halaman jurnal dan tautan balik ke kalender (B8),
   uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.

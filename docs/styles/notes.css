@@ -2678,3 +2678,11 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
   .belajar:not([data-tab="materi"]) .belajar-materi{display:none}
   .belajar[data-tab="materi"] .belajar-catatan{display:none}
 }
+
+/* ── C3 · picture-in-picture untuk video materi ── */
+.belajar [hidden]{display:none!important}
+.belajar-url{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--surface)}
+.belajar-url-in{flex:1;min-width:0;font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+.belajar-video{display:block;width:100%;max-height:100%;background:#000;border-radius:6px}
+.belajar-isi:has(.belajar-video){padding:12px 12px 16px;justify-content:center}
+.belajar-pip-tahan{position:fixed;left:-9999px;top:0;width:320px;height:180px;overflow:hidden;opacity:0;pointer-events:none}

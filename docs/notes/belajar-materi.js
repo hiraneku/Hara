@@ -1,77 +1,130 @@
 /* C5 · Tampilan belajar: materi dan catatan berdampingan (Tahap 3).
+   C3 · Picture-in-picture untuk video materi (Tahap 3).
 
    Mode ini hanya tata letak di dalam editor. Editor tetap satu-satunya
    penulis catatan (autosave, binding, cur === 'editor' tidak berubah);
-   panel materi di sebelah kiri adalah PDF dari lampiran catatan mana pun.
+   panel materi di sebelah kiri berisi materi dari lampiran catatan mana pun,
+   atau URL video langsung yang ditempel pengguna.
 
    - Lebar sempit (HP): satu panel tampil, dipilih lewat tab Materi / Catatan.
    - Lebar lega: dua kolom. Panel materi menempel saat catatan digulir.
    - Panel materi tidak punya pintasan keyboard global. Tombol panah hanya
-     berlaku saat fokus ada di dalam panel materi, supaya tidak mengganggu
-     mengetik di catatan.
+     berlaku saat fokus ada di dalam panel materi.
    - Materi PDF dirender dengan pdf.js yang sama dengan penampil (B1/B2).
-     Anotasi, OCR, dan susunan halaman tetap di penampil layar penuh.
-   - Hanya materi PDF. Sumber lain (URL, video, gambar) tidak termasuk di sini. */
-import { state } from '../core/store.js?v=20261028093000';
-import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261028093000';
-import { t as tr } from '../core/i18n.js?v=20261028093000';
-import { esc } from '../core/dom.js?v=20261028093000';
-import { ambilBlob } from '../core/blobs.js?v=20261028093000';
-import { toast } from '../core/toast.js?v=20261028093000';
-import { saveNow } from './editor/cleanup.js?v=20261028093000';
-import { muatPdfJs, fiturPdfKurang } from './pdf/muat-pdfjs.js?v=20261028093000';
+   - Materi video (lampiran lokal atau URL langsung) diputar dengan <video>.
+     Tombol Picture-in-picture hanya tampil bila peramban mendukungnya.
+   - Video yang sedang PiP dipindahkan ke wadah tersembunyi saat panel digambar
+     ulang, sehingga jendela mengambang tetap jalan saat mencatat.
+   - Iframe tidak didukung: sanitasi membuangnya, dan konten lintas-asal di
+     dalamnya tidak bisa dibuka atau di-PiP-kan oleh halaman ini. */
+import { state } from '../core/store.js?v=20261028100000';
+import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261028100000';
+import { t as tr } from '../core/i18n.js?v=20261028100000';
+import { esc } from '../core/dom.js?v=20261028100000';
+import { ambilBlob } from '../core/blobs.js?v=20261028100000';
+import { toast } from '../core/toast.js?v=20261028100000';
+import { saveNow } from './editor/cleanup.js?v=20261028100000';
+import { muatPdfJs, fiturPdfKurang } from './pdf/muat-pdfjs.js?v=20261028100000';
 import { adalahPdf, ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
-         skalaPasLebar } from './pdf/logika.js?v=20261028093000';
+         skalaPasLebar } from './pdf/logika.js?v=20261028100000';
+
+const ID_TAHAN = 'belajar-pip-tahan';
+const GALAT_VIDEO = 'Video tidak bisa diputar. Formatnya tidak didukung, sumbernya tidak tersedia, atau dibatasi.';
 
 let aktif = false;     /* mode belajar nyala (bertahan lintas catatan selama sesi) */
-let materiId = null;   /* blobId PDF yang sedang dipilih sebagai materi */
+let materiId = null;   /* id materi yang dipilih: blobId (PDF/video lampiran) atau 'url-N' */
 let sesi = null;       /* { root, isi, doc, task, render, halaman, total, zoom, pas, tok, ... } */
+let urlMateri = [];    /* URL video langsung yang ditempel pengguna (ingatan sesi) */
+let urlSeq = 0;
 
 export const belajarAktif = () => aktif;
 
-/* Daftar PDF dari lampiran semua catatan (termasuk yang diarsipkan). Catatan di
-   Sampah dilewati. Urutan mengikuti urutan catatan lalu urutan blok. */
+/* Berkas video: mime video/*, atau nama berakhiran ekstensi video bila mime kosong. */
+export function adalahVideo(meta) {
+  const mime = String(meta?.mime || '').toLowerCase();
+  if (mime.startsWith('video/')) return true;
+  return /\.(mp4|webm|ogv|m4v|mov)$/i.test(String(meta?.name || '')) && (mime === '' || mime === 'application/octet-stream');
+}
+
+/* Picture-in-picture tersedia bila peramban punya API standar, atau API Safari. */
+export function pipDidukung() {
+  if (document.pictureInPictureEnabled && typeof HTMLVideoElement !== 'undefined'
+      && HTMLVideoElement.prototype.requestPictureInPicture) return true;
+  const v = document.createElement('video');
+  return typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture');
+}
+
+function urlAman(teks) {
+  try {
+    const u = new URL(teks);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch { return false; }
+}
+
+function namaDariUrl(teks) {
+  try {
+    const u = new URL(teks);
+    const akhir = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '');
+    return akhir || u.host;
+  } catch { return teks; }
+}
+
+/* Semua materi yang bisa dipilih: PDF dan video dari lampiran catatan (catatan di
+   Sampah dilewati), lalu URL video langsung. Urutan mengikuti urutan catatan. */
 export function daftarMateri() {
   const hasil = [];
   for (const n of state.notes || []) {
     if (n.deletedAt) continue;
     for (const b of n.blocks || []) {
-      if (b.type !== 'file' || !adalahPdf(b.meta)) continue;
-      hasil.push({
-        blobId: b.meta.blobId,
-        nama: b.meta.name || 'PDF',
-        catatan: n.title || tr('Tanpa judul'),
-      });
+      if (b.type !== 'file') continue;
+      const catatan = n.title || tr('Tanpa judul');
+      if (adalahPdf(b.meta)) {
+        hasil.push({ id: b.meta.blobId, jenis: 'pdf', nama: b.meta.name || 'PDF', catatan });
+      } else if (adalahVideo(b.meta)) {
+        hasil.push({ id: b.meta.blobId, jenis: 'video', nama: b.meta.name || 'Video', catatan });
+      }
     }
   }
+  for (const u of urlMateri) {
+    hasil.push({ id: u.id, jenis: 'url', nama: u.nama, catatan: tr('URL video'), url: u.url });
+  }
   return hasil;
+}
+
+function opsiMateriHtml(daftar) {
+  if (!daftar.length) return `<option value="">${esc(tr('Belum ada materi'))}</option>`;
+  return daftar.map(m => `<option value="${esc(m.id)}"${m.id === materiId ? ' selected' : ''}>${esc(m.nama)} · ${esc(m.catatan)}</option>`).join('');
 }
 
 /* Bagian pembuka dan penutup untuk view editor. Kosong bila mode mati. */
 export function belajarBuka() {
   if (!aktif) return '';
   const daftar = daftarMateri();
-  const pilihan = daftar.length
-    ? daftar.map(m => `<option value="${esc(m.blobId)}"${m.blobId === materiId ? ' selected' : ''}>${esc(m.nama)} · ${esc(m.catatan)}</option>`).join('')
-    : `<option value="">${esc(tr('Belum ada PDF'))}</option>`;
-  const info = daftar.length ? tr('Memuat PDF…') : tr('Belum ada PDF di catatan. Impor PDF ke catatan, lalu pilih di sini.');
-  return `<div class="belajar" data-belajar-root data-tab="catatan">
+  const info = daftar.length ? tr('Memuat PDF…') : tr('Belum ada materi. Lampirkan PDF atau video ke catatan, atau tempel URL video.');
+  return `<div class="belajar" data-belajar-root data-tab="catatan" data-jenis="">
   <div class="belajar-tab" role="tablist">
     <button type="button" class="belajar-tb" role="tab" data-belajar-tab="materi" aria-selected="false">${esc(tr('Materi'))}</button>
     <button type="button" class="belajar-tb on" role="tab" data-belajar-tab="catatan" aria-selected="true">${esc(tr('Catatan'))}</button>
   </div>
   <section class="belajar-materi" aria-label="${esc(tr('Materi'))}">
     <div class="belajar-bar">
-      <select class="belajar-pilih" data-belajar-pilih aria-label="${esc(tr('Pilih PDF sebagai materi'))}"${daftar.length ? '' : ' disabled'}>${pilihan}</select>
+      <select class="belajar-pilih" data-belajar-pilih aria-label="${esc(tr('Pilih materi'))}"${daftar.length ? '' : ' disabled'}>${opsiMateriHtml(daftar)}</select>
       <div class="belajar-kendali">
-        <button type="button" class="belajar-b" data-belajar-aksi="prev" aria-label="${esc(tr('Halaman sebelumnya'))}">‹</button>
-        <span class="belajar-hal" data-belajar-hal>–</span>
-        <button type="button" class="belajar-b" data-belajar-aksi="next" aria-label="${esc(tr('Halaman berikutnya'))}">›</button>
-        <button type="button" class="belajar-b" data-belajar-aksi="kecil" aria-label="${esc(tr('Perkecil'))}">−</button>
-        <span class="belajar-zoom" data-belajar-zoom>100%</span>
-        <button type="button" class="belajar-b" data-belajar-aksi="besar" aria-label="${esc(tr('Perbesar'))}">+</button>
-        <button type="button" class="belajar-teks" data-belajar-aksi="pas">${esc(tr('Pas lebar'))}</button>
+        <span data-belajar-pdf-only>
+          <button type="button" class="belajar-b" data-belajar-aksi="prev" aria-label="${esc(tr('Halaman sebelumnya'))}">‹</button>
+          <span class="belajar-hal" data-belajar-hal>–</span>
+          <button type="button" class="belajar-b" data-belajar-aksi="next" aria-label="${esc(tr('Halaman berikutnya'))}">›</button>
+          <button type="button" class="belajar-b" data-belajar-aksi="kecil" aria-label="${esc(tr('Perkecil'))}">−</button>
+          <span class="belajar-zoom" data-belajar-zoom>100%</span>
+          <button type="button" class="belajar-b" data-belajar-aksi="besar" aria-label="${esc(tr('Perbesar'))}">+</button>
+          <button type="button" class="belajar-teks" data-belajar-aksi="pas">${esc(tr('Pas lebar'))}</button>
+        </span>
+        <button type="button" class="belajar-teks" data-belajar-pip data-belajar-aksi="pip" aria-pressed="false" hidden>${esc(tr('Picture-in-picture'))}</button>
       </div>
+    </div>
+    <div class="belajar-url">
+      <input type="url" class="belajar-url-in" data-belajar-url placeholder="${esc(tr('Tempel URL video langsung (.mp4, .webm)'))}" aria-label="${esc(tr('Tempel URL video langsung (.mp4, .webm)'))}" autocomplete="off" spellcheck="false">
+      <button type="button" class="belajar-teks" data-belajar-aksi="url-pakai">${esc(tr('Pakai'))}</button>
     </div>
     <div class="belajar-isi" data-belajar-isi tabindex="0" aria-label="${esc(tr('Materi'))}">
       <p class="belajar-info">${esc(info)}</p>
@@ -85,15 +138,15 @@ export function belajarTutup() {
 }
 
 /* Menyalakan atau mematikan mode. Catatan disimpan dulu supaya editor yang
-   digambar ulang membaca isi terbaru. */
+   digambar ulang membaca isi terbaru. Video PiP tidak ikut dihentikan. */
 export function toggleBelajar(nyala = !aktif) {
   if (cur !== 'editor') {
     toast(tr('Buka catatan dulu, lalu pilih Mode belajar'));
     return;
   }
   aktif = !!nyala;
-  if (!aktif) lepasMateri();
   saveNow();
+  lepasMateri();
   go('editor', { segar: true, gulir: document.getElementById('wrap').scrollTop });
 }
 
@@ -115,9 +168,8 @@ export function pasangMateri() {
   const root = document.querySelector('[data-belajar-root]');
   if (!root) return;
   const isi = root.querySelector('[data-belajar-isi]');
-  const pilih = root.querySelector('[data-belajar-pilih]');
   const daftar = daftarMateri();
-  if (!materiId || !daftar.some(m => m.blobId === materiId)) materiId = daftar[0]?.blobId || null;
+  if (!materiId || !daftar.some(m => m.id === materiId)) materiId = daftar[0]?.id || null;
 
   sesi = { root, isi, doc: null, task: null, render: null, halaman: 1, total: 0,
            zoom: ZOOM_BAWAAN, pas: true, tok: 0, timer: null, ro: null, lebarTerakhir: -1 };
@@ -129,8 +181,14 @@ export function pasangMateri() {
     const b = e.target.closest('[data-belajar-aksi]');
     if (b && !b.disabled) aksi(s, b.dataset.belajarAksi);
   });
-  pilih?.addEventListener('change', () => { if (pilih.value) muatMateri(s, pilih.value); });
+  root.querySelector('[data-belajar-pilih]')?.addEventListener('change', e => {
+    if (sesi === s && e.target.value) muatMateri(s, e.target.value);
+  });
+  root.querySelector('[data-belajar-url]')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); tambahUrl(s); }
+  });
   isi.addEventListener('keydown', e => {
+    if (!s.doc) return;   /* panah hanya untuk PDF; video memakai kontrolnya sendiri */
     if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); aksi(s, 'next'); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); aksi(s, 'prev'); }
   });
@@ -148,11 +206,15 @@ export function pasangMateri() {
     s.ro.observe(isi);
   }
 
-  if (!materiId) return info(s, tr('Belum ada PDF di catatan. Impor PDF ke catatan, lalu pilih di sini.'));
+  if (!materiId) {
+    setJenis(s, '');
+    return info(s, tr('Belum ada materi. Lampirkan PDF atau video ke catatan, atau tempel URL video.'));
+  }
   muatMateri(s, materiId);
 }
 
-/* Melepas sesi materi: batalkan render, tutup dokumen pdf.js, hentikan pengamat ukuran. */
+/* Melepas sesi materi. Video yang sedang PiP dipindah ke wadah tersembunyi,
+   yang lain dibuang. Dipanggil sebelum editor digambar ulang. */
 export function lepasMateri() {
   const s = sesi;
   if (!s) return;
@@ -161,6 +223,7 @@ export function lepasMateri() {
   s.ro?.disconnect();
   try { s.render?.cancel(); } catch {}
   try { s.task?.destroy(); } catch {}
+  kosongkanIsi(s);
 }
 
 /* Dipanggil saat meninggalkan editor (go tanpa segar). */
@@ -177,10 +240,28 @@ function pilihTab(root, nama) {
   });
 }
 
+function segarkanPilihan(s) {
+  const sel = s.root.querySelector('[data-belajar-pilih]');
+  if (!sel) return;
+  const daftar = daftarMateri();
+  sel.innerHTML = opsiMateriHtml(daftar);
+  sel.disabled = !daftar.length;
+  sel.value = materiId || '';
+}
+
+/* Mengatur bagian kendali sesuai jenis materi yang tampil. */
+function setJenis(s, jenis) {
+  s.root.dataset.jenis = jenis;
+  s.root.querySelectorAll('[data-belajar-pdf-only]').forEach(e => { e.hidden = jenis !== 'pdf'; });
+  segarkanPip(s);
+}
+
 function info(s, pesan) {
   if (!s.isi) return;
+  kosongkanIsi(s);
   s.isi.innerHTML = `<p class="belajar-info">${esc(pesan)}</p>`;
   setLabel(s);
+  segarkanPip(s);
 }
 
 function setLabel(s) {
@@ -195,12 +276,168 @@ function setLabel(s) {
 }
 
 function aksi(s, a) {
-  if (sesi !== s || !s.doc) return;
+  if (sesi !== s) return;
+  if (a === 'pip') return togglePip(s);
+  if (a === 'url-pakai') return tambahUrl(s);
+  if (!s.doc) return;
   if (a === 'prev') { s.halaman = halamanSebelumnya(s.halaman, s.total); s.isi.scrollTop = 0; tampil(s); }
   else if (a === 'next') { s.halaman = halamanBerikut(s.halaman, s.total); s.isi.scrollTop = 0; tampil(s); }
   else if (a === 'besar') { s.pas = false; s.zoom = zoomBerikut(s.zoom); tampil(s); }
   else if (a === 'kecil') { s.pas = false; s.zoom = zoomSebelumnya(s.zoom); tampil(s); }
   else if (a === 'pas') { s.pas = true; tampil(s); }
+}
+
+/* ── Video ── */
+
+function wadahTahan() {
+  let t = document.getElementById(ID_TAHAN);
+  if (!t) {
+    t = document.createElement('div');
+    t.id = ID_TAHAN;
+    t.className = 'belajar-pip-tahan';
+    t.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(t);
+  }
+  return t;
+}
+
+/* Video yang sedang PiP dipindah ke wadah tersembunyi (jangan dilepas dari DOM,
+   karena itu bisa menutup jendela mengambang). Video lain dibuang. */
+function kosongkanIsi(s) {
+  if (!s?.isi) return;
+  for (const v of [...s.isi.querySelectorAll('video')]) {
+    if (document.pictureInPictureElement === v) wadahTahan().appendChild(v);
+    else buangVideo(v);
+  }
+}
+
+function buangVideo(v) {
+  if (!v || v._dibuang) return;
+  v._dibuang = true;
+  if (document.pictureInPictureElement === v) document.exitPictureInPicture?.().catch(() => {});
+  try { v.pause(); } catch {}
+  v.removeAttribute('src');
+  try { v.load(); } catch {}
+  if (v._blobUrl) URL.revokeObjectURL(v._blobUrl);
+  v.remove();
+}
+
+function buatVideo(kunci, src, blobUrl) {
+  const v = document.createElement('video');
+  v.className = 'belajar-video';
+  v.controls = true;
+  v.playsInline = true;
+  v.preload = 'metadata';
+  v._kunci = kunci;
+  v._blobUrl = blobUrl;
+  v._dibuang = false;
+  v.addEventListener('error', () => {
+    if (v._dibuang || !v.error) return;
+    if (sesi && sesi.isi.contains(v)) info(sesi, tr(GALAT_VIDEO));
+  });
+  v.addEventListener('enterpictureinpicture', () => { if (sesi) segarkanPip(sesi); });
+  v.addEventListener('leavepictureinpicture', () => {
+    if (sesi && sesi.isi.contains(v)) segarkanPip(sesi);
+    else buangVideo(v);
+  });
+  v.src = src;
+  return v;
+}
+
+async function muatVideo(s, item) {
+  info(s, tr('Memuat video…'));
+  if (sesi !== s || materiId !== item.id) return;
+  /* video yang masih PiP dan berasal dari materi yang sama dipakai lagi (tidak dimuat ulang) */
+  const pip = document.pictureInPictureElement;
+  let v = pip && pip._kunci === item.id ? pip : null;
+  if (!v) {
+    let src; let blobUrl = null;
+    if (item.jenis === 'url') {
+      src = item.url;
+    } else {
+      const blob = await ambilBlob(item.id);
+      if (sesi !== s || materiId !== item.id) return;
+      if (!blob) return info(s, tr('Berkas lampiran tidak ditemukan'));
+      if (blob.type && !document.createElement('video').canPlayType(blob.type)) {
+        return info(s, tr('Format video ini tidak didukung peramban ini.'));
+      }
+      blobUrl = URL.createObjectURL(blob);
+      src = blobUrl;
+    }
+    v = buatVideo(item.id, src, blobUrl);
+  }
+  if (sesi !== s || materiId !== item.id) {
+    if (v !== pip) buangVideo(v);
+    return;
+  }
+  s.isi.replaceChildren(v);
+  segarkanPip(s);
+}
+
+async function togglePip(s) {
+  const v = s.isi.querySelector('video');
+  if (!v) return;
+  try {
+    if (document.pictureInPictureElement === v) {
+      await document.exitPictureInPicture();
+    } else if (document.pictureInPictureEnabled && v.requestPictureInPicture) {
+      await v.requestPictureInPicture();
+    } else if (typeof v.webkitSetPresentationMode === 'function' && v.webkitSupportsPresentationMode?.('picture-in-picture')) {
+      v.webkitSetPresentationMode(v.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
+    } else {
+      toast(tr('Peramban ini tidak mendukung picture-in-picture untuk video.'));
+      return;
+    }
+  } catch {
+    toast(tr('Gagal membuka picture-in-picture'));
+  }
+  segarkanPip(s);
+}
+
+function segarkanPip(s) {
+  const btn = s?.root?.querySelector('[data-belajar-pip]');
+  if (!btn) return;
+  const v = s.isi?.querySelector('video');
+  const on = !!v && document.pictureInPictureElement === v;
+  /* tombol hanya untuk video yang benar-benar termuat (bukan saat galat atau memuat) */
+  btn.hidden = !(s.root.dataset.jenis === 'video' && pipDidukung() && v);
+  btn.setAttribute('aria-pressed', String(on));
+  btn.textContent = on ? tr('Tutup picture-in-picture') : tr('Picture-in-picture');
+}
+
+/* URL video langsung: hanya http/https. Halaman biasa (mis. tautan video dengan
+   iframe) tidak akan bisa diputar dan menampilkan galat. */
+function tambahUrl(s) {
+  const kolom = s.root.querySelector('[data-belajar-url]');
+  const teks = (kolom?.value || '').trim();
+  if (!urlAman(teks)) {
+    toast(tr('URL harus diawali http:// atau https://'));
+    return;
+  }
+  let u = urlMateri.find(x => x.url === teks);
+  if (!u) {
+    u = { id: 'url-' + (++urlSeq), url: teks, nama: namaDariUrl(teks) };
+    urlMateri.push(u);
+  }
+  if (kolom) kolom.value = '';
+  materiId = u.id;
+  segarkanPilihan(s);
+  muatMateri(s, u.id);
+}
+
+/* ── Pemuatan materi ── */
+
+async function muatMateri(s, id) {
+  if (sesi !== s) return;
+  const item = daftarMateri().find(m => m.id === id);
+  if (!item) return;
+  materiId = id;
+  lepasDokumen(s);
+  s.halaman = 1;
+  s.lebarTerakhir = -1;
+  setJenis(s, item.jenis === 'pdf' ? 'pdf' : 'video');
+  if (item.jenis === 'pdf') return muatPdf(s, item.id);
+  return muatVideo(s, item);
 }
 
 function lepasDokumen(s) {
@@ -209,26 +446,21 @@ function lepasDokumen(s) {
   s.render = null; s.task = null; s.doc = null; s.total = 0;
 }
 
-async function muatMateri(s, blobId) {
-  if (sesi !== s) return;
-  materiId = blobId;
-  lepasDokumen(s);
-  s.halaman = 1;
-  s.lebarTerakhir = -1;
+async function muatPdf(s, blobId) {
   info(s, tr('Memuat PDF…'));
   const kurang = fiturPdfKurang();
   if (kurang.length) return info(s, tr('Peramban ini terlalu lama untuk menampilkan PDF. Perbarui peramban atau WebView.'));
 
   const blob = await ambilBlob(blobId);
-  if (sesi !== s) return;
+  if (sesi !== s || materiId !== blobId) return;
   if (!blob) return info(s, tr('Berkas lampiran tidak ditemukan'));
   const data = new Uint8Array(await blob.arrayBuffer());
-  if (sesi !== s) return;
+  if (sesi !== s || materiId !== blobId) return;
 
   let lib;
   try { lib = await muatPdfJs(); }
   catch { if (sesi === s) info(s, tr('PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.')); return; }
-  if (sesi !== s) return;
+  if (sesi !== s || materiId !== blobId) return;
 
   const task = lib.getDocument({ data, isEvalSupported: false, useSystemFonts: false });
   s.task = task;
@@ -242,7 +474,7 @@ async function muatMateri(s, blobId) {
     if (sesi === s && s.task === task) info(s, tr('PDF tidak bisa dibuka. Berkasnya mungkin rusak atau dilindungi kata sandi.'));
     return;
   }
-  if (sesi !== s || s.task !== task) { try { doc.destroy(); } catch {} return; }
+  if (sesi !== s || s.task !== task || materiId !== blobId) { try { doc.destroy(); } catch {} return; }
   s.doc = doc;
   s.total = doc.numPages;
   s.pas = true;
@@ -273,6 +505,7 @@ async function tampil(s) {
   const bungkus = document.createElement('div');
   bungkus.className = 'belajar-kwrap';
   bungkus.appendChild(kanvas);
+  kosongkanIsi(s);
   s.isi.replaceChildren(bungkus);
 
   s.render = page.render({ canvasContext: ctx, viewport: vp });
