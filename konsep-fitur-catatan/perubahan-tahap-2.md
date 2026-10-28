@@ -848,6 +848,36 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Pilihan materi dan mode belajar** tidak disimpan setelah muat ulang halaman (hanya di memori sesi), seperti C5.
   - **C4 (screenshot frame) belum disetujui** dan tidak ada di perubahan ini.
 
+## Perubahan 28 · C4 — Tangkap frame video ke catatan (Tahap 3)
+
+- **ID:** C4 (Video screenshot capture). Disetujui pengguna lewat pilihan "C4 — Video screenshot capture" (memilih ID secara eksplisit). Persetujuan hanya untuk C4.
+- **Perubahan:**
+  - Tombol **Ambil frame** di panel belajar (C5) muncul hanya saat video termuat dan frame-nya bisa diambil. Posisi video saat ini diambil sebagai JPEG, lalu disisipkan sebagai blok gambar di posisi kursor catatan.
+  - Frame disimpan sebagai blob sendiri (`fr_…`), sehingga tetap ada walau video dihapus dari daftar materi. Alt teks memuat judul dan waktu, misalnya "Frame video · 00:01 · kuliah.webm".
+  - Sumber lintas-asal (URL langsung) dimuat dengan `crossorigin="anonymous"`. Bila servernya menolak CORS, video diputar ulang tanpa CORS. Video tetap bisa diputar dan di-PiP, tetapi tombol frame disembunyikan dan keterangan singkat tampil.
+  - `docs/notes/belajar-materi.js`: `tangkapFrame`, `segarkanFrame`, `probeCanvasBersih`. Penyisipan memakai `sematkanBlokGambar` dari `editor/image.js`, dengan `snap()` sebelum perubahan (undo).
+  - `docs/styles/notes.css`: gaya `.belajar-hint`. `docs/core/bahasa-en.js`, `bahasa-ja.js`: 5 teks baru. Paritas en/ja 1169/1169.
+  - Stempel versi `20261028110000` (137 berkas).
+- **Cara uji (hasil nyata):**
+  - Chromium headless, harness `/home/user/uji-c4/uji-c4.mjs`: **42/42 lulus**, tanpa pageerror. Galat CORS dari URL tanpa CORS dilaporkan terpisah sebagai bagian fallback yang diharapkan.
+  - **A. Sumber lokal** (lampiran): frame pertama dan kedua tersisip. Blob berjenis `image/jpeg`, 320×240, tidak hitam (rata-rata warna di atas 20). Dua frame pada posisi berbeda menghasilkan warna berbeda, sehingga memang diambil dari video. Frame tetap ada setelah mode belajar dimatikan.
+  - **B. URL langsung dengan CORS** (server 8179 yang mengirim `Access-Control-Allow-Origin: *`): tombol tampil, `crossorigin="anonymous"` terpasang, frame tersisip dan tidak hitam.
+  - **C. URL langsung tanpa CORS** (8178): video tetap diputar, PiP tetap tersedia. Tombol Ambil frame disembunyikan dan keterangan CORS tampil. Tidak ada frame baru.
+  - **D. Iframe dan sumber terbatas**: halaman iframe, berkas rusak, dan URL 404 menampilkan galat. Tombol frame tidak tampil dan tidak ada frame yang bertambah.
+  - **E. Lebar 390 px**: tombol tampil dan frame bisa disisipkan dari tab Materi.
+  - Regresi: `uji-c3.mjs` 40/40 (filter galat CORS diperbarui untuk fallback), `uji-c5.mjs` 36/36, `npm test` dijalankan ulang.
+- **Temuan selama uji:**
+  - Dua frame di t≈1,2 dtk dan t≈3,6 dtk kebetulan berwarna sama, karena pola warna video berulang setiap 1,2 dtk. Uji memakai posisi 0,3 dtk dan 3,3 dtk.
+  - Harness awal menganggap galat CORS fallback sebagai galat halaman. Itu perilaku yang benar, jadi filternya dibatasi hanya untuk URL 8178.
+- **Keterbatasan jujur:**
+  - **Tidak ada janji pengambilan frame universal** (§1.14). Frame hanya bisa diambil dari lampiran lokal dan URL lintas-asal yang server-nya mengizinkan CORS.
+  - **Iframe tidak didukung** (dibuang sanitasi, seperti C3).
+  - **DRM / video terproteksi (EME)** tidak diuji. Frame dari sumber seperti itu mungkin hitam atau tidak bisa diambil.
+  - **Android belum diuji.** Semua uji di Chromium headless desktop.
+  - **Posisi sisipan** mengikuti kursor di editor. Bila kursor berada di panel materi, frame disisipkan di posisi terakhir kursor di catatan, atau di akhir catatan.
+  - **Pilihan materi dan mode belajar** tidak bertahan setelah muat ulang halaman, seperti C5.
+  - **Format frame** selalu JPEG (kualitas 0,92). Tidak ada opsi PNG.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
@@ -859,6 +889,6 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 
 ## Berikutnya
 
-- Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, dan C3 sudah dikerjakan. C4 belum disetujui dan menunggu persetujuan pengguna.
+- Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
 - Hal terbuka dari Tahap 2: navigasi antar-hari di halaman jurnal dan tautan balik ke kalender (B8),
   uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.

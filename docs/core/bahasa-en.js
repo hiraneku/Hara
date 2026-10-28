@@ -1199,4 +1199,9 @@ export const EN = {
   "Format video ini tidak didukung peramban ini.": "This video format is not supported by this browser.",
   "Peramban ini tidak mendukung picture-in-picture untuk video.": "This browser does not support picture-in-picture for video.",
   "Gagal membuka picture-in-picture": "Could not open picture-in-picture",
+  "Ambil frame": "Capture frame",
+  "Frame video": "Video frame",
+  "Frame disisipkan ke catatan": "Frame added to note",
+  "Frame tidak bisa diambil dari sumber ini": "A frame cannot be captured from this source",
+  "Frame tidak bisa diambil: server video tidak mengizinkan akses lintas-asal (CORS).": "Frames cannot be captured: the video server does not allow cross-origin access (CORS).",
 };

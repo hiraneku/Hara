@@ -17,16 +17,20 @@
      ulang, sehingga jendela mengambang tetap jalan saat mencatat.
    - Iframe tidak didukung: sanitasi membuangnya, dan konten lintas-asal di
      dalamnya tidak bisa dibuka atau di-PiP-kan oleh halaman ini. */
-import { state } from '../core/store.js?v=20261028100000';
-import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261028100000';
-import { t as tr } from '../core/i18n.js?v=20261028100000';
-import { esc } from '../core/dom.js?v=20261028100000';
-import { ambilBlob } from '../core/blobs.js?v=20261028100000';
-import { toast } from '../core/toast.js?v=20261028100000';
-import { saveNow } from './editor/cleanup.js?v=20261028100000';
-import { muatPdfJs, fiturPdfKurang } from './pdf/muat-pdfjs.js?v=20261028100000';
+import { state } from '../core/store.js?v=20261028110000';
+import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261028110000';
+import { t as tr } from '../core/i18n.js?v=20261028110000';
+import { esc } from '../core/dom.js?v=20261028110000';
+import { ambilBlob } from '../core/blobs.js?v=20261028110000';
+import { toast } from '../core/toast.js?v=20261028110000';
+import { saveNow } from './editor/cleanup.js?v=20261028110000';
+import { muatPdfJs, fiturPdfKurang } from './pdf/muat-pdfjs.js?v=20261028110000';
 import { adalahPdf, ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
-         skalaPasLebar } from './pdf/logika.js?v=20261028100000';
+         skalaPasLebar } from './pdf/logika.js?v=20261028110000';
+import { simpanBlob, hapusBlob } from '../core/blobs.js?v=20261028110000';
+import { sematkanBlokGambar } from './editor/image.js?v=20261028110000';
+import { snap } from './editor/history.js?v=20261028110000';
+import { formatWaktu } from './editor/perekam-suara.js?v=20261028110000';
 
 const ID_TAHAN = 'belajar-pip-tahan';
 const GALAT_VIDEO = 'Video tidak bisa diputar. Formatnya tidak didukung, sumbernya tidak tersedia, atau dibatasi.';
@@ -120,6 +124,8 @@ export function belajarBuka() {
           <button type="button" class="belajar-teks" data-belajar-aksi="pas">${esc(tr('Pas lebar'))}</button>
         </span>
         <button type="button" class="belajar-teks" data-belajar-pip data-belajar-aksi="pip" aria-pressed="false" hidden>${esc(tr('Picture-in-picture'))}</button>
+        <button type="button" class="belajar-teks" data-belajar-frame data-belajar-aksi="frame" hidden>${esc(tr('Ambil frame'))}</button>
+        <span class="belajar-hint" data-belajar-frame-info hidden>${esc(tr('Frame tidak bisa diambil: server video tidak mengizinkan akses lintas-asal (CORS).'))}</span>
       </div>
     </div>
     <div class="belajar-url">
@@ -278,6 +284,7 @@ function setLabel(s) {
 function aksi(s, a) {
   if (sesi !== s) return;
   if (a === 'pip') return togglePip(s);
+  if (a === 'frame') return tangkapFrame(s);
   if (a === 'url-pakai') return tambahUrl(s);
   if (!s.doc) return;
   if (a === 'prev') { s.halaman = halamanSebelumnya(s.halaman, s.total); s.isi.scrollTop = 0; tampil(s); }
@@ -322,7 +329,7 @@ function buangVideo(v) {
   v.remove();
 }
 
-function buatVideo(kunci, src, blobUrl) {
+function buatVideo(kunci, src, blobUrl, lintasAsal = false) {
   const v = document.createElement('video');
   v.className = 'belajar-video';
   v.controls = true;
@@ -331,9 +338,24 @@ function buatVideo(kunci, src, blobUrl) {
   v._kunci = kunci;
   v._blobUrl = blobUrl;
   v._dibuang = false;
+  v._cors = lintasAsal;
+  if (lintasAsal) v.crossOrigin = 'anonymous';
   v.addEventListener('error', () => {
     if (v._dibuang || !v.error) return;
+    /* URL lintas-asal yang servernya menolak CORS: putar ulang tanpa CORS. Video
+       tetap bisa diputar dan di-PiP; hanya pengambilan frame yang tidak tersedia. */
+    if (v._cors) {
+      v._cors = false;
+      v.removeAttribute('crossorigin');
+      v.load();
+      return;
+    }
     if (sesi && sesi.isi.contains(v)) info(sesi, tr(GALAT_VIDEO));
+  });
+  v.addEventListener('loadeddata', () => {
+    if (v._dibuang) return;
+    v._frameOk = probeCanvasBersih(v);
+    if (sesi && sesi.isi.contains(v)) segarkanPip(sesi);
   });
   v.addEventListener('enterpictureinpicture', () => { if (sesi) segarkanPip(sesi); });
   v.addEventListener('leavepictureinpicture', () => {
@@ -364,7 +386,7 @@ async function muatVideo(s, item) {
       blobUrl = URL.createObjectURL(blob);
       src = blobUrl;
     }
-    v = buatVideo(item.id, src, blobUrl);
+    v = buatVideo(item.id, src, blobUrl, item.jenis === 'url');
   }
   if (sesi !== s || materiId !== item.id) {
     if (v !== pip) buangVideo(v);
@@ -403,6 +425,73 @@ function segarkanPip(s) {
   btn.hidden = !(s.root.dataset.jenis === 'video' && pipDidukung() && v);
   btn.setAttribute('aria-pressed', String(on));
   btn.textContent = on ? tr('Tutup picture-in-picture') : tr('Picture-in-picture');
+  segarkanFrame(s);
+}
+
+/* ── Tangkap frame (C4) ── */
+
+/* Kanvas yang sudah menggambar video tidak boleh ternoda (tainted). Video lokal
+   (blob:) dan video lintas-asal yang dimuat dengan CORS lolos; yang tanpa CORS
+   tidak. Diperiksa sekali saat metadata/data pertama tiba. */
+function probeCanvasBersih(v) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    c.getContext('2d').drawImage(v, 0, 0, 1, 1);
+    c.toDataURL('image/png');
+    return true;
+  } catch { return false; }
+}
+
+/* Tombol Ambil frame hanya untuk video yang sudah termuat dan bisa diambil.
+   Bila sumber lintas-asal tidak mengizinkan CORS, tampil keterangan singkat. */
+function segarkanFrame(s) {
+  const btn = s?.root?.querySelector('[data-belajar-frame]');
+  if (!btn) return;
+  const info = s.root.querySelector('[data-belajar-frame-info]');
+  const v = s.isi?.querySelector('video');
+  const adaVideo = s.root.dataset.jenis === 'video' && !!v && v.readyState >= 2;
+  btn.hidden = !(adaVideo && v._frameOk === true);
+  if (info) info.hidden = !(adaVideo && v._frameOk === false);
+}
+
+/* Mengambil frame pada posisi video sekarang, lalu menyisipkannya sebagai blok
+   gambar di posisi kursor catatan. Frame disimpan sebagai blob JPEG sendiri,
+   jadi tetap ada walau video dihapus dari daftar materi. */
+async function tangkapFrame(s) {
+  const v = s.isi?.querySelector('video');
+  if (!v || v._frameOk !== true || v.readyState < 2 || !v.videoWidth) return;
+  const idCatatan = state.openId;
+  const d = document.querySelector('.ed-doc');
+  if (!d) return;
+
+  const kanvas = document.createElement('canvas');
+  kanvas.width = v.videoWidth;
+  kanvas.height = v.videoHeight;
+  let blob;
+  try {
+    kanvas.getContext('2d').drawImage(v, 0, 0);
+    blob = await new Promise((ok, gagal) =>
+      kanvas.toBlob(b => (b ? ok(b) : gagal(new Error('kosong'))), 'image/jpeg', 0.92));
+  } catch {
+    toast(tr('Frame tidak bisa diambil dari sumber ini'));
+    return;
+  }
+
+  const waktu = formatWaktu(Math.floor(v.currentTime));
+  const nama = daftarMateri().find(m => m.id === materiId)?.nama || 'Video';
+  const id = 'fr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  try { await simpanBlob(id, blob); }
+  catch { toast(tr('Gagal menyimpan gambar')); return; }
+
+  /* sasaran sudah bergeser (pindah catatan, keluar editor) selama menyimpan? buang blob */
+  const masihSama = () => cur === 'editor' && state.openId === idCatatan
+    && document.querySelector('.ed-doc') === d && d.isConnected;
+  if (!masihSama()) { try { await hapusBlob(id); } catch {} return; }
+
+  snap();
+  await sematkanBlokGambar(id, `${tr('Frame video')} · ${waktu} · ${nama}`);
+  toast(tr('Frame disisipkan ke catatan'));
 }
 
 /* URL video langsung: hanya http/https. Halaman biasa (mis. tautan video dengan

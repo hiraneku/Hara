@@ -2,18 +2,18 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261028100000';
-import * as M from './mesin.js?v=20261028100000';
-import * as A from './aksi.js?v=20261028100000';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261028100000';
-import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261028100000';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261028100000';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261028100000';
-import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261028100000';
-import { terapkanEfekTersimpan } from './efek.js?v=20261028100000';
-import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261028100000';
-import { segarkanKartuMusik } from './kartu.js?v=20261028100000';
-import { segarSampul } from './sampul-dom.js?v=20261028100000';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261028110000';
+import * as M from './mesin.js?v=20261028110000';
+import * as A from './aksi.js?v=20261028110000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261028110000';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261028110000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261028110000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261028110000';
+import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261028110000';
+import { terapkanEfekTersimpan } from './efek.js?v=20261028110000';
+import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261028110000';
+import { segarkanKartuMusik } from './kartu.js?v=20261028110000';
+import { segarSampul } from './sampul-dom.js?v=20261028110000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;

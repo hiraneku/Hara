@@ -1166,4 +1166,9 @@ export const JA = {
   "Format video ini tidak didukung peramban ini.": "この動画形式はこのブラウザーでは対応していません。",
   "Peramban ini tidak mendukung picture-in-picture untuk video.": "このブラウザーは動画のピクチャーインピクチャーに対応していません。",
   "Gagal membuka picture-in-picture": "ピクチャーインピクチャーを開けませんでした",
+  "Ambil frame": "フレームを取得",
+  "Frame video": "動画のフレーム",
+  "Frame disisipkan ke catatan": "フレームをノートに挿入しました",
+  "Frame tidak bisa diambil dari sumber ini": "このソースからはフレームを取得できません",
+  "Frame tidak bisa diambil: server video tidak mengizinkan akses lintas-asal (CORS).": "フレームを取得できません: 動画サーバーがクロスオリジンアクセス (CORS) を許可していません。",
 };
