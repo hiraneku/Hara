@@ -125,7 +125,7 @@ Format: **Konsep** — **Keputusan/koreksi** — **Status (Tahap 0)** — **Taha
 - **C2 Audio-linked transcription** — Catatan bertanda waktu dulu (tanpa AI). Transkripsi otomatis menyusul. — *Implemented (dasar, uji Chromium 17/17):* tombol Tandai saat merekam dan memutar, daftar tanda yang bisa diklik untuk melompat, disimpan di meta.marks. Transkripsi otomatis belum. — Tahap 3.
 - **C3 Picture-in-picture learning** — Video di jendela mengambang sambil menulis, jika sumber dan platform mendukung. — *Missing.* — Tahap 3.
 - **C4 Video screenshot capture** — Ambil frame hanya untuk jenis sumber yang didukung. Uji tiap sumber. — *Missing.* — Tahap 3.
-- **C5 Course learning view** — Materi dan catatan berdampingan di dalam Hara. Di HP bisa tab/panel jika tidak muat. — *Missing.* — Tahap 3.
+- **C5 Course learning view** — Materi dan catatan berdampingan di dalam Hara. Di HP bisa tab/panel jika tidak muat. — *Implemented (dasar, uji Chromium 36/36):* mode belajar di editor, materi PDF lampiran di kiri, tab Materi/Catatan di layar sempit. Belum ada anotasi atau OCR di panel materi, dan belum diuji di Android. — Tahap 3.
 - **C6 Active recall tape** — Teks ditandai tersembunyi lalu ditampilkan saat diketuk. Untuk objek visual, penutup terhubung ke objek. Buka/tutup per item dan semua. — *Missing:* mode baca bukan mekanisme tape. — Tahap 4.
 - **C7 Flashcard generation** — Kartu depan-belakang, dibuat manual dari teks yang dipilih. Pembuatan dari tape opsional. — *Missing.* — Tahap 4.
 - **C8 Exam preparation center** — Pilih materi pengguna, susun pertanyaan dan jawaban, latihan mengingat. Layer, tape, flashcard, jadwal ditambahkan bertahap. — *Missing.* — Tahap 4.

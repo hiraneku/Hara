@@ -1,14 +1,15 @@
 /* Layar editor: judul, properti yang bisa disunting, isi catatan, dan
    panel data (tautan/backlink/mention/graph) di bawahnya. */
-import { state } from '../../core/store.js?v=20261028085413';
-import { findNote } from '../model.js?v=20261028085413';
-import { esc } from '../../core/dom.js?v=20261028085413';
-import { blocksToDom, kelasKertasNote, gayaKertasNote } from '../note-model.js?v=20261028085413';
-import { barisProps } from '../meta-ui.js?v=20261028085413';
-import { t as tr } from '../../core/i18n.js?v=20261028085413';
-import { renderStickersHtml } from '../hamoji.js?v=20261028085413';
-import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261028085413';
-import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261028085413';
+import { state } from '../../core/store.js?v=20261028093000';
+import { findNote } from '../model.js?v=20261028093000';
+import { esc } from '../../core/dom.js?v=20261028093000';
+import { blocksToDom, kelasKertasNote, gayaKertasNote } from '../note-model.js?v=20261028093000';
+import { barisProps } from '../meta-ui.js?v=20261028093000';
+import { t as tr } from '../../core/i18n.js?v=20261028093000';
+import { renderStickersHtml } from '../hamoji.js?v=20261028093000';
+import { renderQuickKeysHtml } from '../editor/blok-generasi-baru.js?v=20261028093000';
+import { renderBarCatatanTerakhirHtml, catatRiwayatBuka, cssSampul } from '../navigasi-fokus.js?v=20261028093000';
+import { belajarBuka, belajarTutup } from '../belajar-materi.js?v=20261028093000';
 
 export function editorView() {
 const n=findNote(state.openId)||state.notes[0];
@@ -22,7 +23,7 @@ const n=findNote(state.openId)||state.notes[0];
  const body=`<div class="ed-doc${kelasKertasDoc ? ' ' + kelasKertasDoc : ''}"${gayaKertasDoc ? ` style="${gayaKertasDoc}"` : ''} contenteditable="true" spellcheck="false"
    data-ph="${tr('Mulai menulis. Coba ketik **tebal** atau # judul')}">${inner}</div>`;
  const bgSampul = n.cover ? cssSampul(n.cover) : '';
- return `<div class="ed">
+ return `${belajarBuka()}<div class="ed">
   ${renderBarCatatanTerakhirHtml()}
   <div class="ed-cover" id="ed-cover"${bgSampul ? ` style="background:${bgSampul}"` : ' hidden'}></div>
   <div class="ed-aksi" id="ed-aksi-isi" role="group" aria-label="${tr('Kendali baca')}">
@@ -50,5 +51,5 @@ const n=findNote(state.openId)||state.notes[0];
     </div>
   </div>
   <div class="dm" id="dm"></div>
- </div>`;
+ </div>${belajarTutup()}`;
 }

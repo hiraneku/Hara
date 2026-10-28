@@ -2,10 +2,11 @@
    Isi mengikuti keadaan catatan (label Sematkan/Lepas, Arsipkan/
    Kembalikan). Aksi dijalankan lewat delegasi klik global di app.js
    dengan atribut data-note-act. */
-import { state } from '../../core/store.js?v=20261028085413';
-import { esc } from '../../core/dom.js?v=20261028085413';
-import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261028085413';
-import { t as tr } from '../../core/i18n.js?v=20261028085413';
+import { state } from '../../core/store.js?v=20261028093000';
+import { esc } from '../../core/dom.js?v=20261028093000';
+import { punyaKunci, terbukaSesi } from '../kunci.js?v=20261028093000';
+import { belajarAktif } from '../belajar-materi.js?v=20261028093000';
+import { t as tr } from '../../core/i18n.js?v=20261028093000';
 
 export function menuCatatan() {
   const n = state.notes.find(x => x.id === state.openId);
@@ -65,6 +66,8 @@ export function menuCatatan() {
     <svg class="ico"><use href="#i-check2"/></svg>${tr('Ubah baris bertenggat jadi tugas')}</button>
   <button class="pop-i" data-note-act="versi">
     <svg class="ico"><use href="#i-undo"/></svg>${tr('Riwayat versi lokal…')}</button>
+  <button class="pop-i" data-note-act="belajar" aria-pressed="${belajarAktif() ? 'true' : 'false'}">
+    <svg class="ico"><use href="#i-book"/></svg>${tr('Mode belajar: materi dan catatan')}</button>
   <button class="pop-i" data-note-act="cetak">
     <svg class="ico"><use href="#i-print"/></svg>${tr('Cetak / PDF…')}</button>
   <button class="pop-i" data-note-act="tpl">

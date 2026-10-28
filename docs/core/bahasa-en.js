@@ -1182,4 +1182,10 @@ export const EN = {
   "ada jurnal": "has journal",
   "Jurnal {t} dibuka": "Journal {t} opened",
   "Jurnal {t} dibuat — selamat menulis": "Journal {t} created — happy writing",
+  "Mode belajar: materi dan catatan": "Study mode: material and notes",
+  "Materi": "Material",
+  "Pilih PDF sebagai materi": "Choose a PDF as material",
+  "Belum ada PDF": "No PDF yet",
+  "Belum ada PDF di catatan. Impor PDF ke catatan, lalu pilih di sini.": "No PDF in your notes yet. Attach a PDF to a note, then choose it here.",
+  "Buka catatan dulu, lalu pilih Mode belajar": "Open a note first, then choose Study mode",
 };

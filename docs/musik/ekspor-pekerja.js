@@ -6,7 +6,7 @@
 
 importScripts('../vendor/lamejs/lame.min.js?v=20261025001200');
 
-const siap = import('./ekspor-dsp.js?v=20261028085413');
+const siap = import('./ekspor-dsp.js?v=20261028093000');
 
 self.onmessage = async (e) => {
   const d = e.data;

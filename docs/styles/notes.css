@@ -2652,3 +2652,29 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
 .graph .btn.on{background:var(--accent-weak);color:var(--text)}
 
 .ver-diff > div{color:var(--text)}
+
+/* ── C5 · tampilan belajar: materi (PDF) dan catatan berdampingan ── */
+.belajar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.belajar-tab{display:none}
+.belajar-materi{position:sticky;top:0;height:calc(100dvh - 56px);display:flex;flex-direction:column;min-width:0;background:var(--sunken);border-right:1px solid var(--border)}
+.belajar-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface)}
+.belajar-pilih{flex:1 1 160px;min-width:0;max-width:100%;font:inherit;font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+.belajar-kendali{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.belajar-b,.belajar-teks{min-width:32px;min-height:32px;padding:0 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.belajar-b:disabled,.belajar-teks:disabled{opacity:.4;cursor:default}
+.belajar-hal,.belajar-zoom{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding:0 4px;white-space:nowrap}
+.belajar-isi{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;align-items:center;outline:none}
+.belajar-isi:focus-visible{box-shadow:inset 0 0 0 2px var(--text)}
+.belajar-kwrap{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);line-height:0}
+.belajar-kanvas{display:block}
+.belajar-info{margin:auto;padding:16px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5;max-width:320px}
+.belajar-catatan{min-width:0}
+@media (max-width:760px){
+  .belajar{grid-template-columns:minmax(0,1fr)}
+  .belajar-tab{display:flex;gap:6px;position:sticky;top:0;z-index:4;padding:6px 10px;background:var(--surface);border-bottom:1px solid var(--border)}
+  .belajar-tb{flex:1;min-height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font:inherit;font-size:14px;cursor:pointer}
+  .belajar-tb.on{background:var(--sunken);color:var(--text);border-color:var(--border-strong);font-weight:600}
+  .belajar-materi{position:static;height:auto;min-height:72vh;border-right:0}
+  .belajar:not([data-tab="materi"]) .belajar-materi{display:none}
+  .belajar[data-tab="materi"] .belajar-catatan{display:none}
+}

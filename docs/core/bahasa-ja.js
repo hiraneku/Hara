@@ -1149,4 +1149,10 @@ export const JA = {
   "ada jurnal": "ジャーナルあり",
   "Jurnal {t} dibuka": "ジャーナル {t} を開きました",
   "Jurnal {t} dibuat — selamat menulis": "ジャーナル {t} を作成しました — よい執筆を",
+  "Mode belajar: materi dan catatan": "学習モード：教材とメモを並べて表示",
+  "Materi": "教材",
+  "Pilih PDF sebagai materi": "教材にするPDFを選ぶ",
+  "Belum ada PDF": "PDFはまだありません",
+  "Belum ada PDF di catatan. Impor PDF ke catatan, lalu pilih di sini.": "メモにPDFがありません。メモにPDFを添付してから、ここで選んでください。",
+  "Buka catatan dulu, lalu pilih Mode belajar": "先にメモを開いてから、学習モードを選んでください",
 };

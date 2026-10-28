@@ -784,6 +784,38 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Akurasi lompat bergantung pada peramban. Durasi webm dari perekam kadang tidak tersedia (Infinity). Pada uji Chromium ini lompat berhasil.
   - Belum diuji di Android sungguhan.
 
+## Perubahan 26 · C5 — Tampilan belajar: materi dan catatan berdampingan (Tahap 3)
+
+- **ID:** C5 (Course learning view). Disetujui pengguna lewat pilihan \"Oke lanjut C5\" (memilih ID secara eksplisit). Persetujuan hanya untuk C5. C3 dan C4 belum disetujui.
+- **Perubahan:**
+  - Mode belajar adalah tata letak di dalam editor, bukan layar baru. Editor tetap satu-satunya penulis catatan (autosave, binding, `cur === 'editor'` tidak berubah).
+  - Masuk dari menu \"···\" catatan (**Mode belajar: materi dan catatan**) dan dari palet perintah. Mode bertahan saat pindah catatan selama sesi.
+  - Panel **materi** di kiri: PDF dari lampiran catatan mana pun (daftar dibuat dari blok `file` dengan PDF). Bilah berisi pilihan materi, ‹ › halaman, − + zoom, dan Pas lebar.
+  - Lebar lega: dua kolom. Panel materi menempel saat catatan digulir.
+  - Lebar sempit (HP, di bawah 760 px): satu panel tampil, dipilih lewat tab **Materi** / **Catatan**.
+  - Panel materi tidak punya pintasan keyboard global. Panah dan PageUp/PageDown hanya berlaku saat fokus ada di panel materi, supaya tidak mengganggu mengetik.
+  - Materi dirender dengan pdf.js yang sama dengan penampil (B1/B2). Anotasi, OCR, dan susunan halaman tetap di penampil layar penuh.
+  - `docs/notes/belajar-materi.js` (baru): `daftarMateri`, `belajarBuka`/`belajarTutup`, `toggleBelajar`, `pasangMateri`, `lepasMateri`.
+  - `docs/notes/views/editor.js`: pembungkus `belajarBuka()` / `belajarTutup()`.
+  - `docs/notes/menus/note-menu.js`: item menu. `docs/app.js`: handler menu dan perintah palet.
+  - `docs/styles/notes.css`: gaya `.belajar*`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 6 teks baru. Paritas en/ja 1154/1154.
+- **Cara uji (hasil nyata):**
+  - Chromium, harness di luar repo (`/home/user/uji-c5/uji-c5.mjs`): **36/36 lulus**, tanpa galat halaman.
+  - Sumber **lokal** (lampiran PDF): mode nyala dan mati, dua kolom, tombol halaman dan zoom, Pas lebar kembali ke zoom awal, panah hanya di panel materi, edit catatan di dalam mode belajar tetap tersimpan, render ulang setelah nyala lagi.
+  - **Lebar sempit** (390 px): tab Materi/Catatan bekerja, halaman mengisi lebar layar.
+  - **URL langsung**: tautan bookmark ke PDF tidak muncul sebagai materi, dan panel tidak mengambil URL (0 permintaan ke berkas itu).
+  - **Iframe**: Hara tidak punya blok iframe. `html-aman.js` membuang iframe, jadi tidak ada sumber iframe yang bisa menjadi materi. Tidak diuji sebagai kasus terpisah.
+  - **Sumber terbatas**: PDF rusak menampilkan galat dan editor tetap bisa diketik. Lampiran yang blobnya hilang menampilkan \"Berkas lampiran tidak ditemukan\".
+  - `npm test` 37/37. Node: OCR 54/0, kalender 35/0, susunan PDF 49/0.
+- **Keterbatasan jujur:**
+  - Materi hanya PDF lampiran. URL, video, dan gambar tidak menjadi materi.
+  - Panel materi belum punya anotasi, OCR, atau pencarian. Semua itu tetap di penampil layar penuh.
+  - Pilihan materi dan mode belajar tidak disimpan setelah muat ulang halaman (hanya di memori sesi).
+  - PDF berkata sandi belum diuji (tidak ada fixture terenkripsi di repo).
+  - Chromium C1 dan C2 tidak diuji ulang setelah perubahan ini. Harness lamanya hilang. Yang dijalankan ulang: `npm test` dan uji Node.
+  - Belum diuji di Android sungguhan. Layout 760 px dan tinggi panel `calc(100dvh - 56px)` perlu dicek di HP.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
