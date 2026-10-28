@@ -655,11 +655,71 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Lisensi data: paket npm `@tesseract.js-data/*` mencantumkan MIT. Lisensi tessdata asal
     (`naptha/tessdata`) belum diverifikasi langsung. Perlu dicek sebelum rilis.
 
-## Status (B6)
+### Lanjutan B6 · core non-SIMD (keputusan pengguna)
 
-Selesai dan diuji (Node 54/54, npm test exit 0, Chromium 24/24). Belum diuji di HP. Keputusan core
-non-SIMD menunggu konfirmasi pengguna.
+- Pengguna memilih **ya** untuk core non-SIMD. Peramban tanpa WebAssembly SIMD sekarang juga bisa OCR.
+- `docs/notes/ocr/mesin.js`: `adaSimd()` memvalidasi modul wasm minimum (sama dengan deteksi
+  wasm-feature-detect). `berkasCore()` memilih `tesseract-core-simd-lstm.wasm.js` atau
+  `tesseract-core-lstm.wasm.js`. Dua-duanya di `docs/vendor/tesseract/core/`.
+- Ukuran vendor naik menjadi **≈ 17,8 MB** (17.830.500 byte).
+- Uji Chromium mode non-SIMD (`NOSIMD=1`): deteksi SIMD di halaman dibuat gagal lewat init script,
+  karena flag `--no-wasm-simd` tidak berpengaruh di Chromium ini. Hasil: **25/25 lolos**, dan log
+  jaringan mengonfirmasi browser memuat `tesseract-core-lstm.wasm.js`. Mode SIMD tetap 24/24 sebelum ini.
+- Keterbatasan: pengujian non-SIMD hanya memalsukan deteksi. Wasm non-SIMD yang dijalankan
+  tetap di peramban yang punya SIMD. Peramban tanpa SIMD sungguhan belum diuji.
+
+## Perubahan 23 · B8 — Navigasi planner: kalender ke jurnal per tanggal
+
+- **ID:** B8 (Digital planner navigation). Disetujui pengguna lewat pilihan \"Ya, kerjakan B8\".
+- **Keadaan awal (audit):** kalender hanya memilih hari dan menampilkan tenggat. `bukaJurnalHari`
+  hanya bisa membuka atau membuat jurnal **hari ini**. Klik sel kalender tidak membuka jurnal.
+- **Lingkup yang diterapkan:**
+  - Panel hari terpilih di kalender punya tombol **Buka jurnal**. Tombol ini membuka jurnal
+    tanggal itu, atau membuatnya bila belum ada, dengan templat jurnal yang sama seperti jurnal hari ini.
+  - Hari yang sudah punya jurnal diberi penanda titik kecil di sudut sel, dan `aria-label` menyebut \"ada jurnal\".
+  - Pencarian jurnal dan pembuatan memakai judul yang sama, jadi tidak ada jurnal ganda.
+    Pencarian mencoba bahasa aktif dulu, lalu dua bahasa lain. Jurnal yang dibuat dalam bahasa lain tetap ditemukan.
+  - Catatan terkunci yang tidak terlihat tidak ikut menandai kalender.
+- **Di luar lingkup (belum):** navigasi antar-hari di halaman jurnal (sebelumnya/berikutnya),
+  dan tautan balik dari jurnal ke kalender. Keduanya bisa menjadi perbaikan berikutnya bila diminta.
+- **File:**
+  - `docs/notes/jurnal-tanggal.js` (baru, modul murni): `tanggalJurnal`, `judulJurnal`,
+    `urutanBahasaJurnal`, `cariJurnal`, `hariBerjurnal`.
+  - `docs/notes/harian.js`: memakai modul di atas. Tambah `bukaJurnalTanggal(t, hariIni)`.
+    `bukaJurnalHari` dan ekspor lama (`judulJurnalHari`, `tanggalHariIni`) tetap ada.
+  - `docs/notes/views/tugas.js`: tombol **Buka jurnal** dan penanda hari berjurnal. Catatan disaring dengan `terlihat()`.
+  - `docs/notes/index.js`: handler `[data-kal-jurnal]`.
+  - `docs/styles/notes.css`: gaya `.kal-jurnal` dan `.kal-jurnal-titik`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 4 teks baru (jumlah kamus en dan ja sama: 1135).
+  - `tools/uji/planner-kalender.mjs` (baru): 35 pengujian.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/planner-kalender.mjs`: **35/35 lulus**. Mencakup format tanggal per bahasa, pencarian lintas bahasa, catatan terhapus, penanda hari (termasuk Februari kabisat), dan pemeriksaan sumber (wiring, filter `terlihat`, handler, kamus).
+  - Chromium, aplikasi sungguhan, harness di luar repo (`/home/user/uji-b8/uji-b8-chromium.mjs`): **21/21 lulus**, tanpa galat halaman. Mencakup:
+    - pilih hari di kalender lalu **Buka jurnal** membuat jurnal dengan judul tanggal yang benar, dan editor membuka catatan itu;
+    - templat jurnal (heading dan todo) terpasang;
+    - hari berjurnal diberi penanda, hari lain tidak;
+    - membuka lagi tidak menggandakan jurnal dan membuka catatan yang sama;
+    - regresi: jurnal hari ini tetap dibuat sekali dan tidak digandakan;
+    - bahasa Inggris: tombol \"Open journal\", jurnal Indonesia yang sudah ada tetap dipakai, dan jurnal baru memakai judul \"Journal · October 16, 2026\".
+- **Keterbatasan jujur:**
+  - Belum diuji di HP. Tampilan sel kalender di layar kecil belum diperiksa.
+  - Penanda titik di hari terpilih berwarna putih di atas `--accent` default (`#7FB399`), kontrasnya rendah.
+    Ini sama dengan gaya teks hari terpilih yang sudah ada sebelumnya (`.kal-pilih`), jadi belum diubah.
+  - Catatan terkunci tidak menandai kalender. Ini dijamin lewat sumber dan `terlihat()`, belum lewat uji Chromium
+    dengan kunci sungguhan.
+  - Lingkup navigasi planner masih terbatas (lihat \"Di luar lingkup\").
+
+## Status (Tahap 2)
+
+- B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
+- B6: lanjutan core non-SIMD sudah dikerjakan sesuai keputusan pengguna. Pengujian Chromium
+  SIMD 25/25 dan non-SIMD 25/25 (non-SIMD dengan deteksi SIMD dipaksa gagal, lihat bagian B6 lanjutan).
+- B8: lingkup yang diterapkan lihat di atas. Navigasi antar-hari dan tautan balik belum.
+- Uji akhir: `npm test` exit 0 (37/37 suite lolos). Node OCR 54/54. Node B8 35/35. Chromium B8 21/21.
+  Chromium OCR SIMD 25/25 dan non-SIMD 25/25.
 
 ## Berikutnya
 
-- B8 belum dikerjakan. Menunggu persetujuan pengguna per ID.
+- Tahap 2 sudah selesai sesuai urutan. Tahap 3 (C1–C5) belum dimulai dan menunggu persetujuan pengguna per ID.
+- Hal terbuka dari Tahap 2: navigasi antar-hari di halaman jurnal dan tautan balik ke kalender (B8),
+  uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.

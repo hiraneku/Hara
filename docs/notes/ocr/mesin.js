@@ -2,17 +2,32 @@
 
    - Dimuat lewat import() dan worker dibuat hanya saat OCR pertama dijalankan.
    - Data bahasa Inggris dan Indonesia (4.0.0_best_int) ikut di vendor, jadi tidak ada
-     unduhan dari CDN. Core yang disertakan hanya varian SIMD-LSTM: peramban tanpa SIMD
-     akan melaporkan galat dan OCR tidak berjalan (tidak ada fallback diam-diam).
+     unduhan dari CDN. Ada dua core: SIMD-LSTM (dipakai bila peramban mendukung WebAssembly
+     SIMD) dan LSTM non-SIMD (cadangan). Pemilihan dilakukan di sini, bukan lewat deteksi
+     tesseract.js, supaya berkas yang dimuat selalu yang ada di vendor.
    - Worker dihentikan 60 detik setelah pekerjaan terakhir supaya memori HP tidak terus terpakai.
 
    Berkas di vendor dicatat di docs/vendor/tesseract/README.md. */
 
-import { itemDariHasil, SISI_OCR } from './ocr-teks.js?v=20261028064740';
+import { itemDariHasil, SISI_OCR } from './ocr-teks.js?v=20261028073631';
 
 const BASE = new URL('../../vendor/tesseract/', import.meta.url).href;
 const BAHASA = ['eng', 'ind'];
 const JEDA_TUTUP_MS = 60000;
+
+/* Modul wasm minimum yang hanya valid bila WebAssembly SIMD didukung (sama dengan
+   deteksi wasm-feature-detect). Tidak pernah dijalankan, hanya divalidasi. */
+const UJI_SIMD = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0,
+  10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]);
+
+export function adaSimd() {
+  try { return WebAssembly.validate(UJI_SIMD); } catch { return false; }
+}
+
+/* Berkas core yang dipakai. Dikunci ke berkas, bukan folder. */
+export function berkasCore(simd = adaSimd()) {
+  return BASE + (simd ? 'core/tesseract-core-simd-lstm.wasm.js' : 'core/tesseract-core-lstm.wasm.js');
+}
 
 let pemuat = null;          /* janji pembuatan worker (di-cache) */
 let pekerja = null;         /* worker yang sudah siap */
@@ -28,8 +43,8 @@ async function ambilPekerja() {
       return T.createWorker(BAHASA, 1 /* OEM.LSTM_ONLY */, {
         workerPath: BASE + 'worker.min.js',
         /* Berkas core dikunci langsung (bukan folder), supaya tesseract.js tidak memilih varian
-           lain lewat deteksi fitur. Hanya SIMD-LSTM yang di-vendor (lihat README). */
-        corePath: BASE + 'core/tesseract-core-simd-lstm.wasm.js',
+           lain lewat deteksi fitur. Lihat README untuk varian yang di-vendor. */
+        corePath: berkasCore(),
         langPath: BASE + 'lang/4.0.0_best_int/',
         cacheMethod: 'none',
         workerBlobURL: false,

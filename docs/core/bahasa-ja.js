@@ -1132,4 +1132,8 @@ export const JA = {
   "Membaca teks gambar…": "画像の文字を読み取り中…",
   "Tidak ada teks yang terbaca di gambar ini": "この画像から文字を読み取れませんでした",
   "Teks gambar disimpan dan bisa dicari": "画像の文字を保存し、検索できるようにしました",
+  "Buka jurnal": "ジャーナルを開く",
+  "ada jurnal": "ジャーナルあり",
+  "Jurnal {t} dibuka": "ジャーナル {t} を開きました",
+  "Jurnal {t} dibuat — selamat menulis": "ジャーナル {t} を作成しました — よい執筆を",
 };

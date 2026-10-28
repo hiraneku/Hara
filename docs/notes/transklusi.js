@@ -12,9 +12,9 @@
 
    Murni: hanya membaca state. Tidak menulis apa pun. */
 
-import { state } from '../core/store.js?v=20261028064740';
-import { terlihat } from './kunci.js?v=20261028064740';
-import { pisahTautan } from './wikilink.js?v=20261028064740';
+import { state } from '../core/store.js?v=20261028073631';
+import { terlihat } from './kunci.js?v=20261028073631';
+import { pisahTautan } from './wikilink.js?v=20261028073631';
 
 /* Teks polos satu blok (tanpa markup), dipangkas. */
 export const teksPolos = b => {

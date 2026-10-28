@@ -12,29 +12,29 @@
    POSISI di susunan; `srcSekarang(s)` memberi nomor halaman asli (0 = kosong).
    Anotasi selalu diindeks per halaman asli. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261028064740';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261028073631';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261028064740';
+} from './logika.js?v=20261028073631';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261028064740';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028064740';
+} from './anotasi.js?v=20261028073631';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028073631';
 import {
   asliUrut, gandakanPos, hapusPos, pindahPos, posisiSrc, sisipKosongSetelah, srcDi, srcTerdekat, susunanAwal,
-} from './susunan.js?v=20261028064740';
-import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261028064740';
+} from './susunan.js?v=20261028073631';
+import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261028073631';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261028064740';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028064740';
-import { kenali } from '../ocr/mesin.js?v=20261028064740';
-import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261028064740';
-import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261028064740';
-import { esc } from '../../core/dom.js?v=20261028064740';
-import { t as tr } from '../../core/i18n.js?v=20261028064740';
+} from './cari-pdf.js?v=20261028073631';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028073631';
+import { kenali } from '../ocr/mesin.js?v=20261028073631';
+import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261028073631';
+import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261028073631';
+import { esc } from '../../core/dom.js?v=20261028073631';
+import { t as tr } from '../../core/i18n.js?v=20261028073631';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 

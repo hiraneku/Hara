@@ -4,52 +4,37 @@
    dari catatan aktif; belum ada → dibuat dengan blok kosong siap tulis
    (pola templat bawaan jurnal). */
 
-import { state, save } from '../core/store.js?v=20261028064740';
-import { go } from '../core/router.js?v=20261028064740';
-import { toast } from '../core/toast.js?v=20261028064740';
-import { makeNote, makeBlock } from './note-model.js?v=20261028064740';
-import { openNote } from './model.js?v=20261028064740';
-import { terkunciAktif } from './kunci.js?v=20261028064740';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261028064740';
-
-const KODE = ['id', 'en', 'ja'];
-const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
-  'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const BULAN_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
-  'August', 'September', 'October', 'November', 'December'];
-const PREFIX = { id: 'Jurnal', en: 'Journal', ja: 'ジャーナル' };
-
-/* Tanggal di judul jurnal mengikuti bahasa (id: 9 September 2026;
-   en: September 9, 2026; ja: 2026年9月9日). */
-function tanggal(b, t) {
-  const y = t.getFullYear(), d = t.getDate(), mo = t.getMonth();
-  if (b === 'en') return `${BULAN_EN[mo]} ${d}, ${y}`;
-  if (b === 'ja') return `${y}年${mo + 1}月${d}日`;
-  return `${d} ${BULAN[mo]} ${y}`;
-}
+import { state, save } from '../core/store.js?v=20261028073631';
+import { go } from '../core/router.js?v=20261028073631';
+import { toast } from '../core/toast.js?v=20261028073631';
+import { makeNote, makeBlock } from './note-model.js?v=20261028073631';
+import { openNote } from './model.js?v=20261028073631';
+import { terkunciAktif } from './kunci.js?v=20261028073631';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261028073631';
+import { judulJurnal, tanggalJurnal, cariJurnal } from './jurnal-tanggal.js?v=20261028073631';
 
 export function tanggalHariIni() {
-  return tanggal(bahasaSekarang(), new Date());
+  return tanggalJurnal(bahasaSekarang(), new Date());
 }
 
-export const judulJurnalHari = () =>
-  `${PREFIX[bahasaSekarang()]} · ${tanggalHariIni()}`;
+export const judulJurnalHari = () => judulJurnal(bahasaSekarang(), new Date());
 
+/* Jurnal hari ini (tombol beranda dan lembar baru). */
 export function bukaJurnalHari() {
+  bukaJurnalTanggal(new Date(), true);
+}
+
+/* Buka jurnal untuk tanggal t, atau buat bila belum ada (B8: dipanggil dari kalender).
+   Pencarian dan pembuatan memakai judul yang sama, jadi tidak ada jurnal ganda. */
+export function bukaJurnalTanggal(t, hariIni = false) {
   const kini = bahasaSekarang();
-  const t = new Date();
-  const urutCari = [kini, ...KODE.filter(b => b !== kini)];
-  let n = null;
-  for (const b of urutCari) {
-    const j = `${PREFIX[b]} · ${tanggal(b, t)}`;
-    n = state.notes.find(x => !x.deletedAt && (x.title || '').trim() === j);
-    if (n) break;
-  }
+  const n = cariJurnal(state.notes, t, kini);
+  const tgl = tanggalJurnal(kini, t);
   if (n) {
     /* lewat openNote supaya kunci catatan (D19) tetap dihormati */
     const terkunci = terkunciAktif(n);
     openNote(n.id);
-    if (!terkunci) toast(tr('Jurnal hari ini dibuka'));
+    if (!terkunci) toast(hariIni ? tr('Jurnal hari ini dibuka') : tr('Jurnal {t} dibuka', { t: tgl }));
     return;
   }
   const konten = kini === 'en' ? [
@@ -74,14 +59,16 @@ export function bukaJurnalHari() {
     makeBlock({ type: 'heading', content: 'Besok', meta: { level: 2 } }),
     makeBlock({ type: 'todo', content: '' }),
   ];
-  n = makeNote({
-    title: `${PREFIX[kini]} · ${tanggal(kini, t)}`,
+  const baru = makeNote({
+    title: judulJurnal(kini, t),
     blocks: konten,
   });
   state.seq++;
-  state.notes.unshift(n);
-  state.openId = n.id;
+  state.notes.unshift(baru);
+  state.openId = baru.id;
   save();
   go('editor');
-  toast(tr('Jurnal hari ini dibuat — selamat menulis'));
+  toast(hariIni
+    ? tr('Jurnal hari ini dibuat — selamat menulis')
+    : tr('Jurnal {t} dibuat — selamat menulis', { t: tgl }));
 }

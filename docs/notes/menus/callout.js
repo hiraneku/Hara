@@ -1,6 +1,6 @@
 /* Menu jenis callout. */
-import { CALLOUTS } from '../editor/blocks.js?v=20261028064740';
-import { t as tr } from '../../core/i18n.js?v=20261028064740';
+import { CALLOUTS } from '../editor/blocks.js?v=20261028073631';
+import { t as tr } from '../../core/i18n.js?v=20261028073631';
 
 export const calloutMenu = () =>
   `<div class="pop-h">${tr('Jenis callout')}</div>` +

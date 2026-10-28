@@ -1859,6 +1859,10 @@ mark.cari-hl{background:var(--accent-weak);color:inherit;border-radius:3px;
 .kal-titik{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   font-style:normal;font-size:9.5px;line-height:1;color:var(--accent);font-weight:700}
 .kal-pilih .kal-titik{color:#fff}
+.kal-jurnal-titik{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.kal-pilih .kal-jurnal-titik{background:#fff}
+.kal-jurnal{height:30px;padding:0 10px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--text);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 .kal-detail{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
 .kal-judul{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:4px;text-transform:capitalize}
 

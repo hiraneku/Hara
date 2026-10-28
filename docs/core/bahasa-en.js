@@ -1165,4 +1165,8 @@ export const EN = {
   "Membaca teks gambar…": "Reading text in image…",
   "Tidak ada teks yang terbaca di gambar ini": "No text could be read in this image",
   "Teks gambar disimpan dan bisa dicari": "Image text saved and searchable",
+  "Buka jurnal": "Open journal",
+  "ada jurnal": "has journal",
+  "Jurnal {t} dibuka": "Journal {t} opened",
+  "Jurnal {t} dibuat — selamat menulis": "Journal {t} created — happy writing",
 };
