@@ -582,3 +582,84 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Belum ada tampilan miniatur halaman.
   - Pencarian tidak menampilkan halaman yang disembunyikan dari susunan, meskipun teksnya ada di PDF asli. Ini disengaja, tetapi pengguna perlu tahu bahwa "Hapus dari susunan" juga menyembunyikannya dari pencarian.
   - Cadangan (`data-io.js`) hanya diperiksa lewat sumber, karena modul itu butuh DOM. Perilaku pemulihannya belum diuji end-to-end.
+
+## Perubahan 22 · B6 — OCR untuk PDF hasil pindai dan gambar catatan
+
+- **ID:** B6 (OCR search). Disetujui pengguna lewat pilihan \"B6\" setelah B2, dengan pilihan:
+  berkas OCR di-vendor (bukan CDN), bahasa Inggris dan Indonesia, cakupan PDF dan gambar catatan.
+- **Keputusan desain:**
+  - OCR hanya untuk halaman **tanpa lapisan teks** (pdf.js). Halaman yang sudah punya teks tetap
+    dicari lewat teks biasa dan tidak di-OCR. OCR dan pencarian teks adalah proses terpisah.
+  - Hasil OCR PDF disimpan terpisah, kunci `ocr-<blobId>`, format `{v:1, hal:{<n>: items}}`. Setiap
+    item `{str, eol, box}` dengan kotak ternormalisasi (0–1, kiri atas). PDF asli **tidak diubah**.
+  - Gambar catatan: teks OCR disimpan di atribut `data-ocr` pada `div.b-img` lalu di `meta.ocr`
+    blok. Tidak ada kunci IDB terpisah. `plainText()` ikut memakainya, jadi pencarian catatan
+    menemukan kata dari gambar.
+  - Tombol OCR ditekan lagi = membatalkan. Halaman yang sudah dibaca dilewati saat dilanjutkan.
+  - Pemrosesan lokal. Tidak ada layanan cloud.
+- **Mesin:** Tesseract.js 7.0.0 dengan core **SIMD-LSTM 7.0.0**, data `4.0.0_best_int` untuk
+  `eng` dan `ind`. Semua berkas di `docs/vendor/tesseract/` (lihat README di sana).
+  - `mesin.js` mengunci `corePath` ke berkas core. Tanpa itu, library memilih varian lewat deteksi
+    fitur dan bisa meminta berkas yang tidak di-vendor.
+  - **Ukuran vendor ≈ 11,1 MB** (11.078.655 byte), bukan 8,0 MB seperti perkiraan sebelumnya.
+    Core SIMD-LSTM sendiri 6,75 MB (js 3,9 MB + wasm 2,9 MB). Berkas ini ikut masuk ke APK.
+  - **Keputusan core non-SIMD:** tidak di-vendor. Peramban tanpa WebAssembly SIMD akan mendapat
+    \"OCR gagal\". Menambahkannya butuh ≈ 6,8 MB lagi. Keputusan ini perlu dikonfirmasi pengguna.
+- **File:**
+  - `docs/notes/ocr/ocr-teks.js` (murni): `itemDariHasil`, `teksDariItem`, `adaTeks`, `kunciOcr`, dll.
+  - `docs/notes/ocr/ocr-simpan.js`: `muatOcrPdf`, `simpanOcrPdf`.
+  - `docs/notes/ocr/mesin.js`: pemuatan worker lazy, `kenali`, berhenti 60 detik setelah tidak dipakai.
+  - `docs/notes/ocr/gambar.js`: `bacaTeksGambar` untuk chip \"Baca teks\".
+  - `docs/notes/pdf/penampil.js`: tombol OCR (hanya bila PDF punya `blobId`), status kemajuan,
+    pembatalan, dan pencarian yang memakai hasil OCR.
+  - `docs/notes/note-model.js`: `data-ocr` ↔ `meta.ocr`, cabang gambar di `plainText`, `escOcr`.
+  - `docs/notes/tata-gambar.js`: chip `data-mocr` setelah \"Coret\".
+  - `docs/notes/editor/image.js`, `docs/notes/data-io.js`: pembersih blob yatim dan cadangan mengenali `ocr-`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 13 teks baru. (`bahasa-id` memakai teks Indonesia sebagai kunci.)
+  - `tools/uji/ocr-teks.mjs` (baru): 54 pengujian.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/ocr-teks.mjs`: **54/54 lulus**. Mencakup kotak dari bbox piksel, data rusak,
+    penyimpanan di IndexedDB palsu, escape atribut, roundtrip `data-ocr`, dan pembersih blob yatim.
+  - `npm test`: **exit 0**. Semua suite lolos, termasuk pdf-susun 49/49 (B2 tidak rusak).
+  - Chromium, aplikasi sungguhan, harness di luar repo (`/home/user/uji-ocr/uji-ocr-chromium.mjs`):
+    **24/24 lulus** dengan stempel versi final. Mencakup:
+    - PDF pindai dibuat di browser (2 halaman, teks Open Sans tebal). OCR membaca `SEPEDA MERAH`
+      dan `KUCING HITAM`. Hasil tersimpan di `ocr-<id>`.
+    - Pencarian `sepeda`, `kucing`, dan frasa `sepeda merah` menemukan halaman yang benar.
+    - Sebelum OCR, pencarian tidak menemukan apa-apa dan status memberi petunjuk tekan OCR.
+    - OCR kedua melewati halaman yang sudah dibaca (0 halaman).
+    - Pembatalan lalu lanjut: halaman yang sudah dibaca tidak diulang.
+    - PDF berteks: OCR tidak membaca apa pun, dan pencarian lapisan teks tetap bekerja.
+    - Gambar catatan: chip \"Baca teks\" muncul, teks `MOBIL KUNING` tersimpan di `meta.ocr`,
+      bisa dicari lewat `plainText`, dan bertahan setelah muat ulang.
+    - Tidak ada galat halaman yang nyata. Galat `ERR_CONNECTION_CLOSED` berasal dari font Google
+      dan open-meteo yang diblokir sandbox, bukan dari OCR.
+- **Bug yang ditemukan lewat uji dan sudah diperbaiki:**
+  - Core 6.1.2 dipakai dengan wrapper 7.0.0 (wrapper mensyaratkan core ^7.0.0). Diganti ke core 7.0.0.
+  - File `.wasm` pasangan core tidak ikut di-vendor, sehingga wasm gagal dimuat.
+  - Spasi antar kata dalam satu baris hilang saat OCR, sehingga frasa `sepeda merah` tidak cocok
+    (`SEPEDAMERAH`). Spasi kini diberikan di `str` setiap kata.
+  - Pesan \"OCR selesai\" tertimpa hasil pencarian. `cariUi` itu asinkron, jadi harus di-`await`.
+  - Teks OCR di atribut `data-ocr` hanya di-escape untuk tanda kutip. Kini `&` dan `<` juga.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).** Kecepatan OCR di HP belum diukur. Uji di sandbox memakai
+    CPU server, bukan CPU HP.
+  - Uji Chromium memakai build Chromium dari paket npm `@sparticuz/chromium` (153), bukan Opera.
+  - Akurasi hanya diuji pada teks bersih buatan sendiri, belum pada pindai nyata yang buram, miring,
+    atau berwarna.
+  - Halaman yang punya sedikit teks di lapisan teks dianggap sudah punya teks dan **tidak** di-OCR.
+    Ini bisa membuat sebagian halaman pindai terlewat. Perlu diuji dengan PDF nyata.
+  - Tombol batal menyelesaikan halaman yang sedang dibaca dulu, baru berhenti.
+  - Gambar besar diperkecil ke sisi terpanjang 1600 piksel sebelum OCR. Teks yang sangat kecil bisa hilang.
+  - Tidak ada tampilan teks OCR yang bisa diedit. Hasil OCR hanya untuk pencarian.
+  - Lisensi data: paket npm `@tesseract.js-data/*` mencantumkan MIT. Lisensi tessdata asal
+    (`naptha/tessdata`) belum diverifikasi langsung. Perlu dicek sebelum rilis.
+
+## Status (B6)
+
+Selesai dan diuji (Node 54/54, npm test exit 0, Chromium 24/24). Belum diuji di HP. Keputusan core
+non-SIMD menunggu konfirmasi pengguna.
+
+## Berikutnya
+
+- B8 belum dikerjakan. Menunggu persetujuan pengguna per ID.

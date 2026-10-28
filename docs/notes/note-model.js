@@ -28,12 +28,12 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261028024700';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261028024700';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261028024700';
-import { adalahPdf } from './pdf/logika.js?v=20261028024700';
-import { tautanAman } from './url-aman.js?v=20261028024700';
-import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261028024700';
+import { t as tr } from '../core/i18n.js?v=20261028064740';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261028064740';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261028064740';
+import { adalahPdf } from './pdf/logika.js?v=20261028064740';
+import { tautanAman } from './url-aman.js?v=20261028064740';
+import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261028064740';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -114,6 +114,11 @@ export const newNoteId  = () => uid('n');
 /* ════════ FACTORY ════════ */
 
 /* Blok baru yang selalu valid. */
+/* Batas teks OCR yang disimpan di atribut gambar (B6). Sama dengan ocr/ocr-teks.js. */
+const MAKS_OCR_GAMBAR = 20000;
+/* Teks OCR bisa berisi & dan <; escAttr hanya menangani tanda kutip, jadi ini melengkapinya. */
+const escOcr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
 export function makeBlock(patch = {}) {
   const type = BLOCK_TYPES.includes(patch.type) ? patch.type : 'paragraph';
   const blok = {
@@ -245,6 +250,9 @@ export function plainText(note) {
       }
       if (b.type === 'audio') {
         return String((b.meta && b.meta.title) || '');
+      }
+      if (b.type === 'image') {
+        return String((b.meta && b.meta.ocr) || '');
       }
       if (b.type === 'math') {
         return String((b.meta && b.meta.expr) || '');
@@ -481,10 +489,12 @@ function blockToHtmlMentah(b) {
     const gorAttr = meta.goresan ? ` data-goresan="${escAttr(meta.goresan)}"` : '';
     const scanAttr = meta.scan ? ` data-scan="${escAttr(meta.scan)}"` : '';
     const origAttr = meta.origBlob ? ` data-orig-blob="${escAttr(meta.origBlob)}"` : '';
+    /* B6: teks hasil OCR gambar. Ikut disimpan di catatan, jadi tercari dan tercadangkan. */
+    const ocrAttr = meta.ocr ? ` data-ocr="${escOcr(String(meta.ocr).slice(0, MAKS_OCR_GAMBAR))}"` : '';
     /* B4: tautan pada gambar/objek tulisan. Alamat tidak aman tidak pernah ditulis. */
     const tautan = tautanAman(meta.url);
     const urlAttr = tautan ? ` data-url="${escAttr(tautan)}"` : '';
-    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${urlAttr}${bgAttr}>` +
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${ocrAttr}${urlAttr}${bgAttr}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
       `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>` +
@@ -630,6 +640,8 @@ export function elToBlock(el) {
     if (sc) meta.scan = sc;
     const ob = el.getAttribute && el.getAttribute('data-orig-blob');
     if (ob) meta.origBlob = ob;
+    const ocr = el.getAttribute && el.getAttribute('data-ocr');
+    if (ocr) meta.ocr = ocr.slice(0, MAKS_OCR_GAMBAR);
     /* tata letak: atribut data-gw/gr/ga/gb pada figur (baca balik dari
        tata-gambar.js). Gambar lama tanpa atribut tidak mendapat meta —
        tetap dirender sebagai gambar 100% lurus seperti sebelumnya. */

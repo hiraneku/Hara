@@ -5,19 +5,19 @@
    layar ini tidak pernah bisa berbeda dari catatan aslinya. Matriks dan
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
-import { state, save } from '../../core/store.js?v=20261028024700';
-import { esc } from '../../core/dom.js?v=20261028024700';
-import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261028024700';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261028024700';
-import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261028024700';
-import { rowFor } from './row.js?v=20261028024700';
-import { terlihat } from '../kunci.js?v=20261028024700';
-import { t as tr } from '../../core/i18n.js?v=20261028024700';
-import { toast } from '../../core/toast.js?v=20261028024700';
-import { touch, makeNote } from '../note-model.js?v=20261028024700';
-import { go, cur } from '../../core/router.js?v=20261028024700';
-import { flush } from '../../core/autosave.js?v=20261028024700';
-import { openNote } from '../model.js?v=20261028024700';
+import { state, save } from '../../core/store.js?v=20261028064740';
+import { esc } from '../../core/dom.js?v=20261028064740';
+import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261028064740';
+import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261028064740';
+import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261028064740';
+import { rowFor } from './row.js?v=20261028064740';
+import { terlihat } from '../kunci.js?v=20261028064740';
+import { t as tr } from '../../core/i18n.js?v=20261028064740';
+import { toast } from '../../core/toast.js?v=20261028064740';
+import { touch, makeNote } from '../note-model.js?v=20261028064740';
+import { go, cur } from '../../core/router.js?v=20261028064740';
+import { flush } from '../../core/autosave.js?v=20261028064740';
+import { openNote } from '../model.js?v=20261028064740';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
 const SEHARI = 86400000;

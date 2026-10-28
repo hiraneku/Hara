@@ -12,26 +12,29 @@
    POSISI di susunan; `srcSekarang(s)` memberi nomor halaman asli (0 = kosong).
    Anotasi selalu diindeks per halaman asli. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261028024700';
+import { muatPdfJs } from './muat-pdfjs.js?v=20261028064740';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261028024700';
+} from './logika.js?v=20261028064740';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261028024700';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028024700';
+} from './anotasi.js?v=20261028064740';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028064740';
 import {
   asliUrut, gandakanPos, hapusPos, pindahPos, posisiSrc, sisipKosongSetelah, srcDi, srcTerdekat, susunanAwal,
-} from './susunan.js?v=20261028024700';
-import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261028024700';
+} from './susunan.js?v=20261028064740';
+import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261028064740';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261028024700';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028024700';
-import { esc } from '../../core/dom.js?v=20261028024700';
-import { t as tr } from '../../core/i18n.js?v=20261028024700';
+} from './cari-pdf.js?v=20261028064740';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028064740';
+import { kenali } from '../ocr/mesin.js?v=20261028064740';
+import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261028064740';
+import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261028064740';
+import { esc } from '../../core/dom.js?v=20261028064740';
+import { t as tr } from '../../core/i18n.js?v=20261028064740';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -172,6 +175,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       <button type="button" class="pdfv-teks" data-cari="cari">${esc(tr('Cari'))}</button>
       <button type="button" class="pdfv-b" data-cari="prev" aria-label="${esc(tr('Hasil sebelumnya'))}">‹</button>
       <button type="button" class="pdfv-b" data-cari="next" aria-label="${esc(tr('Hasil berikutnya'))}">›</button>
+      ${opsi.blobId ? `<button type="button" class="pdfv-teks" data-cari="ocr" title="${esc(tr('Baca teks halaman hasil pindai (OCR)'))}">OCR</button>` : ''}
       <span class="pdfv-status" data-cari-status aria-live="polite"></span>
     </div>
     ${opsi.blobId ? `
@@ -207,6 +211,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     lapisan: null, ukuran: null, sementara: null,
     lib: null,                     /* modul pdf.js yang sudah dimuat (untuk Util) */
     cari: { kueri: '', indeksJanji: null, gagal: 0, hasil: [], posisi: -1 },
+    ocr: { berjalan: false, batal: false },   /* OCR halaman tanpa teks (B6) */
   };
   aktif = s;
 
@@ -233,6 +238,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     if (alatCari && aktif === s) {
       const j = alatCari.dataset.cari;
       if (j === 'cari') cariUi(s);
+      else if (j === 'ocr') jalankanOcr(s);
       else if (j === 'next') langkahHit(s, hasilBerikut);
       else if (j === 'prev') langkahHit(s, hasilSebelumnya);
       return;
@@ -359,6 +365,62 @@ async function simpanSusunanUi(s) {
   }
 }
 
+/* ── OCR halaman tanpa teks (B6) ──
+   Hanya halaman yang tidak punya lapisan teks (pdf.js) yang di-OCR. Hasilnya disimpan
+   per PDF (ocr-<blobId>) dan dipakai pencarian. Tombol OCR ditekan lagi = membatalkan.
+   Halaman yang sudah pernah di-OCR dilewati. */
+async function jalankanOcr(s) {
+  if (!s.blobId || !s.doc) return;
+  if (s.ocr.berjalan) { s.ocr.batal = true; setStatusCari(s, tr('Membatalkan OCR…')); return; }
+  s.ocr.berjalan = true;
+  s.ocr.batal = false;
+  let hal = {}, dibaca = 0, galat = null;
+  try {
+    hal = await muatOcrPdf(s.blobId).catch(() => ({}));
+    for (let i = 1; i <= s.total; i++) {
+      if (aktif !== s || s.ocr.batal) break;
+      setStatusCari(s, `${tr('OCR halaman')} ${i} / ${s.total}`);
+      const page = await s.doc.getPage(i);
+      const isi = await page.getTextContent();
+      if (isi.items.some(it => typeof it.str === 'string' && it.str.trim()) || hal[i]) {
+        page.cleanup();
+        continue;
+      }
+      const v1 = page.getViewport({ scale: 1 });
+      const vp = page.getViewport({ scale: SISI_OCR / Math.max(v1.width, v1.height) });
+      const kanvas = document.createElement('canvas');
+      kanvas.width = Math.ceil(vp.width);
+      kanvas.height = Math.ceil(vp.height);
+      const ctx = kanvas.getContext('2d');
+      if (!ctx) throw new Error('kanvas tidak tersedia');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, kanvas.width, kanvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      hal[i] = await kenali(kanvas);
+      dibaca++;
+      kanvas.width = 0;
+      kanvas.height = 0;
+      page.cleanup();
+      if (dibaca % 5 === 0) await simpanOcrPdf(s.blobId, hal);
+    }
+    if (dibaca) await simpanOcrPdf(s.blobId, hal);
+  } catch (err) {
+    galat = err;
+  } finally {
+    s.ocr.berjalan = false;   /* worker OCR dilepas sendiri setelah jeda (ocr/mesin.js) */
+  }
+  if (aktif !== s) return;
+  /* indeks pencarian dibangun ulang supaya memakai hasil OCR yang baru */
+  s.cari.indeksJanji = null;
+  if (galat) {
+    setStatusCari(s, tr('OCR gagal. Coba lagi.'));
+    return;
+  }
+  /* cariUi dulu, baru pesan OCR: kalau tidak, hasil pencarian menimpa pesan "OCR selesai" */
+  if (s.cari.kueri) await cariUi(s);
+  setStatusCari(s, `${s.ocr.batal ? tr('OCR dibatalkan') : tr('OCR selesai')} · ${dibaca} ${tr('halaman dibaca')}`);
+}
+
 /* pdf.js 6.x: dokumen dilepas lewat PDFDocumentLoadingTask.destroy() (PDFDocumentProxy tidak punya destroy). */
 function lepaskanTugas(task) {
   try { task?.destroy()?.catch?.(() => {}); } catch {}
@@ -380,6 +442,8 @@ function pastikanIndeks(s) {
   if (!s.cari.indeksJanji) {
     s.cari.indeksJanji = (async () => {
       const daftar = [];
+      /* Hasil OCR (B6) dipakai untuk halaman yang tidak punya lapisan teks. */
+      const ocr = s.blobId ? await muatOcrPdf(s.blobId).catch(() => ({})) : {};
       for (let i = 1; i <= s.total; i++) {
         setStatusCari(s, `${tr('Membaca teks halaman')} ${i} / ${s.total}`);
         let indeks;
@@ -396,6 +460,7 @@ function pastikanIndeks(s) {
           indeks = bangunIndeks([]);
         }
         if (aktif !== s) return null;
+        if (!indeks.norm.length && ocr[i]) indeks = bangunIndeks(ocr[i]);
         daftar.push({ halaman: i, jenis: 'teks', indeks });
       }
       return daftar;
@@ -422,7 +487,8 @@ async function cariUi(s) {
     gambarSorotCari(s);
     const pesan = adaTeks
       ? tr('Tidak ditemukan')
-      : tr('PDF ini tidak punya teks yang bisa dicari. Halaman hasil pindai belum bisa dicari.');
+      : tr('PDF ini tidak punya teks yang bisa dicari. Halaman hasil pindai belum bisa dicari.')
+        + (s.blobId ? ' ' + tr('Tekan OCR untuk membaca halaman hasil pindai.') : '');
     setStatusCari(s, pesan + (s.cari.gagal ? ` · ${s.cari.gagal} ${tr('halaman tidak bisa dibaca')}` : ''));
     return;
   }

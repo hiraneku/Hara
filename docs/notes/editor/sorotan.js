@@ -16,10 +16,10 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261028024700';
-import { refresh } from './cleanup.js?v=20261028024700';
-import { bungkusKomposisi } from './komposisi.js?v=20261028024700';
-import { normalizeWarna } from './warna.js?v=20261028024700';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261028064740';
+import { refresh } from './cleanup.js?v=20261028064740';
+import { bungkusKomposisi } from './komposisi.js?v=20261028064740';
+import { normalizeWarna } from './warna.js?v=20261028064740';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {

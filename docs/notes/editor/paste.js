@@ -22,12 +22,12 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028024700';
-import { sisipGambar } from './image.js?v=20261028024700';
-import { bersihkanHtmlBlok } from '../html-aman.js?v=20261028024700';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261028064740';
+import { sisipGambar } from './image.js?v=20261028064740';
+import { bersihkanHtmlBlok } from '../html-aman.js?v=20261028064740';
 import { barisMekanik, teksKeBaris, bagiIndent, polaBaris, padUntuk,
   tautkanTeks, tautanAman, hrefDari, htmlTautan }
-  from './tempel-mekanik.js?v=20261028024700';
+  from './tempel-mekanik.js?v=20261028064740';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
