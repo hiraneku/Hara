@@ -11,17 +11,23 @@ Dipakai untuk membaca teks dari halaman PDF hasil pindai dan dari gambar di cata
 | `tesseract.esm.min.js`, `worker.min.js` | `tesseract.js` | 7.0.0 | Apache-2.0 (`LICENSE-tesseract.js.txt`) |
 | `core/tesseract-core-simd-lstm.wasm.js`, `core/tesseract-core-simd-lstm.wasm` | `tesseract.js-core` | 7.0.0 | Apache-2.0 (`LICENSE-tesseract-core.txt`) |
 | `core/tesseract-core-lstm.wasm.js`, `core/tesseract-core-lstm.wasm` (non-SIMD) | `tesseract.js-core` | 7.0.0 | Apache-2.0 (`LICENSE-tesseract-core.txt`) |
-| `lang/4.0.0_best_int/eng.traineddata.gz` | `@tesseract.js-data/eng` | 1.0.0 | MIT (paket). Data asal: `naptha/tessdata` |
-| `lang/4.0.0_best_int/ind.traineddata.gz` | `@tesseract.js-data/ind` | 1.0.0 | MIT (paket). Data asal: `naptha/tessdata` |
+| `lang/4.0.0_best_int/eng.traineddata.gz` | `@tesseract.js-data/eng` | 1.0.0 | Apache-2.0 (`LICENSE-tessdata.txt`). Data asal: `naptha/tessdata`, turunan `tessdata_best` |
+| `lang/4.0.0_best_int/ind.traineddata.gz` | `@tesseract.js-data/ind` | 1.0.0 | Apache-2.0 (`LICENSE-tessdata.txt`). Data asal: `naptha/tessdata`, turunan `tessdata_best` |
 
 Berkas disalin **tanpa modifikasi** dari paket npm di atas.
 
 `tesseract.js` 7.0.0 mensyaratkan `tesseract.js-core` ^7.0.0. Versi core harus sama dengan
 versi wrapper; core 6.x tidak bisa dipakai dengan wrapper ini.
 
-**Catatan lisensi data:** `naptha/tessdata` mengikuti tessdata Tesseract (umumnya Apache-2.0).
-Lisensi yang tercantum di paket adalah MIT. Ini belum diverifikasi langsung di repositori asal;
-sebelum rilis, periksa ulang.
+**Lisensi data (diverifikasi 29-10-2026):**
+- LICENSE di repositori `naptha/tessdata` (gh-pages): **Apache License 2.0**.
+- LICENSE di repositori `tesseract-ocr/tessdata_best` (asal `4.0.0_best_int`, menurut README `naptha/tessdata`
+  adalah versi integer dari tessdata_best): **Apache License 2.0**.
+- Field `license` di paket npm `@tesseract.js-data/*` menyatakan **MIT**. Ini bertentangan dengan dua
+  sumber di atas. Yang dipakai di sini adalah Apache-2.0 (teks di `LICENSE-tessdata.txt`), karena itu
+  yang tercantum di repositori asal. Berkas data disalin tanpa modifikasi.
+- Apache-2.0 mewajibkan menyertakan salinan lisensi dan pemberitahuan hak cipta. Keduanya ada di folder ini.
+- Ini pemeriksaan teknis, bukan nasihat hukum. Sebelum rilis, konfirmasi ulang dengan pihak yang berwenang.
 
 ## Pemilihan core
 

@@ -899,6 +899,34 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Android belum diuji.** Semua uji di Chromium headless desktop.
   - Pergantian bulan dan tahun lewat klik belum diuji di Chromium (uji browser hanya di sekitar 14–16 Oktober).
 
+## Verifikasi Tahap 2 · uji HP (390 px) dan lisensi tessdata (29-10-2026)
+
+- **Lingkup:** dua item terbuka dari Tahap 2. (1) Uji tampilan HP untuk kalender (B8 lanjutan) dan OCR (B6).
+  (2) Verifikasi lisensi data tessdata yang di-vendor. Tidak ada perubahan fitur. Yang berubah hanya
+  dokumentasi lisensi dan berkas `LICENSE-tessdata.txt`.
+- **Uji HP (Chromium headless, viewport 390 × 844):** harness `/home/user/uji-hara/uji-hp.mjs`, **25/25 lulus**, tanpa pageerror.
+  - **Kalender:** layar kalender terbuka dari bilah jurnal. Lebar dokumen 390 px, tidak melebar. 31 sel hari
+    di dalam layar. Ketuk hari lain mengubah pilihan. Buka jurnal membuka jurnal hari itu.
+  - **OCR gambar:** gambar PNG bertuliskan "sepeda merah" disisipkan ke catatan, dipilih dengan klik, lalu
+    chip **Baca teks** dipakai. Hasil: `sepeda merah` tersimpan di atribut `data-ocr`.
+  - **OCR PDF hasil pindai:** PDF satu halaman yang hanya berisi gambar JPEG (tanpa lapisan teks), dibuka di
+    penampil. Tombol **OCR** dipakai. Status: "OCR selesai · 1 halaman dibaca". Hasil memuat "sepeda".
+- **Temuan UX (bukan galat fungsi, tapi perlu dipertimbangkan):**
+  - **Buka jurnal di kalender** berada di bawah bilah navigasi bawah saat halaman di posisi awal. Tombol
+    baru terjangkau setelah digulir. Hasil uji: tombol bisa diketuk setelah digulir ke tengah layar.
+  - **Chip Baca teks di bilah mini gambar** berada di luar layar 390 px saat bilah pertama muncul. Bilah
+    ini bisa digeser ke samping (`overflow-x: auto`, 14 chip). Setelah digeser, chip bisa diketuk.
+- **Batas uji:** ini Chromium desktop dengan viewport 390 px, bukan HP sungguhan. Tidak ada emulasi sentuhan
+  penuh. Kecepatan OCR di HP tetap belum diukur. Uji Opera Android belum dilakukan.
+- **Lisensi tessdata (diverifikasi):**
+  - LICENSE repositori `naptha/tessdata` (gh-pages): **Apache License 2.0**.
+  - LICENSE repositori `tesseract-ocr/tessdata_best` (asal `4.0.0_best_int`): **Apache License 2.0**.
+  - Field `license` di paket npm `@tesseract.js-data/eng` dan `ind`: **MIT**. Ini bertentangan dengan dua sumber di atas.
+- **Keputusan dokumentasi:** yang dicatat di vendor adalah **Apache-2.0**, karena itu yang tercantum di repositori asal.
+  Ditambahkan `docs/vendor/tesseract/LICENSE-tessdata.txt` (teks Apache-2.0). `docs/vendor/tesseract/README.md`
+  diperbarui. Berkas data tidak diubah.
+- **Keterbatasan:** ini pemeriksaan teknis, bukan nasihat hukum. Konfirmasi ulang sebelum rilis.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
@@ -911,4 +939,4 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 ## Berikutnya
 
 - Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
-- Hal terbuka dari Tahap 2: uji HP untuk OCR dan kalender, dan verifikasi lisensi tessdata sebelum rilis.
+- Hal terbuka dari Tahap 2: uji di HP sungguhan (Opera Android) untuk OCR dan kalender, serta konfirmasi lisensi tessdata sebelum rilis (lihat Verifikasi Tahap 2). Dua temuan UX di atas (tombol kalender di bawah bilah navigasi, chip Baca teks di luar layar) perlu diputuskan.
