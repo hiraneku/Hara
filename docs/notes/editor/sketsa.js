@@ -4,19 +4,19 @@
  * serta fallback SVG/Blob murni agar tetap berjalan mulus di lingkungan uji tanpa GPU canvas).
  */
 
-import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261028021559';
-import { toast } from '../../core/toast.js?v=20261028021559';
-import { t as tr } from '../../core/i18n.js?v=20261028021559';
-import { ensureCaret, caretEnd } from './caret.js?v=20261028021559';
-import { makeBlock, blockToHtml } from '../note-model.js?v=20261028021559';
-import { refresh } from './cleanup.js?v=20261028021559';
-import { snap } from './history.js?v=20261028021559';
-import { pasangGambar } from './image.js?v=20261028021559';
-import { pastikanKolomAkhir } from './blocks.js?v=20261028021559';
-import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261028021559';
-import { lapisanAwal, bisaDiedit, tambahLapisan, hapusLapisan, pindahLapisan, urutanGambar, urutanRender } from './lapisan.js?v=20261028021559';
-import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261028021559';
-import { kenaliBentuk } from './bentuk.js?v=20261028021559';
+import { simpanBlob, ambilBlob } from '../../core/blobs.js?v=20261028024700';
+import { toast } from '../../core/toast.js?v=20261028024700';
+import { t as tr } from '../../core/i18n.js?v=20261028024700';
+import { ensureCaret, caretEnd } from './caret.js?v=20261028024700';
+import { makeBlock, blockToHtml } from '../note-model.js?v=20261028024700';
+import { refresh } from './cleanup.js?v=20261028024700';
+import { snap } from './history.js?v=20261028024700';
+import { pasangGambar } from './image.js?v=20261028024700';
+import { pastikanKolomAkhir } from './blocks.js?v=20261028024700';
+import { bacaGoresan, serialGoresan, hitObjek, KANVAS_BATAS, faktorGaya } from './goresan.js?v=20261028024700';
+import { lapisanAwal, bisaDiedit, tambahLapisan, hapusLapisan, pindahLapisan, urutanGambar, urutanRender } from './lapisan.js?v=20261028024700';
+import { daftarPreset, simpanPresetKustom, hapusPresetKustom, MAKS_PRESET_KUSTOM } from './preset-pena.js?v=20261028024700';
+import { kenaliBentuk } from './bentuk.js?v=20261028024700';
 
 /* A4: berapa lama ujung dibiarkan diam sebelum coretan dikenali sebagai bentuk. */
 const JEDA_TAHAN_MS = 650;

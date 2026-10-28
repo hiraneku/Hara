@@ -18,19 +18,20 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261028021559';
-import { flush } from '../core/autosave.js?v=20261028021559';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261028021559';
-import { kunciAnotasi } from './pdf/anotasi.js?v=20261028021559';
-import { idBlobDariGoresan } from './editor/goresan.js?v=20261028021559';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261028021559';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261028021559';
-import { terlihat } from './kunci.js?v=20261028021559';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261028021559';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261028021559';
-import { t as tr } from '../core/i18n.js?v=20261028021559';
-import { extractZip } from '../renamer/unzip.js?v=20261028021559';
-import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261028021559';
+import { state, save, SCHEMA } from '../core/store.js?v=20261028024700';
+import { flush } from '../core/autosave.js?v=20261028024700';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261028024700';
+import { kunciAnotasi } from './pdf/anotasi.js?v=20261028024700';
+import { kunciSusunan } from './pdf/susunan.js?v=20261028024700';
+import { idBlobDariGoresan } from './editor/goresan.js?v=20261028024700';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261028024700';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261028024700';
+import { terlihat } from './kunci.js?v=20261028024700';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261028024700';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261028024700';
+import { t as tr } from '../core/i18n.js?v=20261028024700';
+import { extractZip } from '../renamer/unzip.js?v=20261028024700';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261028024700';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -76,9 +77,9 @@ function idBlobDipakai() {
     const g = String(b.content || '').match(/data-goresan="([^"]*)"/g);
     if (g) g.forEach(x => idBlobDariGoresan(x.slice(14, -1).replace(/&quot;/g, '"')).forEach(y => id.add(y)));
   }));
-  /* anotasi PDF (B1b) ikut dicadangkan lewat kunci turunannya; kumpulBlob
-     hanya mengambil kunci yang benar-benar ada di penyimpanan */
-  return [...id].flatMap(x => [x, kunciAnotasi(x)]);
+  /* anotasi PDF (B1b) dan susunan halaman (B2) ikut dicadangkan lewat kunci
+     turunannya; kumpulBlob hanya mengambil kunci yang benar-benar ada di penyimpanan */
+  return [...id].flatMap(x => [x, kunciAnotasi(x), kunciSusunan(x)]);
 }
 
 /* Blob → base64 (dipecah biar aman untuk string besar). */

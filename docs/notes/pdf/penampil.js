@@ -5,26 +5,39 @@
    PageUp/PageDown. Zoom: − / + (langkah tetap) dan Pas lebar.
 
    Anotasi (B1b): coret, sorot, garis, dan komentar. Disimpan TERPISAH dari
-   PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan. */
+   PDF asli lewat anotasi-simpan.js. Hanya dibuka bila `blobId` diberikan.
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261028021559';
+   Susunan halaman (B2): urutan tampilan (susun ulang, hapus, gandakan, sisip
+   halaman kosong) disimpan TERPISAH lewat susunan-simpan.js. `s.halaman` adalah
+   POSISI di susunan; `srcSekarang(s)` memberi nomor halaman asli (0 = kosong).
+   Anotasi selalu diindeks per halaman asli. */
+
+import { muatPdfJs } from './muat-pdfjs.js?v=20261028024700';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261028021559';
+} from './logika.js?v=20261028024700';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261028021559';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028021559';
+} from './anotasi.js?v=20261028024700';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261028024700';
+import {
+  asliUrut, gandakanPos, hapusPos, pindahPos, posisiSrc, sisipKosongSetelah, srcDi, srcTerdekat, susunanAwal,
+} from './susunan.js?v=20261028024700';
+import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261028024700';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261028021559';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028021559';
-import { esc } from '../../core/dom.js?v=20261028021559';
-import { t as tr } from '../../core/i18n.js?v=20261028021559';
+} from './cari-pdf.js?v=20261028024700';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261028024700';
+import { esc } from '../../core/dom.js?v=20261028024700';
+import { t as tr } from '../../core/i18n.js?v=20261028024700';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
+
+/* Susunan (B2): nomor halaman asli di posisi tampil (0 = halaman kosong), dan jumlah posisi. */
+const srcSekarang = s => srcDi(s.urut, s.halaman);
+const jumlahHal = s => s.urut.length;
 
 function pesanGalat(err) {
   if (err && err.message === 'PDF_FITUR_KURANG') {
@@ -46,16 +59,39 @@ export function tutupPenampilPdf() {
 
 function labelHalaman(s) {
   const ol = s.overlay;
-  ol.querySelector('[data-pdf-hal]').textContent = `${s.halaman} / ${s.total}`;
+  const n = jumlahHal(s);
+  ol.querySelector('[data-pdf-hal]').textContent = `${s.halaman} / ${n}${keteranganHal(s)}`;
   ol.querySelector('[data-pdf-zoom]').textContent = `${Math.round(s.zoom * 100)}%`;
   ol.querySelector('[data-pdf="prev"]').disabled = s.halaman <= 1;
-  ol.querySelector('[data-pdf="next"]').disabled = s.halaman >= s.total;
+  ol.querySelector('[data-pdf="next"]').disabled = s.halaman >= n;
+  segarkanSusun(s);
+}
+
+/* Keterangan di samping posisi: hanya muncul bila susunan berbeda dari urutan asli. */
+function keteranganHal(s) {
+  const src = srcSekarang(s);
+  if (!src) return ` · ${tr('kosong')}`;
+  return src === s.halaman ? '' : ` · ${tr('asli')} ${src}`;
+}
+
+function segarkanSusun(s) {
+  const n = jumlahHal(s);
+  const atur = (aksi, mati) => {
+    const b = s.overlay.querySelector(`[data-susun="${aksi}"]`);
+    if (b) b.disabled = mati;
+  };
+  atur('kiri', s.halaman <= 1);
+  atur('kanan', s.halaman >= n);
+  atur('hapus', n <= 1);
+  atur('asli', asliUrut(s.urut, s.total));
 }
 
 async function tampilkanHalaman(s) {
   if (aktif !== s || !s.doc) return;
   s.render?.cancel();
-  const page = await s.doc.getPage(s.halaman);
+  const src = srcSekarang(s);
+  /* Halaman kosong (B2) memakai ukuran halaman asli terdekat. */
+  const page = await s.doc.getPage(src || srcTerdekat(s.urut, s.halaman) || 1);
   if (aktif !== s) return;
   const isi = s.overlay.querySelector('[data-pdf-isi]');
   const lebarAsli = page.getViewport({ scale: 1 }).width;
@@ -79,10 +115,18 @@ async function tampilkanHalaman(s) {
   const wadah = document.createElement('div');
   wadah.className = 'pdfv-kwrap';
   wadah.appendChild(kanvas);
-  if (s.blobId) wadah.appendChild(buatLapisanAnot(s, cssW, cssH));
+  /* Halaman kosong tidak punya anotasi dan tidak punya teks untuk disorot. */
+  if (s.blobId && src) wadah.appendChild(buatLapisanAnot(s, cssW, cssH));
+  else s.lapisan = null;
   isi.replaceChildren(wadah);
   gambarSorotCari(s);
   isi.scrollTop = 0;
+  if (!src) {
+    s.render = null;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, kanvas.width, kanvas.height);
+    return;
+  }
   s.render = page.render({ canvasContext: ctx, viewport: vp });
   try {
     await s.render.promise;
@@ -92,7 +136,7 @@ async function tampilkanHalaman(s) {
 }
 
 function pindahHalaman(s, nomor) {
-  const baru = halamanTerjepit(nomor, s.total);
+  const baru = halamanTerjepit(nomor, jumlahHal(s));
   if (baru === s.halaman) return;
   s.halaman = baru;
   tampilkanHalaman(s);
@@ -140,6 +184,15 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       <button type="button" class="pdfv-teks" data-anot-ekspor>${esc(tr('Ekspor PDF'))}</button>
       <span class="pdfv-status" data-anot-status aria-live="polite"></span>
     </div>` : ''}
+    ${opsi.blobId ? `
+    <div class="pdfv-bar pdfv-bar2" data-susun-bar>
+      <button type="button" class="pdfv-teks" data-susun="kiri">${esc(tr('Geser kiri'))}</button>
+      <button type="button" class="pdfv-teks" data-susun="kanan">${esc(tr('Geser kanan'))}</button>
+      <button type="button" class="pdfv-teks" data-susun="gandakan">${esc(tr('Gandakan'))}</button>
+      <button type="button" class="pdfv-teks" data-susun="kosong">${esc(tr('Sisip kosong'))}</button>
+      <button type="button" class="pdfv-teks" data-susun="hapus">${esc(tr('Hapus dari susunan'))}</button>
+      <button type="button" class="pdfv-teks" data-susun="asli">${esc(tr('Susunan asli'))}</button>
+    </div>` : ''}
     <div class="pdfv-isi" data-pdf-isi><p class="pdfv-info">${esc(tr('Memuat PDF…'))}</p></div>`;
   document.body.appendChild(overlay);
 
@@ -148,7 +201,8 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     halaman: Math.max(1, Math.floor(Number(opsi.halaman)) || 1), total: 0, zoom: ZOOM_BAWAAN, pas: true,
     kunciTombol: null, ubahUkuran: null,
     blobId: opsi.blobId || null,   /* id blob PDF asli; anotasi disimpan dengan kunci turunannya */
-    anot: [],                      /* seluruh anotasi dokumen ini */
+    anot: [],                      /* seluruh anotasi dokumen ini (per halaman asli) */
+    urut: [],                      /* susunan halaman: {s:n} asli atau {k:1} kosong (B2) */
     alat: null,                    /* 'coret' | 'sorot' | 'garis' | 'komentar' | null */
     lapisan: null, ukuran: null, sementara: null,
     lib: null,                     /* modul pdf.js yang sudah dimuat (untuk Util) */
@@ -161,8 +215,8 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     if (e.key === 'Escape') { e.preventDefault(); tutupPenampilPdf(); return; }
     /* Di kolom pencarian, panah dipakai untuk menggerakkan kursor, bukan pindah halaman. */
     if (e.target && e.target.matches && e.target.matches('input, textarea')) return;
-    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); pindahHalaman(s, halamanBerikut(s.halaman, s.total)); }
-    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); pindahHalaman(s, halamanSebelumnya(s.halaman, s.total)); }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); pindahHalaman(s, halamanBerikut(s.halaman, jumlahHal(s))); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); pindahHalaman(s, halamanSebelumnya(s.halaman, jumlahHal(s))); }
   };
   document.addEventListener('keydown', s.kunciTombol, true);
 
@@ -183,8 +237,12 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
       else if (j === 'prev') langkahHit(s, hasilSebelumnya);
       return;
     }
+    const alatSusun = e.target.closest('[data-susun]');
+    if (alatSusun && aktif === s) { aksiSusun(s, alatSusun.dataset.susun); return; }
     const alatAnot = e.target.closest('[data-anot]');
     if (alatAnot && aktif === s) {
+      /* Halaman kosong (B2) tidak bisa dianotasi. */
+      if (!srcSekarang(s)) { setStatusAnot(s, tr('Halaman kosong tidak bisa dianotasi')); return; }
       const j = alatAnot.dataset.anot;
       s.alat = s.alat === j ? null : j;
       segarkanAlatAnot(s);
@@ -196,8 +254,8 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
     if (!b || aktif !== s || b.disabled) return;
     const aksi = b.dataset.pdf;
     if (aksi === 'tutup') tutupPenampilPdf();
-    else if (aksi === 'prev') pindahHalaman(s, halamanSebelumnya(s.halaman, s.total));
-    else if (aksi === 'next') pindahHalaman(s, halamanBerikut(s.halaman, s.total));
+    else if (aksi === 'prev') pindahHalaman(s, halamanSebelumnya(s.halaman, jumlahHal(s)));
+    else if (aksi === 'next') pindahHalaman(s, halamanBerikut(s.halaman, jumlahHal(s)));
     else if (aksi === 'besar') ubahZoom(s, zoomBerikut(s.zoom));
     else if (aksi === 'kecil') ubahZoom(s, zoomSebelumnya(s.zoom));
     else if (aksi === 'pas') { s.pas = true; tampilkanHalaman(s); }
@@ -238,13 +296,67 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
   if (aktif !== s) { lepaskanTugas(task); return; }
   s.doc = doc;
   s.total = doc.numPages;
-  s.halaman = halamanTerjepit(s.halaman, s.total);   /* B3b: halaman dari tautan bisa melebihi jumlah halaman */
+  s.urut = await muatUrutanUi(s);
+  /* B3b: halaman dari tautan bisa melebihi jumlah halaman. Nomornya adalah halaman asli,
+     jadi dipetakan ke posisi di susunan (bila halaman itu disembunyikan, ke posisi 1). */
+  s.halaman = posisiSrc(s.urut, halamanTerjepit(s.halaman, s.total)) || 1;
   if (s.blobId) {
     try { s.anot = await muatAnotasi(s.blobId); }
     catch { setStatusAnot(s, tr('Anotasi tidak bisa dibaca. Ditampilkan kosong.')); }
   }
   labelHalaman(s);
   await tampilkanHalaman(s);
+}
+
+async function muatUrutanUi(s) {
+  if (!s.blobId) return susunanAwal(s.total);
+  try { return await muatSusunan(s.blobId, s.total); }
+  catch {
+    setStatusAnot(s, tr('Susunan halaman tidak bisa dibaca. Ditampilkan urutan asli.'));
+    return susunanAwal(s.total);
+  }
+}
+
+/* ── Susunan halaman (B2) ── */
+
+/* Satu aksi susunan pada posisi tampil. Perubahan langsung disimpan dan tampilan diperbarui.
+   Halaman yang dihapus dari susunan tidak dihapus datanya; "Susunan asli" memunculkannya lagi. */
+function aksiSusun(s, aksi) {
+  if (!s.doc) return;
+  const n = jumlahHal(s);
+  const pos = s.halaman;
+  let urut = s.urut, halaman = pos;
+  if (aksi === 'kiri') { if (pos <= 1) return; urut = pindahPos(urut, pos, pos - 1); halaman = pos - 1; }
+  else if (aksi === 'kanan') { if (pos >= n) return; urut = pindahPos(urut, pos, pos + 1); halaman = pos + 1; }
+  else if (aksi === 'gandakan') { urut = gandakanPos(urut, pos); halaman = pos + 1; }
+  else if (aksi === 'kosong') { urut = sisipKosongSetelah(urut, pos); halaman = pos + 1; }
+  else if (aksi === 'hapus') {
+    if (n <= 1) { setStatusAnot(s, tr('Halaman terakhir tidak bisa dihapus')); return; }
+    urut = hapusPos(urut, pos);
+    halaman = Math.min(pos, urut.length);
+  }
+  else if (aksi === 'asli') {
+    const src = srcSekarang(s) || 1;
+    urut = susunanAwal(s.total);
+    halaman = posisiSrc(urut, src) || 1;
+  }
+  else return;
+  s.urut = urut;
+  s.halaman = halaman;
+  labelHalaman(s);
+  tampilkanHalaman(s);
+  simpanSusunanUi(s);
+  /* Hasil pencarian mengikuti urutan tampil, jadi dicari ulang. */
+  if (s.cari.kueri) cariUi(s);
+}
+
+async function simpanSusunanUi(s) {
+  try {
+    await simpanSusunan(s.blobId, s.urut);
+    setStatusAnot(s, tr('Susunan halaman tersimpan'));
+  } catch {
+    setStatusAnot(s, tr('Susunan belum tersimpan. Coba lagi.'));
+  }
 }
 
 /* pdf.js 6.x: dokumen dilepas lewat PDFDocumentLoadingTask.destroy() (PDFDocumentProxy tidak punya destroy). */
@@ -300,7 +412,10 @@ async function cariUi(s) {
   setStatusCari(s, tr('Mencari…'));
   const daftar = await pastikanIndeks(s);
   if (aktif !== s || !daftar) return;
-  s.cari.hasil = kumpulkanHasil([...daftar, ...daftarKomentar(s.anot)], kueri);
+  /* Halaman yang disembunyikan dari susunan tidak ikut dicari. Hasil diurutkan sesuai posisi tampil. */
+  s.cari.hasil = kumpulkanHasil([...daftar, ...daftarKomentar(s.anot)], kueri)
+    .filter(h => posisiSrc(s.urut, h.halaman) > 0)
+    .sort((a, b) => posisiSrc(s.urut, a.halaman) - posisiSrc(s.urut, b.halaman));
   s.cari.posisi = s.cari.hasil.length ? 0 : -1;
   if (!s.cari.hasil.length) {
     const adaTeks = daftar.some(d => d.indeks.norm.length > 0);
@@ -340,8 +455,9 @@ function statusHit(s) {
 function tampilkanHit(s) {
   const h = s.cari.hasil[s.cari.posisi];
   if (!h) return;
-  if (h.halaman !== s.halaman) {
-    s.halaman = h.halaman;
+  if (srcSekarang(s) !== h.halaman) {
+    const pos = posisiSrc(s.urut, h.halaman);
+    if (pos) s.halaman = pos;
     labelHalaman(s);
     tampilkanHalaman(s);
   } else {
@@ -363,7 +479,8 @@ function gambarSorotCari(s) {
   const wadah = s.overlay.querySelector('.pdfv-kwrap');
   if (!wadah) return;
   wadah.querySelector('.pdfv-cari-layer')?.remove();
-  const diHalaman = s.cari.hasil.filter(h => h.halaman === s.halaman && h.kotak.length);
+  const src = srcSekarang(s);
+  const diHalaman = s.cari.hasil.filter(h => h.halaman === src && h.kotak.length);
   if (!diHalaman.length) return;
   const aktifHit = s.cari.hasil[s.cari.posisi];
   const layer = document.createElement('div');
@@ -432,10 +549,11 @@ function previewDari(g) {
 
 function gambarAnot(s) {
   const svg = s.lapisan;
-  if (!svg || !s.ukuran) return;
+  const src = srcSekarang(s);
+  if (!svg || !s.ukuran || !src) return;
   const { w, h } = s.ukuran;
   svg.replaceChildren();
-  for (const a of anotasiHalaman(s.anot, s.halaman)) svg.appendChild(bentukAnot(a, w, h));
+  for (const a of anotasiHalaman(s.anot, src)) svg.appendChild(bentukAnot(a, w, h));
   if (s.sementara) svg.appendChild(bentukAnot(s.sementara, w, h));
 }
 
@@ -477,15 +595,18 @@ function tambahAnotDanSimpan(s, a) {
 
 /* Ekspor PDF hasil anotasi (B1c). Tiap halaman dirender ke gambar, anotasinya
    digambar di atasnya, lalu semua ditulis ke PDF baru lewat ekspor-pdf.js.
-   PDF asli tidak diubah. Berkas diunduh lewat tautan biasa. */
+   PDF asli tidak diubah. Urutan mengikuti susunan (B2). Berkas diunduh lewat tautan biasa. */
 async function eksporAnot(s, nama) {
   if (s.mengekspor || !s.doc) return;
   s.mengekspor = true;
   try {
     const halaman = [];
-    for (let i = 1; i <= s.total; i++) {
-      setStatusAnot(s, `${tr('Mengekspor halaman')} ${i} / ${s.total}`);
-      const page = await s.doc.getPage(i);
+    const n = jumlahHal(s);
+    /* Urutan ekspor = urutan susunan tampil. Halaman kosong jadi kanvas putih. */
+    for (let p = 1; p <= n; p++) {
+      const src = srcDi(s.urut, p);
+      setStatusAnot(s, `${tr('Mengekspor halaman')} ${p} / ${n}`);
+      const page = await s.doc.getPage(src || srcTerdekat(s.urut, p) || 1);
       const v1 = page.getViewport({ scale: 1 });
       const skala = Math.min(2, 2200 / Math.max(v1.width, v1.height));
       const vp = page.getViewport({ scale: skala });
@@ -494,9 +615,14 @@ async function eksporAnot(s, nama) {
       kanvas.height = Math.round(vp.height);
       const ctx = kanvas.getContext('2d');
       if (!ctx) throw new Error('kanvas tidak tersedia');
-      await page.render({ canvasContext: ctx, viewport: vp }).promise;
-      const daftar = anotasiHalaman(s.anot, i);
-      gambarAnotasiKanvas(ctx, kanvas.width, kanvas.height, daftar);
+      if (src) {
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, kanvas.width, kanvas.height);
+      }
+      const daftar = src ? anotasiHalaman(s.anot, src) : [];
+      if (daftar.length) gambarAnotasiKanvas(ctx, kanvas.width, kanvas.height, daftar);
       const blob = await new Promise((res, rej) =>
         kanvas.toBlob(b => (b ? res(b) : rej(new Error('jpeg'))), 'image/jpeg', 0.9));
       const jpeg = new Uint8Array(await blob.arrayBuffer());
@@ -534,7 +660,9 @@ function unduhBerkas(blob, nama) {
 }
 
 function batalAnotHalaman(s) {
-  const baru = batalTerakhirHalaman(s.anot, s.halaman);
+  const src = srcSekarang(s);
+  if (!src) { setStatusAnot(s, tr('Halaman kosong tidak punya anotasi')); return; }
+  const baru = batalTerakhirHalaman(s.anot, src);
   if (baru.length === s.anot.length) {
     setStatusAnot(s, tr('Tidak ada anotasi di halaman ini'));
     return;
@@ -549,17 +677,18 @@ function pasangPenunjukAnot(s, svg) {
   const titik = e => titikTernormal(e.clientX, e.clientY, svg.getBoundingClientRect());
 
   svg.addEventListener('pointerdown', e => {
-    if (!s.alat || !s.blobId) return;
+    const src = srcSekarang(s);   /* anotasi selalu menempel pada halaman asli */
+    if (!s.alat || !s.blobId || !src) return;
     const p = titik(e);
     if (!p) return;
     e.preventDefault();
     if (s.alat === 'komentar') {
       const teks = (window.prompt(tr('Tulis komentar'), '') || '').trim().slice(0, MAKS_TEKS_KOMENTAR);
       if (!teks) return;
-      tambahAnotDanSimpan(s, buatAnotasi('komentar', s.halaman, { x: p.x, y: p.y, teks }));
+      tambahAnotDanSimpan(s, buatAnotasi('komentar', src, { x: p.x, y: p.y, teks }));
       return;
     }
-    g = { jenis: s.alat, p0: p, p1: p, pts: [p] };
+    g = { jenis: s.alat, p0: p, p1: p, pts: [p], halaman: src };
     try { svg.setPointerCapture(e.pointerId); } catch { /* tidak semua peramban */ }
     s.sementara = previewDari(g);
     gambarAnot(s);
@@ -583,14 +712,14 @@ function pasangPenunjukAnot(s, svg) {
     const p = titik(e) || cur.p1;
     if (cur.jenis === 'coret') {
       const pts = [...cur.pts, p];
-      if (pts.length >= 2) tambahAnotDanSimpan(s, buatAnotasi('coret', s.halaman, { pts }));
+      if (pts.length >= 2) tambahAnotDanSimpan(s, buatAnotasi('coret', cur.halaman, { pts }));
       else gambarAnot(s);
       return;
     }
     const x1 = cur.p0.x, y1 = cur.p0.y, x2 = p.x, y2 = p.y;
     /* ketukan tanpa geser tidak membuat apa-apa */
     if (Math.abs(x2 - x1) < 0.004 && Math.abs(y2 - y1) < 0.004) { gambarAnot(s); return; }
-    tambahAnotDanSimpan(s, buatAnotasi(cur.jenis, s.halaman, { x1, y1, x2, y2 }));
+    tambahAnotDanSimpan(s, buatAnotasi(cur.jenis, cur.halaman, { x1, y1, x2, y2 }));
   };
   svg.addEventListener('pointerup', akhiri);
   svg.addEventListener('pointercancel', () => { g = null; s.sementara = null; gambarAnot(s); });

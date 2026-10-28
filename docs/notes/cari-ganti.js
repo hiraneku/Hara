@@ -13,17 +13,17 @@
    Tombol Urungkan di toast mengembalikan DOM + judul persis seperti
    sebelum penggantian. */
 
-import { state, save } from '../core/store.js?v=20261028021559';
-import { toast } from '../core/toast.js?v=20261028021559';
-import { esc } from '../core/dom.js?v=20261028021559';
-import { t as tr } from '../core/i18n.js?v=20261028021559';
-import { flush } from '../core/autosave.js?v=20261028021559';
-import { docEl } from './editor/caret.js?v=20261028021559';
-import { refresh, saveNow } from './editor/cleanup.js?v=20261028021559';
-import { snap } from './editor/history.js?v=20261028021559';
-import { touch } from './note-model.js?v=20261028021559';
-import { openPop, closeAll } from './menus/pop.js?v=20261028021559';
-import { sheet, shField, shSeg, shAksi } from './sheet.js?v=20261028021559';
+import { state, save } from '../core/store.js?v=20261028024700';
+import { toast } from '../core/toast.js?v=20261028024700';
+import { esc } from '../core/dom.js?v=20261028024700';
+import { t as tr } from '../core/i18n.js?v=20261028024700';
+import { flush } from '../core/autosave.js?v=20261028024700';
+import { docEl } from './editor/caret.js?v=20261028024700';
+import { refresh, saveNow } from './editor/cleanup.js?v=20261028024700';
+import { snap } from './editor/history.js?v=20261028024700';
+import { touch } from './note-model.js?v=20261028024700';
+import { openPop, closeAll } from './menus/pop.js?v=20261028024700';
+import { sheet, shField, shSeg, shAksi } from './sheet.js?v=20261028024700';
 
 /* ── pencocokan teks murni (tanpa regex, tanpa eval) ── */
 const KATA = /[\p{L}\p{N}_]/u;

@@ -9,11 +9,11 @@
    Daftar datang dari registri core/menu-fitur.js (diisi di app.js). Kartu yang
    diketuk menutup lembar lalu menjalankan aksinya. */
 
-import { t as tr } from '../core/i18n.js?v=20261028021559';
-import { ambilGrupFitur } from '../core/menu-fitur.js?v=20261028021559';
-import { esc } from '../core/dom.js?v=20261028021559';
-import { openPop, closeAll } from '../notes/menus/pop.js?v=20261028021559';
-import { sheet, shAksi } from '../notes/sheet.js?v=20261028021559';
+import { t as tr } from '../core/i18n.js?v=20261028024700';
+import { ambilGrupFitur } from '../core/menu-fitur.js?v=20261028024700';
+import { esc } from '../core/dom.js?v=20261028024700';
+import { openPop, closeAll } from '../notes/menus/pop.js?v=20261028024700';
+import { sheet, shAksi } from '../notes/sheet.js?v=20261028024700';
 
 /* Semua fitur dalam bentuk datar, dan peta id → aksi untuk klik. */
 let semua = [];

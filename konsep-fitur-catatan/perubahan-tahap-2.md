@@ -540,3 +540,45 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - **Belum diuji di HP (Opera Android).**
   - Penyaringan `meta` selain URL (mis. judul kartu, label) tidak diubah. Field itu dirender lewat `esc`/`escAttr`, bukan HTML mentah. Ini belum diperiksa menyeluruh.
   - Penyaring memakai daftar izin dan daftar buang yang masuk akal, bukan standar keamanan resmi. Bila nanti ada kebutuhan markup baru, daftarnya perlu ditinjau.
+
+## Perubahan 21 · B2 — Susunan halaman PDF (susun ulang, hapus, gandakan, sisip kosong)
+
+- **ID:** B2 (PDF page management). Disetujui pengguna lewat pilihan "B2" setelah B4c.
+- **Keputusan desain:**
+  - Berkas PDF asli **tidak diubah**. Urutan disimpan terpisah per blob PDF, kunci `susun-<blobId>`, sama polanya dengan anotasi (`anot-<blobId>`).
+  - Entri urutan: `{s:n}` untuk halaman asli nomor n, atau `{k:1}` untuk halaman kosong. Halaman yang digandakan memakai nomor asli yang sama.
+  - Anotasi tetap diindeks per **halaman asli**. Halaman yang digandakan menampilkan anotasi yang sama di kedua salinannya. Anotasi tidak diduplikasi di penyimpanan.
+  - Halaman yang dihapus dari susunan tidak dihapus datanya. Tombol "Susunan asli" memunculkannya lagi.
+  - Halaman kosong tidak bisa dianotasi. Ukurannya mengikuti halaman asli terdekat.
+- **Aksi di bilah viewer** (muncul hanya bila PDF punya `blobId`): Geser kiri, Geser kanan, Gandakan, Sisip kosong, Hapus dari susunan, Susunan asli. Tombol yang tidak relevan (mis. Geser kiri di halaman pertama) dinonaktifkan.
+- **Efek di seluruh viewer:**
+  - Label halaman menampilkan posisi di susunan. Bila berbeda dari urutan asli, ditambah keterangan, mis. `2 / 4 · asli 1` atau `4 / 6 · kosong`.
+  - Navigasi dan panah/PageUp/PageDown memakai posisi di susunan.
+  - Pencarian hanya mencari halaman yang masih ada di susunan, dan hasil diurutkan sesuai posisi tampil.
+  - Tautan `[[Nama.pdf#hal=N]]` (B3b) memetakan N (halaman asli) ke posisinya di susunan. Bila halaman itu disembunyikan, dibuka di posisi 1.
+  - Ekspor PDF (B1c) mengikuti urutan susunan, dan halaman kosong jadi kanvas putih.
+- **File:**
+  - `docs/notes/pdf/susunan.js` (baru): modul murni. `susunanAwal`, `bacaSusunan`, `tulisSusunan`, `pindahPos`, `hapusPos`, `gandakanPos`, `sisipKosongSetelah`, `srcDi`, `posisiSrc`, `srcTerdekat`, `asliUrut`.
+  - `docs/notes/pdf/susunan-simpan.js` (baru): `muatSusunan`, `simpanSusunan`.
+  - `docs/notes/pdf/penampil.js`: label, navigasi, render (halaman kosong), anotasi (per halaman asli), pencarian, ekspor, dan bilah susunan.
+  - `docs/notes/editor/image.js`: pembersih blob yatim juga menganggap `susun-<id>` dipakai.
+  - `docs/notes/data-io.js`: cadangan ikut menyertakan `susun-<id>`.
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: 14 teks baru.
+  - `tools/uji/pdf-susun.mjs` (baru): 49 pengujian.
+- **Cara uji (hasil nyata):**
+  - `node tools/uji/pdf-susun.mjs`: **49/49 lulus**. Mencakup operasi murni, pemetaan posisi, data rusak, penyimpanan di IndexedDB palsu, dan bahwa isi PDF asli tetap (SHA-256).
+  - Chromium, emulasi layar HP, aplikasi sungguhan, harness di luar repo (`/home/user/uji-tg/uji-susun.mjs`) dengan PDF 4 halaman yang dibuat khusus (`uji-b2.pdf`, halaman 4 ukurannya berbeda): **45/45 lulus**. Mencakup:
+    - sidik kanvas tiap halaman asli, sehingga urutan tampil terbukti benar;
+    - halaman kosong putih dan berukuran mengikuti halaman terdekat;
+    - anotasi tidak bisa dibuat di halaman kosong;
+    - anotasi di salinan halaman ikut tampil di kedua salinan dan hanya tersimpan sekali;
+    - pencarian tidak menemukan halaman yang disembunyikan;
+    - persistensi setelah tutup dan buka lagi, serta tautan `#hal=4`;
+    - ekspor: jumlah `/Type /Page` sama dengan jumlah posisi, dan pdf.js membaca jumlah halaman yang sama;
+    - PDF asli tidak berubah.
+- **Keterbatasan jujur:**
+  - **Belum diuji di HP (Opera Android).**
+  - Urutan belum bisa diseret dengan jari. Pengaturan lewat tombol saja.
+  - Belum ada tampilan miniatur halaman.
+  - Pencarian tidak menampilkan halaman yang disembunyikan dari susunan, meskipun teksnya ada di PDF asli. Ini disengaja, tetapi pengguna perlu tahu bahwa "Hapus dari susunan" juga menyembunyikannya dari pencarian.
+  - Cadangan (`data-io.js`) hanya diperiksa lewat sumber, karena modul itu butuh DOM. Perilaku pemulihannya belum diuji end-to-end.

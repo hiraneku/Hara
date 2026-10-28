@@ -12,13 +12,13 @@
    aman: teks di dalam <span class="wl">/…tg…> tidak pernah dianggap
    mention, dan pembungkusan mention memakai simpul teks asli. */
 
-import { state, save } from '../core/store.js?v=20261028021559';
-import { cur } from '../core/router.js?v=20261028021559';
-import { touch } from './note-model.js?v=20261028021559';
-import { terlihat } from './kunci.js?v=20261028021559';
-import { t as tr } from '../core/i18n.js?v=20261028021559';
-import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261028021559';
-import { pisahTautan } from './wikilink.js?v=20261028021559';
+import { state, save } from '../core/store.js?v=20261028024700';
+import { cur } from '../core/router.js?v=20261028024700';
+import { touch } from './note-model.js?v=20261028024700';
+import { terlihat } from './kunci.js?v=20261028024700';
+import { t as tr } from '../core/i18n.js?v=20261028024700';
+import { rujukanCatatan, catatanYatim } from './transklusi.js?v=20261028024700';
+import { pisahTautan } from './wikilink.js?v=20261028024700';
 
 const esc = s => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
