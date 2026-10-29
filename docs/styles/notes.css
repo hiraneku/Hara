@@ -2767,3 +2767,15 @@ button.uj-baris-item:hover{background:var(--sunken)}
   .uj-teks{font-size:18px}
   .uj-aksi-atas .btn{flex:1 1 100%}
 }
+
+/* ── Suara latar (C10) ── */
+.ab-wrap{display:flex;flex-direction:column;gap:12px}
+.ab-status{text-align:center;font-size:15px;font-variant-numeric:tabular-nums;min-height:22px}
+.ab-mode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--sunken);border-radius:16px;padding:4px}
+.ab-pil{min-width:0;border:0;background:transparent;border-radius:12px;padding:8px 6px;font:inherit;font-size:14px;line-height:1.25;cursor:pointer;color:inherit;overflow-wrap:anywhere}
+.ab-pil[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.ab-lab{font-size:13px;color:var(--muted)}
+.ab-rentang{width:100%;accent-color:var(--accent)}
+.ab-input{box-sizing:border-box;width:100%;min-height:40px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:inherit;font:inherit}
+.ab-lebar{width:100%}
+.ab-catatan{margin:0;font-size:13px;color:var(--muted)}

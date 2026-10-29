@@ -1249,6 +1249,53 @@ gambar besar tetapi sedikit teks.
 - **Tidak ada statistik lintas ruang** dan tidak ada jadwal ulang.
 - Chromium desktop dan viewport 390 px saja. Belum diuji di HP sungguhan atau Android.
 
+## Perubahan 34 · C10 — Suara latar belajar v1 (Tahap 4)
+
+- **ID:** C10 (Study ambience). Urutan §6.1 Tahap 4 nomor 5. Dikerjakan setelah persetujuan pengguna ("Oke kerjakan C10").
+  Acuan §6.3 mengizinkan memakai modul Musik yang sudah ada jika cocok secara teknis dan lisensinya sesuai. Modul Musik
+  diperiksa dan tidak dipakai sebagai sumber audio, karena isinya lagu dari perangkat pengguna dan dua berkas IR dengan
+  lisensinya sendiri (`docs/musik/ir/LICENSE-voxengo.txt`), bukan audio latar.
+- **Sumber bunyi: derau yang dibuat di kode.** Tiga jenis: derau putih, merah muda, dan cokelat. Dibuat dengan
+  Web Audio dari kode aplikasi sendiri, jadi tidak ada berkas audio pihak ketiga dan tidak ada isu lisensi baru.
+  Rekaman alam seperti hujan atau kafe **belum dipakai**, karena lisensinya harus diverifikasi lebih dulu.
+- **Perilaku:**
+  - Lembar **Suara latar**: tiga jenis, volume 0–100 (bawaan 40), dan batas berhenti otomatis (tanpa batas, 15 menit,
+    30 menit, atau 1 jam). Status menampilkan sisa waktu saat batas dipasang.
+  - Pemutaran tetap jalan saat lembar ditutup. Jenis, volume, dan batas berhenti bisa diubah saat sedang diputar.
+  - Buffer derau 4 detik diulang (loop). Volume naik dan turun halus, dengan kurva kuadrat agar perubahannya terasa halus di volume rendah.
+  - Pengaturan disimpan di `localStorage` (kunci `hara.ambience.v1`). Keadaan pemutaran hanya di memori, jadi muat ulang halaman menghentikan suara.
+  - Pemutaran hanya dimulai dari tombol **Putar**. Bila browser memblokir audio, muncul pesan dan pengguna diminta mengetuk lagi.
+- **Akses:** menu Lainnya grup Belajar, dan palet perintah (Ctrl+K, "Suara latar").
+- **File:**
+  - `docs/notes/ambience-murni.js` (baru): model murni (normalisasi, pembuat sampel derau, kurva volume, batas berhenti).
+  - `docs/notes/ambience.js` (baru): lembar, mesin audio Web Audio, dan delegasi.
+  - `docs/app.js`: impor, `pasangAmbience()`, entri palet, grup Lainnya.
+  - `docs/styles/notes.css` (gaya `.ab-*`), `docs/core/bahasa-en.js` dan `bahasa-ja.js` (20 kunci per bahasa).
+  - `tools/uji/ambience-murni.mjs` (baru): uji model.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/ambience-murni.mjs` (Node): **43/43 lulus**. Mencakup normalisasi dan batas, panjang dan batas nilai
+    sampel, RMS dan DC, fade ujung, determinisme dengan benih, urutan kecerahan (putih > merah muda > cokelat), kurva volume,
+    dan batas berhenti.
+  - Chromium `uji-c10.mjs` (harness di luar repo): **26/26 lulus**, tanpa pageerror. Mencakup akses lewat palet,
+    keadaan awal, jenis dan volume tersimpan, Putar dengan konteks audio `running`, lembar ditutup tetap memutar,
+    ganti jenis dan volume saat diputar, batas 15 menit, Berhenti manual, muat ulang, berhenti otomatis dengan jam palsu
+    (`clock.runFor`), dan 390 px tanpa gulir horizontal.
+  - `npm test`: exit 0, **37/37 lolos** (`npmtest-c10.log`).
+- **Galat yang ditemukan lewat uji dan diperbaiki:**
+  - Pilihan jenis suara terbagi menjadi dua baris yang tidak rata di desktop. Sekarang berupa kisi tiga kolom.
+  - Uji model: pengecekan "henti '30' ditolak" salah, karena `Number('30')` memang 30 dan itu nilai yang valid. Pengecekan diganti dengan nilai yang benar-benar tidak valid.
+  - Harness: regex label sisa memakai huruf kecil, padahal teks ditampilkan dengan "Sisa". Ini kesalahan uji.
+
+**Keterbatasan (v1):**
+- **Hanya derau.** Tidak ada suara alam atau musik latar bawaan. Rekaman hanya bisa ditambahkan setelah lisensinya diverifikasi.
+- **Pemutaran tidak ikut dengan modul Musik.** Bila lagu di Musik sedang diputar, keduanya bisa berbunyi bersamaan. Tidak ada koordinasi.
+- **Tidak ada indikator di luar lembar.** Status hanya terlihat saat lembar Suara latar dibuka.
+- **Muat ulang halaman menghentikan suara.** Keadaan tidak disimpan.
+- **Browser bisa memblokir audio** sampai ada ketukan pengguna. Diuji dengan klik Playwright, bukan oleh pengguna sungguhan.
+- **HP:** browser bisa menghentikan audio saat layar terkunci atau aplikasi berpindah ke latar. Belum diuji di HP sungguhan atau Android.
+- **Tab tidak aktif:** timer berhenti otomatis dihitung dari waktu nyata, tetapi browser dapat menunda pemeriksaannya.
+- Chromium desktop dan viewport 390 px saja.
+
 ## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
 
 Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.

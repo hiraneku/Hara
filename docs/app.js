@@ -1,41 +1,42 @@
 /* Titik masuk Hara. Daftarkan modul di sini. */
-import { load, state } from './core/store.js?v=20261029200000';
-import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261029200000';
-import { toast } from './core/toast.js?v=20261029200000';
-import { mulaiPembaruan } from './core/pembaruan.js?v=20261029200000';
-import { mulaiBeranda } from './home/beranda.js?v=20261029200000';
-import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261029200000';
-import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261029200000';
-import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261029200000';
-import { buatTinjauan } from './notes/pintar-aksi.js?v=20261029200000';
-import { bukaStatistik } from './notes/statistik-ui.js?v=20261029200000';
-import { notesModule } from './notes/index.js?v=20261029200000';
-import { bukaFokus, pasangFokus } from './notes/fokus.js?v=20261029200000';
-import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261029200000';
-import { musikModule } from './musik/index.js?v=20261029200000';
-import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261029200000';
+import { load, state } from './core/store.js?v=20261029220000';
+import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261029220000';
+import { toast } from './core/toast.js?v=20261029220000';
+import { mulaiPembaruan } from './core/pembaruan.js?v=20261029220000';
+import { mulaiBeranda } from './home/beranda.js?v=20261029220000';
+import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261029220000';
+import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261029220000';
+import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261029220000';
+import { buatTinjauan } from './notes/pintar-aksi.js?v=20261029220000';
+import { bukaStatistik } from './notes/statistik-ui.js?v=20261029220000';
+import { notesModule } from './notes/index.js?v=20261029220000';
+import { bukaFokus, pasangFokus } from './notes/fokus.js?v=20261029220000';
+import { bukaAmbience, pasangAmbience } from './notes/ambience.js?v=20261029220000';
+import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261029220000';
+import { musikModule } from './musik/index.js?v=20261029220000';
+import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261029220000';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
   bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih,
   jadikanBarisTenggatTugas, bukaTabelProperti, sumberTugasTerbuka,
   bukaTangkapCepat, bukaPanelRuangCatatan, bukaPanelVersiCatatan,
-} from './notes/fitur-lanjutan-ui.js?v=20261029200000';
+} from './notes/fitur-lanjutan-ui.js?v=20261029220000';
 import { newNote, delNote, openNote, pinNote, arsipNote, duplikatNote }
-  from './notes/model.js?v=20261029200000';
-import { bagikanCatatan } from './notes/share.js?v=20261029200000';
-import { bukaJurnalHari } from './notes/harian.js?v=20261029200000';
-import { menuCatatan } from './notes/menus/note-menu.js?v=20261029200000';
-import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261029200000';
-import { toggleBelajar, jalankanBelajarPalet } from './notes/belajar-materi.js?v=20261029200000';
-import { simpanTemplatNote } from './notes/templat.js?v=20261029200000';
-import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261029200000';
-import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261029200000';
-import { bukaDialogKertasCatatan } from './notes/kertas.js?v=20261029200000';
-import { bukaCariGanti } from './notes/cari-ganti.js?v=20261029200000';
-import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261029200000';
-import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261029200000';
-import { itemPintar } from './notes/pintar-aksi.js?v=20261029200000';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261029200000';
+  from './notes/model.js?v=20261029220000';
+import { bagikanCatatan } from './notes/share.js?v=20261029220000';
+import { bukaJurnalHari } from './notes/harian.js?v=20261029220000';
+import { menuCatatan } from './notes/menus/note-menu.js?v=20261029220000';
+import { openPop, closeAll, penambatAdalah } from './notes/menus/pop.js?v=20261029220000';
+import { toggleBelajar, jalankanBelajarPalet } from './notes/belajar-materi.js?v=20261029220000';
+import { simpanTemplatNote } from './notes/templat.js?v=20261029220000';
+import { resetSemuaCentangTodo, bukaDialogKartuGambar } from './notes/alat-cerdas.js?v=20261029220000';
+import { bukaDialogSampulCatatan, bukaGrafInteraktif } from './notes/navigasi-fokus.js?v=20261029220000';
+import { bukaDialogKertasCatatan } from './notes/kertas.js?v=20261029220000';
+import { bukaCariGanti } from './notes/cari-ganti.js?v=20261029220000';
+import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261029220000';
+import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261029220000';
+import { itemPintar } from './notes/pintar-aksi.js?v=20261029220000';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261029220000';
 
 const MODULES = [notesModule, renamerModule, musikModule];
 
@@ -51,6 +52,7 @@ setBahasa(bahasaSekarang());
    tidak tahu isi modul. Catatan dibaca dari state saat palette dibuka. */
 initPalette();
 pasangFokus();   /* C9: delegasi tombol timer fokus */
+pasangAmbience(); /* C10: delegasi tombol suara latar */
 daftarkanSumber(() => [
   { id: 'go-home', label: tr('Beranda'), hint: tr('Layar'), jalan: () => go('home') },
   { id: 'go-notes', label: tr('Catatan'), hint: tr('Layar'), jalan: () => go('notes') },
@@ -72,6 +74,7 @@ daftarkanSumber(() => [
   { id: 'resep-impor', label: tr('Renamer: impor resep'), hint: tr('Alat'), cari: 'resep preset muat json', jalan: () => { go('renamer'); pilihResepUntukImpor(renamerAlatCtx()); } },
   { id: 'belajar-materi', label: tr('Mode belajar: materi dan catatan'), hint: tr('Aksi'), cari: 'belajar materi pdf berdampingan dua panel split tab', jalan: () => jalankanBelajarPalet() },
   { id: 'fokus', label: tr('Timer fokus'), hint: tr('Aksi'), cari: 'pomodoro timer fokus belajar hitung mundur', jalan: () => bukaFokus() },
+  { id: 'ambience', label: tr('Suara latar'), hint: tr('Aksi'), cari: 'suara latar derau noise ambience belajar fokus', jalan: () => bukaAmbience() },
   { id: 'ujian', label: tr('Persiapan ujian'), hint: tr('Layar'), cari: 'ujian exam soal latihan materi ruang', jalan: () => go('ujian') },
   { id: 'baca-keras', label: tr('Baca catatan ini keras'), hint: tr('Aksi'), cari: 'baca keras suara tts dengarkan', jalan: () => { bacaCatatanKeras(); } },
   { id: 'baca-stop', label: tr('Hentikan baca keras'), hint: tr('Aksi'), cari: 'hentikan diam suara', jalan: () => { hentikanBaca(); } },
@@ -155,6 +158,7 @@ daftarkanGrupFitur(() => [
   ] },
   { judul: tr('Belajar'), item: [
     { id: 'fokus', label: tr('Timer fokus'), hint: tr('Pomodoro atau hitung mundur'), ikon: 'i-clock', jalan: () => bukaFokus() },
+    { id: 'ambience', label: tr('Suara latar'), hint: tr('Derau untuk belajar'), ikon: 'i-music', jalan: () => bukaAmbience() },
     { id: 'ujian', label: tr('Persiapan ujian'), hint: tr('Materi, soal, dan latihan mengingat'), ikon: 'i-book', jalan: () => go('ujian') },
   ] },
   { judul: tr('Pengaturan'), item: [
