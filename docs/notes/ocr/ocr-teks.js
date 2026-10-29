@@ -101,3 +101,47 @@ export function bacaOcrPdf(teks) {
 /* Kunci penyimpanan per blob PDF. Pembersih blob yatim (notes/editor/image.js) dan cadangan
    (notes/data-io.js) memakai kunci ini, sama seperti anot- dan susun-. */
 export const kunciOcr = blobId => 'ocr-' + blobId;
+
+/* ── Halaman pindai dengan sedikit teks (B6 lanjutan) ──
+   Halaman pindai yang punya satu baris teks ketikan (stempel, nomor halaman) punya lapisan
+   teks, sehingga tanpa aturan ini ia tidak di-OCR dan isi pindaiannya tidak bisa dicari.
+   Halaman dianggap pindai bila teks lapisannya sedikit DAN gambar menutupi sebagian besar
+   halaman. Halaman dengan teks banyak, atau tanpa gambar besar, tetap tidak di-OCR. */
+export const MAKS_HURUF_LAPISAN_SEDIKIT = 50; /* huruf non-spasi di lapisan teks. Stempel dan nomor halaman jauh di bawah ini; label grafik (77 huruf di multipage.pdf hal. 4) di atasnya */
+export const BAGIAN_GAMBAR_PINDAI = 0.5;       /* gambar terbesar, bagian dari luas halaman */
+
+/* Keputusan OCR untuk satu halaman. hurufLapisan: jumlah huruf non-spasi di lapisan teks.
+   bagianGambar: bagian luas halaman yang ditutupi gambar terbesar (0–1). */
+export function perluOcr(hurufLapisan, bagianGambar) {
+  if (!(hurufLapisan > 0)) return true;
+  return hurufLapisan <= MAKS_HURUF_LAPISAN_SEDIKIT && bagianGambar >= BAGIAN_GAMBAR_PINDAI;
+}
+
+/* Jumlah huruf non-spasi dari item teks pdf.js. */
+export function hitungHuruf(items) {
+  let n = 0;
+  for (const it of items || []) {
+    if (it && typeof it.str === 'string') n += it.str.replace(/\s+/g, '').length;
+  }
+  return n;
+}
+
+/* Gabungan teks lapisan dan hasil OCR. Item OCR yang sebagian besar kotaknya sudah ditutupi
+   item lapisan dibuang, supaya teks yang sudah ada di lapisan (mis. stempel) tidak dihitung dua
+   kali. Kotak keduanya ternormalisasi 0–1 dengan titik asal kiri atas. */
+export function gabungLapisanOcr(itemLapisan, itemOcr) {
+  const lapisan = Array.isArray(itemLapisan) ? itemLapisan : [];
+  const ocr = Array.isArray(itemOcr) ? itemOcr : [];
+  const kotakLapisan = lapisan.map(it => it.box).filter(Boolean);
+  const tertutup = b => {
+    const luas = b.w * b.h;
+    if (!(luas > 0)) return true;
+    for (const t of kotakLapisan) {
+      const w = Math.min(b.x + b.w, t.x + t.w) - Math.max(b.x, t.x);
+      const h = Math.min(b.y + b.h, t.y + t.h) - Math.max(b.y, t.y);
+      if (w > 0 && h > 0 && (w * h) / luas > 0.5) return true;
+    }
+    return false;
+  };
+  return [...lapisan, ...ocr.filter(it => it && it.box && !tertutup(it.box))];
+}

@@ -15,7 +15,7 @@
 
    Di browser, HTML diurai di dalam <template>: tidak memuat gambar dan tidak menjalankan skrip. */
 
-import { tautanAman } from './url-aman.js?v=20261029140000';
+import { tautanAman } from './url-aman.js?v=20261029160000';
 
 const TAG_BUANG = new Set([
   'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet',

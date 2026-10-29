@@ -12,29 +12,29 @@
    POSISI di susunan; `srcSekarang(s)` memberi nomor halaman asli (0 = kosong).
    Anotasi selalu diindeks per halaman asli. */
 
-import { muatPdfJs, OPSI_WASM_PDFJS } from './muat-pdfjs.js?v=20261029140000';
+import { muatPdfJs, OPSI_WASM_PDFJS } from './muat-pdfjs.js?v=20261029160000';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261029140000';
+} from './logika.js?v=20261029160000';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261029140000';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261029140000';
+} from './anotasi.js?v=20261029160000';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261029160000';
 import {
   asliUrut, gandakanPos, hapusPos, pindahPos, posisiSrc, sisipKosongSetelah, srcDi, srcTerdekat, susunanAwal,
-} from './susunan.js?v=20261029140000';
-import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261029140000';
+} from './susunan.js?v=20261029160000';
+import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261029160000';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261029140000';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261029140000';
-import { kenali } from '../ocr/mesin.js?v=20261029140000';
-import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261029140000';
-import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261029140000';
-import { esc } from '../../core/dom.js?v=20261029140000';
-import { t as tr } from '../../core/i18n.js?v=20261029140000';
+} from './cari-pdf.js?v=20261029160000';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261029160000';
+import { kenali } from '../ocr/mesin.js?v=20261029160000';
+import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261029160000';
+import { SISI_OCR, MAKS_HURUF_LAPISAN_SEDIKIT, hitungHuruf, perluOcr, gabungLapisanOcr } from '../ocr/ocr-teks.js?v=20261029160000';
+import { esc } from '../../core/dom.js?v=20261029160000';
+import { t as tr } from '../../core/i18n.js?v=20261029160000';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -365,10 +365,49 @@ async function simpanSusunanUi(s) {
   }
 }
 
-/* ── OCR halaman tanpa teks (B6) ──
-   Hanya halaman yang tidak punya lapisan teks (pdf.js) yang di-OCR. Hasilnya disimpan
-   per PDF (ocr-<blobId>) dan dipakai pencarian. Tombol OCR ditekan lagi = membatalkan.
-   Halaman yang sudah pernah di-OCR dilewati. */
+/* Bagian luas halaman (0–1) yang ditutupi gambar terbesar, dari operator list pdf.js.
+   Hanya gambar yang digambar langsung di halaman; gambar di dalam form XObject tidak dihitung.
+   Galat membaca operator dianggap tidak ada gambar, supaya satu halaman tidak menggagalkan OCR. */
+export async function bagianGambarTerbesar(page, lib) {
+  try {
+    const O = lib.OPS, U = lib.Util;
+    const v1 = page.getViewport({ scale: 1 });
+    const luas = v1.width * v1.height;
+    if (!(luas > 0)) return 0;
+    const jenisGambar = new Set([
+      'paintImageXObject', 'paintImageXObjectRepeat', 'paintInlineImageXObject',
+      'paintInlineImageXObjectGroup', 'paintImageMaskXObject', 'paintImageMaskXObjectGroup',
+      'paintImageMaskXObjectRepeat', 'paintJpegXObject',
+    ].map(k => O[k]).filter(v => v !== undefined));
+    const ops = await page.getOperatorList();
+    const tumpukan = [];
+    let ctm = [1, 0, 0, 1, 0, 0];
+    let terbesar = 0;
+    for (let k = 0; k < ops.fnArray.length; k++) {
+      const fn = ops.fnArray[k];
+      if (fn === O.save) tumpukan.push(ctm);
+      else if (fn === O.restore) ctm = tumpukan.pop() || [1, 0, 0, 1, 0, 0];
+      else if (fn === O.transform) ctm = U.transform(ops.argsArray[k], ctm);
+      else if (jenisGambar.has(fn)) {
+        /* gambar mengisi kotak satuan (0,0)–(1,1) di ruang pengguna */
+        const m = U.transform(v1.transform, ctm);
+        const xs = [0, 1].flatMap(u => [0, 1].map(v => m[0] * u + m[2] * v + m[4]));
+        const ys = [0, 1].flatMap(u => [0, 1].map(v => m[1] * u + m[3] * v + m[5]));
+        const x0 = Math.max(0, Math.min(...xs)), x1 = Math.min(v1.width, Math.max(...xs));
+        const y0 = Math.max(0, Math.min(...ys)), y1 = Math.min(v1.height, Math.max(...ys));
+        if (x1 > x0 && y1 > y0) terbesar = Math.max(terbesar, ((x1 - x0) * (y1 - y0)) / luas);
+      }
+    }
+    return Math.min(1, terbesar);
+  } catch {
+    return 0;
+  }
+}
+
+/* ── OCR halaman tanpa teks atau halaman pindai dengan sedikit teks (B6) ──
+   Halaman di-OCR bila tidak punya lapisan teks, atau bila teksnya sedikit dan gambar menutupi
+   sebagian besar halaman (lihat perluOcr). Hasilnya disimpan per PDF (ocr-<blobId>) dan dipakai
+   pencarian. Tombol OCR ditekan lagi = membatalkan. Halaman yang sudah pernah di-OCR dilewati. */
 async function jalankanOcr(s) {
   if (!s.blobId || !s.doc) return;
   if (s.ocr.berjalan) { s.ocr.batal = true; setStatusCari(s, tr('Membatalkan OCR…')); return; }
@@ -382,7 +421,11 @@ async function jalankanOcr(s) {
       setStatusCari(s, `${tr('OCR halaman')} ${i} / ${s.total}`);
       const page = await s.doc.getPage(i);
       const isi = await page.getTextContent();
-      if (isi.items.some(it => typeof it.str === 'string' && it.str.trim()) || hal[i]) {
+      if (hal[i]) { page.cleanup(); continue; }
+      const huruf = hitungHuruf(isi.items);
+      /* gambar hanya diperiksa bila teks lapisannya sedikit; halaman berteks banyak tidak perlu */
+      const bagian = huruf > 0 && huruf <= MAKS_HURUF_LAPISAN_SEDIKIT ? await bagianGambarTerbesar(page, s.lib) : 0;
+      if (!perluOcr(huruf, bagian)) {
         page.cleanup();
         continue;
       }
@@ -446,21 +489,21 @@ function pastikanIndeks(s) {
       const ocr = s.blobId ? await muatOcrPdf(s.blobId).catch(() => ({})) : {};
       for (let i = 1; i <= s.total; i++) {
         setStatusCari(s, `${tr('Membaca teks halaman')} ${i} / ${s.total}`);
-        let indeks;
+        let lapisan = [];
         try {
           const page = await s.doc.getPage(i);
           const vp = page.getViewport({ scale: 1 });
           const isi = await page.getTextContent();
-          indeks = bangunIndeks(isi.items
+          lapisan = isi.items
             .filter(it => typeof it.str === 'string')
-            .map(it => ({ str: it.str, eol: !!it.hasEOL, box: kotakItem(it, vp, s.lib) })));
+            .map(it => ({ str: it.str, eol: !!it.hasEOL, box: kotakItem(it, vp, s.lib) }));
           page.cleanup();
         } catch {
           s.cari.gagal++;
-          indeks = bangunIndeks([]);
         }
         if (aktif !== s) return null;
-        if (!indeks.norm.length && ocr[i]) indeks = bangunIndeks(ocr[i]);
+        /* teks lapisan dan hasil OCR (B6) digabung; OCR yang sudah tertutup lapisan dibuang */
+        const indeks = bangunIndeks(gabungLapisanOcr(lapisan, ocr[i]));
         daftar.push({ halaman: i, jenis: 'teks', indeks });
       }
       return daftar;

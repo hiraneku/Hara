@@ -21,11 +21,11 @@
    Penyimpanan tetap lewat atribut figur data-gw/gr/ga/gb → meta blok
    {w,rot,align,zb} (elToBlock). Gambar lama tanpa atribut tetap 100%. */
 
-import { docEl, kunciKeyboard } from './editor/caret.js?v=20261029140000';
-import { refresh } from './editor/cleanup.js?v=20261029140000';
-import { snap } from './editor/history.js?v=20261029140000';
-import { modeBacaBerlaku } from './mode-baca.js?v=20261029140000';
-import { t as tr } from '../core/i18n.js?v=20261029140000';
+import { docEl, kunciKeyboard } from './editor/caret.js?v=20261029160000';
+import { refresh } from './editor/cleanup.js?v=20261029160000';
+import { snap } from './editor/history.js?v=20261029160000';
+import { modeBacaBerlaku } from './mode-baca.js?v=20261029160000';
+import { t as tr } from '../core/i18n.js?v=20261029160000';
 
 let pilih = null;      /* figur yang dipilih */
 let geser = null;      /* gesture aktif (ukuran/pindah/putar) */
@@ -229,7 +229,7 @@ function bukaPilihGanti() {
     const f = inp.files && inp.files[0];
     inp.remove();
     if (!f) return;
-    import('./editor/image.js?v=20261029140000')
+    import('./editor/image.js?v=20261029160000')
       .then(async m => {
         await m.gantiGambar(fig, f);
         const t = baca();
@@ -620,13 +620,13 @@ export function bindTataGambar() {
     const mlink = e.target.closest('[data-mlink]');
     if (mlink && pilih) {
       const figTautan = pilih;
-      import('./tautan-gambar.js?v=20261029140000').then(m => m.bukaDialogTautanGambar(figTautan));
+      import('./tautan-gambar.js?v=20261029160000').then(m => m.bukaDialogTautanGambar(figTautan));
       return;
     }
     const mocr = e.target.closest('[data-mocr]');
     if (mocr && pilih) {
       const figOcr = pilih;
-      import('./ocr/gambar.js?v=20261029140000').then(m => m.bacaTeksGambar(figOcr));
+      import('./ocr/gambar.js?v=20261029160000').then(m => m.bacaTeksGambar(figOcr));
       return;
     }
     const mscan = e.target.closest('[data-mscan]');
@@ -634,14 +634,14 @@ export function bindTataGambar() {
       const fTarget = pilih;
       const skrg = fTarget.getAttribute('data-scan') || '';
       const modeBerikut = skrg === '' ? 'bw' : skrg === 'bw' ? 'kontras' : 'asli';
-      import('./editor/sketsa.js?v=20261029140000').then(m => m.terapkanFilterPindai(fTarget, modeBerikut));
+      import('./editor/sketsa.js?v=20261029160000').then(m => m.terapkanFilterPindai(fTarget, modeBerikut));
       return;
     }
     const msketch = e.target.closest('[data-msketch]');
     if (msketch && pilih) {
       const fTarget = pilih;
       deseleksi();
-      import('./editor/sketsa.js?v=20261029140000').then(m => m.bukaStudioSketsa(fTarget));
+      import('./editor/sketsa.js?v=20261029160000').then(m => m.bukaStudioSketsa(fTarget));
       return;
     }
     const deg = e.target.closest('[data-mdeg]');

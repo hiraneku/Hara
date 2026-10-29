@@ -647,9 +647,9 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Uji Chromium memakai build Chromium dari paket npm `@sparticuz/chromium` (153), bukan Opera.
   - Akurasi hanya diuji pada teks bersih buatan sendiri, belum pada pindai nyata yang buram, miring,
     atau berwarna.
-  - Halaman yang punya sedikit teks di lapisan teks dianggap sudah punya teks dan **tidak** di-OCR.
-    Ini sudah diuji dengan PDF nyata (`pindai-stempel.pdf`): bagian pindai halaman itu tidak terbaca. Lihat
-    Verifikasi lanjutan butir 1, temuan 2.
+  - Halaman yang punya teks banyak di lapisan teks (lebih dari 50 huruf) dianggap sudah punya teks dan
+    **tidak** di-OCR. Halaman pindai dengan sedikit teks ketikan (stempel, nomor halaman) di-OCR bila gambar
+    menutupi sebagian besar halaman (sejak 29-10-2026, lihat Verifikasi lanjutan, Perubahan OCR halaman campur).
   - Tombol batal menyelesaikan halaman yang sedang dibaca dulu, baru berhenti.
   - Gambar besar diperkecil ke sisi terpanjang 1600 piksel sebelum OCR. Teks yang sangat kecil bisa hilang.
   - Tidak ada tampilan teks OCR yang bisa diedit. Hasil OCR hanya untuk pencarian.
@@ -960,7 +960,7 @@ murni: 0 karakter di lapisan teks, 1 gambar. Teks yang benar diperiksa dari tang
 | `ccitt.pdf` | CCITT (galat JBIG2 di konsol, lihat di bawah) | teks yang sama | sama | 8/8 |
 | `rotated_skew.pdf` (diputar) | JBIG2 | teks yang sama | sama | 8/8 |
 | `jbig2.pdf` | JBIG2 | teks yang sama | sama | 7/7 |
-| `multipage.pdf` (6 hal.) | JPEG dan teks | 5 halaman dibaca, halaman 4 dilewati karena punya teks (109 karakter) | sesuai desain | 5/5 |
+| `multipage.pdf` (6 hal.) | JPEG dan teks | 5 halaman dibaca, halaman 4 dilewati karena punya teks (109 karakter) | sesuai desain (sebelum perubahan OCR halaman campur) | 5/5 |
 
 Kontrol negatif ("Watson" tidak ada di halaman) selalu "Tidak ditemukan". Tidak ada pageerror.
 
@@ -973,12 +973,9 @@ dalam 1 detik tanpa hasil. Perbaikan:
 - `OPSI_WASM_PDFJS` di `docs/notes/pdf/muat-pdfjs.js` (`wasmUrl`), dipakai oleh penampil PDF dan belajar-materi.
 - README vendor diperbarui. `image_decoders/` (JS) dan OpenJPEG (JPEG2000) tetap belum disertakan.
 
-**Temuan 2 (belum diperbaiki, perlu keputusan pengguna): halaman pindai yang punya sedikit teks dilewati OCR.**
-`pindai-stempel.pdf` adalah `skew.pdf` yang ditambah satu baris teks ketikan "STEMPEL DRAFT" di atas halaman.
-Hasilnya: OCR "0 halaman dibaca", pencarian "LinnSequencer" tidak menemukan apa-apa, dan hanya teks stempel yang
-bisa dicari. Ini perilaku yang dirancang (halaman dengan lapisan teks tidak di-OCR), tetapi untuk pindaian nyata
-yang diberi stempel atau nomor halaman, isinya tidak bisa dicari. Pilihan perbaikan: OCR juga untuk halaman yang
-punya gambar besar tetapi sedikit teks. Ini menambah waktu OCR pada PDF digital yang punya gambar.
+**Temuan 2 (diperbaiki, lihat Perubahan OCR halaman campur di bawah): halaman pindai dengan sedikit teks
+dilewati OCR.** `pindai-stempel.pdf` adalah `skew.pdf` yang ditambah satu baris teks ketikan "STEMPEL DRAFT".
+Sebelum perbaikan, OCR melewati halaman itu ("0 halaman dibaca") dan pencarian "LinnSequencer" tidak menemukan apa-apa.
 
 **Catatan `ccitt.pdf`:** konsol browser sebelum perbaikan menunjukkan galat JBIG2 untuk berkas ini, padahal
 pemeriksaan byte tidak menemukan `JBIG2Decode` (kemungkinan filter tersembunyi di object stream terkompresi).
@@ -1034,4 +1031,45 @@ Konfirmasi hukum sebelum rilis tetap menjadi tanggung jawab pengguna. Ini pemeri
 
 - Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
 - Hal terbuka dari Tahap 2: uji di HP sungguhan (Opera Android) untuk OCR dan kalender, serta konfirmasi lisensi tessdata sebelum rilis (lihat Verifikasi Tahap 2). Dua temuan UX di atas sudah diperbaiki (lihat Perbaikan UX dari uji HP).
-  - Keputusan terbuka: OCR untuk halaman pindai yang punya sedikit teks (Verifikasi lanjutan, temuan 2). Menunggu persetujuan pengguna.
+  - Keterbatasan OCR halaman campur: halaman dengan teks lapisan 51 huruf atau lebih tidak di-OCR, walau gambarnya
+    penuh (lihat Perubahan OCR halaman campur).
+
+## Perubahan OCR halaman campur (29-10-2026): halaman pindai dengan sedikit teks
+
+Menanggapi temuan 2 di Verifikasi lanjutan. Pengguna memilih opsi (a): OCR juga untuk halaman yang punya
+gambar besar tetapi sedikit teks.
+
+- **Aturan:** halaman di-OCR bila tidak punya teks lapisan, atau bila teks lapisannya **50 huruf atau kurang** dan
+  gambar terbesar menutupi **50% atau lebih** halaman (`perluOcr` di `docs/notes/ocr/ocr-teks.js`).
+  Halaman dengan teks lebih dari 50 huruf tidak di-OCR, walau gambarnya penuh.
+- **Deteksi gambar:** `bagianGambarTerbesar` (`docs/notes/pdf/penampil.js`) membaca operator list pdf.js.
+  CTM setiap gambar dihitung dan dibandingkan dengan luas halaman. Gambar di dalam form XObject tidak dihitung.
+  Galat membaca operator dianggap tidak ada gambar.
+- **Penggabungan saat mencari:** teks lapisan dan hasil OCR digabung (`gabungLapisanOcr`). Item OCR yang separuh
+  lebih kotaknya tertutup kotak teks lapisan dibuang, jadi stempel tidak tercatat dua kali. Halaman tanpa
+  teks lapisan memakai hasil OCR seperti sebelumnya.
+- **Ambang 50 huruf:** dipilih dari dua contoh, bukan dari statistik. Stempel `pindai-stempel.pdf` punya 12 huruf.
+  Halaman 4 `multipage.pdf` (grafik dengan label "Oppose", "Percentage", dan "note") punya 77 huruf. Dengan
+  ambang 200, halaman grafik ini ikut di-OCR, dan hasilnya sebagian besar derau ("&", "AN", "ae") yang masuk
+  indeks pencarian. Ambang 50 mengecualikannya. Ini penilaian, bukan angka yang sudah divalidasi pada banyak berkas.
+
+**Cara uji (hasil nyata):**
+- `tools/uji/ocr-pindai-campur.mjs` (Node): **19/19 lulus**. Mencakup ambang, batas tepat di 50, penghitungan huruf,
+  dan penggabungan (duplikat dibuang, OCR di luar lapisan tetap masuk).
+- Chromium, PDF pindai:
+  - `pindai-stempel.pdf`: 7/7. OCR membaca halaman, "LinnSequencer" menemukan 3 hasil, "STEMPEL" tepat 1 hasil
+    (tidak ganda), kontrol negatif "Watson" tidak ditemukan.
+  - `skew.pdf`, `ccitt.pdf`, `rotated_skew.pdf`, `jbig2.pdf`: masing-masing 6/6. Hanya halaman 1 di-OCR.
+  - `multipage.pdf`: 6/6. Halaman 1, 2, 3, 5, dan 6 di-OCR. Halaman 4 tidak. "widow" ditemukan, dan "Oppose"
+    tetap ditemukan lewat lapisan teks.
+- `npm test`: exit 0, semua suite lolos (termasuk `ocr-pindai-campur.mjs`).
+- Ukuran per halaman (`dbg-bagian`): huruf lapisan dan bagian gambar untuk setiap halaman di semua berkas di atas.
+
+**Batas:**
+- Halaman dengan lebih dari 50 huruf di lapisan teks dan gambar penuh tidak di-OCR. Contoh: pindaian yang punya
+  paragraf teks ketikan (misalnya hasil OCR lama yang sudah ditambah lapisan teks). Bagian yang hanya berupa gambar
+  di halaman itu tidak bisa dicari.
+- Gambar di dalam form XObject tidak dihitung. Pindaian biasa tidak memakai bentuk ini, tetapi belum diuji.
+- Keputusan ambang 50 bisa berubah setelah uji dengan lebih banyak PDF nyata.
+- Waktu OCR bertambah untuk PDF digital yang punya gambar besar. Ini hanya terjadi saat pengguna menekan OCR.
+- Chromium desktop saja. Belum diuji di HP atau Android.
