@@ -2,9 +2,9 @@
    gambar sampul asli bila ada; bila tidak, ikon nota di atas warna cadangan
    yang dihasilkan dari id lagu. Dipakai layar Musik dan kartu beranda. */
 
-import * as S from './simpan.js?v=20261029190000';
-import { hueDariId } from './logika.js?v=20261029190000';
-import { ikon } from './ikon.js?v=20261029190000';
+import * as S from './simpan.js?v=20261029200000';
+import { hueDariId } from './logika.js?v=20261029200000';
+import { ikon } from './ikon.js?v=20261029200000';
 
 function isi(el, id, url) {
   const hue = hueDariId(id);

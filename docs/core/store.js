@@ -4,13 +4,14 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261029190000';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261029190000';
-import { sinkronTag } from '../notes/tags.js?v=20261029190000';
-import { bahasaSekarang, t as tr } from './i18n.js?v=20261029190000';
-import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261029190000';
-import { toast } from './toast.js?v=20261029190000';
-import { normalizeKartu } from '../notes/kartu-murni.js?v=20261029190000';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261029200000';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261029200000';
+import { sinkronTag } from '../notes/tags.js?v=20261029200000';
+import { bahasaSekarang, t as tr } from './i18n.js?v=20261029200000';
+import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261029200000';
+import { toast } from './toast.js?v=20261029200000';
+import { normalizeKartu } from '../notes/kartu-murni.js?v=20261029200000';
+import { normalizeUjian } from '../notes/ujian-murni.js?v=20261029200000';
 
 const SCHEMA = 2;
 /* Penyimpanan utama: IndexedDB (lihat db-catatan.js). Kunci localStorage
@@ -64,6 +65,8 @@ export const state = {
   notes: DEFAULT_NOTES(),
   /* flashcard (C7). Ikut tersimpan di snapshot yang sama dengan catatan. */
   kartu: [],
+  /* ruang persiapan ujian (C8): materi dan soal. Ikut snapshot yang sama. */
+  ujian: [],
   openId: 'w',
   /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
      untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
@@ -79,6 +82,7 @@ function snapshot() {
     openId: state.openId,
     notes: state.notes,
     kartu: state.kartu,
+    ujian: state.ujian,
   });
 }
 
@@ -140,6 +144,8 @@ export async function load() {
     state.seq = data.seq || 1;
     /* data sebelum C7 tidak punya kunci kartu: dimulai dari daftar kosong */
     state.kartu = normalizeKartu(data.kartu);
+    /* data sebelum C8 tidak punya kunci ujian */
+    state.ujian = normalizeUjian(data.ujian);
     state.openId = (data.openId && state.notes.some(n => n.id === data.openId))
       ? data.openId : state.notes[0].id;
 

@@ -18,22 +18,23 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261029190000';
-import { flush } from '../core/autosave.js?v=20261029190000';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261029190000';
-import { kunciAnotasi } from './pdf/anotasi.js?v=20261029190000';
-import { kunciSusunan } from './pdf/susunan.js?v=20261029190000';
-import { kunciOcr } from './ocr/ocr-teks.js?v=20261029190000';
-import { idBlobDariGoresan } from './editor/goresan.js?v=20261029190000';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261029190000';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261029190000';
-import { terlihat } from './kunci.js?v=20261029190000';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261029190000';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261029190000';
-import { t as tr } from '../core/i18n.js?v=20261029190000';
-import { extractZip } from '../renamer/unzip.js?v=20261029190000';
-import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261029190000';
-import { normalizeKartu } from './kartu-murni.js?v=20261029190000';
+import { state, save, SCHEMA } from '../core/store.js?v=20261029200000';
+import { flush } from '../core/autosave.js?v=20261029200000';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261029200000';
+import { kunciAnotasi } from './pdf/anotasi.js?v=20261029200000';
+import { kunciSusunan } from './pdf/susunan.js?v=20261029200000';
+import { kunciOcr } from './ocr/ocr-teks.js?v=20261029200000';
+import { idBlobDariGoresan } from './editor/goresan.js?v=20261029200000';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261029200000';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261029200000';
+import { terlihat } from './kunci.js?v=20261029200000';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261029200000';
+import { daftarRuang, tambahRuang } from './ruang.js?v=20261029200000';
+import { t as tr } from '../core/i18n.js?v=20261029200000';
+import { extractZip } from '../renamer/unzip.js?v=20261029200000';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261029200000';
+import { normalizeKartu } from './kartu-murni.js?v=20261029200000';
+import { normalizeUjian } from './ujian-murni.js?v=20261029200000';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -128,6 +129,7 @@ export async function cadanganJson() {
     ...(hamojiCustom.length ? { hamojiCustom } : {}),
     ...(ruang.length ? { ruang } : {}),
     ...(state.kartu && state.kartu.length ? { kartu: state.kartu } : {}),
+    ...(state.ujian && state.ujian.length ? { ujian: state.ujian } : {}),
   });
   return { nama: `hara-cadangan-${namaHariIni()}.json`, teks };
 }
@@ -146,6 +148,7 @@ export async function siapImporJson(teks) {
     hamojiCustom: Array.isArray(data.hamojiCustom) ? data.hamojiCustom : [],
     ruang: Array.isArray(data.ruang) ? data.ruang : [],
     kartu: normalizeKartu(data.kartu),
+    ujian: normalizeUjian(data.ujian),
     jumlahBlob: Object.keys(data.blobs || {}).length,
     seq: data.seq || 1,
   };
@@ -178,6 +181,18 @@ export async function terapkanImporJson(r, mode) {
       }
     }
   } else if (mode === 'timpa') state.kartu = [];
+
+  /* ujian (C8): sama dengan kartu. Ruang ber-id sama diganti seluruhnya. */
+  if (Array.isArray(r.ujian) && r.ujian.length) {
+    if (mode === 'timpa') state.ujian = r.ujian;
+    else {
+      const ada = new Map(state.ujian.map((u, i) => [u.id, i]));
+      for (const u of r.ujian) {
+        if (ada.has(u.id)) state.ujian[ada.get(u.id)] = u;
+        else state.ujian.push(u);
+      }
+    }
+  } else if (mode === 'timpa') state.ujian = [];
 
   if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) {
     setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');

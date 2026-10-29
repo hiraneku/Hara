@@ -1204,6 +1204,51 @@ gambar besar tetapi sedikit teks.
 - **Akses:** tidak ada di grid beranda. Ditemukan lewat Lainnya > Belajar atau Ctrl+K.
 - Chromium desktop dan viewport 390 px saja. Belum diuji di HP sungguhan atau Android.
 
+## Perubahan 33 · C8 — Persiapan ujian v1 (Tahap 4)
+
+- **ID:** C8 (Persiapan ujian). Urutan §6.1 Tahap 4. Dikerjakan setelah persetujuan pengguna ("Oke kerjakan C8").
+  Lingkup v1 mengikuti §1.9: C8 tidak menunggu semua fitur belajar.
+- **Perilaku:**
+  - **Ruang ujian:** banyak ruang, masing-masing punya nama (dipangkas, maksimal 120 karakter), daftar materi, dan daftar soal.
+  - **Materi:** dipilih dari catatan yang belum masuk Sampah. Judul disalin saat ditambahkan. Mengeluarkan materi tidak menghapus soal. Catatan yang masuk Sampah tetap tampil dengan label "di Sampah". Batas 200 materi per ruang.
+  - **Soal:** pertanyaan dan jawaban diketik manual, sumber opsional (salah satu materi di ruang). Maksimal 2000 karakter per sisi. Batas 1000 soal per ruang. Soal menyimpan nilai benar dan salah.
+  - **Latihan:** Ingat / Belum, berurutan dari soal tertua. Soal Belum kembali ke antrean sampai dijawab Ingat. Ringkasan di akhir, dengan tombol ulangi. Logika antrean memakai `kartu-murni.js` (`antrianLatihan`, `langkahAntrean`, `ringkasSesi`).
+  - **Timer fokus:** tombol "Timer fokus" di ruang membuka timer dari C9 (`bukaFokus()`).
+  - **Hapus:** soal dan ruang dihapus dengan toast dan tombol Urungkan. Tidak ada dialog konfirmasi.
+  - **Layar:** tiga layar terhubung lewat induk. `ujian` (daftar ruang), `ujian-ruang` (detail), dan `ujian-latihan`. Tombol kembali pulang ke layar induk. Navigasi bawah disembunyikan.
+  - **Akses:** menu Lainnya grup Belajar, dan palet (Ctrl+K, "Persiapan ujian").
+  - **Penyimpanan:** kunci `ujian` ikut di snapshot yang sama dengan catatan dan kartu. Ekspor memuatnya. Impor gabung memperbarui ruang ber-id sama dan menambah yang baru. Impor timpa mengembalikan persis.
+- **File:**
+  - `docs/notes/ujian-murni.js` (baru): model murni (buat ruang dan soal, normalisasi, materi, latihan, statistik). Tanpa DOM.
+  - `docs/notes/ujian.js` (baru): layar, glue, dan delegasi klik.
+  - `docs/core/store.js`, `docs/notes/data-io.js`: kunci `ujian` untuk simpan, muat, ekspor, dan impor.
+  - `docs/core/router.js` (`UJIAN_LAYAR`), `docs/notes/index.js` (registrasi layar dan induk), `docs/app.js` (grup Lainnya dan palet).
+  - `docs/styles/notes.css` (gaya `.uj-*`), `docs/core/bahasa-en.js` dan `bahasa-ja.js` (40 kunci per bahasa).
+  - `tools/uji/ujian-murni.mjs` (baru): uji model.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/ujian-murni.mjs` (Node): **44/44 lulus**. Mencakup pembuatan ruang dan soal, batas karakter dan jumlah,
+    normalisasi data rusak, materi tanpa duplikat, antrean latihan, nilai tersimpan, dan statistik.
+  - Chromium `uji-c8.mjs` (harness di luar repo, `/home/user/uji-hara/`): **45/45 lulus**, tanpa pageerror. Mencakup akses
+    lewat palet, navigasi bawah tersembunyi, Enter untuk membuat ruang, nama kosong ditolak, lembar materi dengan pencarian,
+    soal kosong ditolak, sumber soal, latihan Ingat dan Belum, ringkasan, tombol kembali, timer fokus, hapus dan Urungkan,
+    keluarkan materi, label Sampah, muat ulang (data bertahan), ekspor dan impor timpa, dan 390 px tanpa gulir horizontal.
+  - `npm test`: exit 0, **37/37 lolos** (`npmtest-c8.log`).
+- **Galat yang ditemukan lewat uji dan diperbaiki:**
+  - Layar latihan menampilkan "Catatan tidak ditemukan" untuk soal tanpa sumber. Label sekarang hanya tampil bila ada sumber.
+  - Uji model: pengecekan "nilai tak dikenal tidak mengubah" memakai soal yang sudah dinilai. Pengecekan dibuat pada objek baru. Ini galat uji, bukan kode.
+  - Harness: browser Chromium dari `@sparticuz/chromium` mati saat halaman kedua dibuka di browser yang sama. Setiap skenario sekarang memakai browser sendiri.
+- **Keputusan:**
+  - Impor timpa dari cadangan lama tanpa kunci `ujian` mengosongkan semua ruang. Ini sama dengan perilaku kartu (Perubahan 31) dan sesuai arti timpa.
+  - Judul materi dan sumber soal ditampilkan dari catatan asli bila catatannya masih ada. Salinan judul yang tersimpan hanya dipakai bila catatan sudah tidak ditemukan.
+
+**Keterbatasan (v1):**
+- **Tidak ada layer, tape, impor kartu, SRS (§2.7), pembuatan soal otomatis, atau materi bawaan.** Ini di luar v1 sesuai lingkup.
+- **Tidak ada ganti nama ruang** dan tidak ada ganti soal. Soal hanya bisa ditambah, dihapus, dan dinilai.
+- **Latihan hanya di memori.** Muat ulang halaman menghentikan sesi. Nilai per soal tetap tersimpan.
+- **Materi hanya dari catatan.** Teks tape atau kartu belum menjadi materi.
+- **Tidak ada statistik lintas ruang** dan tidak ada jadwal ulang.
+- Chromium desktop dan viewport 390 px saja. Belum diuji di HP sungguhan atau Android.
+
 ## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
 
 Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.

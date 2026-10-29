@@ -17,20 +17,20 @@
      ulang, sehingga jendela mengambang tetap jalan saat mencatat.
    - Iframe tidak didukung: sanitasi membuangnya, dan konten lintas-asal di
      dalamnya tidak bisa dibuka atau di-PiP-kan oleh halaman ini. */
-import { state } from '../core/store.js?v=20261029190000';
-import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261029190000';
-import { t as tr } from '../core/i18n.js?v=20261029190000';
-import { esc } from '../core/dom.js?v=20261029190000';
-import { ambilBlob } from '../core/blobs.js?v=20261029190000';
-import { toast } from '../core/toast.js?v=20261029190000';
-import { saveNow } from './editor/cleanup.js?v=20261029190000';
-import { muatPdfJs, fiturPdfKurang, OPSI_WASM_PDFJS } from './pdf/muat-pdfjs.js?v=20261029190000';
+import { state } from '../core/store.js?v=20261029200000';
+import { go, cur, onAfterRender, onBeforeLeave } from '../core/router.js?v=20261029200000';
+import { t as tr } from '../core/i18n.js?v=20261029200000';
+import { esc } from '../core/dom.js?v=20261029200000';
+import { ambilBlob } from '../core/blobs.js?v=20261029200000';
+import { toast } from '../core/toast.js?v=20261029200000';
+import { saveNow } from './editor/cleanup.js?v=20261029200000';
+import { muatPdfJs, fiturPdfKurang, OPSI_WASM_PDFJS } from './pdf/muat-pdfjs.js?v=20261029200000';
 import { adalahPdf, ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
-         skalaPasLebar } from './pdf/logika.js?v=20261029190000';
-import { simpanBlob, hapusBlob } from '../core/blobs.js?v=20261029190000';
-import { sematkanBlokGambar } from './editor/image.js?v=20261029190000';
-import { snap } from './editor/history.js?v=20261029190000';
-import { formatWaktu } from './editor/perekam-suara.js?v=20261029190000';
+         skalaPasLebar } from './pdf/logika.js?v=20261029200000';
+import { simpanBlob, hapusBlob } from '../core/blobs.js?v=20261029200000';
+import { sematkanBlokGambar } from './editor/image.js?v=20261029200000';
+import { snap } from './editor/history.js?v=20261029200000';
+import { formatWaktu } from './editor/perekam-suara.js?v=20261029200000';
 
 const ID_TAHAN = 'belajar-pip-tahan';
 const GALAT_VIDEO = 'Video tidak bisa diputar. Formatnya tidak didukung, sumbernya tidak tersedia, atau dibatasi.';

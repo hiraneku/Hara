@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20261029190000';
+import { t as tr } from './i18n.js?v=20261029200000';
 
 const views  = {};
 const titles = {};
@@ -25,6 +25,8 @@ export function registerViews(map, titleMap, indukMap) {
 }
 
 const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-efek', 'musik-effect', 'musik-eq', 'musik-ekspor'];
+/* Persiapan ujian (C8): tiga layar dengan tombol kembali, tanpa navigasi bawah. */
+const UJIAN_LAYAR = ['ujian', 'ujian-ruang', 'ujian-latihan'];
 
 const saudara = (a, b) => induk[a] === b || induk[b] === a;
 
@@ -54,7 +56,7 @@ export function go(v, opsi = {}) {
   const isEd = v === 'editor';
   /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,
      dengan panah kembali — jalannya cuma dua: buka PIN atau kembali */
-  const pakaiEd = isEd || v === 'kunci' || MUSIK_LAYAR.includes(v);
+  const pakaiEd = isEd || v === 'kunci' || MUSIK_LAYAR.includes(v) || UJIAN_LAYAR.includes(v);
   /* panah kembali ikut tampil di halaman yang tidak ada di nav bawah
      (Pengaturan) supaya selalu ada jalan keluar */
   const pakaiBack = pakaiEd || v === 'set';
