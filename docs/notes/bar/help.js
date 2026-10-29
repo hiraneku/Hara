@@ -88,6 +88,19 @@ export const HELP = {
     tahu: 'Tape yang baru dibuat selalu dalam keadaan tertutup.'
   },
 
+  kartuBuat: {
+    nama: 'Jadikan kartu',
+    apa: 'Membuat kartu belajar dari teks yang disorot. Teks sorot menjadi bagian depan, dan jawabannya ditulis sendiri di belakang.',
+    cara: 'Sorot teks, lalu pilih menu ini. Isi jawabannya, lalu tekan Simpan kartu.',
+    tahu: 'Kartu disimpan bersama data catatan dan ikut cadangan JSON. Kartu tidak berubah saat catatan asalnya diedit atau dihapus.'
+  },
+  kartuLatih: {
+    nama: 'Latihan kartu',
+    apa: 'Mengulang kartu satu per satu: lihat bagian depan, balik untuk melihat jawaban, lalu tandai Ingat atau Belum.',
+    cara: 'Pilih menu ini. Ketuk Lihat jawaban, lalu pilih Ingat atau Belum.',
+    tahu: 'Kartu yang Belum muncul lagi di akhir sesi yang sama. Belum ada penjadwalan ulang otomatis.'
+  },
+
   /* ── gaya paragraf ── */
   p: {
     nama: 'Teks biasa',

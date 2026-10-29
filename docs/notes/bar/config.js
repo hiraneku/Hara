@@ -60,6 +60,8 @@ export const BAR = [
       { m: 'tape',   ikon: 'i-eye-off',nama: 'Tape (sembunyikan teks)', kunci: '' },
       { m: 'tapeBuka', ikon: 'i-eye', nama: 'Buka semua tape', kunci: '' },
       { m: 'tapeTutup', ikon: 'i-eye-off', nama: 'Tutup semua tape', kunci: '' },
+      { m: 'kartuBuat', ikon: 'i-plus', nama: 'Jadikan kartu', kunci: '' },
+      { m: 'kartuLatih', ikon: 'i-book', nama: 'Latihan kartu', kunci: '' },
     ]
   },
   {

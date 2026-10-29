@@ -4,12 +4,13 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261029170000';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261029170000';
-import { sinkronTag } from '../notes/tags.js?v=20261029170000';
-import { bahasaSekarang, t as tr } from './i18n.js?v=20261029170000';
-import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261029170000';
-import { toast } from './toast.js?v=20261029170000';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261029180000';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261029180000';
+import { sinkronTag } from '../notes/tags.js?v=20261029180000';
+import { bahasaSekarang, t as tr } from './i18n.js?v=20261029180000';
+import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261029180000';
+import { toast } from './toast.js?v=20261029180000';
+import { normalizeKartu } from '../notes/kartu-murni.js?v=20261029180000';
 
 const SCHEMA = 2;
 /* Penyimpanan utama: IndexedDB (lihat db-catatan.js). Kunci localStorage
@@ -61,6 +62,8 @@ export function sinkronWelcome() {
 export const state = {
   seq: 1,
   notes: DEFAULT_NOTES(),
+  /* flashcard (C7). Ikut tersimpan di snapshot yang sama dengan catatan. */
+  kartu: [],
   openId: 'w',
   /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
      untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
@@ -75,6 +78,7 @@ function snapshot() {
     seq: state.seq,
     openId: state.openId,
     notes: state.notes,
+    kartu: state.kartu,
   });
 }
 
@@ -134,6 +138,8 @@ export async function load() {
     const notes = normalizeNotes(data.notes);
     state.notes = notes.length ? notes : DEFAULT_NOTES();
     state.seq = data.seq || 1;
+    /* data sebelum C7 tidak punya kunci kartu: dimulai dari daftar kosong */
+    state.kartu = normalizeKartu(data.kartu);
     state.openId = (data.openId && state.notes.some(n => n.id === data.openId))
       ? data.openId : state.notes[0].id;
 

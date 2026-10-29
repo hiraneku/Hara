@@ -10,7 +10,7 @@
 
    Murni: tidak menyentuh state. Penyimpanan ada di tugas.js. */
 
-import { tenggatTodo } from './pengingat.js?v=20261029170000';
+import { tenggatTodo } from './pengingat.js?v=20261029180000';
 
 const pad = n => String(n).padStart(2, '0');
 const tglIso = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;

@@ -1115,3 +1115,50 @@ gambar besar tetapi sedikit teks.
 - Tidak ada pintasan keyboard untuk membuka atau menutup tape. Tidak ada cara untuk mengakses tape lewat keyboard saja.
 - Belum diuji di mode baca, di dalam tabel, dan di dalam blok toggle atau daftar.
 - Chromium desktop dan viewport 390 px saja. Belum diuji di HP atau Android.
+
+## Perubahan 31 · C7 — Flashcard v1 (Tahap 4)
+
+- **ID:** C7 (Flashcard). Urutan §6.1 Tahap 4 nomor 2. Dikerjakan setelah persetujuan pengguna ("Oke lanjut c7").
+- **Lingkup v1 (sesuai rancangan):**
+  - Kartu dibuat manual. Sorot teks di catatan, lalu pilih **Jadikan kartu** di bilah format atau di menu **Penandaan**.
+    Teks sorot mengisi bagian depan, dan belakang diisi sendiri. Kedua sisi wajib, dipangkas, maksimal 2000 karakter per sisi.
+  - Judul catatan sumber disalin ke kartu. Menghapus atau mengedit catatan asal **tidak** mengubah kartu.
+  - **Latihan kartu** (menu Penandaan): berurutan dari kartu tertua. Ketuk **Lihat jawaban**, lalu pilih **Kartu ingat** atau **Belum**.
+    Kartu yang "Belum" diantrekan lagi di akhir sesi yang sama. Hitungan benar dan salah disimpan per kartu.
+  - Kartu bisa dihapus dari sesi latihan. Tanpa spaced repetition (§2.7 ditunda).
+  - Kartu disimpan di `state.kartu`, ikut snapshot penyimpanan, dan ikut cadangan JSON. Impor dinormalisasi:
+    entri rusak dibuang, id ganda dibuang. Mode timpa mengganti semua kartu, mode gabung menimpa berdasarkan id.
+- **File:**
+  - `docs/notes/kartu-murni.js` (baru): model murni (buat, normalisasi, nilai, antrean, ringkasan). Tanpa impor UI.
+  - `docs/notes/kartu.js` (baru): glue UI (formulir lembar, latihan, hapus, pesan).
+  - `docs/core/store.js`, `docs/notes/data-io.js`: penyimpanan, ekspor, impor kartu.
+  - `docs/notes/menus/pop.js`: klik dan Enter untuk formulir dan latihan (Enter memakai kelas `pop-in`).
+  - `docs/notes/editor/bilah-teks.js`: tombol Jadikan kartu di bilah format seleksi.
+  - `docs/notes/bar/render.js`, `bar/config.js` (grup Penandaan), `bar/help.js`.
+  - `docs/styles/notes.css` (gaya `.kt-*`), `docs/core/bahasa-en.js`, `bahasa-ja.js`.
+  - `tools/uji/kartu-murni.mjs` (baru): uji model murni.
+- **Keputusan kecil saat implementasi:**
+  - Kunci terjemahan `Ingat` dan `Ulangi` sudah dipakai di tempat lain dengan arti berbeda (pengingat, ulang). Untuk kartu dipakai
+    `Kartu ingat` dan `Ulangi latihan`, supaya tidak menimpa terjemahan lama.
+  - Ringkasan latihan memakai "Sisa" dan bukan "selesai / total", karena kartu "Belum" muncul lagi.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/kartu-murni.mjs` (Node): **35/35 lulus**. Mencakup validasi, batas 2000 karakter, normalisasi impor,
+    urutan antrean, dan jalannya sesi sampai selesai.
+  - Chromium `uji-c7.mjs` (harness di luar repo): **46/46 lulus**. Mencakup pembuatan dari grup Penandaan dan bilah
+    (termasuk validasi belakang kosong dan spasi saja), Enter menyimpan, latihan (balik, Ingat, Belum, kembali ke antrean),
+    nilai tersimpan, Ulangi, hapus, latihan tanpa kartu, kartu bertahan setelah muat ulang, batas maxlength,
+    dan tampilan 390 px tanpa melebar (latihan dan formulir). Tidak ada pageerror.
+  - `npm test`: exit 0, **37 suite lolos** (`npmtest-c7.log`).
+- **Galat yang ditemukan lewat uji dan diperbaiki:** kolom formulir tidak punya kelas `pop-in`, sehingga Enter tidak menyimpan.
+  Ditambahkan kelas itu.
+- **Temuan di luar C7 (belum diperbaiki):** pada 390 px grup **Penandaan** di bilah utama berada di luar layar.
+  Bilah mobile harus digulir ke samping untuk mencapainya. Ini berlaku untuk semua isi grup itu, termasuk Tape.
+  Jalur kartu di HP sekarang lewat bilah format yang muncul saat teks disorot.
+
+**Keterbatasan (v1):**
+- Tanpa spaced repetition. Kartu "Belum" hanya muncul lagi dalam sesi yang sama, tanpa jadwal lintas hari (§2.7).
+- Tidak terikat Tape. Integrasi kartu dari teks tape (opsional) belum dikerjakan.
+- Pembuatan manual saja. Tidak ada impor kartu dari berkas atau pembuatan otomatis.
+- Tidak ada gambar atau media di kartu. Hanya teks biasa.
+- Hanya Chromium desktop dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
+- Uji 390 px memicu tombol Penandaan lewat DOM karena tombol itu di luar layar (lihat temuan di atas).

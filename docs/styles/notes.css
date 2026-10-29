@@ -2704,3 +2704,12 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
   background:color-mix(in srgb,currentColor 9%,transparent);transition:background .15s,color .15s}
 .tape.tutup{color:transparent!important;background:var(--tape-tutup,#8e8e93)}
 .tape.tutup::selection{background:transparent}
+
+/* Flashcard (C7) */
+.kt-kartu{border:1px solid var(--border);border-radius:12px;padding:18px 16px;min-height:120px;text-align:center}
+.kt-teks{font-size:18px;line-height:1.5;margin:8px 0;white-space:pre-wrap;word-break:break-word}
+.kt-garis{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)}
+.kt-baris{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%}
+.kt-hitung{text-align:center;margin:10px 0 0}
+.kt-hapus{margin-top:8px;width:100%}
+.kt-form .sh-inp{width:100%;box-sizing:border-box;margin-bottom:10px}

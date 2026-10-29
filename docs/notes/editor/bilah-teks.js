@@ -18,12 +18,13 @@
    • hilang saat sorotan menguncup, saat menggulir, pindah layar,
      jendela berubah ukuran, atau Escape. */
 
-import { docEl, sel } from './caret.js?v=20261029170000';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261029170000';
-import { jalankan } from '../bar/render.js?v=20261029170000';
-import { openPop } from '../menus/pop.js?v=20261029170000';
-import { warnaMenu } from '../menus/warna.js?v=20261029170000';
-import { t as tr } from '../../core/i18n.js?v=20261029170000';
+import { docEl, sel } from './caret.js?v=20261029180000';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261029180000';
+import { jalankan } from '../bar/render.js?v=20261029180000';
+import { openPop } from '../menus/pop.js?v=20261029180000';
+import { warnaMenu } from '../menus/warna.js?v=20261029180000';
+import { kartuBuatMenu } from '../kartu.js?v=20261029180000';
+import { t as tr } from '../../core/i18n.js?v=20261029180000';
 
 const JEDA = 90;          /* ms — selectionchange datang beruntun */
 const LUANG = 8;          /* px jarak bilah dari sorotan / tepi layar */
@@ -38,6 +39,7 @@ const TOMBOL = [
   { m: 'warna',  l: '<svg class="bi"><use href="#i-drop"/></svg>', t: 'Warna teks & sorotan' },
   { m: 'link',   l: '<svg class="bi"><use href="#i-link2"/></svg>', t: 'Tautan web' },
   { m: 'tape',   l: '<svg class="bi"><use href="#i-eye-off"/></svg>', t: 'Tape (sembunyikan teks)' },
+  { m: 'kartu',  l: '<svg class="bi"><use href="#i-plus"/></svg>', t: 'Jadikan kartu' },
   { m: 'clear',  l: '<svg class="bi"><use href="#i-eraser"/></svg>', t: 'Hapus format' },
 ];
 
@@ -66,6 +68,10 @@ function bilah() {
     const m = b.dataset.m;
     if (m === 'warna') {           /* palet warna punya menunya sendiri */
       openPop(warnaMenu(), b);
+      return;
+    }
+    if (m === 'kartu') {           /* flashcard (C7): isi depan dari seleksi, lalu lembar */
+      openPop(kartuBuatMenu(), b);
       return;
     }
     jalankan(m, b);
