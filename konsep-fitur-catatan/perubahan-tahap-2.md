@@ -648,7 +648,8 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Akurasi hanya diuji pada teks bersih buatan sendiri, belum pada pindai nyata yang buram, miring,
     atau berwarna.
   - Halaman yang punya sedikit teks di lapisan teks dianggap sudah punya teks dan **tidak** di-OCR.
-    Ini bisa membuat sebagian halaman pindai terlewat. Perlu diuji dengan PDF nyata.
+    Ini sudah diuji dengan PDF nyata (`pindai-stempel.pdf`): bagian pindai halaman itu tidak terbaca. Lihat
+    Verifikasi lanjutan butir 1, temuan 2.
   - Tombol batal menyelesaikan halaman yang sedang dibaca dulu, baru berhenti.
   - Gambar besar diperkecil ke sisi terpanjang 1600 piksel sebelum OCR. Teks yang sangat kecil bisa hilang.
   - Tidak ada tampilan teks OCR yang bisa diedit. Hasil OCR hanya untuk pencarian.
@@ -942,6 +943,84 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   - Uji OCR gambar dan PDF di HP tetap lulus setelah perbaikan.
 - **Keterbatasan:** tetap Chromium desktop dengan viewport 390 px, bukan HP sungguhan. Uji Opera Android belum dilakukan.
 
+## Verifikasi lanjutan (29-10-2026): PDF pindai sungguhan, pergantian bulan dan tahun, dan catatan uji
+
+Lingkup: lima butir tindak lanjut pengguna. Satu butir (PR ke main) tidak dikerjakan atas permintaan pengguna.
+
+### 1. Uji B6 dengan PDF pindai sungguhan (Chromium, harness `uji-b6-pdf.mjs`)
+
+Harness Chromium (`uji-b6-pdf.mjs`, `uji-jurnal-bulan.mjs`) disimpan di luar repo, seperti harness lain di bagian uji Chromium.
+
+PDF pindai diambil dari sampel `tests/resources` repo OCRmyPDF (hanya untuk uji, tidak dikirim dalam aplikasi). Keempatnya halaman pindai
+murni: 0 karakter di lapisan teks, 1 gambar. Teks yang benar diperiksa dari tangkapan layar penampil.
+
+| Berkas | Kompresi | Hasil OCR | Pencarian | Hasil uji |
+|---|---|---|---|---|
+| `skew.pdf` (miring) | JBIG2 | "The LinnSequencer … professional musician" | "LinnSequencer" 3 hasil, "musician" 1 hasil | 8/8 |
+| `ccitt.pdf` | CCITT (galat JBIG2 di konsol, lihat di bawah) | teks yang sama | sama | 8/8 |
+| `rotated_skew.pdf` (diputar) | JBIG2 | teks yang sama | sama | 8/8 |
+| `jbig2.pdf` | JBIG2 | teks yang sama | sama | 7/7 |
+| `multipage.pdf` (6 hal.) | JPEG dan teks | 5 halaman dibaca, halaman 4 dilewati karena punya teks (109 karakter) | sesuai desain | 5/5 |
+
+Kontrol negatif ("Watson" tidak ada di halaman) selalu "Tidak ditemukan". Tidak ada pageerror.
+
+**Temuan 1 (sudah diperbaiki): decoder JBIG2 tidak dimuat.** Vendor pdf.js hanya berisi `pdf.min.mjs` dan
+worker. Halaman JBIG2 gagal dengan "JBig2 failed to initialize", kanvas tetap kosong, dan OCR membaca
+kanvas kosong ("1 halaman dibaca" tanpa teks). Uji sebelum perbaikan: `skew.pdf` tidak tergambar, OCR selesai
+dalam 1 detik tanpa hasil. Perbaikan:
+- `docs/vendor/pdfjs/wasm/jbig2.wasm` (sekitar 104 KB, sha256 `466f45c2…8eaab0`) dan lisensinya, disalin
+  dari `pdfjs-dist` 6.4.299 tanpa modifikasi.
+- `OPSI_WASM_PDFJS` di `docs/notes/pdf/muat-pdfjs.js` (`wasmUrl`), dipakai oleh penampil PDF dan belajar-materi.
+- README vendor diperbarui. `image_decoders/` (JS) dan OpenJPEG (JPEG2000) tetap belum disertakan.
+
+**Temuan 2 (belum diperbaiki, perlu keputusan pengguna): halaman pindai yang punya sedikit teks dilewati OCR.**
+`pindai-stempel.pdf` adalah `skew.pdf` yang ditambah satu baris teks ketikan "STEMPEL DRAFT" di atas halaman.
+Hasilnya: OCR "0 halaman dibaca", pencarian "LinnSequencer" tidak menemukan apa-apa, dan hanya teks stempel yang
+bisa dicari. Ini perilaku yang dirancang (halaman dengan lapisan teks tidak di-OCR), tetapi untuk pindaian nyata
+yang diberi stempel atau nomor halaman, isinya tidak bisa dicari. Pilihan perbaikan: OCR juga untuk halaman yang
+punya gambar besar tetapi sedikit teks. Ini menambah waktu OCR pada PDF digital yang punya gambar.
+
+**Catatan `ccitt.pdf`:** konsol browser sebelum perbaikan menunjukkan galat JBIG2 untuk berkas ini, padahal
+pemeriksaan byte tidak menemukan `JBIG2Decode` (kemungkinan filter tersembunyi di object stream terkompresi).
+Ini belum diverifikasi. Setelah perbaikan berkas ini lulus.
+
+**Batas uji:** Chromium desktop, bukan HP. Teks yang dikenali adalah halaman iklan cetak yang bersih dan
+dipindai buatan OCRmyPDF, bukan pindai buram, berwarna, atau berisi tulisan tangan. Waktu OCR di server
+5–7 detik per halaman (CPU server, bukan HP).
+
+### 2. Catatan hasil `uji-belajar` (C3, C4, C5, HP)
+
+- Hasil: **53/53 lulus** (run4, exit 0). Angka ini dari sesi sebelumnya, sebelum lingkungan di-reset.
+- Harness `uji-belajar.mjs` dan log `run4.log` tidak tersedia lagi di workspace ini, jadi uji ini **tidak bisa
+  diulang di sini**. Hasil ini dicatat sebagai laporan, bukan hasil yang sudah diverifikasi ulang.
+- Perubahan setelah run4 yang menyentuh jalur PDF belajar: `OPSI_WASM_PDFJS` (lihat butir 1). Uji
+  `npm test` tetap lulus setelah perubahan ini.
+
+### 3. Pergantian bulan dan tahun di navigasi jurnal (`uji-jurnal-bulan.mjs`, Chromium)
+
+Hasil: **28/28 lulus**, tanpa pageerror.
+- 31 Oktober → 1 November 2026: label, judul, dan isi tiap hari tersimpan terpisah (tidak tercampur).
+- 30 November → 1 Desember 2026: label dan judul benar.
+- 31 Desember 2026 → 1 Januari 2027: judul, label kiri dan kanan, dan isi tersimpan lintas tahun.
+- Mundur dari 1 Januari 2027 ke 31 Desember 2026: jurnal yang sudah ada dibuka, tidak dibuat ganda (tetap 1 catatan).
+- Penanda kalender: Desember 2026 menandai 31, Januari 2027 menandai 1, November 2026 menandai 1 dan 30.
+- Tautan **Lihat di kalender** dari 1 Januari 2027 membuka layar Tugas dengan Januari 2027 terlihat.
+
+Batas: cek Januari 2027 di layar Tugas memakai teks halaman, belum cek sel kalender yang terpilih.
+
+### 4. Keputusan yang diserahkan kepada saya
+
+- **Navigasi jurnal (±1 hari):** tetap membuka atau membuat jurnal, sama seperti tombol Buka jurnal di kalender.
+  Konsekuensinya, menelusuri beberapa hari bisa membuat jurnal kosong. Saya pilih ini karena konsisten
+  dengan tombol Buka jurnal dan tidak perlu mode terpisah.
+- **Bilah mini gambar:** tetap membungkus ke dua baris di desktop dan HP (lihat Perbaikan UX dari uji HP).
+  Alasannya, chip di ujung, termasuk Baca teks, lebih penting daripada gaya satu baris ramping.
+
+### 5. Lisensi tessdata (butir 7)
+
+Pengguna menjawab "Ya". Data `eng` dan `ind` dicatat sebagai **Apache-2.0** (lihat Verifikasi Tahap 2).
+Konfirmasi hukum sebelum rilis tetap menjadi tanggung jawab pengguna. Ini pemeriksaan teknis, bukan nasihat hukum.
+
 ## Status (Tahap 2)
 
 - B1, B5, B3, B4, B2, B6, dan B8 sudah diterapkan dan diuji (urutan §6.1). Tahap 2 selesai.
@@ -955,3 +1034,4 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 
 - Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
 - Hal terbuka dari Tahap 2: uji di HP sungguhan (Opera Android) untuk OCR dan kalender, serta konfirmasi lisensi tessdata sebelum rilis (lihat Verifikasi Tahap 2). Dua temuan UX di atas sudah diperbaiki (lihat Perbaikan UX dari uji HP).
+  - Keputusan terbuka: OCR untuk halaman pindai yang punya sedikit teks (Verifikasi lanjutan, temuan 2). Menunggu persetujuan pengguna.

@@ -12,29 +12,29 @@
    POSISI di susunan; `srcSekarang(s)` memberi nomor halaman asli (0 = kosong).
    Anotasi selalu diindeks per halaman asli. */
 
-import { muatPdfJs } from './muat-pdfjs.js?v=20261029120000';
+import { muatPdfJs, OPSI_WASM_PDFJS } from './muat-pdfjs.js?v=20261029140000';
 import {
   ZOOM_BAWAAN, zoomBerikut, zoomSebelumnya, halamanBerikut, halamanSebelumnya,
   halamanTerjepit, skalaPasLebar,
-} from './logika.js?v=20261029120000';
+} from './logika.js?v=20261029140000';
 import {
   WARNA_ANOT, anotasiHalaman, batalTerakhirHalaman, buatAnotasi, tambahAnotasi,
   titikTernormal, MAKS_TEKS_KOMENTAR,
-} from './anotasi.js?v=20261029120000';
-import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261029120000';
+} from './anotasi.js?v=20261029140000';
+import { muatAnotasi, simpanAnotasi } from './anotasi-simpan.js?v=20261029140000';
 import {
   asliUrut, gandakanPos, hapusPos, pindahPos, posisiSrc, sisipKosongSetelah, srcDi, srcTerdekat, susunanAwal,
-} from './susunan.js?v=20261029120000';
-import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261029120000';
+} from './susunan.js?v=20261029140000';
+import { muatSusunan, simpanSusunan } from './susunan-simpan.js?v=20261029140000';
 import {
   bangunIndeks, daftarKomentar, hasilBerikut, hasilSebelumnya, kumpulkanHasil, normalisasiCari,
-} from './cari-pdf.js?v=20261029120000';
-import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261029120000';
-import { kenali } from '../ocr/mesin.js?v=20261029120000';
-import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261029120000';
-import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261029120000';
-import { esc } from '../../core/dom.js?v=20261029120000';
-import { t as tr } from '../../core/i18n.js?v=20261029120000';
+} from './cari-pdf.js?v=20261029140000';
+import { tulisPdfGambar, gambarAnotasiKanvas } from './ekspor-pdf.js?v=20261029140000';
+import { kenali } from '../ocr/mesin.js?v=20261029140000';
+import { muatOcrPdf, simpanOcrPdf } from '../ocr/ocr-simpan.js?v=20261029140000';
+import { SISI_OCR } from '../ocr/ocr-teks.js?v=20261029140000';
+import { esc } from '../../core/dom.js?v=20261029140000';
+import { t as tr } from '../../core/i18n.js?v=20261029140000';
 
 let aktif = null;   /* sesi penampil yang sedang terbuka (satu saja) */
 
@@ -285,7 +285,7 @@ export async function bukaPenampilPdf(data, nama = 'PDF', opsi = {}) {
   if (aktif !== s) return;
   s.lib = lib;
 
-  const task = lib.getDocument({ data: new Uint8Array(data), isEvalSupported: false, useSystemFonts: false });
+  const task = lib.getDocument({ data: new Uint8Array(data), isEvalSupported: false, useSystemFonts: false, ...OPSI_WASM_PDFJS });
   s.task = task;
   task.onPassword = () => {
     s.dilindungi = true;   /* destroy() menolak promise; pesan ini tidak boleh tertimpa */

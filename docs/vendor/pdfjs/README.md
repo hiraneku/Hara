@@ -9,13 +9,24 @@ Dipakai untuk menampilkan PDF di dalam catatan (Bagian B1, Tahap 2).
   - `pdf.worker.min.mjs` (worker untuk parsing dan rendering, sekitar 1,26 MB)
 - Dimuat lewat `import()` hanya saat PDF dibuka, jadi tidak membebani pembukaan aplikasi.
 
+## Decoder JBIG2 (wasm/)
+
+Pindai hitam-putih sering memakai JBIG2. Tanpa decoder ini pdf.js gagal menggambar halaman
+("JBig2 failed to initialize"), dan OCR akan membaca kanvas kosong. Karena itu disertakan:
+
+- `wasm/jbig2.wasm` (sekitar 104 KB), disalin **tanpa modifikasi** dari `pdfjs-dist` 6.4.299 (`wasm/`).
+  sha256: `466f45c2a61a698152fb5400c27e56ff2ceb73dcb71fde3fc366a502308eaab0`
+- `wasm/LICENSE_JBIG2` dan `wasm/LICENSE_PDFJS_JBIG2`: lisensi dari paket yang sama (Apache-2.0).
+- Dipasang lewat `OPSI_WASM_PDFJS` di `docs/notes/pdf/muat-pdfjs.js` (`wasmUrl`).
+
 ## Yang belum disertakan (versi minimal)
 
 Berkas ini sengaja tidak disalin untuk menjaga ukuran repo:
 
 - `cmaps/` (sekitar 1,7 MB): peta karakter untuk font CJK yang **tidak tertanam** di PDF. Tanpa ini, teks CJK pada PDF jenis itu bisa tampil salah.
 - `standard_fonts/` (sekitar 820 KB): font standar PDF yang tidak tertanam (Helvetica, Times, dan sejenisnya). Tanpa ini, font pengganti dari sistem yang dipakai.
-- `image_decoders/` (sekitar 632 KB): decoder untuk gambar JPEG2000 dan JBIG2. Tanpa ini, gambar jenis itu bisa gagal ditampilkan.
+- `image_decoders/` (sekitar 632 KB): decoder JavaScript untuk gambar JPEG2000 dan JBIG2. Belum disertakan. Untuk JBIG2 yang dipakai aplikasi, decoder WASM ada di `wasm/` (lihat di bawah).
+- `wasm/openjpeg.wasm` dan `wasm/openjpeg_nowasm_fallback.js` (JPEG2000): belum disertakan, karena belum ada PDF JPEG2000 yang perlu didukung.
 - `pdf.sandbox.min.mjs`: untuk menjalankan skrip JavaScript di dalam PDF. Tidak dipakai.
 
 Jika salah satu diperlukan, tambahkan berkasnya dari paket yang sama dan catat di sini.

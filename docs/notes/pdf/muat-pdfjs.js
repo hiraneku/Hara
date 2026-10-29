@@ -10,6 +10,10 @@
 
 const URL_LIB = new URL('../../vendor/pdfjs/pdf.min.mjs', import.meta.url).href;
 const URL_WORKER = new URL('../../vendor/pdfjs/pdf.worker.min.mjs', import.meta.url).href;
+/* Decoder WASM untuk JBIG2 (pindai hitam-putih yang umum). Tanpanya pdf.js gagal
+   menggambar halaman JBIG2 ("JBig2 failed to initialize"), dan OCR membaca kanvas kosong.
+   Berkas ada di docs/vendor/pdfjs/wasm (lihat README di sana). */
+export const OPSI_WASM_PDFJS = { wasmUrl: new URL('../../vendor/pdfjs/wasm/', import.meta.url).href };
 
 export const FITUR_PDFJS = [
   ['Iterator', () => typeof globalThis.Iterator === 'function'],

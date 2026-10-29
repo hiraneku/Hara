@@ -22,14 +22,14 @@
    otomatis; nama lain ({proyek}, …) meminta isian sebelum catatan
    dibuat (lihat templat-var.js). Templat tanpa isian langsung dibuat. */
 
-import { state } from '../core/store.js?v=20261029120000';
-import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261029120000';
-import { go } from '../core/router.js?v=20261029120000';
-import { esc } from '../core/dom.js?v=20261029120000';
-import { toast } from '../core/toast.js?v=20261029120000';
-import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261029120000';
-import { judulJurnalHari } from './harian.js?v=20261029120000';
-import { isianDiperlukan, gantiVariabel } from './templat-var.js?v=20261029120000';
+import { state } from '../core/store.js?v=20261029140000';
+import { makeNote, htmlToBlocks, blocksToDom } from './note-model.js?v=20261029140000';
+import { go } from '../core/router.js?v=20261029140000';
+import { esc } from '../core/dom.js?v=20261029140000';
+import { toast } from '../core/toast.js?v=20261029140000';
+import { t as tr, LOKALE, bahasaSekarang } from '../core/i18n.js?v=20261029140000';
+import { judulJurnalHari } from './harian.js?v=20261029140000';
+import { isianDiperlukan, gantiVariabel } from './templat-var.js?v=20261029140000';
 
 const KUNCI = 'hara.v1.tpl';
 
