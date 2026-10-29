@@ -1203,3 +1203,13 @@ gambar besar tetapi sedikit teks.
 - **Tanpa notifikasi sistem.** Tidak ada notifikasi OS saat tab tertutup.
 - **Akses:** tidak ada di grid beranda. Ditemukan lewat Lainnya > Belajar atau Ctrl+K.
 - Chromium desktop dan viewport 390 px saja. Belum diuji di HP sungguhan atau Android.
+
+## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
+
+Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.
+
+- Ekspor (`cadanganJson`) memuat kunci `kartu` bila ada kartu.
+- Impor **timpa** dari cadangan baru mengembalikan kartu persis.
+- Impor **gabung**: id yang sama diperbarui dengan isi cadangan, kartu lokal yang tidak ada di cadangan tetap, dan entri rusak (depan kosong) dibuang.
+- Impor **gabung** dari cadangan lama (tanpa kunci `kartu`) tidak menghapus kartu lokal.
+- **Perilaku yang dicatat:** impor **timpa** dari cadangan lama (tanpa kunci `kartu`) mengosongkan semua kartu. Ini sesuai arti timpa, yaitu isi data diganti seluruhnya dengan isi cadangan. Pengguna perlu tahu ini sebelum memilih timpa.
