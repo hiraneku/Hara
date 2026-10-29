@@ -1,11 +1,12 @@
 /* Apa yang dilakukan tiap tombol. Satu tombol = satu baris. */
-import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20261029160000';
-import { toggleMark } from '../editor/marks.js?v=20261029160000';
-import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20261029160000';
-import { refresh } from '../editor/cleanup.js?v=20261029160000';
-import { pilihGambar } from '../editor/image.js?v=20261029160000';
-import { toggleRef } from '../editor/blockref.js?v=20261029160000';
-import { insertToggle, insertTable, bukaPerekamMemoSuara } from '../editor/blok-modern.js?v=20261029160000';
+import { setBlock, insertHr, indent, clearFormat, moveBlock, insertTanggal } from '../editor/blocks.js?v=20261029170000';
+import { toggleMark } from '../editor/marks.js?v=20261029170000';
+import { undo as undoRiwayat, redo as redoRiwayat } from '../editor/history.js?v=20261029170000';
+import { refresh } from '../editor/cleanup.js?v=20261029170000';
+import { pilihGambar } from '../editor/image.js?v=20261029170000';
+import { toggleRef } from '../editor/blockref.js?v=20261029170000';
+import { insertToggle, insertTable, bukaPerekamMemoSuara } from '../editor/blok-modern.js?v=20261029170000';
+import { tambahTape, tapeSemuaUi } from '../editor/tape.js?v=20261029170000';
 
 export const ACTIONS = {
   p:      () => setBlock('b-p'),
@@ -34,6 +35,9 @@ export const ACTIONS = {
   in:     () => indent(1),
   out:    () => indent(-1),
   clear:  clearFormat,
+  tape:   tambahTape,
+  tapeBuka:  () => tapeSemuaUi(true),
+  tapeTutup: () => tapeSemuaUi(false),
   up:     () => moveBlock(-1),
   down:   () => moveBlock(1),
   /* refresh() sesudah undo/redo lewat TOMBOL menyamakan perilakunya

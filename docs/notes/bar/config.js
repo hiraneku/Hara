@@ -57,6 +57,9 @@ export const BAR = [
       { m: 'strike', ikon: 'i-strike',nama: 'Coret',        kunci: '~~' },
       { m: 'icode',  ikon: 'i-code',  nama: 'Kode inline',  kunci: '`' },
       { m: 'clear',  ikon: 'i-eraser',nama: 'Hapus format', kunci: '' },
+      { m: 'tape',   ikon: 'i-eye-off',nama: 'Tape (sembunyikan teks)', kunci: '' },
+      { m: 'tapeBuka', ikon: 'i-eye', nama: 'Buka semua tape', kunci: '' },
+      { m: 'tapeTutup', ikon: 'i-eye-off', nama: 'Tutup semua tape', kunci: '' },
     ]
   },
   {

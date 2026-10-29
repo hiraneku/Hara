@@ -3,8 +3,8 @@
    Hasil ditulis sebagai blob JSON dengan kunci `ocr-<blobId>`. Blob PDF asli dengan id
    `blobId` TIDAK disentuh. Pembersih blob yatim dan cadangan sudah tahu kunci ini. */
 
-import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261029160000';
-import { bacaOcrPdf, tulisOcrPdf, kunciOcr } from './ocr-teks.js?v=20261029160000';
+import { ambilBlob, simpanBlob } from '../../core/blobs.js?v=20261029170000';
+import { bacaOcrPdf, tulisOcrPdf, kunciOcr } from './ocr-teks.js?v=20261029170000';
 
 export async function muatOcrPdf(blobId) {
   if (!blobId) return {};

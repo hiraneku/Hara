@@ -1073,3 +1073,45 @@ gambar besar tetapi sedikit teks.
 - Keputusan ambang 50 bisa berubah setelah uji dengan lebih banyak PDF nyata.
 - Waktu OCR bertambah untuk PDF digital yang punya gambar besar. Ini hanya terjadi saat pengguna menekan OCR.
 - Chromium desktop saja. Belum diuji di HP atau Android.
+
+## Perubahan 30 · C6 — Active recall tape, bagian teks (Tahap 4)
+
+- **ID:** C6 (Active recall tape). Urutan §6.1 Tahap 4 nomor 1. Dikerjakan setelah persetujuan pengguna ("Oke kerjakan C6").
+- **Alasan urutan dan dependensi:** §6.1 meminta versi teks dulu, lalu objek visual/layer. Versi teks hanya butuh
+  model isi blok yang sudah ada (HTML dengan kelas) dan mesin perintah bar. Objek visual/layer belum dikerjakan
+  (A2/A5 belum selesai) dan tidak diperlukan untuk bagian ini. C7 dan C8 tidak bergantung pada C6.
+- **Perilaku:**
+  - Sorot teks lalu pilih **Tape** di bilah format atau di menu **Penandaan**. Teks dibungkus span
+    `<span class="tape tutup">`. Teks tersembunyi (warna transparan, blok abu-abu), default saat dibuat.
+  - **Ketuk** tape untuk menampilkan, ketuk lagi untuk menutup. Status disimpan di kelas, jadi ikut tersimpan
+    bersama isi blok dan bertahan setelah muat ulang.
+  - **Buka semua tape** dan **Tutup semua tape** di menu Penandaan mengubah semua tape di catatan itu.
+  - Seleksi yang ditolak dengan pesan: kosong, melewati dua blok (tape tidak boleh memutus paragraf),
+    berada di dalam tape, atau memuat tape lain.
+  - Format di dalam seleksi (tebal, sorot) tetap dipertahankan di dalam tape. Id elemen tidak digandakan.
+- **File:**
+  - `docs/notes/editor/tape-murni.js` (baru): logika DOM murni (bungkus, status, buka/tutup semua). Tanpa impor UI.
+  - `docs/notes/editor/tape.js` (baru): glue UI (tombol, ketukan, pesan galat).
+  - `docs/notes/bar/actions.js`, `bar/config.js` (grup Penandaan), `bar/help.js` (bantuan ketiga aksi),
+    `editor/bilah-teks.js` (tombol di bilah seleksi), `index.js` (`bindTape()`).
+  - `docs/styles/notes.css` (gaya `.tape`, `.tape.tutup`), `docs/index.html` (ikon `i-eye`, `i-eye-off`).
+  - `docs/core/bahasa-en.js`, `bahasa-ja.js`: terjemahan untuk string baru.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/tape-teks.mjs` (Node + jsdom): **40/40 lulus**. Mencakup pembungkusan, penolakan, status per tape,
+    buka/tutup semua, penyaringan HTML (kelas dan data-* tetap, onclick dibuang), serta format sorot tanpa id ganda.
+  - Chromium `uji-c6.mjs`: **21/21 lulus**. Bungkus lewat bilah format, ketuk buka dan tutup, buka/tutup semua
+    lewat menu, status bertahan setelah muat ulang, galat seleksi lintas blok, dan lebar 390 px tanpa gulir mendatar.
+    Tidak ada pageerror.
+  - `npm test`: exit 0, semua suite lolos.
+- **Galat yang ditemukan lewat uji dan diperbaiki:** seleksi di dalam satu text node yang berada di dalam `<b>`
+  kehilangan format tebal di dalam tape, karena `extractContents()` hanya mengambil teks. Diperbaiki dengan
+  membungkus ulang isi dengan klon rantai inline (tanpa id).
+
+**Keterbatasan:**
+- Hanya versi teks. Tape untuk coretan dan objek visual (penutup terhubung ke objek) belum ada.
+- Teks tape **tetap masuk pencarian dan ekspor**. Ini tidak menyembunyikan teks dari pencarian atau hasil ekspor.
+- Ketuk tape juga mengubah statusnya. Saat mengedit teks di dalam tape, ketukan akan membuka atau menutupnya.
+  Pindah kursor dengan panah keyboard tidak mengubah status.
+- Tidak ada pintasan keyboard untuk membuka atau menutup tape. Tidak ada cara untuk mengakses tape lewat keyboard saja.
+- Belum diuji di mode baca, di dalam tabel, dan di dalam blok toggle atau daftar.
+- Chromium desktop dan viewport 390 px saja. Belum diuji di HP atau Android.

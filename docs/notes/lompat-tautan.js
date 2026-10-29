@@ -4,13 +4,13 @@
    [[Judul#^ref]]. Dipindahkan dari index.js supaya modul editor juga bisa
    memakainya tanpa mengimpor index.js. */
 
-import { openNote } from './model.js?v=20261029160000';
-import { docEl } from './editor/caret.js?v=20261029160000';
-import { toast } from '../core/toast.js?v=20261029160000';
-import { t as tr } from '../core/i18n.js?v=20261029160000';
-import { cariBagian } from './wikilink.js?v=20261029160000';
-import { ambilBlob } from '../core/blobs.js?v=20261029160000';
-import { bukaPenampilPdf } from './pdf/penampil.js?v=20261029160000';
+import { openNote } from './model.js?v=20261029170000';
+import { docEl } from './editor/caret.js?v=20261029170000';
+import { toast } from '../core/toast.js?v=20261029170000';
+import { t as tr } from '../core/i18n.js?v=20261029170000';
+import { cariBagian } from './wikilink.js?v=20261029170000';
+import { ambilBlob } from '../core/blobs.js?v=20261029170000';
+import { bukaPenampilPdf } from './pdf/penampil.js?v=20261029170000';
 
 /* Buka catatan, lalu gulir ke blok `bid` dan sorot sebentar. Tanpa `bid`, hanya membuka. */
 export function lompatKe(noteId, bid) {
