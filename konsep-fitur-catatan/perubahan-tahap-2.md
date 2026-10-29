@@ -911,11 +911,9 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
     chip **Baca teks** dipakai. Hasil: `sepeda merah` tersimpan di atribut `data-ocr`.
   - **OCR PDF hasil pindai:** PDF satu halaman yang hanya berisi gambar JPEG (tanpa lapisan teks), dibuka di
     penampil. Tombol **OCR** dipakai. Status: "OCR selesai · 1 halaman dibaca". Hasil memuat "sepeda".
-- **Temuan UX (bukan galat fungsi, tapi perlu dipertimbangkan):**
-  - **Buka jurnal di kalender** berada di bawah bilah navigasi bawah saat halaman di posisi awal. Tombol
-    baru terjangkau setelah digulir. Hasil uji: tombol bisa diketuk setelah digulir ke tengah layar.
-  - **Chip Baca teks di bilah mini gambar** berada di luar layar 390 px saat bilah pertama muncul. Bilah
-    ini bisa digeser ke samping (`overflow-x: auto`, 14 chip). Setelah digeser, chip bisa diketuk.
+- **Temuan UX (diperbaiki, lihat Perbaikan UX di bawah):**
+  - **Buka jurnal di kalender** berada di bawah bilah navigasi bawah saat halaman di posisi awal.
+  - **Chip Baca teks di bilah mini gambar** berada di luar layar 390 px. Bilah hanya satu baris yang digeser mendatar.
 - **Batas uji:** ini Chromium desktop dengan viewport 390 px, bukan HP sungguhan. Tidak ada emulasi sentuhan
   penuh. Kecepatan OCR di HP tetap belum diukur. Uji Opera Android belum dilakukan.
 - **Lisensi tessdata (diverifikasi):**
@@ -926,6 +924,23 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
   Ditambahkan `docs/vendor/tesseract/LICENSE-tessdata.txt` (teks Apache-2.0). `docs/vendor/tesseract/README.md`
   diperbarui. Berkas data tidak diubah.
 - **Keterbatasan:** ini pemeriksaan teknis, bukan nasihat hukum. Konfirmasi ulang sebelum rilis.
+
+## Perbaikan UX dari uji HP (29-10-2026)
+
+- **Kalender:** tombol **Lihat di kalender** dari jurnal sekarang menggulir layar ke kartu kalender
+  (`tampilkanKalenderTanggal` di `docs/notes/views/tugas.js`). Tombol **Buka jurnal** langsung terlihat
+  dan tidak tertutup bilah navigasi bawah, tanpa gulir manual.
+- **Bilah mini gambar:** chip sekarang **membungkus ke baris kedua** bila tidak muat (`#mbar` di
+  `docs/styles/notes.css`). Dulu satu baris yang digeser mendatar, dan chip di ujung, termasuk **Baca teks**,
+  tersembunyi di luar layar 390 px. Perubahan ini juga berlaku di desktop, karena bilah dibatasi 420 px
+  dan 14 chip tidak muat di satu baris. **Ini mengubah desain "satu baris ramping" yang dulu dipilih.**
+- **Cara uji (hasil nyata):**
+  - `uji-hp.mjs` (Chromium, 390 px): **23/23 lulus**. Tombol Buka jurnal dan chip Baca teks sekarang terlihat dan
+    bisa diketuk **tanpa gulir atau geser**. Sebelum perbaikan, uji yang sama gagal 3 cek (tombol tertutup,
+    chip di luar layar), jadi perbaikan ini yang membuat perbedaan.
+  - `uji-b8-lanjut.mjs` (Chromium): **23/23 lulus**, termasuk cek baru bahwa kalender digulir ke kartunya.
+  - Uji OCR gambar dan PDF di HP tetap lulus setelah perbaikan.
+- **Keterbatasan:** tetap Chromium desktop dengan viewport 390 px, bukan HP sungguhan. Uji Opera Android belum dilakukan.
 
 ## Status (Tahap 2)
 
@@ -939,4 +954,4 @@ Tahap 2 mengikuti urutan doc koreksi §6.1: B1, B5, B3, B4, B2, B6, B8. Satu ID 
 ## Berikutnya
 
 - Tahap 2 sudah selesai sesuai urutan. Tahap 3: C1, C2, C5, C3, dan C4 sudah dikerjakan. Uji Android untuk C1–C5 dan DRM untuk C4 belum dilakukan.
-- Hal terbuka dari Tahap 2: uji di HP sungguhan (Opera Android) untuk OCR dan kalender, serta konfirmasi lisensi tessdata sebelum rilis (lihat Verifikasi Tahap 2). Dua temuan UX di atas (tombol kalender di bawah bilah navigasi, chip Baca teks di luar layar) perlu diputuskan.
+- Hal terbuka dari Tahap 2: uji di HP sungguhan (Opera Android) untuk OCR dan kalender, serta konfirmasi lisensi tessdata sebelum rilis (lihat Verifikasi Tahap 2). Dua temuan UX di atas sudah diperbaiki (lihat Perbaikan UX dari uji HP).

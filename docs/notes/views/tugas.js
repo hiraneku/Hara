@@ -5,20 +5,20 @@
    layar ini tidak pernah bisa berbeda dari catatan aslinya. Matriks dan
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
-import { state, save } from '../../core/store.js?v=20261029100000';
-import { esc } from '../../core/dom.js?v=20261029100000';
-import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261029100000';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261029100000';
-import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261029100000';
-import { rowFor } from './row.js?v=20261029100000';
-import { terlihat } from '../kunci.js?v=20261029100000';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261029100000';
-import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261029100000';
-import { toast } from '../../core/toast.js?v=20261029100000';
-import { touch, makeNote } from '../note-model.js?v=20261029100000';
-import { go, cur } from '../../core/router.js?v=20261029100000';
-import { flush } from '../../core/autosave.js?v=20261029100000';
-import { openNote } from '../model.js?v=20261029100000';
+import { state, save } from '../../core/store.js?v=20261029120000';
+import { esc } from '../../core/dom.js?v=20261029120000';
+import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261029120000';
+import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261029120000';
+import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261029120000';
+import { rowFor } from './row.js?v=20261029120000';
+import { terlihat } from '../kunci.js?v=20261029120000';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261029120000';
+import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261029120000';
+import { toast } from '../../core/toast.js?v=20261029120000';
+import { touch, makeNote } from '../note-model.js?v=20261029120000';
+import { go, cur } from '../../core/router.js?v=20261029120000';
+import { flush } from '../../core/autosave.js?v=20261029120000';
+import { openNote } from '../model.js?v=20261029120000';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
 const SEHARI = 86400000;
@@ -226,6 +226,9 @@ export function tampilkanKalenderTanggal(ms) {
   const d = new Date(kalPilih);
   kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   go('task');
+  /* kalender ada di bawah daftar tugas. Gulir ke kartunya supaya tombol Buka jurnal
+     langsung terlihat (di HP tidak tertutup bilah navigasi bawah). */
+  setTimeout(() => document.getElementById('kal-bagian')?.scrollIntoView({ block: 'start' }), 0);
 }
 
 /* ── K8 · ekspor & impor .ics ── */

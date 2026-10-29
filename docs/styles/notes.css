@@ -464,11 +464,13 @@ code.ic{background:var(--sunken);border-radius:4px;padding:1px 5px;font-family:v
 /* gagang tidak bergeser saat gambar menempel kiri — tetap di pojok */
 .b-img.sempit.img-pilih .img-x{width:24px;height:24px;top:6px;right:6px}
 
-/* ── bilah mini gambar (tata-gambar.js) — satu baris ramping ── */
-#mbar{position:fixed;z-index:70;display:none;align-items:center;gap:2px;
+/* ── bilah mini gambar (tata-gambar.js) ──
+   Chip membungkus ke baris berikutnya bila tidak muat (dulu satu baris yang digeser mendatar,
+   dan chip di ujung, termasuk Baca teks, tersembunyi di luar layar 390 px). */
+#mbar{position:fixed;z-index:70;display:none;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:3px 2px;
   background:var(--surface);border:1px solid var(--border);border-radius:12px;
-  box-shadow:var(--shadow-modal);padding:4px 6px;max-width:min(92vw,420px);
-  overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+  box-shadow:var(--shadow-modal);padding:4px 6px;max-width:min(92vw,420px)}
 #mbar.on{display:flex}
 #mbar::-webkit-scrollbar{display:none}
 .mb-chip{flex:none;height:27px;min-width:38px;padding:0 8px;border-radius:8px;
