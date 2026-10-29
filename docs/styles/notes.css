@@ -2713,3 +2713,16 @@ body.sheet-open .scrim.on{background:rgba(18,18,13,.44);-webkit-backdrop-filter:
 .kt-hitung{text-align:center;margin:10px 0 0}
 .kt-hapus{margin-top:8px;width:100%}
 .kt-form .sh-inp{width:100%;box-sizing:border-box;margin-bottom:10px}
+
+/* Focus timer (C9) */
+.ft-wrap{display:flex;flex-direction:column;gap:12px}
+.ft-mode{display:flex;gap:6px;background:var(--sunken);border-radius:999px;padding:4px}
+.ft-pil{flex:1;border:0;background:transparent;border-radius:999px;padding:8px 10px;font:inherit;cursor:pointer;color:inherit}
+.ft-pil[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.ft-info{text-align:center;font-size:14px;opacity:.75}
+.ft-waktu{font-size:56px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1.1;padding:8px 0}
+.ft-baris{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.ft-baris [hidden]{display:none}
+.ft-atur{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);padding-top:12px}
+.ft-atur .sh-inp{width:100%;box-sizing:border-box}
+.ft-cek{display:flex;align-items:center;gap:8px;margin-top:6px}

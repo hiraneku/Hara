@@ -6,14 +6,14 @@
    • Hitungan benar/salah disimpan per kartu. Tidak ada penjadwalan ulang (§2.7).
    Logika murni ada di kartu-murni.js. */
 
-import { state, save } from '../core/store.js?v=20261029180000';
-import { openPop, setPopIsi, closeAll, pop } from './menus/pop.js?v=20261029180000';
-import { sheet } from './sheet.js?v=20261029180000';
-import { docEl, sel } from './editor/caret.js?v=20261029180000';
-import { toast } from '../core/toast.js?v=20261029180000';
-import { esc } from '../core/dom.js?v=20261029180000';
-import { t as tr } from '../core/i18n.js?v=20261029180000';
-import { buatKartu, catatNilai, antrianAwal, langkahAntrean, ringkasSesi } from './kartu-murni.js?v=20261029180000';
+import { state, save } from '../core/store.js?v=20261029190000';
+import { openPop, setPopIsi, closeAll, pop } from './menus/pop.js?v=20261029190000';
+import { sheet } from './sheet.js?v=20261029190000';
+import { docEl, sel } from './editor/caret.js?v=20261029190000';
+import { toast } from '../core/toast.js?v=20261029190000';
+import { esc } from '../core/dom.js?v=20261029190000';
+import { t as tr } from '../core/i18n.js?v=20261029190000';
+import { buatKartu, catatNilai, antrianAwal, langkahAntrean, ringkasSesi } from './kartu-murni.js?v=20261029190000';
 
 const PESAN = {
   'depan-kosong': 'Isi bagian depan kartu (pertanyaan).',

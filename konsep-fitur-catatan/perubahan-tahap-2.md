@@ -1162,3 +1162,44 @@ gambar besar tetapi sedikit teks.
 - Tidak ada gambar atau media di kartu. Hanya teks biasa.
 - Hanya Chromium desktop dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
 - Uji 390 px memicu tombol Penandaan lewat DOM karena tombol itu di luar layar (lihat temuan di atas).
+
+## Perubahan 32 · C9 — Focus timer v1 (Tahap 4)
+
+- **ID:** C9 (Focus timer). Urutan §6.1 Tahap 4 nomor 3, setelah C7. Dikerjakan setelah persetujuan pengguna
+  (pilihan "C9" di pertanyaan lanjutan). Dasar: §2.8 (Pomodoro sebagai mode awal, durasi bisa diubah, notifikasi suara bisa dimatikan).
+- **Perilaku:**
+  - **Pomodoro** (bawaan): fokus 25 menit lalu istirahat 5 menit, bergantian. Hitungan siklus fokus ditampilkan.
+  - **Hitung mundur**: satu kali hitung, bawaan 10 menit.
+  - Tombol **Mulai**, **Jeda**, **Lanjut**, **Ulang**. Waktu dihitung dari timestamp akhir, jadi tetap benar walau tab sempat tidak aktif.
+  - Timer tetap jalan saat lembar ditutup. Saat waktu habis: toast, dan bunyi pendek bila dinyalakan.
+  - Pergantian fase **tidak otomatis dimulai**. Pengguna menekan Mulai lagi.
+  - Durasi dan pilihan bunyi disimpan di `localStorage` (kunci `hara.fokus.v1`). Keadaan timer hanya di memori, jadi muat ulang membuat timer kembali siap.
+  - Pengaturan hanya bisa diubah saat timer siap atau selesai. Saat berjalan atau dijeda, kolom dan mode terkunci dan muncul pesan.
+- **Akses:** menu **Lainnya** grup baru **Belajar** dan palet perintah (Ctrl+K, "timer fokus"). Tidak masuk grid beranda.
+- **File:**
+  - `docs/notes/fokus-murni.js` (baru): model murni (pengaturan, mulai, jeda, periksa fase, format waktu). Tanpa impor UI.
+  - `docs/notes/fokus.js` (baru): glue UI (lembar, tombol, toast, bunyi lewat Web Audio tanpa berkas).
+  - `docs/app.js`: impor, `pasangFokus()`, entri palet, grup Lainnya.
+  - `docs/styles/notes.css` (gaya `.ft-*`), `docs/core/bahasa-en.js`, `bahasa-ja.js` (26 kunci per bahasa).
+  - `tools/uji/fokus-murni.mjs` (baru): uji model murni.
+- **Cara uji (hasil nyata):**
+  - `tools/uji/fokus-murni.mjs` (Node): **48/48 lulus**. Mencakup normalisasi dan batas, durasi, jeda dan lanjut dari
+    timestamp, siklus fokus lalu istirahat, mode hitung selesai sekali, pengaturan hanya saat siap atau selesai, dan format waktu.
+  - Chromium `uji-c9.mjs` (harness di luar repo, jam palsu Playwright): **49/49 lulus**. Mencakup akses dari Lainnya,
+    keadaan awal, mulai, jeda (waktu tidak bergerak), lanjut, timer tetap jalan setelah lembar ditutup, fokus selesai
+    dengan bunyi, istirahat tidak otomatis mulai, mode hitung, Ulang, kunci saat berjalan, batas nilai (999 menit jadi 180),
+    pengaturan tersimpan dan bertahan muat ulang, bunyi mati, dan 390 px tanpa melebar. Tidak ada pageerror.
+  - `npm test`: exit 0 (`npmtest-c9.log`).
+- **Galat yang ditemukan lewat uji dan diperbaiki:** tidak ada galat kode. Ada dua masalah harness: jam palsu yang
+  berjalan mengikuti waktu nyata membuat hitungan meleset 2 dtk, sehingga jam dibekukan dengan `pauseAt`. Screenshot
+  Playwright tertahan saat jam palsu aktif, sehingga memakai CDP.
+
+**Keterbatasan (v1):**
+- **Stopwatch belum ada.** Acuan menyebutnya sebagai tambahan, dan itu ditunda.
+- **Tidak ada penyimpanan keadaan timer.** Muat ulang halaman menghentikan timer yang sedang berjalan.
+- **Tidak terhubung ke catatan atau tugas.** Tidak ada pencatatan sesi belajar ke jurnal atau statistik.
+- **Tab tidak aktif:** browser dapat menunda pemeriksaan waktu. Waktu tetap benar, tetapi toast dan bunyi bisa terlambat sampai tab aktif lagi.
+- **Bunyi:** dibuat lewat Web Audio saat waktu habis. Browser dapat memblokirnya bila tidak ada interaksi pengguna di halaman. Belum diuji di Android atau iOS.
+- **Tanpa notifikasi sistem.** Tidak ada notifikasi OS saat tab tertutup.
+- **Akses:** tidak ada di grid beranda. Ditemukan lewat Lainnya > Belajar atau Ctrl+K.
+- Chromium desktop dan viewport 390 px saja. Belum diuji di HP sungguhan atau Android.
