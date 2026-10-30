@@ -18,23 +18,23 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261029220000';
-import { flush } from '../core/autosave.js?v=20261029220000';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261029220000';
-import { kunciAnotasi } from './pdf/anotasi.js?v=20261029220000';
-import { kunciSusunan } from './pdf/susunan.js?v=20261029220000';
-import { kunciOcr } from './ocr/ocr-teks.js?v=20261029220000';
-import { idBlobDariGoresan } from './editor/goresan.js?v=20261029220000';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261029220000';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261029220000';
-import { terlihat } from './kunci.js?v=20261029220000';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261029220000';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261029220000';
-import { t as tr } from '../core/i18n.js?v=20261029220000';
-import { extractZip } from '../renamer/unzip.js?v=20261029220000';
-import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261029220000';
-import { normalizeKartu } from './kartu-murni.js?v=20261029220000';
-import { normalizeUjian } from './ujian-murni.js?v=20261029220000';
+import { state, save, SCHEMA } from '../core/store.js?v=20261030090000';
+import { flush } from '../core/autosave.js?v=20261030090000';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261030090000';
+import { kunciAnotasi } from './pdf/anotasi.js?v=20261030090000';
+import { kunciSusunan } from './pdf/susunan.js?v=20261030090000';
+import { kunciOcr } from './ocr/ocr-teks.js?v=20261030090000';
+import { idBlobDariGoresan } from './editor/goresan.js?v=20261030090000';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261030090000';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261030090000';
+import { terlihat } from './kunci.js?v=20261030090000';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261030090000';
+import { daftarRuang, pulihkanRuang } from './ruang.js?v=20261030090000';
+import { t as tr } from '../core/i18n.js?v=20261030090000';
+import { extractZip } from '../renamer/unzip.js?v=20261030090000';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261030090000';
+import { normalizeKartu } from './kartu-murni.js?v=20261030090000';
+import { normalizeUjian } from './ujian-murni.js?v=20261030090000';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -157,6 +157,13 @@ export async function siapImporJson(teks) {
 /* Terapkan impor JSON. mode 'timpa' = kembalikan persis cadangan;
    mode 'gabung' = sisip catatan baru + perbarui catatan ber-id sama. */
 export async function terapkanImporJson(r, mode) {
+  /* D1: ruang dipulihkan lebih dulu, lalu folderId catatan diarahkan ke id final */
+  const petaRuang = pulihkanRuang(r.ruang, mode);
+  if (petaRuang.size) {
+    for (const n of r.catatan) {
+      if (n && n.folderId && petaRuang.has(n.folderId)) n.folderId = petaRuang.get(n.folderId);
+    }
+  }
   let daftar = r.catatan;
   if (mode !== 'timpa') {
     daftar = r.catatan.map(datang => {
@@ -196,9 +203,6 @@ export async function terapkanImporJson(r, mode) {
 
   if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) {
     setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');
-  }
-  if (Array.isArray(r.ruang) && r.ruang.length) {
-    r.ruang.forEach(rg => { if (rg && rg.nama) tambahRuang(rg.nama); });
   }
 
   /* pulihkan gambar dulu, baru simpan — supaya catatan yang dirender

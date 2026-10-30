@@ -1296,6 +1296,60 @@ gambar besar tetapi sedikit teks.
 - **Tab tidak aktif:** timer berhenti otomatis dihitung dari waktu nyata, tetapi browser dapat menunda pemeriksaannya.
 - Chromium desktop dan viewport 390 px saja.
 
+## Perubahan 35 · D1 — Verifikasi ruang, tag, Smart Folder, dan hierarki (Tahap 5)
+
+- **ID:** D1 (Project/course-based organization). Urutan §6.1 Tahap 5 nomor 1. Dikerjakan setelah persetujuan pengguna
+  (pilihan "D1" di pertanyaan lanjutan). Acuan: `penerapan-konsep-fitur-catatan.md` menilai D1 **Ada** (ruang, tag,
+  Smart Folder), dan `pemahaman-ide-fitur-catatan.md` mencatat ruang **belum bertingkat**.
+- **Lingkup:** sesuai §6.1, ini tahap verifikasi. Ruang, tag, dan Smart Folder diuji dengan data nyata. Kebutuhan
+  hierarki dinilai, lalu keputusan dicatat. Pembuatan hierarki bertingkat tidak dikerjakan di sini.
+
+### Hasil verifikasi
+
+- **Ruang (folder):** daftar datar di `localStorage` (`hara.v1.ruang`). Catatan membawa `folderId`. Ruang dibuat, dipindah,
+  dan dihapus. Menghapus ruang mengosongkan `folderId` catatannya.
+- **Tag:** ikut di catatan dan ikut pulih dari cadangan. Lolos uji.
+- **Smart Folder** (`folder:Biologi`): mencocokkan catatan melalui nama ruang. Lolos uji setelah pemulihan.
+- **Bug ditemukan: cadangan memutus hubungan catatan dan ruang.** Saat impor, ruang dibuat ulang dengan id baru.
+  Catatan tetap membawa `folderId` lama. Akibatnya:
+  - nama ruang tampil sebagai id mentah (`rg-biologi-qsh`);
+  - ruang tampak ganda ("Biologi" dan "rg-biologi-qsh");
+  - Smart Folder `folder:Biologi` tidak menemukan catatan yang dipulihkan.
+  Reproduksi: `repro-d1` (harness di luar repo) menunjukkan ketiganya terjadi pada perangkat yang kosong.
+
+### Perbaikan
+
+- **Pemulihan ruang berdasarkan id.** Logika di `docs/notes/ruang-murni.js` (`rencanaPulihRuang`):
+  - **timpa**: daftar lokal diganti persis dengan cadangan. Cadangan tanpa ruang tidak menghapus daftar lokal.
+  - **gabung**: id yang sama dipertahankan. Id yang belum ada tetapi namanya sama (tanpa membedakan huruf) diarahkan ke ruang lokal. Ruang lain ditambahkan dengan id cadangan.
+  - Entri rusak dibuang. Nama dipangkas dan dibatasi 32 karakter.
+- `docs/notes/ruang.js` (`pulihkanRuang`) membaca dan menulis `localStorage`. `docs/notes/data-io.js` memetakan `folderId` catatan
+  ke id final **sebelum** catatan digabung. Pemanggilan `tambahRuang` yang lama dihapus dari impor.
+
+### Cara uji (hasil nyata)
+
+- `tools/uji/ruang-murni.mjs` (Node): **15/15 lulus**. Mencakup setiap cabang timpa dan gabung, id ganda, dan entri rusak.
+- Chromium `uji-d1.mjs` (harness di luar repo): **9/9 lulus**, tanpa pageerror. Mencakup:
+  - timpa setelah perangkat baru: id catatan sama, nama Biologi, tidak ada duplikat, tag pulih, Smart Folder cocok;
+  - gabung ke perangkat yang punya "Biologi" dengan id lain: catatan diarahkan ke ruang lokal, tidak ada duplikat;
+  - gabung dengan ruang baru: id cadangan dipertahankan;
+  - cadangan lama tanpa kunci `ruang`: `folderId` tidak berubah.
+- `npm test`: lihat hasil di bawah.
+
+### Keputusan hierarki (dinilai, belum dikerjakan)
+
+Ruang masih datar. Kebutuhan project dan mata kuliah sudah tertangani oleh **ruang + tag + Smart Folder**:
+satu catatan tetap hanya di satu ruang, dan tag bisa dipakai untuk pengelompokan lintas ruang.
+
+Hierarki bertingkat (ruang di dalam ruang) akan menyentuh model data (`parentId`), tampilan pohon, arti operator
+`folder:` (apakah termasuk sub-ruang), dan ekspor/impor (struktur folder Obsidian). Ini keputusan produk yang belum
+diambil. Rekomendasi: **tunda hierarki** sampai ada kebutuhan nyata, dan tetap berbasis ruang datar + tag.
+
+**Keterbatasan:**
+- Ruang belum bisa diganti nama. Mengganti nama ruang berarti memperbarui indeks Smart Folder (`cari.js`).
+- Cadangan lama tanpa kunci `ruang` hanya memiliki `folderId`. Nama ruangnya tampil sebagai id, karena nama tidak ada di cadangan.
+- Chromium desktop dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
+
 ## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
 
 Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.

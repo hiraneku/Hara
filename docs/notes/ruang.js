@@ -5,10 +5,11 @@
  * Seluruh penyimpanan catatan utama tetap melewati `core/store.js`.
  */
 
-import { state, save } from '../core/store.js?v=20261029220000';
-import { touch, plainText } from './note-model.js?v=20261029220000';
-import { punyaKunci } from './kunci.js?v=20261029220000';
-import { bacaKv, tulisKv } from '../core/db-catatan.js?v=20261029220000';
+import { state, save } from '../core/store.js?v=20261030090000';
+import { touch, plainText } from './note-model.js?v=20261030090000';
+import { rencanaPulihRuang } from './ruang-murni.js?v=20261030090000';
+import { punyaKunci } from './kunci.js?v=20261030090000';
+import { bacaKv, tulisKv } from '../core/db-catatan.js?v=20261030090000';
 
 const KUNCI_RUANG = 'hara.v1.ruang';
 const KUNCI_TAMPIL = 'hara.v1.tampilan';
@@ -80,6 +81,23 @@ export function daftarRuang() {
 
 function tulisDaftarRuang(list) {
   try { localStorage.setItem(KUNCI_RUANG, JSON.stringify(list)); } catch (e) {}
+}
+
+/* D1: pulihkan ruang dari cadangan dengan mempertahankan id, supaya catatan (note.folderId) tetap
+   menunjuk ruang yang benar. Sebelumnya ruang dibuat ulang dengan id baru, sehingga catatan yatim
+   dan nama ruang berupa id mentah.
+   • timpa : daftar lokal diganti dengan daftar cadangan (id dan nama persis).
+   • gabung: id yang sudah ada dibiarkan; id yang belum ada tetapi namanya sama dengan ruang lokal
+             diarahkan ke ruang lokal itu; selain itu ruang ditambahkan dengan id dari cadangan.
+   Mengembalikan peta idCadangan -> idFinal untuk dipakai ulang pada catatan yang diimpor. */
+export function pulihkanRuang(daftarCadangan, mode) {
+  const lokal = (() => {
+    try { const raw = localStorage.getItem(KUNCI_RUANG); const p = raw ? JSON.parse(raw) : []; return Array.isArray(p) ? p : []; }
+    catch (e) { return []; }
+  })();
+  const { daftar, peta } = rencanaPulihRuang(lokal, daftarCadangan, mode);
+  if (peta.size) tulisDaftarRuang(daftar);
+  return peta;
 }
 
 export function tambahRuang(namaMentah) {
