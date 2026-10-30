@@ -1,20 +1,20 @@
 /* Popup melayang di atas bar. */
-import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20261030090000';
-import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20261030090000';
-import { insertInline } from './insert.js?v=20261030090000';
-import { focusKeep } from '../bar/render.js?v=20261030090000';
-import { applyLink } from './link.js?v=20261030090000';
-import { applyKartuBaru, kartuAksi } from '../kartu.js?v=20261030090000';
-import { buangGaring, slashAktif } from './slash-trigger.js?v=20261030090000';
-import { setFont } from '../editor/font.js?v=20261030090000';
-import { setWarna, normalizeWarna } from '../editor/warna.js?v=20261030090000';
-import { setSorotan } from '../editor/sorotan.js?v=20261030090000';
-import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20261030090000';
-import { setCallout } from '../editor/blocks.js?v=20261030090000';
-import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20261030090000';
-import { getar } from '../bar/prefs.js?v=20261030090000';
-import { toast } from '../../core/toast.js?v=20261030090000';
-import { t as tr } from '../../core/i18n.js?v=20261030090000';
+import { ensureCaret, kunciKeyboard } from '../editor/caret.js?v=20261030100000';
+import { setBlock, insertHr, insertTanggal } from '../editor/blocks.js?v=20261030100000';
+import { insertInline } from './insert.js?v=20261030100000';
+import { focusKeep } from '../bar/render.js?v=20261030100000';
+import { applyLink } from './link.js?v=20261030100000';
+import { applyKartuBaru, kartuAksi } from '../kartu.js?v=20261030100000';
+import { buangGaring, slashAktif } from './slash-trigger.js?v=20261030100000';
+import { setFont } from '../editor/font.js?v=20261030100000';
+import { setWarna, normalizeWarna } from '../editor/warna.js?v=20261030100000';
+import { setSorotan } from '../editor/sorotan.js?v=20261030100000';
+import { rodaPasang, pilihSasaran, sasaranSekarang, perbaruiSasaranPop } from './warna.js?v=20261030100000';
+import { setCallout } from '../editor/blocks.js?v=20261030100000';
+import { snap as snapFont, snap as snapWarna } from '../editor/history.js?v=20261030100000';
+import { getar } from '../bar/prefs.js?v=20261030100000';
+import { toast } from '../../core/toast.js?v=20261030100000';
+import { t as tr } from '../../core/i18n.js?v=20261030100000';
 
 export const pop = () => document.getElementById('pop');
 
@@ -264,7 +264,7 @@ export function bindPop() {
     const inf = e.target.closest('[data-info]');
     if (inf) {
       getar();
-      import('../bar/render.js?v=20261030090000').then(({ helpPanel, gantiIsiPop }) => {
+      import('../bar/render.js?v=20261030100000').then(({ helpPanel, gantiIsiPop }) => {
         gantiIsiPop(helpPanel(inf.dataset.info), inf.dataset.info);
       });
       return;
@@ -273,7 +273,7 @@ export function bindPop() {
     const bk = e.target.closest('[data-helpback]');
     if (bk) {
       getar();
-      import('../bar/render.js?v=20261030090000').then(({ kembaliKeMenu }) => kembaliKeMenu());
+      import('../bar/render.js?v=20261030100000').then(({ kembaliKeMenu }) => kembaliKeMenu());
       return;
     }
 
@@ -283,7 +283,7 @@ export function bindPop() {
       getar();
       kunciKeyboard();
       closeAll();
-      import('../bar/render.js?v=20261030090000').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
+      import('../bar/render.js?v=20261030100000').then(({ jalankan }) => jalankan(gm.dataset.m, gm));
       return;
     }
 
@@ -297,37 +297,37 @@ export function bindPop() {
     else if (t.dataset.blk === 'img') { closeAll(); pilihGambar(); return; }
     else if (t.dataset.blk === 'toggle') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261030090000').then(m => m.insertToggle());
+      import('../editor/blok-modern.js?v=20261030100000').then(m => m.insertToggle());
       return;
     }
     else if (t.dataset.blk === 'table') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261030090000').then(m => m.insertTable());
+      import('../editor/blok-modern.js?v=20261030100000').then(m => m.insertTable());
       return;
     }
     else if (t.dataset.blk === 'audio') {
       closeAll();
-      import('../editor/blok-modern.js?v=20261030090000').then(m => m.bukaPerekamMemoSuara());
+      import('../editor/blok-modern.js?v=20261030100000').then(m => m.bukaPerekamMemoSuara());
       return;
     }
     else if (t.dataset.blk === 'sketch') {
       closeAll();
-      import('../editor/sketsa.js?v=20261030090000').then(m => m.bukaStudioSketsa());
+      import('../editor/sketsa.js?v=20261030100000').then(m => m.bukaStudioSketsa());
       return;
     }
     else if (t.dataset.blk === 'math') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261030090000').then(m => m.bukaDialogRumus());
+      import('../editor/blok-generasi-baru.js?v=20261030100000').then(m => m.bukaDialogRumus());
       return;
     }
     else if (t.dataset.blk === 'bookmark') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261030090000').then(m => m.bukaDialogBookmark());
+      import('../editor/blok-generasi-baru.js?v=20261030100000').then(m => m.bukaDialogBookmark());
       return;
     }
     else if (t.dataset.blk === 'file') {
       closeAll();
-      import('../editor/blok-generasi-baru.js?v=20261030090000').then(m => m.pilihLampiranBerkas());
+      import('../editor/blok-generasi-baru.js?v=20261030100000').then(m => m.pilihLampiranBerkas());
       return;
     }
     else if (t.dataset.blk === 'hr') insertHr();
@@ -336,7 +336,7 @@ export function bindPop() {
          ke area dokumen supaya panel tag tetap muncul di tempat wajar */
       closeAll();
       const jangkar = document.querySelector('.ed-doc');
-      import('../tagwarna.js?v=20261030090000').then(m => m.panelTag(jangkar));
+      import('../tagwarna.js?v=20261030100000').then(m => m.panelTag(jangkar));
       return;
     }
     else if (t.dataset.blk)     setBlock(t.dataset.blk);

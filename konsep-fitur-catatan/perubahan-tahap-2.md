@@ -1350,6 +1350,50 @@ diambil. Rekomendasi: **tunda hierarki** sampai ada kebutuhan nyata, dan tetap b
 - Cadangan lama tanpa kunci `ruang` hanya memiliki `folderId`. Nama ruangnya tampil sebagai id, karena nama tidak ada di cadangan.
 - Chromium desktop dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
 
+## Perubahan 36 · D3 — Akses cepat ke tindakan utama (Tahap 5)
+
+- **ID:** D3 (Quick access tools). Urutan §6.1 Tahap 5. Dikerjakan setelah persetujuan pengguna (pilihan "D3" di
+  pertanyaan lanjutan, tanpa catatan tambahan). Penilaian awal di `penerapan-konsep-fitur-catatan.md` menulis D3 **Sebagian**.
+- **Batas dengan A9:** §6.3 mencatat bahwa D3 dan A9 berbeda cakupan. **A9** adalah alat editor yang disematkan
+  (`docs/bar/config.js`), sedangkan **D3** adalah tindakan utama aplikasi. Perubahan ini tidak menyentuh bilah editor.
+
+### Keadaan sebelum
+
+- Lembar tambah (`#sheet`, dibuka dari tombol `+` atau `#fab-bnav` di HP) berisi 6 aksi: catatan baru, catatan hari ini,
+  dari templat, reminder baru, tugas baru, dan ganti nama massal.
+- Bilah bawah berisi 5 layar: Beranda, Catatan, Reminder, Tugas, dan Lainnya. Palet Ctrl+K memuat semua layar.
+- Tindakan utama dari Tahap 4 (Timer fokus, Suara latar, Persiapan ujian) belum ada di jalur akses cepat. Hanya bisa dibuka
+  lewat Lainnya atau Ctrl+K.
+
+### Perubahan
+
+- `docs/index.html`: tiga entri baru di `#sheet`, masing-masing dengan atribut `data-aksi-cepat` (`fokus`, `suara`, `ujian`).
+  Label memakai kunci i18n yang sudah ada (en dan ja), sehingga tidak ada kunci baru.
+- `docs/app.js`: penangan klik `[data-aksi-cepat]` menutup lembar, lalu membuka Timer fokus (`bukaFokus`), Suara latar
+  (`bukaAmbience`), atau layar Persiapan ujian (`go('ujian')`).
+- Alur yang sudah ada tidak diubah: `data-new` (catatan, jurnal, templat, reminder, tugas) dan `data-go` (ganti nama massal).
+
+### Keputusan cakupan v1 (diambil saya, belum dikonfirmasi pengguna)
+
+- Cakupan dibatasi pada tiga tindakan utama dari Tahap 4 yang belum punya jalur cepat. Akses cepat **tidak** dibuat
+  bisa disusun pengguna. Susunan yang bisa diatur (pin, urutan, sembunyikan) akan menjadi pekerjaan terpisah bila diminta.
+- Bilah bawah tetap 5 layar. Menambah isi bilah bawah tidak dikerjakan karena ruangnya terbatas di HP.
+
+### Cara uji (hasil nyata)
+
+- Chromium `uji-d3.mjs` (harness di luar repo): **20/20 lulus**, tanpa pageerror. Mencakup:
+  - 1280 px dan 390 px: lembar terbuka, tiga entri tampil dengan label benar, dan entri lama (Ganti Nama Massal) tetap ada;
+  - setiap entri baru membuka tujuannya dan menutup lembar. Timer fokus dan Suara latar membuka lembar masing-masing;
+    Persiapan ujian membuka layar ujian;
+  - 390 px: `#fab-bnav` membuka lembar yang sama, dan halaman tidak punya gulir horizontal;
+  - regresi: Catatan baru tetap membuka editor.
+- `npm test`: **37/37 lulus** (`npmtest-d3.log`).
+
+**Keterbatasan:**
+- Chromium desktop (1280 px) dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
+- Akses cepat tidak bisa disusun pengguna. Urutan tetap seperti di `index.html`.
+- Tangkapan layar lembar di 390 px: `d3-390-sheet.png` (harness di luar repo).
+
 ## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
 
 Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.

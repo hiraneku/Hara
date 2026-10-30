@@ -7,15 +7,15 @@
    • Catatan: saat tab tidak aktif, browser dapat menunda pemeriksaan. Waktu tetap benar karena
      dihitung dari timestamp, tetapi toast dan bunyi bisa terlambat sampai tab aktif lagi. */
 
-import { t as tr } from '../core/i18n.js?v=20261030090000';
-import { toast } from '../core/toast.js?v=20261030090000';
-import { esc } from '../core/dom.js?v=20261030090000';
-import { openPop, closeAll, pop } from './menus/pop.js?v=20261030090000';
-import { sheet } from './sheet.js?v=20261030090000';
+import { t as tr } from '../core/i18n.js?v=20261030100000';
+import { toast } from '../core/toast.js?v=20261030100000';
+import { esc } from '../core/dom.js?v=20261030100000';
+import { openPop, closeAll, pop } from './menus/pop.js?v=20261030100000';
+import { sheet } from './sheet.js?v=20261030100000';
 import {
   normalisasi, keadaanAwal, mulai, jeda, sisa, periksa, terapkanPengaturan,
   bisaDiubah, formatSisa, FOKUS_MAKS, ISTIRAHAT_MAKS, HITUNG_MAKS,
-} from './fokus-murni.js?v=20261030090000';
+} from './fokus-murni.js?v=20261030100000';
 
 const KUNCI = 'hara.fokus.v1';
 

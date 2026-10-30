@@ -5,12 +5,12 @@
    lewat elToBlock. plainText() ikut memakainya, jadi pencarian catatan menemukan
    kata dari gambar. Gambar tidak diubah. */
 
-import { kenali, kanvasOcr } from './mesin.js?v=20261030090000';
-import { teksDariItem } from './ocr-teks.js?v=20261030090000';
-import { snap } from '../editor/history.js?v=20261030090000';
-import { refresh } from '../editor/cleanup.js?v=20261030090000';
-import { toast } from '../../core/toast.js?v=20261030090000';
-import { t as tr } from '../../core/i18n.js?v=20261030090000';
+import { kenali, kanvasOcr } from './mesin.js?v=20261030100000';
+import { teksDariItem } from './ocr-teks.js?v=20261030100000';
+import { snap } from '../editor/history.js?v=20261030100000';
+import { refresh } from '../editor/cleanup.js?v=20261030100000';
+import { toast } from '../../core/toast.js?v=20261030100000';
+import { t as tr } from '../../core/i18n.js?v=20261030100000';
 
 /* Tunggu gambar selesai dimuat (object URL dari blob catatan). */
 function tungguGambar(img) {

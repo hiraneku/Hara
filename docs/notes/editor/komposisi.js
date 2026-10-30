@@ -14,7 +14,7 @@
 
    Modul ini sengaja tidak mengimpor cleanup.js/marks.js supaya tidak
    menambah siklus impor (warna.js, sorotan.js, marks.js saling memakainya). */
-import { sel, curBlock } from './caret.js?v=20261030090000';
+import { sel, curBlock } from './caret.js?v=20261030100000';
 
 /* Panjang teks sebuah blok, tanpa karakter nol-lebar. Dipakai untuk
    menghitung berapa karakter yang BENAR-BENAR masuk selama komposisi. */

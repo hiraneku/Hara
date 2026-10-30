@@ -7,18 +7,18 @@
 
    Logika data ada di ujian-murni.js. Tindakan hapus memakai Urungkan di toast, tanpa dialog konfirmasi. */
 
-import { state, save } from '../core/store.js?v=20261030090000';
-import { go, cur } from '../core/router.js?v=20261030090000';
-import { t as tr } from '../core/i18n.js?v=20261030090000';
-import { toast } from '../core/toast.js?v=20261030090000';
-import { esc } from '../core/dom.js?v=20261030090000';
-import { openPop, closeAll } from './menus/pop.js?v=20261030090000';
-import { sheet } from './sheet.js?v=20261030090000';
-import { bukaFokus } from './fokus.js?v=20261030090000';
+import { state, save } from '../core/store.js?v=20261030100000';
+import { go, cur } from '../core/router.js?v=20261030100000';
+import { t as tr } from '../core/i18n.js?v=20261030100000';
+import { toast } from '../core/toast.js?v=20261030100000';
+import { esc } from '../core/dom.js?v=20261030100000';
+import { openPop, closeAll } from './menus/pop.js?v=20261030100000';
+import { sheet } from './sheet.js?v=20261030100000';
+import { bukaFokus } from './fokus.js?v=20261030100000';
 import {
   buatRuang, tambahMateri, keluarkanMateri, tambahSoal, hapusSoal, catatNilaiSoal,
   antrianLatihan, langkahAntrean, ringkasSesi, statistikRuang,
-} from './ujian-murni.js?v=20261030090000';
+} from './ujian-murni.js?v=20261030100000';
 
 /* Keadaan layar (hanya di memori). */
 let aktifId = null;     /* ruang yang dibuka */
