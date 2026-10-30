@@ -4,7 +4,7 @@ name: Build APK Hara
 
 on:
   push:
-    branches: [arena/c3f71ef0-hara, main]
+    branches: [arena/c3f71ef0-hara, arena/4c22176a-hara, main]
   workflow_dispatch:
 
 permissions:
