@@ -1394,6 +1394,61 @@ diambil. Rekomendasi: **tunda hierarki** sampai ada kebutuhan nyata, dan tetap b
 - Akses cepat tidak bisa disusun pengguna. Urutan tetap seperti di `index.html`.
 - Tangkapan layar lembar di 390 px: `d3-390-sheet.png` (harness di luar repo).
 
+## Perubahan 37 · D4 — Web content capture v1 (Tahap 5)
+
+- **ID:** D4 (Web content capture). Urutan §6.1 Tahap 5. Dikerjakan setelah persetujuan pengguna (pilihan "D4" lewat
+  pertanyaan lanjutan). Acuan: §1.11 (lingkup sederhana), `penerapan-konsep-fitur-catatan.md` baris 104 (D4 **Belum**,
+  hanya kartu tautan manual), dan §1.11 yang menyebut pengambilan halaman lintas-asal bisa terhalang.
+- **Lingkup v1 (sesuai §1.11):** URL, judul, metadata yang tersedia, **teks pilihan pengguna** (kutipan), dan sumber.
+  Tidak ada pengambilan halaman dari jaringan. Browser memblokir pengambilan lintas-asal, dan halaman dengan
+  autentikasi tidak bisa diambil. Ringkasan AI tidak dikerjakan (fitur terpisah, §1.11).
+
+### Keadaan sebelum
+
+- Kartu tautan (`/bookmark`, blok `bookmark`) sudah ada, dengan URL, judul, dan catatan singkat. Kartu tidak menyimpan
+  teks dari halaman maupun tanggal pengambilan.
+
+### Perubahan
+
+- **Kolom baru di dialog kartu tautan:** "Teks pilihan dari halaman (opsional)", maksimal 2000 karakter. Pengguna menempelkan
+  teks yang dipilih di halaman web. Mengedit kartu juga bisa mengubah kolom ini.
+- **Metadata baru di blok:** `kutipan` (teks pilihan, sudah dibersihkan) dan `diambil` (YYYY-MM-DD, zona waktu lokal, dicatat
+  saat kartu dibuat dan dipertahankan saat disunting). Kartu menampilkan kutipan (tiga baris) dan "Diambil <tanggal>".
+- **Pustaka murni baru** `docs/notes/tautan-murni.js`: `bersihKutipan`, `tanggalDiambil`, `escHtml`. Tanpa DOM.
+- **Kutipan ikut ke pencarian, ekspor markdown (sebagai kutipan `>`), dan ganti teks (Cari & Ganti).**
+- **Normalisasi:** `normalizeNote` membersihkan kutipan (CRLF, spasi tepi, batas 2000).
+
+### Perbaikan keamanan yang ditemukan saat mengerjakan D4
+
+- **Judul dan catatan kartu tautan belum di-escape HTML penuh.** Kode lama hanya mengescape tanda kutip, lalu menyisipkan
+  judul sebagai HTML. Judul berisi `<img onerror=…>` dari cadangan bisa dieksekusi. Sekarang `title`, `desc`, `kutipan`,
+  dan atribut data memakai `escHtml`. Dibuktikan di Chromium: judul markup tampil sebagai teks, tidak ada `img` atau `i` di kartu,
+  dan `window.__xss` tidak terisi.
+
+### Cara uji (hasil nyata)
+
+- `tools/uji/tautan-murni.mjs` (Node): **20/20 lulus**. Mencakup pemangkasan, CRLF, batas 2000, pergantian bulan dan tahun
+  untuk tanggal, dan escape HTML.
+- Chromium `uji-d4.mjs` (harness di luar repo): **40/40 lulus** di 1280 dan 390 px, tanpa pageerror. Mencakup:
+  - dialog membuat kartu dengan kutipan, kutipan dipangkas, dan `<b>` di kutipan tampil sebagai teks;
+  - label "Diambil" berisi tanggal hari ini;
+  - sunting mengganti kutipan dan mempertahankan tanggal, tanpa kartu ganda;
+  - judul berisi markup tidak dieksekusi;
+  - baca balik dari DOM, teks pencarian, ekspor markdown, dan normalisasi;
+  - tidak ada gulir horizontal di 390 px.
+- `npm test`: **37/37 lulus** (`npmtest-d4.log`).
+
+### Keterbatasan
+
+- **Pengambilan otomatis tidak ada.** Pengguna menyalin dan menempelkan teks pilihan sendiri. Berbagi dari aplikasi lain ke
+  Hara adalah D5.
+- Tanggal pengambilan adalah tanggal dibuat di Hara, bukan tanggal sebenarnya halaman diambil dari jaringan.
+- **Impor markdown** (`catatanDariMarkdown`) tidak mengenali kutipan kartu tautan. Kutipan menjadi paragraf kutipan biasa,
+  bukan bagian kartu. Impor JSON memakai normalisasi yang sudah diuji (kutipan dan tanggal bertahan), tetapi alur impor JSON penuh belum diuji langsung.
+- Alur ganti teks (Cari & Ganti) untuk kutipan **belum diuji** (tidak di Node maupun Chromium). Perubahan kodenya hanya menambah satu kunci.
+- Chromium desktop (1280 px) dan viewport 390 px. Belum diuji di HP sungguhan atau Android.
+- Stempel versi ikut berubah menjadi `20261030110000` (143 berkas).
+
 ## Verifikasi lanjutan C7: ekspor dan impor kartu (Chromium, `uji-c7-data.mjs`)
 
 Butir yang belum diuji pada Perubahan 31 sekarang sudah diuji: **9/9 lulus**, tanpa pageerror.

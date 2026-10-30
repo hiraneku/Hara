@@ -941,6 +941,8 @@ export const EN = {
   "Isi rumus terlebih dahulu": "Enter a formula first",
   "Kartu Tautan Web": "Web Bookmark Card",
   "Judul kartu (opsional)": "Card title (optional)",
+  "Teks pilihan dari halaman (opsional)": "Selected text from the page (optional)",
+  "Diambil": "Captured",
   "Catatan singkat (opsional)": "Short note (optional)",
   "Masukkan alamat tautan terlebih dahulu": "Enter a URL first",
   "Ukuran berkas maksimal 25 MB": "Max file size is 25 MB",

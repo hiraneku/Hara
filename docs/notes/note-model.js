@@ -28,12 +28,13 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261030100000';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261030100000';
-import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261030100000';
-import { adalahPdf } from './pdf/logika.js?v=20261030100000';
-import { tautanAman } from './url-aman.js?v=20261030100000';
-import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261030100000';
+import { t as tr } from '../core/i18n.js?v=20261030110000';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261030110000';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261030110000';
+import { adalahPdf } from './pdf/logika.js?v=20261030110000';
+import { tautanAman } from './url-aman.js?v=20261030110000';
+import { bersihKutipan, escHtml } from './tautan-murni.js?v=20261030110000';
+import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261030110000';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -294,7 +295,7 @@ export function plainText(note) {
         return String((b.meta && b.meta.expr) || '');
       }
       if (b.type === 'bookmark') {
-        return [b.meta?.title, b.meta?.desc, b.meta?.url].filter(Boolean).join(' ');
+        return [b.meta?.title, b.meta?.desc, b.meta?.kutipan, b.meta?.url].filter(Boolean).join(' ');
       }
       if (b.type === 'file') {
         return String((b.meta && b.meta.name) || '');
@@ -396,15 +397,19 @@ function blockToHtmlMentah(b) {
     const urlData = escAttr(aman);
     let host = 'tautan';
     try { if (aman) host = new URL(aman).hostname.replace(/^www\./, ''); } catch {}
-    const jdl = escAttr(meta.title || host);
-    const ket = escAttr(meta.desc || '');
-    return `<div class="b-bmk" contenteditable="false" data-url="${urlData}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
+    /* D4: judul, catatan, dan kutipan di-escape HTML penuh (dari pengguna atau cadangan) */
+    const jdl = escHtml(meta.title || host);
+    const ket = escHtml(meta.desc || '');
+    const kut = bersihKutipan(meta.kutipan);
+    const dia = escHtml(meta.diambil || '');
+    return `<div class="b-bmk" contenteditable="false" data-url="${urlData}" data-title="${jdl}" data-desc="${ket}" data-kutipan="${escHtml(kut)}" data-diambil="${dia}"${bid}${ref}${bgAttr}>` +
       `<a class="bmk-main" href="${url}" target="_blank" rel="noopener noreferrer">` +
       `<span class="bmk-ico" aria-hidden="true"><svg class="ico"><use href="#i-link"/></svg></span>` +
       `<span class="bmk-info">` +
       `<span class="bmk-title">${jdl}</span>` +
       `${ket ? `<span class="bmk-desc">${ket}</span>` : ''}` +
-      `<span class="bmk-host">${escAttr(host)}</span>` +
+      `${kut ? `<span class="bmk-kutipan">${escHtml(kut)}</span>` : ''}` +
+      `<span class="bmk-host">${escHtml(host)}${dia ? ` · <span class="bmk-diambil">${tr('Diambil')} ${dia}</span>` : ''}</span>` +
       `</span></a>` +
       `<button type="button" class="bmk-act" data-bmk-edit title="${tr('Sunting')}" aria-label="${tr('Sunting')}"><svg class="ico"><use href="#i-pen"/></svg></button>` +
       `<button type="button" class="bmk-act" data-bmk-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
@@ -659,6 +664,8 @@ export function elToBlock(el) {
     meta.url = el.getAttribute('data-url') || '';
     meta.title = el.getAttribute('data-title') || '';
     meta.desc = el.getAttribute('data-desc') || '';
+    meta.kutipan = bersihKutipan(el.getAttribute('data-kutipan') || '');
+    meta.diambil = el.getAttribute('data-diambil') || '';
   } else if (type === 'file') {
     meta.blobId = el.getAttribute('data-blob') || '';
     meta.name = el.getAttribute('data-name') || 'lampiran';
@@ -861,6 +868,10 @@ function bersihBlokTautan(blok) {
   }
   if ((blok.type === 'bookmark' || blok.type === 'image') && blok.meta && blok.meta.url) {
     out = { ...out, meta: { ...blok.meta, url: tautanAman(blok.meta.url) } };
+  }
+  /* D4: kutipan dibatasi panjangnya; nilai non-string dibuang */
+  if (blok.type === 'bookmark' && blok.meta && 'kutipan' in blok.meta) {
+    out = { ...out, meta: { ...out.meta, kutipan: bersihKutipan(blok.meta.kutipan) } };
   }
   return out;
 }

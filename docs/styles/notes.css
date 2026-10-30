@@ -2204,6 +2204,10 @@ body.zen #cari-float{right:16px;bottom:calc(70px + env(safe-area-inset-bottom));
 .bmk-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .bmk-title,.fl-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bmk-desc{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* D4: teks pilihan dari halaman, dibatasi tiga baris */
+.bmk-kutipan{font-size:12.5px;line-height:1.45;color:var(--text);border-left:2px solid var(--accent);padding-left:8px;margin:2px 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
+.bmk-kutipan-in{min-height:76px;resize:vertical;font:inherit;line-height:1.45;white-space:pre-wrap}
+.bmk-diambil{color:var(--faint)}
 .bmk-host,.fl-size{font-size:11.5px;color:var(--faint);font-family:var(--mono)}
 .bmk-act{width:34px;height:34px;border-radius:10px;color:var(--muted);display:grid;place-items:center;
   flex:none;cursor:pointer;transition:.14s var(--ease)}

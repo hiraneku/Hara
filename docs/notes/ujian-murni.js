@@ -8,7 +8,7 @@
 
    Versi awal sengaja tidak memuat layer, tape, atau bank soal bawaan (acuan §1.9). Materi bawaan bukan syarat. */
 
-import { antrianAwal, langkahAntrean, ringkasSesi } from './kartu-murni.js?v=20261030100000';
+import { antrianAwal, langkahAntrean, ringkasSesi } from './kartu-murni.js?v=20261030110000';
 
 export const MAKS_NAMA = 120;     /* karakter, nama ruang */
 export const MAKS_TEKS = 2000;    /* karakter per sisi soal */

@@ -13,17 +13,17 @@
    Tombol Urungkan di toast mengembalikan DOM + judul persis seperti
    sebelum penggantian. */
 
-import { state, save } from '../core/store.js?v=20261030100000';
-import { toast } from '../core/toast.js?v=20261030100000';
-import { esc } from '../core/dom.js?v=20261030100000';
-import { t as tr } from '../core/i18n.js?v=20261030100000';
-import { flush } from '../core/autosave.js?v=20261030100000';
-import { docEl } from './editor/caret.js?v=20261030100000';
-import { refresh, saveNow } from './editor/cleanup.js?v=20261030100000';
-import { snap } from './editor/history.js?v=20261030100000';
-import { touch } from './note-model.js?v=20261030100000';
-import { openPop, closeAll } from './menus/pop.js?v=20261030100000';
-import { sheet, shField, shSeg, shAksi } from './sheet.js?v=20261030100000';
+import { state, save } from '../core/store.js?v=20261030110000';
+import { toast } from '../core/toast.js?v=20261030110000';
+import { esc } from '../core/dom.js?v=20261030110000';
+import { t as tr } from '../core/i18n.js?v=20261030110000';
+import { flush } from '../core/autosave.js?v=20261030110000';
+import { docEl } from './editor/caret.js?v=20261030110000';
+import { refresh, saveNow } from './editor/cleanup.js?v=20261030110000';
+import { snap } from './editor/history.js?v=20261030110000';
+import { touch } from './note-model.js?v=20261030110000';
+import { openPop, closeAll } from './menus/pop.js?v=20261030110000';
+import { sheet, shField, shSeg, shAksi } from './sheet.js?v=20261030110000';
 
 /* ── pencocokan teks murni (tanpa regex, tanpa eval) ── */
 const KATA = /[\p{L}\p{N}_]/u;
@@ -110,7 +110,7 @@ export function gantiDiBlocks(blocks, cari, ganti, opsi = {}) {
       if (r.jumlah) { salin.meta.title = r.teks; jumlah += r.jumlah; }
     }
     if (salin.type === 'bookmark') {
-      for (const k of ['title', 'desc']) {
+      for (const k of ['title', 'desc', 'kutipan']) {
         if (!salin.meta[k]) continue;
         const r = gantiTeks(salin.meta[k], cari, ganti, opsi);
         if (r.jumlah) { salin.meta[k] = r.teks; jumlah += r.jumlah; }

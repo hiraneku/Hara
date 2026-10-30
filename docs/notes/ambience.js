@@ -7,14 +7,14 @@
    • Browser bisa memblokir audio sebelum ada ketukan pengguna. Pemutaran dimulai hanya dari tombol Putar.
    • Di HP, browser bisa menghentikan audio saat layar terkunci. Belum diuji di perangkat sungguhan. */
 
-import { t as tr } from '../core/i18n.js?v=20261030100000';
-import { toast } from '../core/toast.js?v=20261030100000';
-import { esc } from '../core/dom.js?v=20261030100000';
-import { openPop, pop } from './menus/pop.js?v=20261030100000';
-import { sheet } from './sheet.js?v=20261030100000';
+import { t as tr } from '../core/i18n.js?v=20261030110000';
+import { toast } from '../core/toast.js?v=20261030110000';
+import { esc } from '../core/dom.js?v=20261030110000';
+import { openPop, pop } from './menus/pop.js?v=20261030110000';
+import { sheet } from './sheet.js?v=20261030110000';
 import {
   JENIS, HENTI_MENIT, normalisasi, buatSampel, gainUntuk, sisaHenti, sudahHabis, PANJANG_DETIK,
-} from './ambience-murni.js?v=20261030100000';
+} from './ambience-murni.js?v=20261030110000';
 
 const KUNCI = 'hara.ambience.v1';
 const LABEL_JENIS = { 'putih': 'Derau putih', 'merah-muda': 'Derau merah muda', 'cokelat': 'Derau cokelat' };

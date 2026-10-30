@@ -908,6 +908,8 @@ export const JA = {
   "Isi rumus terlebih dahulu": "数式を入力してください",
   "Kartu Tautan Web": "Webブックマークカード",
   "Judul kartu (opsional)": "タイトル（任意）",
+  "Teks pilihan dari halaman (opsional)": "ページから選んだテキスト（任意）",
+  "Diambil": "取得日",
   "Catatan singkat (opsional)": "メモ（任意）",
   "Masukkan alamat tautan terlebih dahulu": "URLを入力してください",
   "Ukuran berkas maksimal 25 MB": "ファイルサイズ上限は25MBです",
