@@ -1352,4 +1352,9 @@ export const EN = {
   "Gagal membaca lagu di penyimpanan. Ketuk Pindai ulang.": "Could not read device storage. Tap Rescan.",
   "Lagu dari penyimpanan HP tidak dihapus oleh Hara": "Hara does not delete songs from phone storage",
   "Semua lagu Hara dihapus; berkas di HP tetap ada": "Hara's imported library was cleared; files on the phone remain",
+  "Pustaka lagu": "Music library",
+  "Lihat semua lagu": "See all songs",
+  "Cari lagu di pustaka": "Search the library",
+  "Lagu tidak ditemukan": "No songs found",
+  "Audio yang diindeks Android muncul otomatis. Berkas privat atau belum diindeks tidak dapat dipindai Hara; WebM di koleksi video memerlukan izin video.": "Android-indexed audio appears automatically. Hara cannot scan private or unindexed files; WebM in the video library requires video access permission.",
 };

@@ -65,7 +65,9 @@ oke('kejadian pertama mingguan jatuh di hari Senin', new Date(sn.waktu).getDay()
 
 const bl = uraiTugas('setiap tanggal 31 bayar');
 oke('setiap tanggal 31 → bulanan tgl=31', bl && bl.aturan.jenis === 'bulanan' && bl.aturan.tgl === 31);
-oke('kejadian bulanan tanggal 31 memang tanggal 31', new Date(bl.waktu).getDate() === 31);
+const blTanggal = new Date(bl.waktu);
+const blAkhirBulan = new Date(blTanggal.getFullYear(), blTanggal.getMonth() + 1, 0).getDate();
+oke('kejadian bulanan tanggal 31 dijepit ke akhir bulan bila perlu', blTanggal.getDate() === Math.min(31, blAkhirBulan));
 
 /* kejadianSesudah — tepi bulan pendek & pekan */
 oke('bulanan 31 Jan → 28 Feb (2027, bukan tahun kabisat)',

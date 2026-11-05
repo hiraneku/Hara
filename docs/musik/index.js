@@ -2,23 +2,34 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261105170000';
-import * as M from './mesin.js?v=20261105170000';
-import * as A from './aksi.js?v=20261105170000';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261105170000';
-import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261105170000';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261105170000';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261105170000';
-import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261105170000';
-import { terapkanEfekTersimpan } from './efek.js?v=20261105170000';
-import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261105170000';
-import { segarkanKartuMusik } from './kartu.js?v=20261105170000';
-import { segarSampul } from './sampul-dom.js?v=20261105170000';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261105210000';
+import * as M from './mesin.js?v=20261105210000';
+import * as A from './aksi.js?v=20261105210000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261105210000';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261105210000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261105210000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261105210000';
+import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261105210000';
+import { terapkanEfekTersimpan } from './efek.js?v=20261105210000';
+import { pustakaView, pasangPustakaLagu } from './pustaka-layar.js?v=20261105210000';
+import { pasangKontrolNotifikasi, sinkronkanKontrolNotifikasi } from './kontrol-notif.js?v=20261105210000';
+import * as S from './simpan.js?v=20261105210000';
+import { segarkanKartuMusik } from './kartu.js?v=20261105210000';
+import { segarSampul } from './sampul-dom.js?v=20261105210000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
 let pindaiTerakhir = 0;
 let pindaiJalan = false;
+let updateKontrolTerakhir = 0;
+
+function sinkronKontrolSistem(jenis, keadaan) {
+  const sekarang = Date.now();
+  if (jenis === 'waktu' && sekarang - updateKontrolTerakhir < 1200) return;
+  if (!['lagu', 'status', 'atur', 'waktu'].includes(jenis)) return;
+  updateKontrolTerakhir = sekarang;
+  sinkronkanKontrolNotifikasi(S.laguById(keadaan.id), keadaan);
+}
 
 function segarkanPustakaPerangkat() {
   if (!A.bisaPindaiPustakaPerangkat() || pindaiJalan || Date.now() - pindaiTerakhir < 5000) return;
@@ -38,6 +49,7 @@ function jadwalSimpan() {
 }
 
 function onMesin(jenis, k) {
+  sinkronKontrolSistem(jenis, k);
   if (jenis === 'lagu') A.jalankanTundaan(k.id);
   if (jenis === 'status' && k.status === 'kosong') A.batalkanTundaan();
   if (jenis === 'atur') jadwalSimpan();
@@ -67,16 +79,25 @@ export const musikModule = {
 
   init() {
     registerViews(
-      { musik: musikView, 'musik-set': pengaturanView, 'musik-daftar': daftarView, 'musik-efek': efekView, 'musik-effect': effectView, 'musik-eq': eqView, 'musik-ekspor': eksporView },
-      { musik: 'Musik', 'musik-set': 'Pengaturan Musik', 'musik-daftar': 'Daftar Putar', 'musik-efek': 'Efek & Visual', 'musik-effect': 'Effect', 'musik-eq': 'Ekualiser', 'musik-ekspor': 'Ekspor Lagu' },
-      { 'musik-set': 'musik', 'musik-daftar': 'musik', 'musik-efek': 'musik', 'musik-effect': 'musik-efek', 'musik-eq': 'musik-efek', 'musik-ekspor': 'musik' },
+      { musik: musikView, 'musik-set': pengaturanView, 'musik-daftar': daftarView, 'musik-pustaka': pustakaView, 'musik-efek': efekView, 'musik-effect': effectView, 'musik-eq': eqView },
+      { musik: 'Musik', 'musik-set': 'Pengaturan Musik', 'musik-daftar': 'Daftar Putar', 'musik-pustaka': 'Pustaka lagu', 'musik-efek': 'Efek & Visual', 'musik-effect': 'Effect', 'musik-eq': 'Ekualiser' },
+      { 'musik-set': 'musik', 'musik-daftar': 'musik', 'musik-pustaka': 'musik', 'musik-efek': 'musik', 'musik-effect': 'musik-efek', 'musik-eq': 'musik-efek' },
     );
     pasangLayar();
     pasangDaftar();
     pasangEq();
     pasangEfek();
     pasangPengaturan();
-    pasangEkspor();
+    pasangPustakaLagu();
+    pasangKontrolNotifikasi({
+      play: () => M.putar(),
+      pause: () => M.jeda(),
+      previous: () => A.gantiLagu(-1),
+      next: () => A.gantiLagu(1),
+      seekTo: positionMs => M.seek(positionMs / 1000),
+      rewind: () => M.lompat(-10),
+      forward: () => M.lompat(10),
+    });
     terapkanEqTersimpan();
     terapkanEfekTersimpan();
     M.dengar(onMesin);

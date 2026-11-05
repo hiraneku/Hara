@@ -40,6 +40,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Audio MediaStore: Android 13+, izin granular pustaka audio. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <!-- WebM/WebA dapat diindeks Android sebagai media video; hanya wadah audio WebM yang diimpor. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <!-- Android 12L dan lebih lama. Tidak dipakai pada Android 13+. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 </manifest>

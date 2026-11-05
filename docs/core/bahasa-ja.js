@@ -1319,4 +1319,9 @@ export const JA = {
   "Gagal membaca lagu di penyimpanan. Ketuk Pindai ulang.": "端末の保存領域を読み取れませんでした。再スキャンしてください。",
   "Lagu dari penyimpanan HP tidak dihapus oleh Hara": "Haraは端末内の曲を削除しません",
   "Semua lagu Hara dihapus; berkas di HP tetap ada": "Haraの取り込み済みライブラリを消去しました。端末のファイルは残っています",
+  "Pustaka lagu": "曲のライブラリ",
+  "Lihat semua lagu": "すべての曲を見る",
+  "Cari lagu di pustaka": "ライブラリを検索",
+  "Lagu tidak ditemukan": "曲が見つかりません",
+  "Audio yang diindeks Android muncul otomatis. Berkas privat atau belum diindeks tidak dapat dipindai Hara; WebM di koleksi video memerlukan izin video.": "Android にインデックスされた音声が自動表示されます。非公開または未インデックスのファイルは Hara ではスキャンできず、動画ライブラリ内の WebM には動画アクセス許可が必要です。",
 };

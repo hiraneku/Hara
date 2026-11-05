@@ -16,23 +16,26 @@ const { window: w } = dom;
 w.indexedDB = fakeIDB;
 let mintaIzin = 0;
 let jumlahPindai = 0;
-let jumlahRegistrasiPlugin = 0;
+const pluginTerdaftar = [];
 const songs = [
   { id: '10', uri: 'content://media/external/audio/media/10', title: 'Lagu di Music', displayName: 'lagu.mp3', artist: 'Artis', album: 'Album', duration: 120000, size: 1000, mimeType: 'audio/mpeg', dateAdded: 1760000000, location: 'Music/' },
   { id: '11', uri: 'content://media/external/audio/media/11', title: 'Rekaman lain', displayName: 'rekaman.wav', duration: 5000, size: 500, mimeType: 'audio/wav', dateAdded: 1760000001, location: 'Recordings/' },
+  { id: 'video:12', uri: 'content://media/external/video/media/12', title: 'Audio WebM', displayName: 'suara.webm', duration: 70000, size: 1500, mimeType: 'video/webm', dateAdded: 1760000002, location: 'Music/' },
 ];
 const audioLibrary = {
   checkAccess: async () => ({ granted: false }),
   requestAccess: async () => { mintaIzin++; return { granted: true }; },
   listAudio: async () => { jumlahPindai++; return { granted: true, songs }; },
 };
+const mediaControls = { addListener: async () => ({ remove: async () => {} }), update: async () => {}, clear: async () => {} };
 w.Capacitor = {
   getPlatform: () => 'android',
   Plugins: {},
   registerPlugin: name => {
-    if (name !== 'AudioLibrary') throw new Error(`Nama plugin tak dikenal: ${name}`);
-    jumlahRegistrasiPlugin++;
-    return audioLibrary;
+    pluginTerdaftar.push(name);
+    if (name === 'AudioLibrary') return audioLibrary;
+    if (name === 'MusicControls') return mediaControls;
+    throw new Error(`Nama plugin tak dikenal: ${name}`);
   },
 };
 for (const k of ['document', 'getSelection', 'HTMLElement', 'Node', 'Range', 'MouseEvent', 'Event', 'InputEvent', 'localStorage', 'Image', 'Blob']) {
@@ -62,16 +65,16 @@ await tunggu();
 router.go('musik');
 await tunggu(300);
 const judul = [...document.querySelectorAll('.mus-item-judul')].map(e => e.textContent.trim());
-cek('plugin native didaftarkan lewat API Capacitor 8', jumlahRegistrasiPlugin === 1);
+cek('plugin native audio dan kontrol media terdaftar lewat API Capacitor 8', pluginTerdaftar.includes('AudioLibrary') && pluginTerdaftar.includes('MusicControls'));
 cek('membuka Musik otomatis meminta izin audio', mintaIzin === 1);
 cek('membuka Musik otomatis menjalankan satu pemindaian MediaStore', jumlahPindai === 1);
-cek('semua audio yang tersedia muncul tanpa impor manual', judul.includes('Lagu di Music') && judul.includes('Rekaman lain'));
+cek('semua audio yang tersedia muncul tanpa impor manual', judul.includes('Lagu di Music') && judul.includes('Rekaman lain') && judul.includes('Audio WebM'));
 cek('tombol pemindaian ulang diberi label yang benar', [...document.querySelectorAll('[data-mus="impor"]')].some(e => e.getAttribute('aria-label') === 'Pindai ulang penyimpanan' || e.textContent.includes('Pindai ulang')));
 
 document.querySelector('[data-mus="impor"]')?.click();
 await tunggu(200);
 cek('tombol Pindai ulang memindai kembali pustaka perangkat', jumlahPindai === 2);
-cek('pemindaian ulang tidak menggandakan lagu', document.querySelectorAll('.mus-item-judul').length === 2);
+cek('pemindaian ulang tidak menggandakan lagu', document.querySelectorAll('.mus-item-judul').length === 3);
 
 console.log(gagal ? `\n${gagal} GAGAL` : '\nSemua uji musik-pindai-otomatis LOLOS');
 dom.window.close();

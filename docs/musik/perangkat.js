@@ -39,6 +39,8 @@ export async function pindaiAudioPerangkat() {
     return {
       tersedia: true,
       granted: !!hasil?.granted,
+      audioGranted: !!hasil?.audioGranted,
+      videoGranted: !!hasil?.videoGranted,
       songs: Array.isArray(hasil?.songs) ? hasil.songs : [],
     };
   } catch (error) {

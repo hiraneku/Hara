@@ -9,13 +9,13 @@
 
    Modul ini tidak menyentuh penyimpanan. Perubahan diumumkan lewat dengar(). */
 
-import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261105170000';
-import { buatRantaiEfek } from './efek-dsp.js?v=20261105170000';
+import { PitchShifter } from '../vendor/soundtouch/soundtouch.js?v=20261105210000';
+import { buatRantaiEfek } from './efek-dsp.js?v=20261105210000';
 import {
   klampTempo, klampPitch, klampPosisi, loopBerikutnya, tandaiLoop,
   sahkanLoop, puncakGelombang, LOOP_KOSONG, LOMPAT_DETIK,
   EQ_FREKUENSI, EQ_AWAL, normalisasiEq,
-} from './logika.js?v=20261105170000';
+} from './logika.js?v=20261105210000';
 
 const pendengar = new Set();
 /* Umumkan perubahan dari luar mesin (mis. sampul baru tersedia). */
@@ -526,8 +526,14 @@ export function lepas() {
 let sistemDipasang = false;
 let aksiBerikutnya = null;
 
+function androidPunyaMediaSessionNative() {
+  try { return typeof window !== 'undefined' && window.Capacitor?.getPlatform?.() === 'android'; }
+  catch (e) { return false; }
+}
+
 export function pasangAksiSistem({ sebelumnya, berikutnya }) {
   aksiBerikutnya = { sebelumnya, berikutnya };
+  if (androidPunyaMediaSessionNative()) return;
   if (sistemDipasang || !('mediaSession' in navigator)) return;
   sistemDipasang = true;
   const ms = navigator.mediaSession;
@@ -546,7 +552,7 @@ export function pasangAksiSistem({ sebelumnya, berikutnya }) {
 }
 
 function aturMediaSession() {
-  if (!('mediaSession' in navigator)) return;
+  if (androidPunyaMediaSessionNative() || !('mediaSession' in navigator)) return;
   const ms = navigator.mediaSession;
   try {
     ms.metadata = new MediaMetadata({ title: judulAktif || 'Musik', artist: 'Hara', album: 'Musik' });
@@ -555,7 +561,7 @@ function aturMediaSession() {
 }
 
 function aturPosisiSistem() {
-  if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+  if (androidPunyaMediaSessionNative() || !('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
   if (!shifter || durasi <= 0) return;
   try {
     navigator.mediaSession.setPositionState({

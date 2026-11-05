@@ -1,5 +1,5 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20261105170000';
+import { t as tr } from './i18n.js?v=20261105210000';
 
 const views  = {};
 const titles = {};
@@ -24,7 +24,7 @@ export function registerViews(map, titleMap, indukMap) {
   Object.assign(induk, indukMap || {});
 }
 
-const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-efek', 'musik-effect', 'musik-eq', 'musik-ekspor'];
+const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq'];
 /* Persiapan ujian (C8): tiga layar dengan tombol kembali, tanpa navigasi bawah. */
 const UJIAN_LAYAR = ['ujian', 'ujian-ruang', 'ujian-latihan'];
 

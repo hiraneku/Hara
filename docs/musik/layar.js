@@ -3,18 +3,18 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261105170000';
-import { esc } from '../core/dom.js?v=20261105170000';
-import { t as tr } from '../core/i18n.js?v=20261105170000';
-import { toast } from '../core/toast.js?v=20261105170000';
-import * as M from './mesin.js?v=20261105170000';
-import * as S from './simpan.js?v=20261105170000';
-import * as L from './logika.js?v=20261105170000';
-import * as A from './aksi.js?v=20261105170000';
-import { ikon } from './ikon.js?v=20261105170000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261105170000';
-import { segarSampul } from './sampul-dom.js?v=20261105170000';
-import { ambilSet } from './set.js?v=20261105170000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261105210000';
+import { esc } from '../core/dom.js?v=20261105210000';
+import { t as tr } from '../core/i18n.js?v=20261105210000';
+import { toast } from '../core/toast.js?v=20261105210000';
+import * as M from './mesin.js?v=20261105210000';
+import * as S from './simpan.js?v=20261105210000';
+import * as L from './logika.js?v=20261105210000';
+import * as A from './aksi.js?v=20261105210000';
+import { ikon } from './ikon.js?v=20261105210000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261105210000';
+import { segarSampul } from './sampul-dom.js?v=20261105210000';
+import { ambilSet } from './set.js?v=20261105210000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
@@ -190,7 +190,8 @@ function kontrolHtml(v) {
 function pustakaHtml(v) {
   const antre = A.antreanLagu();
   const langsung = A.bisaPindaiPustakaPerangkat();
-  const items = v.daftar.map(x => {
+  const itemRingkas = v.daftar.slice(0, 5);
+  const items = itemRingkas.map(x => {
     const aktif = v.sel && x.id === v.sel.id;
     const sedang = aktif && v.status === 'putar';
     const dalamAntre = antre.includes(x.id);
@@ -226,9 +227,11 @@ function pustakaHtml(v) {
       <div><h3 id="mus-h-pustaka">${tr('Pustaka')}</h3><p class="mus-catatan">${v.daftar.length} ${tr('lagu')}</p></div>
       <button type="button" class="mus-tombol" data-mus="impor">${ikon(langsung ? 'repeat' : 'plus')}<span>${tr(langsung ? 'Pindai ulang' : 'Impor')}</span></button>
     </header>
+    ${langsung ? `<p class="mus-pustaka-batas">${tr('Audio yang diindeks Android muncul otomatis. Berkas privat atau belum diindeks tidak dapat dipindai Hara; WebM di koleksi video memerlukan izin video.')}</p>` : ''}
     ${items
       ? `<ul class="mus-daftar">${items}</ul>`
       : `<p class="mus-kosong-kecil">${kosong}</p>`}
+    ${v.daftar.length > 5 ? `<button type="button" class="mus-tombol mus-pustaka-lebih" data-mus="pustaka">${ikon('list')}<span>${tr('Lihat semua lagu')} (${v.daftar.length})</span>${ikon('chev')}</button>` : ''}
   </section>`;
 }
 
@@ -245,7 +248,6 @@ export function musikView() {
         <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr(A.bisaPindaiPustakaPerangkat() ? 'Pindai ulang penyimpanan' : 'Impor lagu')}">${ikon(A.bisaPindaiPustakaPerangkat() ? 'repeat' : 'impor')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="daftar" aria-label="${tr('Daftar putar')}">${ikon('list')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="eq" aria-label="${tr('Efek & Visual')}">${ikon('eq')}</button>
-        <button type="button" class="mus-ikon-btn" data-mus="ekspor" aria-label="${tr('Ekspor lagu')}">${ikon('ekspor')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="pengaturan" aria-label="${tr('Pengaturan Musik')}">${ikon('sliders')}</button>
       </div>
     </header>
@@ -493,8 +495,8 @@ function onClick(e) {
     case 'eq':
       go('musik-efek');
       return;
-    case 'ekspor':
-      go('musik-ekspor');
+    case 'pustaka':
+      go('musik-pustaka');
       return;
     case 'putar':
       putarSel();
