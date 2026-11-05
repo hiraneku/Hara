@@ -2,16 +2,44 @@
    pengaturan, dan kontrol sistem (layar kunci). Menjaga urutan: simpan posisi
    lagu lama sebelum berpindah, lalu muat lagu baru. */
 
-import { toast } from '../core/toast.js?v=20261030110000';
-import { t as tr } from '../core/i18n.js?v=20261030110000';
-import * as M from './mesin.js?v=20261030110000';
-import * as S from './simpan.js?v=20261030110000';
-import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261030110000';
-import { ambilSampul, pembacaBlob } from './sampul.js?v=20261030110000';
-import * as D from './daftar.js?v=20261030110000';
-import * as T from './tidur.js?v=20261030110000';
-import { ambilSet, ubahSet } from './set.js?v=20261030110000';
-import { pilihBerikut, urutkanAcak } from './mode.js?v=20261030110000';
+import { toast } from '../core/toast.js?v=20261105170000';
+import { t as tr } from '../core/i18n.js?v=20261105170000';
+import * as M from './mesin.js?v=20261105170000';
+import * as S from './simpan.js?v=20261105170000';
+import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261105170000';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261105170000';
+import * as D from './daftar.js?v=20261105170000';
+import * as T from './tidur.js?v=20261105170000';
+import { ambilSet, ubahSet } from './set.js?v=20261105170000';
+import { pindaiAudioPerangkat, pustakaPerangkatTersedia, statusPustakaPerangkat } from './perangkat.js?v=20261105170000';
+import { pilihBerikut, urutkanAcak } from './mode.js?v=20261105170000';
+
+let pindaiPerangkatAktif = null;
+export const bisaPindaiPustakaPerangkat = () => pustakaPerangkatTersedia();
+export const statusPindaiPustakaPerangkat = () => statusPustakaPerangkat();
+
+/* Android: tampilkan semua audio MediaStore otomatis; tidak meminta pengguna
+   memilih atau mengimpor berkas satu per satu. */
+export function pindaiPustakaPerangkat({ pesan = false } = {}) {
+  if (!pustakaPerangkatTersedia()) return Promise.resolve(false);
+  if (pindaiPerangkatAktif) return pindaiPerangkatAktif;
+  pindaiPerangkatAktif = (async () => {
+    const hasil = await pindaiAudioPerangkat();
+    if (!hasil.tersedia) return false;
+    if (!hasil.granted) {
+      S.sinkronkanLaguPerangkat([]);
+      if (pesan) toast(tr('Izin audio diperlukan untuk membaca lagu di perangkat'));
+      return false;
+    }
+    const jumlah = S.sinkronkanLaguPerangkat(hasil.songs);
+    if (pesan) toast(tr('{n} lagu ditemukan di perangkat', { n: jumlah }));
+    return true;
+  })().catch(() => {
+    if (pesan) toast(tr('Pustaka lagu perangkat tidak dapat dibaca'));
+    return false;
+  }).finally(() => { pindaiPerangkatAktif = null; });
+  return pindaiPerangkatAktif;
+}
 
 /* Antrean putar: null = urutan pustaka; array id = urutan daftar putar yang sedang diputar. */
 let antrean = null;
@@ -162,7 +190,7 @@ export async function togglePutarUtama() {
   if (k.status === 'kosong') {
     const id = S.terakhirId() || S.daftarLagu()[0]?.id;
     if (id) await mainkanLagu(id);
-    else toast(tr('Belum ada lagu. Impor dulu dari layar Musik'));
+    else toast(tr(pustakaPerangkatTersedia() ? 'Buka Musik untuk memuat lagu dari perangkat' : 'Belum ada lagu. Impor dulu dari layar Musik'));
     return;
   }
   await M.putar();
@@ -300,6 +328,10 @@ export async function mainkanDaftar(idDaftar, indeks = 0) {
 }
 
 export async function hapusLagu(id) {
+  if (S.laguById(id)?.sumber === 'perangkat') {
+    toast(tr('Lagu dari penyimpanan HP tidak dihapus oleh Hara'));
+    return;
+  }
   if (M.keadaan().id === id) M.lepas();
   if (antrean) antrean = antrean.filter(x => x !== id);
   D.lepasLaguDariSemua(id);
@@ -316,7 +348,8 @@ export async function hapusSemuaLagu() {
   aturAntrean(null);
   let gagal = 0;
   for (const x of S.daftarLagu()) {
+    if (x.sumber === 'perangkat') continue; // Lagu asli tidak dihapus dari penyimpanan HP.
     try { await S.hapusLagu(x.id); D.lepasLaguDariSemua(x.id); } catch (e) { gagal++; }
   }
-  toast(gagal ? tr('Sebagian lagu gagal dihapus') : tr('Semua lagu dihapus'));
+  toast(gagal ? tr('Sebagian lagu gagal dihapus') : tr('Semua lagu Hara dihapus; berkas di HP tetap ada'));
 }

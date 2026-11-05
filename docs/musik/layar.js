@@ -3,18 +3,18 @@
    pustaka lagu. Keadaan audio ada di mesin.js; layar ini hanya menampilkan dan
    meneruskan aksi. */
 
-import { cur, go, onAfterRender } from '../core/router.js?v=20261030110000';
-import { esc } from '../core/dom.js?v=20261030110000';
-import { t as tr } from '../core/i18n.js?v=20261030110000';
-import { toast } from '../core/toast.js?v=20261030110000';
-import * as M from './mesin.js?v=20261030110000';
-import * as S from './simpan.js?v=20261030110000';
-import * as L from './logika.js?v=20261030110000';
-import * as A from './aksi.js?v=20261030110000';
-import { ikon } from './ikon.js?v=20261030110000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261030110000';
-import { segarSampul } from './sampul-dom.js?v=20261030110000';
-import { ambilSet } from './set.js?v=20261030110000';
+import { cur, go, onAfterRender } from '../core/router.js?v=20261105170000';
+import { esc } from '../core/dom.js?v=20261105170000';
+import { t as tr } from '../core/i18n.js?v=20261105170000';
+import { toast } from '../core/toast.js?v=20261105170000';
+import * as M from './mesin.js?v=20261105170000';
+import * as S from './simpan.js?v=20261105170000';
+import * as L from './logika.js?v=20261105170000';
+import * as A from './aksi.js?v=20261105170000';
+import { ikon } from './ikon.js?v=20261105170000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261105170000';
+import { segarSampul } from './sampul-dom.js?v=20261105170000';
+import { ambilSet } from './set.js?v=20261105170000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
@@ -101,9 +101,9 @@ function pemutarHtml(v) {
       <div class="mus-sampul-besar mus-sampul-kosong" aria-hidden="true">${ikon('nota')}</div>
       <div class="mus-judul-blok">
         <h2 class="mus-judul">${tr('Belum ada lagu')}</h2>
-        <p class="mus-sub">${tr('Impor lagu dari perangkat untuk mulai. Lagu tetap tersimpan di aplikasi.')}</p>
+        <p class="mus-sub">${tr(A.bisaPindaiPustakaPerangkat() ? 'Lagu dari penyimpanan akan muncul otomatis.' : 'Impor lagu dari perangkat untuk mulai. Lagu tetap tersimpan di aplikasi.')}</p>
       </div>
-      <button type="button" class="mus-tombol-utama" data-mus="impor">${ikon('impor')}<span>${tr('Impor lagu')}</span></button>
+      <button type="button" class="mus-tombol-utama" data-mus="impor">${ikon(A.bisaPindaiPustakaPerangkat() ? 'repeat' : 'impor')}<span>${tr(A.bisaPindaiPustakaPerangkat() ? 'Pindai ulang penyimpanan' : 'Impor lagu')}</span></button>
     </article>`;
   }
   const putar = v.status === 'putar';
@@ -189,34 +189,46 @@ function kontrolHtml(v) {
 
 function pustakaHtml(v) {
   const antre = A.antreanLagu();
+  const langsung = A.bisaPindaiPustakaPerangkat();
   const items = v.daftar.map(x => {
     const aktif = v.sel && x.id === v.sel.id;
     const sedang = aktif && v.status === 'putar';
     const dalamAntre = antre.includes(x.id);
+    const asal = x.sumber === 'perangkat' && x.lokasi ? ` · ${x.lokasi}` : '';
     return `<li class="mus-item${aktif ? ' aktif' : ''}">
       <button type="button" class="mus-item-buka" data-mus="pilih" data-id="${esc(x.id)}" aria-current="${aktif ? 'true' : 'false'}">
         <span class="mus-thumb-wrap"><span class="mus-thumb" data-sampul-id="${esc(x.id)}"></span>${sedang ? eqHtml : ''}</span>
         <span class="mus-item-teks">
           <span class="mus-item-judul">${esc(x.nama)}</span>
-          <span class="mus-item-sub">${L.formatWaktu(x.durasi)}${x.ukuran ? ` · ${ukuranTeks(x.ukuran)}` : ''}</span>
+          <span class="mus-item-sub">${L.formatWaktu(x.durasi)}${x.ukuran ? ` · ${ukuranTeks(x.ukuran)}` : ''}${esc(asal)}</span>
         </span>
       </button>
       <button type="button" class="mus-item-antre${dalamAntre ? ' on' : ''}" data-mus="antre" data-id="${esc(x.id)}" aria-pressed="${dalamAntre}" aria-label="${tr(dalamAntre ? 'Keluarkan dari antrean' : 'Tambahkan ke antrean')}">
         ${ikon(dalamAntre ? 'check' : 'plus')}
       </button>
-      <button type="button" class="mus-item-hapus" data-mus="hapus" data-id="${esc(x.id)}" aria-label="${tr('Hapus lagu')}">
+      ${x.sumber === 'perangkat' ? '' : `<button type="button" class="mus-item-hapus" data-mus="hapus" data-id="${esc(x.id)}" aria-label="${tr('Hapus lagu')}">
         ${ikon('trash')}<span class="mus-hapus-teks">${tr('Ketuk lagi')}</span>
-      </button>
+      </button>`}
     </li>`;
   }).join('');
+  const statusPindai = A.statusPindaiPustakaPerangkat();
+  const kosong = langsung
+    ? statusPindai === 'izin'
+      ? tr('Izinkan akses audio agar semua lagu di penyimpanan muncul di sini.')
+      : statusPindai === 'siap'
+        ? tr('Tidak ditemukan audio di penyimpanan perangkat.')
+        : statusPindai === 'gagal'
+          ? tr('Gagal membaca lagu di penyimpanan. Ketuk Pindai ulang.')
+          : tr('Pustaka perangkat sedang dipindai; lagu akan muncul otomatis di sini.')
+    : tr('Belum ada lagu. Lagu yang sudah diunduh di perangkat juga bisa diimpor.');
   return `<section class="mus-kartu mus-pustaka" aria-labelledby="mus-h-pustaka">
     <header class="mus-kartu-kepala">
       <div><h3 id="mus-h-pustaka">${tr('Pustaka')}</h3><p class="mus-catatan">${v.daftar.length} ${tr('lagu')}</p></div>
-      <button type="button" class="mus-tombol" data-mus="impor">${ikon('plus')}<span>${tr('Impor')}</span></button>
+      <button type="button" class="mus-tombol" data-mus="impor">${ikon(langsung ? 'repeat' : 'plus')}<span>${tr(langsung ? 'Pindai ulang' : 'Impor')}</span></button>
     </header>
     ${items
       ? `<ul class="mus-daftar">${items}</ul>`
-      : `<p class="mus-kosong-kecil">${tr('Belum ada lagu. Lagu yang sudah diunduh di perangkat juga bisa diimpor.')}</p>`}
+      : `<p class="mus-kosong-kecil">${kosong}</p>`}
   </section>`;
 }
 
@@ -230,7 +242,7 @@ export function musikView() {
     <header class="mus-atas">
       <p class="mus-atas-teks">${v.daftar.length} ${tr('lagu di perangkat')}</p>
       <div class="mus-atas-aksi">
-        <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr('Impor lagu')}">${ikon('impor')}</button>
+        <button type="button" class="mus-ikon-btn" data-mus="impor" aria-label="${tr(A.bisaPindaiPustakaPerangkat() ? 'Pindai ulang penyimpanan' : 'Impor lagu')}">${ikon(A.bisaPindaiPustakaPerangkat() ? 'repeat' : 'impor')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="daftar" aria-label="${tr('Daftar putar')}">${ikon('list')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="eq" aria-label="${tr('Efek & Visual')}">${ikon('eq')}</button>
         <button type="button" class="mus-ikon-btn" data-mus="ekspor" aria-label="${tr('Ekspor lagu')}">${ikon('ekspor')}</button>
@@ -465,7 +477,11 @@ function onClick(e) {
   const aksi = b.dataset.mus;
   switch (aksi) {
     case 'impor':
-      document.querySelector('[data-mus-berkas]')?.click();
+      if (A.bisaPindaiPustakaPerangkat()) {
+        A.pindaiPustakaPerangkat({ pesan: true }).then(render);
+      } else {
+        document.querySelector('[data-mus-berkas]')?.click();
+      }
       return;
     case 'pengaturan':
       go('musik-set');

@@ -2,12 +2,13 @@
    terakhir yang diputar dengan sampulnya. Ketuk badan kartu → layar Musik;
    tombol putar → lanjut/jeda lagu itu. */
 
-import { esc } from '../core/dom.js?v=20261030110000';
-import { t as tr } from '../core/i18n.js?v=20261030110000';
-import * as M from './mesin.js?v=20261030110000';
-import * as S from './simpan.js?v=20261030110000';
-import { formatWaktu, laguTerakhir } from './logika.js?v=20261030110000';
-import { ikon } from './ikon.js?v=20261030110000';
+import { esc } from '../core/dom.js?v=20261105170000';
+import { t as tr } from '../core/i18n.js?v=20261105170000';
+import * as M from './mesin.js?v=20261105170000';
+import * as S from './simpan.js?v=20261105170000';
+import { formatWaktu, laguTerakhir } from './logika.js?v=20261105170000';
+import { ikon } from './ikon.js?v=20261105170000';
+import { pustakaPerangkatTersedia } from './perangkat.js?v=20261105170000';
 
 /* Lagu yang ditampilkan: yang terakhir diputar, atau yang terakhir diimpor. */
 function laguKartu() {
@@ -36,7 +37,7 @@ export function kartuMusikHtml() {
         <span class="mk-info">
           <span class="mk-label">${tr('Musik')}</span>
           <span class="mk-judul">${tr('Belum ada lagu')}</span>
-          <span class="mk-sub">${tr('Ketuk untuk impor lagu dari perangkat')}</span>
+          <span class="mk-sub">${tr(pustakaPerangkatTersedia() ? 'Lagu di penyimpanan akan dimuat otomatis saat Musik dibuka' : 'Ketuk untuk impor lagu dari perangkat')}</span>
         </span>
       </button>
     </section>`;

@@ -6,11 +6,11 @@
    • Buka semua / Tutup semua mengubah semua tape di catatan itu.
    Logika DOM ada di tape-murni.js. */
 
-import { docEl, sel } from './caret.js?v=20261030110000';
-import { refresh } from './cleanup.js?v=20261030110000';
-import { toast } from '../../core/toast.js?v=20261030110000';
-import { t as tr } from '../../core/i18n.js?v=20261030110000';
-import { bungkusRange, gantiStatus, setSemua } from './tape-murni.js?v=20261030110000';
+import { docEl, sel } from './caret.js?v=20261105170000';
+import { refresh } from './cleanup.js?v=20261105170000';
+import { toast } from '../../core/toast.js?v=20261105170000';
+import { t as tr } from '../../core/i18n.js?v=20261105170000';
+import { bungkusRange, gantiStatus, setSemua } from './tape-murni.js?v=20261105170000';
 
 const PESAN = {
   kosong: 'Sorot teks dulu, lalu pilih Tape.',

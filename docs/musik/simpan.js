@@ -7,8 +7,9 @@
 
    Lagu tetap ada setelah aplikasi ditutup dan dibuka lagi. */
 
-import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261030110000';
-import { ambilSet } from './set.js?v=20261030110000';
+import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261105170000';
+import { ambilSet } from './set.js?v=20261105170000';
+import { berkasAudioPerangkat } from './perangkat.js?v=20261105170000';
 
 const DB = 'hara-musik';
 const TOKO = 'berkas';
@@ -76,13 +77,48 @@ function simpanMeta() {
   catch (e) { /* kuota/privat: keadaan tetap di memori untuk sesi ini */ }
 }
 
-/* Lagu diurutkan menurut urutan impor (urutan putar berikutnya). */
+/* Lagu lokal dan semua audio yang baru saja disinkronkan dari MediaStore.
+   Track perangkat menggunakan metadata/URI saja, bukan salinan di IndexedDB. */
 export function daftarLagu() {
   return meta.lagu.slice().sort((a, b) => a.ditambahkan - b.ditambahkan);
 }
 
 export function laguById(id) {
   return meta.lagu.find(x => x.id === id) || null;
+}
+
+export function sinkronkanLaguPerangkat(daftar) {
+  const lama = new Map(meta.lagu.filter(x => x.sumber === 'perangkat').map(x => [x.id, x]));
+  const perangkat = (Array.isArray(daftar) ? daftar : []).map(raw => {
+    if (!raw || raw.id == null || typeof raw.uri !== 'string' || !raw.uri.startsWith('content://')) return null;
+    const id = 'android-audio:' + String(raw.id);
+    const sblm = lama.get(id);
+    const namaBerkas = String(raw.displayName || raw.title || 'audio');
+    return {
+      ...(sblm || {}),
+      id,
+      nama: String(raw.title || namaBerkas),
+      durasi: Math.max(0, Number(raw.duration) || 0) / 1000,
+      ukuran: Math.max(0, Number(raw.size) || 0),
+      tipe: String(raw.mimeType || 'audio/*'),
+      uri: raw.uri,
+      sumber: 'perangkat',
+      artis: String(raw.artist || ''),
+      album: String(raw.album || ''),
+      lokasi: String(raw.location || ''),
+      ditambahkan: sblm?.ditambahkan || (Number(raw.dateAdded) > 0 ? Number(raw.dateAdded) * 1000 : Date.now()),
+      terakhirMain: sblm?.terakhirMain || 0,
+      atur: sblm?.atur || null,
+      sampulDiperiksa: sblm?.sampulDiperiksa || false,
+      sampulAda: sblm?.sampulAda || false,
+    };
+  }).filter(Boolean);
+
+  const idLama = new Set(lama.keys());
+  meta.lagu = meta.lagu.filter(x => x.sumber !== 'perangkat').concat(perangkat);
+  if (idLama.has(meta.terakhirId) && !perangkat.some(x => x.id === meta.terakhirId)) meta.terakhirId = null;
+  simpanMeta();
+  return perangkat.length;
 }
 
 export function terakhirId() {
@@ -160,6 +196,10 @@ export async function tambahLagu(berkas, { nama, durasi }) {
 }
 
 export async function ambilBerkas(id) {
+  const rekaman = laguById(id);
+  if (rekaman?.sumber === 'perangkat') {
+    return berkasAudioPerangkat(rekaman.uri, rekaman.nama, rekaman.tipe);
+  }
   const x = await tx('readonly', s => s.get(id));
   return x || null;
 }
@@ -190,6 +230,8 @@ export function lupakanSampulUrl(id) {
 }
 
 export async function hapusLagu(id) {
+  /* Lagu MediaStore milik pengguna tidak dihapus dari berkas HP lewat Hara. */
+  if (laguById(id)?.sumber === 'perangkat') return false;
   await tx('readwrite', s => s.delete(id));
   try { await tx('readwrite', s => s.delete(awalanSampul + id)); } catch (e) { /* sampul tak ada */ }
   lupakanSampulUrl(id);

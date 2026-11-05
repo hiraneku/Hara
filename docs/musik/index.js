@@ -2,21 +2,33 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261030110000';
-import * as M from './mesin.js?v=20261030110000';
-import * as A from './aksi.js?v=20261030110000';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261030110000';
-import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261030110000';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261030110000';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261030110000';
-import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261030110000';
-import { terapkanEfekTersimpan } from './efek.js?v=20261030110000';
-import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261030110000';
-import { segarkanKartuMusik } from './kartu.js?v=20261030110000';
-import { segarSampul } from './sampul-dom.js?v=20261030110000';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261105170000';
+import * as M from './mesin.js?v=20261105170000';
+import * as A from './aksi.js?v=20261105170000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261105170000';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261105170000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261105170000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261105170000';
+import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261105170000';
+import { terapkanEfekTersimpan } from './efek.js?v=20261105170000';
+import { eksporView, pasangEkspor } from './ekspor-layar.js?v=20261105170000';
+import { segarkanKartuMusik } from './kartu.js?v=20261105170000';
+import { segarSampul } from './sampul-dom.js?v=20261105170000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;
+let pindaiTerakhir = 0;
+let pindaiJalan = false;
+
+function segarkanPustakaPerangkat() {
+  if (!A.bisaPindaiPustakaPerangkat() || pindaiJalan || Date.now() - pindaiTerakhir < 5000) return;
+  pindaiJalan = true;
+  pindaiTerakhir = Date.now();
+  A.pindaiPustakaPerangkat().finally(() => {
+    pindaiJalan = false;
+    if (cur === 'musik') go('musik', { segar: true });
+  });
+}
 
 /* Simpan pengaturan (tempo, nada, loop, posisi) setelah jeda singkat,
    supaya geseran slider tidak menulis berkali-kali. */
@@ -68,7 +80,13 @@ export const musikModule = {
     terapkanEqTersimpan();
     terapkanEfekTersimpan();
     M.dengar(onMesin);
-    onAfterRender(() => segarSampul(document));
+    onAfterRender(layar => {
+      segarSampul(document);
+      if (layar === 'musik') segarkanPustakaPerangkat();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && cur === 'musik') segarkanPustakaPerangkat();
+    });
     M.pasangAksiSistem({
       sebelumnya: () => A.gantiLagu(-1),
       berikutnya: () => A.gantiLagu(1),
