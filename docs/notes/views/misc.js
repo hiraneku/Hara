@@ -303,6 +303,9 @@ set:()=>{ const akPilih = akSekarang() || '';
         <button type="button" class="btn btn-sec" data-cad-enkrip>${tr('Enkripsi')}</button>
         <button type="button" class="btn btn-sec" data-cad-pulih>${tr('Pulihkan')}</button>
       </div></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Sinkronisasi E2E')}</div>
+      <div class="row-s">${tr('Sinkronisasi lintas perangkat terenkripsi dengan WebDAV milikmu; tidak ada server Hara.')}</div></div>
+      <button type="button" class="btn btn-sec" data-sinkronisasi>${tr('Atur & sinkronkan')}</button></div>
     <div class="row"><div class="row-b"><div class="row-t">${tr('Penyimpanan')}</div>
       <div class="row-s" id="ruang">${tr('menghitung…')}</div></div></div>
   </div>

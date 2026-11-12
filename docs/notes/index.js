@@ -40,6 +40,7 @@ import { bindBacaPlus, terapkanUkuranLayar, tutupCari, matikanZen }
 import { bindDaftarIsi } from './daftar-isi.js?v=20261105210000';
 import { bindCariGanti } from './cari-ganti.js?v=20261105210000';
 import { bindSaringan } from './saringan.js?v=20261105210000';
+import { bindSinkronisasi } from './sinkronisasi-ui.js?v=20261105210000';
 import { bindKilasBalik } from './kilas-balik.js?v=20261105210000';
 import { bindLipatBagian } from './lipat-bagian.js?v=20261105210000';
 import { setUrut, menuUrut, namaUrut } from './urut.js?v=20261105210000';
@@ -407,7 +408,8 @@ export const notesModule = {
     bindBacaPlus();           /* A−/A+, zen, cari-di-catatan */
     bindDaftarIsi();          /* B8: lompat ke heading + lipat bagian */
     bindCariGanti();          /* cari & ganti teks dalam catatan */
-    bindSaringan();           /* saringan tersimpan di layar Catatan */
+    bindSaringan();           /* koleksi pintar di layar Catatan */
+    bindSinkronisasi();       /* N6: sinkronisasi E2E melalui WebDAV */
     bindKilasBalik();         /* kilas balik: hari ini di tahun lalu */
     bindLipatBagian();        /* lipat bagian per heading (mode baca) */
     bindTagWarna();           /* B10: panel warna tag */
