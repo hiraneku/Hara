@@ -44,5 +44,6 @@ API aman bagi ekstensi untuk menambah aksi, format ekspor, atau tampilan khusus.
 
 - N6 implementasi awal tersedia: envelope PBKDF2-SHA-256/AES-GCM; baseline disegel lokal; merge note/ruang/kartu/ujian/lampiran tiga-arah; WebDAV memakai If-Match/If-None-Match; konflik ditampilkan dengan pilihan versi atau gabung note; kredensial tidak dipersistenkan. UI pengaturan tersedia.
 - N6 masih perlu uji terhadap server WebDAV sungguhan, CORS/ETag tiap penyedia, perangkat Android nyata, serta penanganan vault/attachment besar.
-- N7–N10 belum mulai. N11 belum disetujui.
-- Tes N6: `sinkronisasi-murni.mjs`, `sinkronisasi-rencana.mjs`, `sinkronisasi-webdav.mjs`, `sinkronisasi-klien.mjs`.
+- N7 sedang dikerjakan: mesin murni untuk kondisi tag/properti/judul/tugas selesai, aksi terbatas, pratinjau, apply, dan urungkan yang menolak menimpa editan sesudahnya sudah ada. UI pengelolaan aturan, riwayat tahan-muat ulang, pemicu otomatis, dan integrasi store belum selesai.
+- N8–N10 belum mulai. N11 belum disetujui.
+- Tes N6: `sinkronisasi-murni.mjs`, `sinkronisasi-rencana.mjs`, `sinkronisasi-webdav.mjs`, `sinkronisasi-klien.mjs`, `sinkronisasi-ui.mjs`; tes model N7: `aturan-murni.mjs`.
