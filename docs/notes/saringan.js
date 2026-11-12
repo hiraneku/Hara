@@ -1,4 +1,4 @@
-/* Saringan tersimpan — "Smart Folder" versi ringan (Peta Master Bagian 5).
+/* Koleksi pintar — "Smart Folder" versi ringan (Peta Master Bagian 5).
 
    Menyimpan kueri pencarian yang sering dipakai sebagai chip di layar
    Catatan. Satu ketukan mengaktifkan saringan, ketukan lagi
@@ -32,6 +32,7 @@ function baca() {
     if (!Array.isArray(v)) return [];
     return v
       .filter(x => x && typeof x.id === 'string' && typeof x.kueri === 'string' && x.kueri.trim())
+      .map(x => ({ ...x, jenis: 'pintar' }))
       .slice(0, MAKS);
   } catch (e) { return []; }
 }
@@ -53,7 +54,7 @@ export const daftarSaringan = () => baca();
 
 export function simpanSaringan(nama, kueri) {
   const q = String(kueri == null ? '' : kueri).trim().slice(0, 200);
-  if (!q) return null;
+  if (!q || kueriKosong(pecahKueri(q))) return null;
   const daftar = baca();
   const namaBersih = (String(nama == null ? '' : nama).trim() || namaPendek(q)).slice(0, 40);
 
@@ -64,7 +65,7 @@ export function simpanSaringan(nama, kueri) {
     tulis(daftar);
     return ada;
   }
-  const item = { id: idBaru(), nama: namaBersih, kueri: q };
+  const item = { id: idBaru(), nama: namaBersih, kueri: q, jenis: 'pintar' };
   daftar.unshift(item);
   tulis(daftar);
   return item;
@@ -111,8 +112,14 @@ export function saringanAktifNama() {
 export function saringCatatan(daftar) {
   const s = saringanAktif();
   if (!s) return daftar;
-  const k = pecahKueri(s.kueri);
-  if (kueriKosong(k)) return daftar;
+  return terapkanKoleksiPintar(s, daftar);
+}
+
+/* Koleksi pintar tidak menyimpan salinan hasil: kuerinya dievaluasi terhadap
+   data terbaru setiap kali daftar atau hitungan dirender. */
+export function terapkanKoleksiPintar(koleksi, daftar) {
+  const k = pecahKueri(typeof koleksi === 'string' ? koleksi : koleksi?.kueri || '');
+  if (kueriKosong(k)) return Array.isArray(daftar) ? daftar : [];
   const ctx = { namaRuang: petaNamaRuang() };
   return (Array.isArray(daftar) ? daftar : []).filter(n => catatanCocok(n, k, ctx));
 }
@@ -138,14 +145,14 @@ export function renderSaringanBarHtml() {
       <svg class="ico" aria-hidden="true"><use href="#${on ? 'i-check2' : 'i-filter'}"/></svg>
       <span class="sf-nm">${esc(x.nama)}</span><b class="sf-ct">${n}</b></button>`;
   };
-  return `<div class="sf-bar" role="group" aria-label="${tr('Saringan tersimpan')}">
+  return `<div class="sf-bar" role="group" aria-label="${tr('Koleksi pintar')}">
     <div class="sf-track">${daftar.map(chip).join('')}</div>
     <div class="sf-aksi">
       ${aktif ? `<button type="button" class="sf-kelola sf-bersih" data-sf-bersih
         title="${tr('Hapus filter saringan')}" aria-label="${tr('Hapus filter saringan')}">
         <svg class="ico"><use href="#i-x"/></svg></button>` : ''}
       <button type="button" class="sf-kelola" data-sf-kelola
-        title="${tr('Kelola saringan')}" aria-label="${tr('Kelola saringan')}">
+        title="${tr('Kelola koleksi pintar')}" aria-label="${tr('Kelola koleksi pintar')}">
         <svg class="ico"><use href="#i-cog"/></svg></button>
     </div>
   </div>`;
@@ -154,7 +161,7 @@ export function renderSaringanBarHtml() {
 export const renderSimpanSaringanHtml = () =>
   `<button type="button" class="sf-simpan" data-sf-baru>
     <span class="sf-simpan-i" aria-hidden="true"><svg class="ico"><use href="#i-plus"/></svg></span>
-    <span class="sf-simpan-t">${tr('Simpan pencarian ini')}</span>
+    <span class="sf-simpan-t">${tr('Simpan sebagai koleksi pintar')}</span>
     <svg class="ico sf-simpan-go" aria-hidden="true"><use href="#i-chev"/></svg>
   </button>`;
 
@@ -164,11 +171,11 @@ export function bukaSimpanSaringan(kueri) {
   if (!q) { toast(tr('Ketik kata kunci dulu di kolom cari')); return; }
   openPop(sheet({
     ikon: 'i-bookmark',
-    judul: tr('Simpan saringan'),
-    catatan: esc(tr('Saringan menyimpan kata kunci pencarian agar bisa dipakai lagi dengan satu ketukan.')),
+    judul: tr('Simpan koleksi pintar'),
+    catatan: esc(tr('Koleksi pintar otomatis menampilkan catatan yang cocok dengan aturan ini, dan selalu diperbarui saat isi berubah.')),
     isi: shField({
-      id: 'sf-nama', ikon: 'i-filter', label: tr('Nama saringan'),
-      value: namaPendek(q), placeholder: tr('Nama saringan'), maxlength: 40,
+      id: 'sf-nama', ikon: 'i-filter', label: tr('Nama koleksi'),
+      value: namaPendek(q), placeholder: tr('Nama koleksi'), maxlength: 40,
     }) + `<div class="sh-lab">${tr('Kata kunci')}</div>
       <div class="sf-cuplik"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
         <span>${esc(q)}</span></div>`,
@@ -181,12 +188,12 @@ export function bukaKelolaSaringan() {
   const baris = daftar.map(x => `<div class="sf-manage" data-sf-baris="${esc(x.id)}">
       <input class="sh-inp" type="text" maxlength="40" autocomplete="off"
         data-sf-nama-input="${esc(x.id)}" value="${esc(x.nama)}"
-        aria-label="${tr('Nama saringan')}">
+        aria-label="${tr('Nama koleksi')}">
       <button type="button" class="sf-mini" data-sf-nama-simpan="${esc(x.id)}"
         title="${tr('Simpan nama')}" aria-label="${tr('Simpan nama')}">
         <svg class="ico"><use href="#i-check2"/></svg></button>
       <button type="button" class="sf-mini bahaya" data-sf-hapus="${esc(x.id)}"
-        title="${tr('Hapus saringan')}" aria-label="${tr('Hapus saringan')}">
+        title="${tr('Hapus koleksi pintar')}" aria-label="${tr('Hapus koleksi pintar')}">
         <svg class="ico"><use href="#i-trash"/></svg></button>
       <div class="sf-manage-ket"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
         <span>${esc(x.kueri)}</span><b>${jumlahCocokSaringan(x.kueri)}</b></div>
@@ -194,9 +201,9 @@ export function bukaKelolaSaringan() {
 
   openPop(sheet({
     ikon: 'i-filter',
-    judul: tr('Kelola saringan'),
-    catatan: daftar.length ? esc(tr('Ubah nama atau hapus saringan. Ketuk chip di layar Catatan untuk memakainya.')) : '',
-    isi: daftar.length ? baris : `<p class="sh-kosong">${tr('Belum ada saringan tersimpan')}</p>`,
+    judul: tr('Kelola koleksi pintar'),
+    catatan: daftar.length ? esc(tr('Koleksi pintar mengikuti aturan secara otomatis. Ketuk chip untuk melihat catatan yang cocok.')) : '',
+    isi: daftar.length ? baris : `<p class="sh-kosong">${tr('Belum ada koleksi pintar')}</p>`,
     kaki: shAksi({ batal: tr('Tutup'), tutup: true }),
   }));
 }
@@ -238,14 +245,14 @@ export function bindSaringan() {
       const q = (document.querySelector('.sh .sf-cuplik')?.textContent || '').trim();
       if (!q) { toast(tr('Ketik kata kunci dulu di kolom cari')); return; }
       const item = simpanSaringan(nama, q);
-      if (item) toast(tr('Saringan disimpan'));
+      if (item) toast(tr('Koleksi pintar disimpan'));
       closeAll();
       return;
     }
 
     const hapus = e.target.closest('[data-sf-hapus]');
     if (hapus) {
-      if (hapusSaringan(hapus.dataset.sfHapus)) toast(tr('Saringan dihapus'));
+      if (hapusSaringan(hapus.dataset.sfHapus)) toast(tr('Koleksi pintar dihapus'));
       closeAll();
       segarkan();
       return;
@@ -255,7 +262,7 @@ export function bindSaringan() {
     if (simpanNama) {
       const id = simpanNama.dataset.sfNamaSimpan;
       const inp = document.querySelector(`[data-sf-nama-input="${id}"]`);
-      if (inp && ubahNamaSaringan(id, inp.value)) toast(tr('Saringan diperbarui'));
+      if (inp && ubahNamaSaringan(id, inp.value)) toast(tr('Koleksi pintar diperbarui'));
       closeAll();
       segarkan();
       return;

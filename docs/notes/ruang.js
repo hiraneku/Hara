@@ -69,11 +69,20 @@ export function daftarRuang() {
   /* Pastikan folderId yang sudah dipakai pada catatan tetap muncul walau dipulihkan dari cadangan */
   const map = new Map();
   for (const r of tersimpan) {
-    if (r && r.id && r.nama) map.set(r.id, { id: r.id, nama: String(r.nama) });
+    if (r && r.id && r.nama) map.set(r.id, { id: r.id, nama: String(r.nama), ...(typeof r.parentId === 'string' && r.parentId ? { parentId: r.parentId } : {}) });
   }
   for (const n of state.notes || []) {
     if (!n.deletedAt && n.folderId && !map.has(n.folderId)) {
       map.set(n.folderId, { id: n.folderId, nama: String(n.folderId) });
+    }
+  }
+  /* Ruang lama tetap akar. Parent yatim / siklus dari data impor dinetralkan. */
+  for (const r of map.values()) if (!map.has(r.parentId) || r.parentId === r.id) delete r.parentId;
+  for (const r of map.values()) {
+    const seen = new Set([r.id]); let p = r.parentId;
+    while (p && map.has(p)) {
+      if (seen.has(p)) { delete r.parentId; break; }
+      seen.add(p); p = map.get(p).parentId;
     }
   }
   return [...map.values()];
@@ -100,28 +109,45 @@ export function pulihkanRuang(daftarCadangan, mode) {
   return peta;
 }
 
-export function tambahRuang(namaMentah) {
+export function tambahRuang(namaMentah, parentId = null) {
   const nama = String(namaMentah || '').trim().slice(0, 32);
   if (!nama) return null;
   const list = daftarRuang();
-  const sudah = list.find(r => r.nama.toLowerCase() === nama.toLowerCase());
+  const induk = list.some(r => r.id === parentId) ? parentId : null;
+  const sudah = list.find(r => r.nama.toLowerCase() === nama.toLowerCase() && (r.parentId || null) === induk);
   if (sudah) return sudah;
   const baru = {
     id: 'rg-' + nama.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-3),
     nama,
+    ...(induk ? { parentId: induk } : {}),
   };
   list.push(baru);
   tulisDaftarRuang(list);
   return baru;
 }
 
+export function turunanRuang(id, daftar = daftarRuang()) {
+  const hasil = new Set(id ? [id] : []);
+  let ubah = true;
+  while (ubah) {
+    ubah = false;
+    for (const r of daftar) if (r.parentId && hasil.has(r.parentId) && !hasil.has(r.id)) { hasil.add(r.id); ubah = true; }
+  }
+  return hasil;
+}
+
 export function hapusRuang(id) {
-  const list = daftarRuang().filter(r => r.id !== id);
+  const ruang = daftarRuang();
+  const hapus = ruang.find(r => r.id === id);
+  const parentId = hapus?.parentId || null;
+  const list = ruang.filter(r => r.id !== id).map(r => r.parentId === id
+    ? { ...r, ...(parentId ? { parentId } : {}) } : r);
+  for (const r of list) if (r.parentId === id) delete r.parentId;
   tulisDaftarRuang(list);
   let berubah = false;
   for (const n of state.notes || []) {
     if (n.folderId === id) {
-      n.folderId = null;
+      n.folderId = parentId;
       berubah = true;
     }
   }
@@ -140,15 +166,23 @@ export function pindahkanCatatanKeRuang(noteId, ruangId) {
 
 /* Fungsi id -> nama ruang dengan peta yang dibangun sekali (dipakai pencarian
    agar tidak membaca localStorage untuk setiap catatan). */
+export function jalurRuang(id, daftar = daftarRuang()) {
+  const peta = new Map(daftar.map(r => [r.id, r]));
+  const nama = []; const seen = new Set(); let r = peta.get(id);
+  while (r && !seen.has(r.id)) {
+    seen.add(r.id); nama.unshift(r.nama); r = r.parentId ? peta.get(r.parentId) : null;
+  }
+  return nama.join(' / ') || String(id || '');
+}
+
 export function petaNamaRuang() {
-  const peta = new Map(daftarRuang().map(r => [r.id, r.nama]));
+  const daftar = daftarRuang();
+  const peta = new Map(daftar.map(r => [r.id, jalurRuang(r.id, daftar)]));
   return id => (peta.has(id) ? peta.get(id) : String(id));
 }
 
 export function namaRuangUntuk(id) {
-  if (!id) return '';
-  const r = daftarRuang().find(x => x.id === id);
-  return r ? r.nama : String(id);
+  return id ? jalurRuang(id) : '';
 }
 
 /* ════════ RIWAYAT VERSI LOKAL CATATAN (SNAPSHOT LINTAS SESI) ════════ */

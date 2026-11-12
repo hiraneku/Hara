@@ -11,7 +11,7 @@ import { tagDariIsi } from '../tags.js?v=20261105210000';
 import { urutkanCatatan, namaUrut, urutSekarang } from '../urut.js?v=20261105210000';
 import { judulJurnalHari } from '../harian.js?v=20261105210000';
 import { terlihat } from '../kunci.js?v=20261105210000';
-import { daftarRuang, ruangAktif, modeTampilDaftar } from '../ruang.js?v=20261105210000';
+import { daftarRuang, ruangAktif, turunanRuang, modeTampilDaftar } from '../ruang.js?v=20261105210000';
 import { t as tr } from '../../core/i18n.js?v=20261105210000';
 import { renderSaringanBarHtml, saringCatatan, saringanAktif } from '../saringan.js?v=20261105210000';
 import { renderKilasBalikHtml } from '../kilas-balik.js?v=20261105210000';
@@ -138,7 +138,7 @@ export const notesView = () => {
   const semuaAktif = aktif();
   let daftar = semuaAktif;
   const rg = ruangAktif();
-  if (rg) daftar = daftar.filter(n => n.folderId === rg);
+  if (rg) { const ruangTermasuk = turunanRuang(rg); daftar = daftar.filter(n => ruangTermasuk.has(n.folderId)); }
   const tag = stt.tag;
   if (tag) daftar = daftar.filter(n => punyaTag(n, tag));
   daftar = saringCatatan(daftar);
@@ -163,12 +163,20 @@ export const notesView = () => {
     <button type="button" class="ruang-pill${!rg ? ' on' : ''}" data-ruang-pilih="">
       <span>${tr('Semua')}</span><span class="ruang-n">${semuaAktif.length}</span>
     </button>
-    ${ruangList.map(r => {
-      const jml = semuaAktif.filter(n => n.folderId === r.id).length;
-      return `<button type="button" class="ruang-pill${rg === r.id ? ' on' : ''}" data-ruang-pilih="${esc(r.id)}">
-        <span>${esc(r.nama)}</span><span class="ruang-n">${jml}</span>
-      </button>`;
-    }).join('')}
+    ${(() => {
+      const urut = []; const lihat = new Set();
+      const jalan = (induk, level) => ruangList.filter(x => (x.parentId || null) === induk).forEach(x => {
+        if (lihat.has(x.id)) return; lihat.add(x.id); urut.push({ ruang: x, level }); jalan(x.id, level + 1);
+      });
+      jalan(null, 0); ruangList.forEach(x => { if (!lihat.has(x.id)) { urut.push({ ruang: x, level: 0 }); jalan(x.id, 1); } });
+      return urut.map(({ ruang: r, level }) => {
+        const termasuk = turunanRuang(r.id, ruangList);
+        const jml = semuaAktif.filter(n => termasuk.has(n.folderId)).length;
+        return `<button type="button" class="ruang-pill${rg === r.id ? ' on' : ''}" data-ruang-pilih="${esc(r.id)}" style="--ruang-level:${level}" aria-label="${esc((level ? 'Sub-ruang: ' : '') + r.nama)}">
+          <span>${level ? '↳ ' : ''}${esc(r.nama)}</span><span class="ruang-n">${jml}</span>
+        </button>`;
+      }).join('');
+    })()}
     <button type="button" class="ruang-pill ruang-add" data-ruang-tambah title="${tr('Buat ruang / folder baru')}">+ ${tr('Ruang')}</button>
   </div>
   ${renderSaringanBarHtml()}
@@ -193,7 +201,7 @@ export const notesView = () => {
     </div>`
     : ''}
   ${daftar.length === 0 && sfAktif && !tag
-    ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Tidak ada catatan untuk saringan ini')}</h3>
+    ? `<div class="empty" style="padding:30px 20px"><h3>${tr('Tidak ada catatan untuk koleksi ini')}</h3>
         <p>${tr('Coba kata kunci lain, atau hapus saringan supaya semua catatan tampil lagi.')}</p>
         <button class="btn btn-sec" data-sf-bersih>${tr('Hapus filter saringan')}</button></div>`
     : ''}

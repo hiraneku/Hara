@@ -156,7 +156,7 @@ search:()=>`<div class="page">
       aria-label="${tr('Cari catatan')}" value="${esc(kueriCari)}"></div>
   ${renderSimpanSaringanHtml()}
   <div id="cari-hasil">${riwayatHtml()}<p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
-  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama, judul:kata, folder:ruang, properti:nilai, atau sebelum:/sesudah: dengan tanggal (mis. 2026-10-01). Awali dengan - untuk mengecualikan (mis. -kecuali). Bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
+  <p class="note" style="padding:20px 2px 0">${tr('Pencarian deterministik tanpa AI: semua kata harus cocok (judul, isi, atau tag). Pakai tag:nama, judul:kata, folder:ruang, properti:kunci=nilai, sebelum:/sesudah:, has:pdf|audio|image|todo|link, dan is:pinned|archived|empty. Awali operator dengan - untuk mengecualikan; kutip frasa utuh, mis. judul:"resep kue".')}</p></div>`,
 
 tags:()=>{
   const sem = semuaTag();

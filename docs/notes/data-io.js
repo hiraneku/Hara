@@ -287,6 +287,10 @@ function blokMd(b, noOl) {
           const d = Number(m.t) || 0;
           return `> - ${Math.floor(d / 60)}:${String(Math.floor(d % 60)).padStart(2, '0')} ${escT(m.teks || '')}`.trimEnd();
         }),
+        ...(Array.isArray(meta.transcript) ? meta.transcript : []).map(seg => {
+          const d = Number(seg.t) || 0;
+          return `> - Transkrip ${Math.floor(d / 60)}:${String(Math.floor(d % 60)).padStart(2, '0')} ${escT(seg.teks || '')}`.trimEnd();
+        }),
       ].join('\n');
     case 'math':
       return `$$\n${meta.expr || ''}\n$$`;

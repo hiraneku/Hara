@@ -158,14 +158,17 @@ console.log('── Bagian 5 (#15–#19): Cari & Ganti, Saringan, Kilas Balik, L
   cek('#16 Saringan tersimpan dengan nama & kueri yang bisa dipakai ulang',
     !!item && daftarSaringan().length === 1 &&
     daftarSaringan()[0].nama === 'Belanja' &&
-    daftarSaringan()[0].kueri === 'tag:belanja');
+    daftarSaringan()[0].kueri === 'tag:belanja' && daftarSaringan()[0].jenis === 'pintar');
 
   setSaringanAktif(item.id);
   const hasilSaring = saringCatatan([nBelanja, nResep]);
-  cek('#16 Saringan aktif menyaring daftar catatan sesuai kueri tag',
+  cek('#16 Koleksi pintar menyaring daftar sesuai aturan tag',
     saringanAktif()?.kueri === 'tag:belanja' &&
     hasilSaring.some(n => n.id === nBelanja.id) &&
     !hasilSaring.some(n => n.id === nResep.id));
+  const nKemudian = makeNote({ title: 'Belanja berikutnya', blocks: [makeBlock({ type: 'paragraph', content: '<span class=\"tg\">#belanja</span>' })] });
+  cek('#16 aturan koleksi pintar menghitung catatan baru tanpa menyimpan salinan hasil',
+    saringCatatan([nKemudian]).some(n => n.id === nKemudian.id));
 
   cek('#16 Hitungan & chip saringan tampil di layar Catatan',
     jumlahCocokSaringan('tag:belanja') === 1 &&

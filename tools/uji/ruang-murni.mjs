@@ -82,5 +82,40 @@ console.log('── 3. entri rusak');
   cek('masukan null aman', r.daftar.length === 0 && r.peta.size === 0);
 }
 
+// ── 4. hierarki notebook bertingkat (N5), kompatibel dengan ruang datar ──
+{
+  const r = rencanaPulihRuang([], [
+    { id: 'root', nama: 'Proyek' },
+    { id: 'child', nama: 'Riset', parentId: 'root' },
+    { id: 'grand', nama: 'Arsip', parentId: 'child' },
+  ], 'timpa');
+  cek('timpa mempertahankan relasi notebook induk-anak-cucu', r.daftar[1].parentId === 'root' && r.daftar[2].parentId === 'child');
+}
+{
+  const r = rencanaPulihRuang([], [
+    { id: 'root', nama: 'Proyek' },
+    { id: 'child', nama: 'Riset', parentId: 'root' },
+  ], 'gabung');
+  cek('gabung memulihkan relasi parentId notebook baru', r.daftar.find(x => x.id === 'child')?.parentId === 'root');
+}
+{
+  const r = rencanaPulihRuang([], [{ id: 'child', nama: 'Riset', parentId: 'missing' }], 'timpa');
+  cek('ruang datar lama / parent yatim tidak membuat data runtuh', r.daftar.length === 1 && r.daftar[0].id === 'child');
+}
+
+{
+  const lokal = [
+    { id: 'work', nama: 'Kerja' }, { id: 'home', nama: 'Rumah' },
+    { id: 'task-work', nama: 'Tugas', parentId: 'work' },
+  ];
+  const cad = [
+    { id: 'work', nama: 'Kerja' }, { id: 'home', nama: 'Rumah' },
+    { id: 'task-home', nama: 'Tugas', parentId: 'home' },
+  ];
+  const r = rencanaPulihRuang(lokal, cad, 'gabung');
+  cek('gabung membedakan nama sub-notebook yang sama di bawah induk berbeda',
+    r.peta.get('task-home') === 'task-home' && r.daftar.some(x => x.id === 'task-home' && x.parentId === 'home'));
+}
+
 console.log(`\nHasil: ${lulus} lulus, ${gagal} gagal`);
 if (gagal) process.exit(1);

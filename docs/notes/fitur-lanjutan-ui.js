@@ -26,7 +26,7 @@ import { openPop, closeAll } from './menus/pop.js?v=20261105210000';
 import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalender,
          setKelompok, setKalenderKunci } from './papan.js?v=20261105210000';
 import {
-  daftarRuang, tambahRuang, pindahkanCatatanKeRuang,
+  daftarRuang, jalurRuang, tambahRuang, pindahkanCatatanKeRuang,
   ambilVersiCatatan, pulihkanVersiCatatan, bandingVersiDenganSekarang,
 } from './ruang.js?v=20261105210000';
 
@@ -333,7 +333,7 @@ export function bukaPanelRuangCatatan(anchor) {
     </button>
     ${daftar.map(r => `
       <button type="button" class="pop-i${n.folderId === r.id ? ' on' : ''}" data-set-ruang="${esc(r.id)}">
-        <svg class="ico"><use href="#i-arch"/></svg>${esc(r.nama)}
+        <svg class="ico"><use href="#i-arch"/></svg>${esc(jalurRuang(r.id, daftar))}
       </button>`).join('')}
     <div style="display:flex;gap:6px;padding:6px 10px 10px">
       <input id="ruang-baru-in" class="pop-in" placeholder="${tr('Nama ruang baru…')}" maxlength="32">

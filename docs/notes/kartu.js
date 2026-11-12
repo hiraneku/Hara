@@ -13,7 +13,7 @@ import { docEl, sel } from './editor/caret.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
 import { esc } from '../core/dom.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
-import { buatKartu, catatNilai, antrianAwal, langkahAntrean, ringkasSesi } from './kartu-murni.js?v=20261105210000';
+import { buatKartu, catatNilai, antrianAwal, kartuBerikutnya, langkahAntrean, ringkasLatihanKartu } from './kartu-murni.js?v=20261105210000';
 
 const PESAN = {
   'depan-kosong': 'Isi bagian depan kartu (pertanyaan).',
@@ -77,15 +77,23 @@ export function applyKartuBaru() {
 
 /* ── Latihan ── */
 
-let sesi = null;   /* { antrean: [id], ingat, belum, balik } */
+let sesi = null;   /* { antrean, again, hard, good, easy, telahUlang: Set } */
 
 function kartuDenganId(id) {
   return state.kartu.find(k => k.id === id) || null;
 }
 
-function mulaiSesi() {
-  const antrean = antrianAwal(state.kartu);
-  sesi = { antrean, ingat: 0, belum: 0, balik: false };
+function urutanSemuaKartu() {
+  return [...state.kartu].sort((a, b) => (a.dueAt || 0) - (b.dueAt || 0)
+    || (a.dibuat - b.dibuat) || (a.id < b.id ? -1 : 1)).map(k => k.id);
+}
+
+function mulaiSesi(semua = false) {
+  sesi = {
+    antrean: semua ? urutanSemuaKartu() : antrianAwal(state.kartu),
+    lagi: 0, sulit: 0, baik: 0, mudah: 0, modeSemua: semua,
+    telahUlang: new Set(), balik: false,
+  };
 }
 
 function tampilkan(html) {
@@ -96,20 +104,25 @@ function tampilkan(html) {
 
 function renderLatihan() {
   if (!sesi) return;
-  const ringkas = ringkasSesi(sesi);
+  const r = ringkasLatihanKartu(sesi);
   if (!sesi.antrean.length) {
+    const berikutnya = kartuBerikutnya(state.kartu);
+    const waktuBerikut = Number.isFinite(berikutnya)
+      ? `<p class="sh-note">${tr('Kartu berikutnya jatuh tempo')}: ${esc(new Date(berikutnya).toLocaleString())}</p>` : '';
     const isi = `<div class="kt-kartu kt-selesai">
-        <div class="kt-teks">${tr('Selesai')}</div>
-        <p class="sh-note">${tr('Kartu ingat')}: ${ringkas.ingat} · ${tr('Belum')}: ${ringkas.belum}</p>
+        <div class="kt-teks">${tr('Sesi selesai')}</div>
+        <p class="sh-note">${tr('Lagi')}: ${r.lagi} · ${tr('Sulit')}: ${r.sulit} · ${tr('Ingat')}: ${r.baik} · ${tr('Mudah')}: ${r.mudah}</p>
+        ${waktuBerikut || `<p class="sh-note">${tr('Semua kartu sudah dijadwalkan.')}</p>`}
       </div>`;
     const kaki = `<div class="kt-baris">
-        <button class="btn btn-sec" data-kt-aksi="ulang">${tr('Ulangi latihan')}</button>
+        <button class="btn btn-sec" data-kt-aksi="semua">${tr('Latihan semua kartu')}</button>
         <button class="btn btn-pri" data-kt-aksi="tutup">${tr('Tutup')}</button>
       </div>`;
     tampilkan(sheet({ ikon: 'i-book', judul: tr('Latihan kartu'), isi, kaki, kelas: 'kt-sh' }));
     return;
   }
   const k = kartuDenganId(sesi.antrean[0]);
+  const sisa = sesi.antrean.length;
   const isi = `<div class="kt-kartu">
       <div class="sh-lab">${tr('Depan')}</div>
       <div class="kt-teks">${esc(k ? k.depan : '')}</div>
@@ -117,33 +130,32 @@ function renderLatihan() {
         <div class="kt-teks">${esc(k ? k.belakang : '')}</div>` : ''}
       <p class="sh-note">${esc(k && k.sumberJudul ? k.sumberJudul : '')}</p>
     </div>
-    <p class="sh-note kt-hitung">${tr('Sisa')}: ${sesi.antrean.length} · ${tr('Kartu ingat')}: ${ringkas.ingat} · ${tr('Belum')}: ${ringkas.belum}</p>`;
+    <p class="sh-note kt-hitung">${tr('Sisa')}: ${sisa} · ${tr('Lagi')}: ${r.lagi} · ${tr('Sulit')}: ${r.sulit} · ${tr('Ingat')}: ${r.baik} · ${tr('Mudah')}: ${r.mudah}</p>`;
   const kaki = sesi.balik
-    ? `<div class="kt-baris">
-         <button class="btn btn-sec" data-kt-aksi="belum">${tr('Belum')}</button>
-         <button class="btn btn-pri" data-kt-aksi="ingat">${tr('Kartu ingat')}</button>
+    ? `<div class="kt-rating">
+         <button class="btn btn-sec" data-kt-aksi="again">${tr('Lagi')}<small>${tr('Ulangi segera')}</small></button>
+         <button class="btn btn-sec" data-kt-aksi="hard">${tr('Sulit')}<small>${tr('Jadwal pendek')}</small></button>
+         <button class="btn btn-pri" data-kt-aksi="good">${tr('Ingat')}<small>${tr('Jadwal normal')}</small></button>
+         <button class="btn btn-pri" data-kt-aksi="easy">${tr('Mudah')}<small>${tr('Jadwal panjang')}</small></button>
        </div>`
-    : `<div class="kt-baris">
-         <button class="btn btn-pri" data-kt-aksi="balik">${tr('Lihat jawaban')}</button>
-       </div>`;
-  tampilkan(sheet({ ikon: 'i-book', judul: tr('Latihan kartu'), isi, kaki: kaki + `<button class="btn btn-sec kt-hapus" data-kt-aksi="hapus">${tr('Hapus kartu ini')}</button>`, kelas: 'kt-sh' }));
+    : `<div class="kt-baris"><button class="btn btn-pri" data-kt-aksi="balik">${tr('Lihat jawaban')}</button></div>`;
+  tampilkan(sheet({ ikon: 'i-book', judul: tr('Latihan kartu'), isi,
+    kaki: kaki + `<button class="btn btn-sec kt-hapus" data-kt-aksi="hapus">${tr('Hapus kartu ini')}</button>`, kelas: 'kt-sh' }));
 }
 
-/* Tombol Latihan kartu di bar. */
 export function bukaLatihan() {
   if (!state.kartu.length) {
     toast(tr('Belum ada kartu. Sorot teks, lalu pilih Jadikan kartu.'));
     return;
   }
-  mulaiSesi();
+  mulaiSesi(false);
   renderLatihan();
 }
 
-/* Dipanggil dari pop.js untuk tombol [data-kt-aksi]. */
 export function kartuAksi(aksi) {
-  if (!sesi && aksi !== 'ulang') return;
   if (aksi === 'tutup') { sesi = null; closeAll(); return; }
-  if (aksi === 'ulang') { mulaiSesi(); renderLatihan(); return; }
+  if (aksi === 'semua') { mulaiSesi(true); renderLatihan(); return; }
+  if (!sesi) return;
   if (aksi === 'balik') { sesi.balik = true; renderLatihan(); return; }
   const id = sesi.antrean[0];
   if (aksi === 'hapus') {
@@ -155,11 +167,18 @@ export function kartuAksi(aksi) {
     renderLatihan();
     return;
   }
-  if (aksi !== 'ingat' && aksi !== 'belum') return;
+  const alias = aksi === 'ingat' ? 'good' : aksi === 'belum' ? 'again' : aksi;
+  if (!['again', 'hard', 'good', 'easy'].includes(alias)) return;
   const k = kartuDenganId(id);
-  if (k) { catatNilai(k, aksi); save(); }
-  sesi.antrean = langkahAntrean(sesi.antrean, id, aksi);
-  sesi[aksi]++;
+  if (k) { catatNilai(k, alias); save(); }
+  const namaHitung = { again: 'lagi', hard: 'sulit', good: 'baik', easy: 'mudah' }[alias];
+  sesi[namaHitung]++;
+  if (alias === 'again' && !sesi.telahUlang.has(id)) {
+    sesi.antrean = langkahAntrean(sesi.antrean, id, alias);
+    sesi.telahUlang.add(id);
+  } else {
+    sesi.antrean = sesi.antrean.filter(x => x !== id);
+  }
   sesi.balik = false;
   renderLatihan();
 }

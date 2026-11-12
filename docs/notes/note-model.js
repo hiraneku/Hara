@@ -141,6 +141,23 @@ export function bacaTandaDom(el) {
   });
 }
 
+/* Transkrip manual terhubung ke waktu audio. Tidak ada STT/pengenalan suara. */
+export function normalisasiTranskrip(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter(x => x && typeof x === 'object').map(x => ({
+    t: Math.max(0, Math.round((Number(x.t) || 0) * 10) / 10),
+    teks: String(x.teks || '').slice(0, 2000),
+  })).sort((a, b) => a.t - b.t);
+}
+
+export function bacaTranskripDom(el) {
+  if (!el || !el.querySelectorAll) return [];
+  return Array.from(el.querySelectorAll('.aud-trans-row')).map(row => ({
+    t: Number(row.getAttribute('data-t')) || 0,
+    teks: row.querySelector('.aud-trans-teks')?.value || '',
+  }));
+}
+
 const formatDetik = d => `${String(Math.floor(d / 60)).padStart(2, '0')}:${String(Math.floor(d % 60)).padStart(2, '0')}`;
 
 /* Daftar penanda sebagai HTML. Selalu ada <ol> (meski kosong) supaya bisa diganti tanpa mencari tempatnya. */
@@ -153,6 +170,16 @@ export function tandaAudioHtml(list) {
     `<button type="button" class="aud-mark-del" data-aud-mark-del aria-label="${tr('Hapus tanda')}" title="${tr('Hapus tanda')}">×</button>` +
     `</li>`).join('');
   return `<ol class="aud-marks" aria-label="${tr('Tanda waktu')}">${item}</ol>`;
+}
+
+export function transkripAudioHtml(list) {
+  const daftar = normalisasiTranskrip(list);
+  const item = daftar.map(s => `<li class="aud-trans-row" data-t="${s.t}">
+    <button type="button" class="aud-mark-t" data-aud-trans-seek aria-label="${tr('Putar dari titik ini')}">${formatDetik(s.t)}</button>
+    <textarea class="aud-trans-teks" rows="2" maxlength="2000" placeholder="${tr('Tulis transkrip di sini')}" aria-label="${tr('Transkrip')}" spellcheck="true">${String(s.teks).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+    <button type="button" class="aud-mark-del" data-aud-trans-del aria-label="${tr('Hapus segmen transkrip')}" title="${tr('Hapus segmen transkrip')}">×</button>
+  </li>`).join('');
+  return `<section class="aud-transcript"><div class="aud-trans-head"><strong>${tr('Transkrip manual')}</strong><button type="button" class="aud-trans-add" data-aud-trans-add>${tr('Tambah baris')}</button></div><ol class="aud-transcript-list" aria-label="${tr('Transkrip manual')}">${item}</ol></section>`;
 }
 
 export function makeBlock(patch = {}) {
@@ -286,7 +313,7 @@ export function plainText(note) {
       }
       if (b.type === 'audio') {
         const m = b.meta || {};
-        return [String(m.title || ''), ...(Array.isArray(m.marks) ? m.marks.map(x => x && x.teks ? String(x.teks) : '') : [])].filter(Boolean).join(' ');
+        return [String(m.title || ''), ...(Array.isArray(m.marks) ? m.marks.map(x => x && x.teks ? String(x.teks) : '') : []), ...(Array.isArray(m.transcript) ? m.transcript.map(x => x && x.teks ? String(x.teks) : '') : [])].filter(Boolean).join(' ');
       }
       if (b.type === 'image') {
         return String((b.meta && b.meta.ocr) || '');
@@ -495,7 +522,7 @@ function blockToHtmlMentah(b) {
       `<button type="button" class="aud-mark-btn" data-aud-mark title="${tr('Tandai')}" aria-label="${tr('Tandai')}">${tr('Tandai')}</button>` +
       `<button type="button" class="aud-speed" data-aud-speed>1×</button>` +
       `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
-      `<audio preload="metadata"></audio>${tandaAudioHtml(meta.marks)}${pegangan()}</figure>`;
+      `<audio preload="metadata"></audio>${tandaAudioHtml(meta.marks)}${transkripAudioHtml(meta.transcript)}${pegangan()}</figure>`;
   }
 
   if (b.type === 'image') {
@@ -658,6 +685,7 @@ export function elToBlock(el) {
     meta.duration = Number(el.getAttribute('data-dur')) || 0;
     meta.title = inp ? inp.value : '';
     meta.marks = normalisasiTanda(bacaTandaDom(el));
+    meta.transcript = normalisasiTranskrip(bacaTranskripDom(el));
   } else if (type === 'math') {
     meta.expr = el.getAttribute('data-expr') || '';
   } else if (type === 'bookmark') {

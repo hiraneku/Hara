@@ -48,8 +48,11 @@ const PREFIX = {
   tag: 'tag', judul: 'judul', title: 'judul',
   folder: 'folder', ruang: 'folder',
   properti: 'properti', property: 'properti', prop: 'properti',
-  sebelum: 'sebelum', sesudah: 'sesudah',
+  sebelum: 'sebelum', sesudah: 'sesudah', before: 'sebelum', after: 'sesudah',
+  has: 'has', is: 'status',
 };
+const HAS_DIDUKUNG = new Set(['attachment', 'image', 'audio', 'pdf', 'file', 'link', 'todo', 'table', 'bookmark']);
+const STATUS_DIDUKUNG = new Set(['pinned', 'archived', 'empty', 'active']);
 
 /* Tanggal "2026-10-24" atau "24/10/2026" → batas ms (awal hari).
    sebelum → t < awal hari itu. sesudah → t ≥ awal hari berikutnya.
@@ -93,7 +96,12 @@ export function pecahKueri(q) {
       const jenis = PREFIX[pfx.toLowerCase()];
       if (jenis === 'tag' || jenis === 'judul' || jenis === 'folder') pakai[jenis].push(nil);
       else if (jenis === 'properti') pakai.properti.push(pecahProperti(nil));
-      else if (jenis === 'sebelum' || jenis === 'sesudah') {
+      else if (jenis === 'has' || jenis === 'status') {
+        const nilai = nil.toLowerCase();
+        const sah = jenis === 'has' ? HAS_DIDUKUNG.has(nilai) : STATUS_DIDUKUNG.has(nilai);
+        if (sah) pakai[jenis].push(nilai);
+        else pakai.kata.push(`${pfx}:${nil}`);                /* nilai tak dikenal = teks biasa */
+      } else if (jenis === 'sebelum' || jenis === 'sesudah') {
         const batas = batasTanggal(jenis, nil);
         if (batas === null) pakai.kata.push(`${pfx}:${nil}`);   /* tanggal salah = teks biasa */
         else pakai.tanggal.push({ rel: jenis, batas, teks: `${jenis}:${nil}` });
@@ -116,6 +124,7 @@ export function pecahKueri(q) {
 export const kueriKosong = k =>
   !k.tag.length && !k.judul.length && !k.kata.length
   && !(k.folder || []).length && !(k.properti || []).length && !(k.tanggal || []).length
+  && !(k.has || []).length && !(k.status || []).length
   && !Object.values(k.kecuali || {}).some(a => a.length);
 
 /* Label operator untuk chip di layar cari (satu string per operator). */
@@ -127,6 +136,8 @@ export function labelOperator(k) {
     tambah(pre + 'judul:', kec ? k.kecuali.judul : k.judul, x => x);
     tambah(pre + 'folder:', kec ? k.kecuali.folder : k.folder, x => x);
     tambah(pre + 'properti:', kec ? k.kecuali.properti : k.properti, p => (p.k ? p.k + '=' : '') + p.v);
+    tambah(pre + 'has:', kec ? k.kecuali.has : k.has, x => x);
+    tambah(pre + 'is:', kec ? k.kecuali.status : k.status, x => x);
     tambah(pre, kec ? k.kecuali.tanggal : k.tanggal, t => t.teks);
   };
   satu('', false);
@@ -144,14 +155,36 @@ export function catatanCocok(n, k, ctx) {
 /* Entri indeks dari sebuah catatan — satu sumber untuk catatanCocok dan Worker. */
 export function entriDariCatatan(n, ctx) {
   const namaRuang = ctx && typeof ctx.namaRuang === 'function' ? ctx.namaRuang : null;
+  const blocks = Array.isArray(n.blocks) ? n.blocks : [];
+  const teks = plainText(n);
+  const has = new Set();
+  for (const b of blocks) {
+    const meta = b && b.meta || {};
+    if (b?.type === 'image') { has.add('image'); has.add('attachment'); }
+    if (b?.type === 'audio') { has.add('audio'); has.add('attachment'); }
+    if (b?.type === 'file') {
+      has.add('file'); has.add('attachment');
+      if (/\.pdf$/i.test(meta.name || '') || /application\/pdf/i.test(meta.mime || '')) has.add('pdf');
+    }
+    if (b?.type === 'bookmark') { has.add('bookmark'); has.add('link'); }
+    if (b?.type === 'todo') has.add('todo');
+    if (b?.type === 'table') has.add('table');
+    if (/\[\[[^\]]+\]\]|<a\b/i.test(String(b?.content || ''))) has.add('link');
+  }
+  const status = [];
+  if (n.pinned) status.push('pinned');
+  if (n.archived) status.push('archived'); else status.push('active');
+  if (!(String(n.title || '').trim() || teks.trim())) status.push('empty');
   return {
     id: n.id,
     judul: String(n.title || ''),
     tag: tagUntukTampil(n),
-    teks: plainText(n),
+    teks,
     updatedAt: n.updatedAt || 0,
     folder: n.folderId && namaRuang ? String(namaRuang(n.folderId) || '') : '',
     props: (n.props || []).map(p => ({ k: String(p.k ?? ''), v: String(p.v ?? '') })),
+    has: [...has],
+    status,
   };
 }
 

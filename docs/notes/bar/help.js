@@ -98,7 +98,7 @@ export const HELP = {
     nama: 'Latihan kartu',
     apa: 'Mengulang kartu satu per satu: lihat bagian depan, balik untuk melihat jawaban, lalu tandai Ingat atau Belum.',
     cara: 'Pilih menu ini. Ketuk Lihat jawaban, lalu pilih Ingat atau Belum.',
-    tahu: 'Kartu yang Belum muncul lagi di akhir sesi yang sama. Belum ada penjadwalan ulang otomatis.'
+    tahu: 'Hasil latihan menjadwalkan kartu berikutnya secara otomatis. Kartu baru langsung jatuh tempo; jadwal dan riwayat ikut cadangan.'
   },
 
   /* ── gaya paragraf ── */

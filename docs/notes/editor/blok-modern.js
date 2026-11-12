@@ -17,7 +17,7 @@ import { modeBacaBerlaku } from '../mode-baca.js?v=20261105210000';
 import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261105210000';
 import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261105210000';
 import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261105210000';
-import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom } from '../note-model.js?v=20261105210000';
+import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom, normalisasiTranskrip, transkripAudioHtml, bacaTranskripDom } from '../note-model.js?v=20261105210000';
 import { state } from '../../core/store.js?v=20261105210000';
 import { simpan } from '../../core/autosave.js?v=20261105210000';
 import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam, tandaiRekam } from './perekam-suara.js?v=20261105210000';
@@ -177,7 +177,7 @@ export async function pasangAudio() {
 for (const jenis of ['keydown', 'beforeinput']) {
   document.addEventListener(jenis, e => {
     const t = e.target;
-    if (t && t.tagName === 'INPUT' && t.closest && t.closest('.b-audio')) e.stopPropagation();
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.closest && t.closest('.b-audio')) e.stopPropagation();
   }, true);
 }
 
@@ -283,6 +283,16 @@ function tulisTanda(box, daftar) {
   baru.querySelectorAll('.aud-mark-teks').forEach(i => { i.readOnly = baca; });
 }
 
+function tulisTranskrip(box, daftar) {
+  const lama = box.querySelector('.aud-transcript');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = transkripAudioHtml(normalisasiTranskrip(daftar));
+  const baru = wrap.firstElementChild;
+  if (lama) lama.replaceWith(baru); else box.appendChild(baru);
+  const baca = modeBacaBerlaku();
+  baru.querySelectorAll('.aud-trans-teks').forEach(i => { i.readOnly = baca; });
+}
+
 /* Sinkronkan atribut editable di dalam blok toggle/tabel/audio sesuai Mode Baca / Tulis */
 export function sinkronBacaBlokModern() {
   const d = docEl();
@@ -296,7 +306,7 @@ export function sinkronBacaBlokModern() {
     cell.setAttribute('contenteditable', String(!baca));
   });
   d.querySelectorAll('.b-audio .aud-title').forEach(inp => { inp.readOnly = baca; });
-  d.querySelectorAll('.b-audio .aud-mark-teks').forEach(inp => { inp.readOnly = baca; });
+  d.querySelectorAll('.b-audio .aud-mark-teks, .b-audio .aud-trans-teks').forEach(inp => { inp.readOnly = baca; });
 }
 
 /* ════════ 4. BILAH KODE MENGAMBANG (#code-bar) & 5. PILL SENTUH WIKILINK (#wl-pill) ════════ */
@@ -549,6 +559,53 @@ export function bindBlokModern() {
       tulisTanda(box, daftar);
       refresh();
       toast(tr('Tanda ditambahkan'));
+      return;
+    }
+
+    /* Transkrip manual: segmen bertanda waktu, tanpa layanan pengenalan suara. */
+    const transAdd = e.target.closest('[data-aud-trans-add]');
+    if (transAdd) {
+      if (modeBacaBerlaku()) return;
+      const box = transAdd.closest('.b-audio');
+      const aud = box && box.querySelector('audio');
+      if (!box || !aud) return;
+      snap();
+      const segmen = bacaTranskripDom(box.querySelector('.aud-transcript-list'));
+      segmen.push({ t: aud.currentTime || 0, teks: '' });
+      tulisTranskrip(box, segmen);
+      refresh();
+      box.querySelector('.aud-trans-row:last-child .aud-trans-teks')?.focus();
+      return;
+    }
+
+    const transSeek = e.target.closest('[data-aud-trans-seek]');
+    if (transSeek) {
+      const box = transSeek.closest('.b-audio');
+      const row = transSeek.closest('.aud-trans-row');
+      const aud = box && box.querySelector('audio');
+      if (!aud || !row) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      aud.currentTime = Number(row.getAttribute('data-t')) || 0;
+      if (aud.paused) {
+        aud.play().catch(() => toast(tr('Berkas suara tidak dapat diputar')));
+        box.classList.add('playing');
+      }
+      return;
+    }
+
+    const transDel = e.target.closest('[data-aud-trans-del]');
+    if (transDel) {
+      if (modeBacaBerlaku()) return;
+      const box = transDel.closest('.b-audio');
+      const row = transDel.closest('.aud-trans-row');
+      if (!box || !row) return;
+      const segmen = bacaTranskripDom(box.querySelector('.aud-transcript-list'));
+      const i = Array.from(row.parentNode.children).indexOf(row);
+      if (i < 0) return;
+      snap();
+      segmen.splice(i, 1);
+      tulisTranskrip(box, segmen);
+      refresh();
       return;
     }
 

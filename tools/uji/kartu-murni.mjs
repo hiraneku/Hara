@@ -12,7 +12,7 @@
 //
 // Jalan: node tools/uji/kartu-murni.mjs (dari folder repo).
 import {
-  buatKartu, normalizeKartu, catatNilai, antrianAwal, langkahAntrean, ringkasSesi, MAKS_SISI,
+  buatKartu, normalizeKartu, catatNilai, antrianAwal, langkahAntrean, ringkasSesi, ringkasLatihanKartu, MAKS_SISI,
 } from '../../docs/notes/kartu-murni.js';
 
 let lulus = 0, gagal = 0;
@@ -122,9 +122,13 @@ console.log('── 5. langkahAntrean dan ringkasSesi');
     sesi[nilai]++;
   }
   const r = ringkasSesi(sesi);
+  const detail = ringkasLatihanKartu({ lagi: 1, sulit: 2, baik: 3, mudah: 4 });
   cek('sesi berakhir setelah 4 jawaban', sesi.antrean.length === 0 && langkah === 4, `langkah ${langkah}`);
-  cek('ringkasan ingat 3, belum 1', r.ingat === 3 && r.belum === 1, JSON.stringify(r));
-  cek('ringkas sesi kosong nol', JSON.stringify(ringkasSesi({})) === '{"ingat":0,"belum":0}');
+  cek('ringkasan sesi lama tetap dua nilai', JSON.stringify(r) === '{\"ingat\":3,\"belum\":1}');
+  cek('ringkasan nilai kartu mencakup rating terjadwal', detail.lagi === 1 && detail.sulit === 2 && detail.baik === 3 && detail.mudah === 4);
+  const kosong = ringkasSesi({});
+  const kosongDetail = ringkasLatihanKartu({});
+  cek('ringkas sesi kosong nol & kontrak lama terjaga', kosong.ingat === 0 && kosong.belum === 0 && Object.keys(kosong).length === 2 && Object.values(kosongDetail).every(x => x === 0));
 }
 
 console.log(`\nHasil: ${lulus} lulus, ${gagal} gagal`);

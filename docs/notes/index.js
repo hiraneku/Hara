@@ -56,7 +56,7 @@ import {
 } from './navigasi-fokus.js?v=20261105210000';
 import { bindHamoji } from './hamoji.js?v=20261105210000';
 import { pasangPratinjauTautan } from './pratinjau-tautan.js?v=20261105210000';
-import { setRuangAktif, tambahRuang, hapusRuang, toggleModeTampilDaftar } from './ruang.js?v=20261105210000';
+import { setRuangAktif, ruangAktif, tambahRuang, hapusRuang, toggleModeTampilDaftar } from './ruang.js?v=20261105210000';
 import { bukaCadanganTerenkripsiDialog, pilihCadanganTerenkripsiUntukPulih, bukaTabelProperti } from './fitur-lanjutan-ui.js?v=20261105210000';
 import { bukaStatistik } from './statistik-ui.js?v=20261105210000';
 import { bindTagWarna } from './tagwarna.js?v=20261105210000';
@@ -582,10 +582,11 @@ export const notesModule = {
       }
       const rt = e.target.closest('[data-ruang-tambah]');
       if (rt) {
+        const ruangInduk = ruangAktif();
         openPop(`
-          <div class="pop-h">${tr('Buat ruang baru')}</div>
+          <div class="pop-h">${ruangInduk ? tr('Buat sub-ruang') : tr('Buat ruang baru')}</div>
           <div style="display:flex;gap:6px;padding:6px 10px 10px">
-            <input id="rg-nama-baru" class="pop-in" placeholder="${tr('Mis. Kerja, Kuliah, Pribadi')}" maxlength="32">
+            <input id="rg-nama-baru" class="pop-in" placeholder="${ruangInduk ? tr('Nama sub-ruang…') : tr('Mis. Kerja, Kuliah, Pribadi')}" maxlength="32">
             <button type="button" class="btn btn-pri" data-ruang-simpan style="height:34px;flex:none">${tr('Buat')}</button>
           </div>`, rt);
         const inp = document.getElementById('rg-nama-baru');
@@ -594,7 +595,7 @@ export const notesModule = {
       }
       if (e.target.closest('[data-ruang-simpan]')) {
         const inp = document.getElementById('rg-nama-baru');
-        const dibuat = tambahRuang(inp ? inp.value : '');
+        const dibuat = tambahRuang(inp ? inp.value : '', ruangAktif());
         if (!dibuat) { toast(tr('Masukkan nama ruang')); return; }
         closeAll();
         setRuangAktif(dibuat.id);

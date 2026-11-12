@@ -43,8 +43,8 @@ export const batasSalah = kata => (kata.length >= 8 ? 2 : kata.length >= 4 ? 1 :
 
 /* Kueri kosong dengan bentuk lengkap (dipakai cari.js dan uji). */
 export const kosongKueri = () => ({
-  tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [],
-  kecuali: { tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [] },
+  tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [], has: [], status: [],
+  kecuali: { tag: [], judul: [], kata: [], folder: [], properti: [], tanggal: [], has: [], status: [] },
 });
 
 /* properti: { k: string|null, v: string }. Tanpa kunci → cocok di nama atau nilai. */
@@ -75,8 +75,10 @@ export function cocokOperator(e, k) {
     folder: x => folder.includes(norm(x)),
     properti: p => cocokProperti(props, p),
     tanggal: t => cocokTanggal(e.updatedAt || 0, t),
+    has: x => (e.has || []).map(norm).includes(norm(x)),
+    status: x => (e.status || []).map(norm).includes(norm(x)),
   };
-  for (const jenis of ['tag', 'judul', 'folder', 'properti', 'tanggal']) {
+  for (const jenis of ['tag', 'judul', 'folder', 'properti', 'tanggal', 'has', 'status']) {
     if (!(k[jenis] || []).every(x => ada[jenis](x))) return false;
     if ((kec[jenis] || []).some(x => ada[jenis](x))) return false;
   }

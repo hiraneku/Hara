@@ -60,10 +60,11 @@ const {
 } = await import(`../../docs/notes/fitur-lanjutan-ui.js${qv}`);
 const { imporCatatanHara, renamerAlatCtx } = await import(`../../docs/renamer/index.js${qv}`);
 const {
-  tambahRuang, pindahkanCatatanKeRuang, setRuangAktif, toggleModeTampilDaftar, modeTampilDaftar,
+  tambahRuang, pindahkanCatatanKeRuang, setRuangAktif, toggleModeTampilDaftar, modeTampilDaftar, turunanRuang,
   rekamVersiCatatan, pulihkanVersiCatatan,
 } = await import(`../../docs/notes/ruang.js${qv}`);
 const { insertToggle, insertTable, insertAudioBlock } = await import(`../../docs/notes/editor/blok-modern.js${qv}`);
+const { notesView } = await import(`../../docs/notes/views/list.js${qv}`);
 const { simpanBlob } = await import(`../../docs/core/blobs.js${qv}`);
 const { bukaPalette, tutupPalette } = await import(`../../docs/core/palette.js${qv}`);
 
@@ -234,11 +235,15 @@ console.log('── 5. Tangkap Cepat, Ruang/Folder, Grid, Kanban, Versi & Blok M
   state.notes.unshift(nProyek);
   const rg = tambahRuang('Kerja');
   pindahkanCatatanKeRuang(nProyek.id, rg.id);
+  const sub = tambahRuang('Riset', rg.id);
+  const nSub = makeNote({ title: 'Catatan di sub-notebook', folderId: sub.id, blocks: [{ type: 'paragraph', content: 'isi anak' }] });
+  state.notes.unshift(nSub);
   setRuangAktif(rg.id);
   toggleModeTampilDaftar();
   routerMod.go('notes');
-  cek('Filter Ruang menyaring daftar hanya catatan di ruang tersebut & mode Grid aktif',
-    modeTampilDaftar() === 'grid' && !!document.querySelector('.card.card-grid') && document.getElementById('wrap').innerHTML.includes('Rencana Produk Q4'));
+  cek('Notebook bertingkat: ruang induk mencakup catatan sub-ruang & mode Grid aktif',
+    modeTampilDaftar() === 'grid' && !!document.querySelector('.card.card-grid') && document.getElementById('wrap').innerHTML.includes('Rencana Produk Q4') && document.getElementById('wrap').innerHTML.includes('Catatan di sub-notebook') && turunanRuang(rg.id).has(sub.id));
+  state.notes = state.notes.filter(x => x.id !== nSub.id);
   setRuangAktif(null);
   toggleModeTampilDaftar();
 
@@ -262,11 +267,14 @@ console.log('── 5. Tangkap Cepat, Ruang/Folder, Grid, Kanban, Versi & Blok M
   insertAudioBlock('aud_uji_1', 12, 'Rekaman Ide');
 
   const d = document.querySelector('.ed-doc');
+  d.querySelector('[data-aud-trans-add]')?.click();
+  const transInp = d.querySelector('.aud-trans-teks');
+  if (transInp) transInp.value = 'Rencana rapat hari Senin';
   const bloks = domToBlocks(d);
-  cek('domToBlocks membaca utuh blok Toggle, Tabel, dan Audio Memo',
+  cek('domToBlocks membaca utuh blok Toggle, Tabel, Audio & transkrip manual bertanda waktu',
     bloks.some(b => b.type === 'toggle' && b.meta.summary === 'Catatan Rapat') &&
     bloks.some(b => b.type === 'table' && b.meta.rows.length === 3) &&
-    bloks.some(b => b.type === 'audio' && b.meta.blobId === 'aud_uji_1'));
+    bloks.some(b => b.type === 'audio' && b.meta.blobId === 'aud_uji_1' && b.meta.transcript?.[0]?.teks === 'Rencana rapat hari Senin' && b.meta.transcript[0].t === 0));
 
   const nMd = makeNote({ title: 'Ekspor Tabel & Kode', blocks: [
     ...bloks,
