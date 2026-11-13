@@ -9,6 +9,7 @@ import { toast } from '../core/toast.js?v=20261105210000';
 import { namaSekarang, setNama } from './nama.js?v=20261105210000';
 import { kartuMusikHtml } from '../musik/kartu.js?v=20261113230000';
 import { togglePutarMusik } from '../musik/index.js?v=20261113230000';
+import { kalenderRingkasHtml, bindKalenderRingkas } from './kalender-ringkas.js?v=20261113231200';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -125,6 +126,7 @@ export function berandaView() {
   </header>
 
   ${kartuMusikHtml()}
+  ${kalenderRingkasHtml()}
 
   <nav class="bh-kartu bh-alat" aria-label="${tr('Alat')}">
     <button type="button" class="bh-alat-item aktif" data-go="notes">
@@ -196,6 +198,7 @@ export function mulaiBeranda() {
   if (sudahPasang) return;
   sudahPasang = true;
   pasangMenuFitur();
+  bindKalenderRingkas();
 
   /* Nama di Pengaturan: simpan saat selesai diketik, sapaan langsung ikut berubah. */
   document.addEventListener('change', e => {

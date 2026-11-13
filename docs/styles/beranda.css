@@ -128,3 +128,25 @@ body.layar-beranda .page { padding: 0; max-width: none; }
 .bh-alat-ikon .bh-ico { width: 5vw; height: 5vw; }
 .bh-alat-item.aktif { background: rgba(169, 207, 166, .16); }
 .bh-alat-item.aktif .bh-alat-ikon { color: var(--bh-aksen); }
+
+/* Ringkasan agenda Beranda — preferensi lokal dan tombol minimal 44 px. */
+.bh-kalender{margin-top:clamp(14px,3.4vw,20px);padding:clamp(12px,3vw,16px);border:1px solid var(--bh-garis);border-radius:clamp(14px,4vw,20px);background:rgba(12,14,13,.42);color:var(--bh-teks);backdrop-filter:blur(10px)}
+.bh-kalender-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:9px;border-bottom:1px solid var(--bh-garis)}
+.bh-kalender-head>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.bh-kalender-head b{font-size:clamp(13px,3.4vw,16px);line-height:1.2}
+.bh-kalender-head small,.bh-kalender-head label span{font-size:clamp(10px,2.8vw,12px);color:var(--bh-redup)}
+.bh-kalender-head label{display:flex;align-items:center;gap:6px;min-width:0}
+.bh-kalender-head select{max-width:46vw;min-height:40px;padding:0 9px;border:1px solid var(--bh-garis);border-radius:9px;background:rgba(255,255,255,.08);color:var(--bh-teks);font:inherit;font-size:clamp(10px,2.8vw,12px)}
+.bh-kalender-head option{color:#171915;background:#fff}
+.bh-kalender-list{display:grid;gap:6px;padding-top:8px}
+.bh-kalender-item{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;min-width:0;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.bh-kalender-item:last-child{border-bottom:0}
+.bh-kalender-buka,.bh-kalender-note{width:100%;min-width:0;min-height:42px;padding:5px 6px;text-align:left;border:0;border-radius:8px;background:transparent;color:var(--bh-teks);font:inherit;cursor:pointer}
+.bh-kalender-buka{display:flex;flex-direction:column;justify-content:center;gap:2px}
+.bh-kalender-buka:hover,.bh-kalender-note:hover{background:rgba(255,255,255,.08)}
+.bh-kalender-buka span{color:var(--bh-redup);font-size:clamp(10px,2.7vw,11px);line-height:1.3}
+.bh-kalender-buka b{font-size:clamp(12px,3.1vw,14px);line-height:1.35;overflow-wrap:anywhere}
+.bh-kalender-note{min-height:38px;padding-left:12px;color:var(--bh-aksen);font-size:clamp(10px,2.7vw,11px);line-height:1.35;overflow-wrap:anywhere}
+.bh-kalender-kosong{margin:0;padding:8px 6px;color:var(--bh-redup);font-size:clamp(11px,2.9vw,12px);line-height:1.45}
+.bh-kalender :focus-visible{outline:2px solid #d8f1d3;outline-offset:2px}
+@media(max-width:360px){.bh-kalender-head{align-items:flex-start;flex-direction:column}.bh-kalender-head select{max-width:100%}.bh-kalender-head label{width:100%;justify-content:space-between}}

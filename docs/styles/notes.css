@@ -3004,6 +3004,9 @@ button.uj-baris-item:hover{background:var(--sunken)}
 .kal-templat{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin:8px 0;padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2)}
 .kal-templat label{display:flex;min-width:0;flex-direction:column;gap:5px;color:var(--muted);font-size:11px;font-weight:600}
 .kal-templat select{width:100%;min-width:0;height:40px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);padding:0 10px;font:inherit;font-size:13px}
+.kal-catatan-terkait small{color:var(--faint);font-size:10.5px;line-height:1.4;font-weight:400}
+.kal-acara-tautan{align-self:flex-start;max-width:100%;padding:2px 0;border:0;background:none;color:var(--accent);font:inherit;font-size:11px;text-align:left;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere;cursor:pointer}
+.kal-acara-tautan-hilang{color:var(--faint);font-size:10.5px}
 .kal-templat .btn,.kal-cepat .btn{min-height:40px;padding-inline:12px;white-space:nowrap}
 .kal-cepat{gap:8px;margin:8px 0;padding:10px}
 .kal-cepat label{line-height:1.35}
@@ -3096,4 +3099,5 @@ button.uj-baris-item:hover{background:var(--sunken)}
   .kal-linimasa-item>time{padding:0 2px}
   .kal-ringkasan-pekan{display:grid;grid-template-columns:minmax(0,1fr)}
 }
+.papan-kal-hint{margin:4px 0 8px;color:var(--muted);font-size:12px;line-height:1.45}
 @media(prefers-reduced-motion:reduce){.kal *{scroll-behavior:auto!important;transition:none!important}}

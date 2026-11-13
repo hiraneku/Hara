@@ -42,8 +42,8 @@ export async function setBahasa(b) {
   if (b !== 'id' && !KAMUS[b]) {
     try {
       const modul = b === 'en'
-        ? await import('./bahasa-en.js?v=20261113230200')
-        : await import('./bahasa-ja.js?v=20261113230200');
+        ? await import('./bahasa-en.js?v=20261113231200')
+        : await import('./bahasa-ja.js?v=20261113231200');
       KAMUS[b] = modul[b === 'en' ? 'EN' : 'JA'];
     } catch (e) {
       return false;              /* biarkan bahasa aktif sebelumnya tetap utuh */

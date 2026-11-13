@@ -6,7 +6,7 @@
    disimpan di sini agar tetap ada saat modal digambar ulang. */
 import { state, save } from '../core/store.js?v=20261105210000';
 import { esc } from '../core/dom.js?v=20261105210000';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261105210000';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261113231200';
 import { touch } from './note-model.js?v=20261105210000';
 import { aturProp, KET_PROP, namaProp } from './meta-ui.js?v=20261105210000';
 import * as L from './papan-logika.js?v=20261105210000';
@@ -131,6 +131,7 @@ export function htmlKalender(aktif) {
       ${navBtn(1, '›')}
       <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)">${tr('Sumbu')} ${pilihSumbu}</label>
     </div>
+    <p class="papan-kal-hint" role="note">${tr('Sumbu memakai nilai properti bertanggal format YYYY-MM-DD. Kalender hanya membaca properti; catatan tidak diubah.')}</p>
     <table style="width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed">
       <thead><tr>${namaHariPendek().map(h => `<th style="font-size:11px;color:var(--muted);font-weight:600">${esc(h)}</th>`).join('')}</tr></thead>
       <tbody>${baris}</tbody>

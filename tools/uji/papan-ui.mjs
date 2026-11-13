@@ -60,6 +60,7 @@ const kalTanggal=()=>[...papanEl().querySelectorAll('[data-kal-hari]')];
 oke('MB1h kalender: sel hari ada', kalTanggal().length>=28);
 const selTgl=papanEl().querySelector('[data-kal-kunci]');
 oke('MB1i sumbu kalender memuat "tenggat" & "tanggal"', !!selTgl && ['tenggat','tanggal'].every(k=>[...selTgl.options].some(o=>o.value===k)));
+oke('MB1i.1 pemetaan tanggal dinyatakan ISO dan read-only',papanEl().textContent.includes('YYYY-MM-DD')&&papanEl().textContent.includes('catatan tidak diubah'));
 /* bulan awal = bulan sekarang; pindah ke Oktober 2026 agar data uji tampil */
 papan._uji.tampilan.tahun=2026; papan._uji.tampilan.bulan0=9;
 fla.bukaTabelProperti('kalender');

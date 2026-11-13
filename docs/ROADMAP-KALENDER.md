@@ -1,6 +1,6 @@
 # Roadmap fitur Kalender Hara
 
-**Status:** Tahap 3 masih berlangsung. Tambah-cepat berpratinjau, pengulangan, blok tugas/fokus, benturan, dan ringkasan mingguan sudah tersedia; templat acara dan perubahan khusus pada satu kejadian masih tersisa.
+**Status:** Tahap 3 selesai untuk cakupan yang disetujui (termasuk templat acara dan pengecualian satu kejadian); Tahap 4 Integrasi Hara sudah diimplementasikan pada workspace dan menunggu verifikasi akhir.
 
 Dokumen ini mencatat seluruh gagasan Kalender yang telah dibahas agar cakupan dan urutannya tidak hilang. Ini roadmap usulan, bukan janji tanggal rilis. Keputusan cakupan atau perubahan prioritas perlu dicatat sebelum mengubah butirnya.
 
@@ -52,7 +52,7 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 
 ## Tahap 3 — Pengaturan jadwal dan produktivitas
 
-- [ ] Buat alur tambah acara yang ringkas, dengan templat acara untuk pola umum (misalnya rapat, kelas, olahraga, belajar).
+- [x] Buat alur tambah acara yang ringkas, dengan templat acara untuk pola umum (misalnya rapat, kelas, olahraga, belajar); pilihan mengisi formulir dan menampilkan pratinjau, tetapi tidak menyimpan sebelum konfirmasi.
 - [x] Tambahkan **tambah cepat dengan bahasa alami** untuk tanggal dan waktu, termasuk contoh “rapat Jumat jam 10” dan “bayar tagihan setiap tanggal 5”.
 - [x] Parsing menampilkan pratinjau yang bisa diperiksa/diedit di formulir; acara baru tersimpan hanya setelah pengguna mengirim formulir sebagai konfirmasi.
 - [x] Dukung pengulangan harian/mingguan/bulanan, hari kerja tertentu, tanggal akhir, melewati satu kejadian, dan aksi seluruh rangkaian.
@@ -64,12 +64,12 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 
 ## Tahap 4 — Integrasi Hara
 
-- [ ] Hubungkan satu tanggal terpilih dengan tugas, tenggat, pengingat, acara, dan jurnal dalam panel tanggal yang sama.
-- [ ] Dari tanggal, sediakan aksi membuka atau membuat jurnal hari tersebut; dari jurnal, sediakan jalan kembali ke tanggal itu.
-- [ ] Tautkan acara ke catatan terkait (misalnya agenda rapat atau bahan belajar) tanpa menyalin isi catatan ke kalender.
-- [ ] Perluas kalender berbasis properti catatan yang sudah ada: aturan pemetaan tanggal dan sumbu kalender harus jelas serta tetap non-destruktif.
-- [ ] Kembangkan ringkasan Beranda yang dapat diatur: agenda hari ini, tugas terlambat, atau beberapa hari mendatang.
-- [ ] Pastikan menyelesaikan tugas, menunda pengingat, atau mengubah acara menyegarkan tampilan terkait dengan konsisten.
+- [x] Hubungkan satu tanggal terpilih dengan tugas/tenggat, acara, blok jadwal, dan status jurnal dalam panel tanggal yang sama; semua lapisan tetap dapat diatur.
+- [x] Dari tanggal, sediakan aksi membuka atau membuat jurnal hari tersebut; dari jurnal, sediakan jalan kembali ke tanggal itu.
+- [x] Tautkan acara ke catatan terkait (misalnya agenda rapat atau bahan belajar) dengan menyimpan ID catatan lokal saja, tanpa menyalin isi; tautan tersembunyi/terhapus tidak membocorkan judul.
+- [x] Perjelas kalender berbasis properti catatan yang sudah ada: sumbu hanya menerima nilai tanggal ISO `YYYY-MM-DD`, dan kalender hanya membaca—tidak mengubah nilai catatan.
+- [x] Kembangkan ringkasan Beranda yang dapat diatur secara lokal: agenda hari ini, tugas terlambat, 3 hari, atau 7 hari mendatang; baris agenda dapat membuka tanggal kalender atau catatan terkait.
+- [x] Pastikan menyelesaikan tugas, menunda pengingat, atau mengubah acara menyegarkan tampilan terkait dengan konsisten melalui render ulang layar setelah perubahan.
 
 ## Tahap 5 — Pengingat dan notifikasi
 

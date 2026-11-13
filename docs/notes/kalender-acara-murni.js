@@ -45,6 +45,7 @@ export function normalisasiAcara(item, sekarang = Date.now()) {
   const dasar = {
     id: String(item.id || idBaru()).slice(0, 120), judul, sepanjangHari, kategori,
     zonaWaktu: zonaValid(zona) ? zona : 'UTC',
+    ...(typeof item.catatanId==='string'&&item.catatanId.trim()&&!/[\u0000-\u001f\u007f]/.test(item.catatanId)?{catatanId:item.catatanId.trim().slice(0,120)}:{}),
     ...(Number(item.persiapanMenit)>0?{persiapanMenit:Math.min(1440,Math.floor(Number(item.persiapanMenit)))}:{}),
     ...(Number(item.perjalananMenit)>0?{perjalananMenit:Math.min(1440,Math.floor(Number(item.perjalananMenit)))}:{}),
     dibuat: Number.isFinite(item.dibuat) ? item.dibuat : sekarang,

@@ -38,6 +38,9 @@ cek('acara yang selesai tepat tengah malam tidak menempati hari berikutnya', !ac
 cek('waktu lokal DST yang tidak ada ditolak', timestampDariDinding('2026-03-08', '02:30', 'America/New_York') === null);
 cek('waktu lokal valid setelah transisi DST diterima', Number.isFinite(timestampDariDinding('2026-03-08', '03:30', 'America/New_York')));
 cek('zona waktu invalid jatuh aman ke UTC ketika normalisasi', normalisasiAcara({ ...dasar, mulai: 1, selesai: 2, zonaWaktu: 'No/Such_Zone' })?.zonaWaktu === 'UTC');
+const tertaut=normalisasiAcara({...dasar,catatanId:'note-local-42',mulai:1,selesai:2});
+cek('acara mempertahankan ID tautan catatan saja sebagai metadata opsional',tertaut?.catatanId==='note-local-42'&&!('isiCatatan' in tertaut));
+cek('ID tautan catatan dengan karakter kontrol ditolak',!normalisasiAcara({...dasar,catatanId:'bad\u0000id',mulai:1,selesai:2})?.catatanId);
 
 const daftar = normalisasiDaftarAcara([
   { ...dasar, sepanjangHari: true, tanggalMulai: '2028-02-28', id: 'x' },

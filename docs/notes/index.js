@@ -3,7 +3,7 @@
 import { registerViews, onBeforeLeave, onAfterRender, cur, go } from '../core/router.js?v=20261105210000';
 import { bukaJendelaLog, setLogAktif, logAktif } from './log-ketik.js?v=20261105210000';
 import { notesView, pasangMuatLebih, tambahBatasDaftar } from './views/list.js?v=20261105210000';
-import { berandaView } from '../home/beranda.js?v=20261105210000';
+import { berandaView } from '../home/beranda.js?v=20261113231200';
 import { editorView } from './views/editor.js?v=20261105210000';
 import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar,
          setKueriCari } from './views/misc.js?v=20261105210000';
@@ -773,6 +773,8 @@ export const notesModule = {
       if (form) { e.preventDefault(); cariKalender(form.querySelector('[name="q"]')?.value || ''); }
     });
     document.addEventListener('click', e => {
+      const terkait=e.target.closest('[data-kal-catatan]');
+      if(terkait){openNote(terkait.dataset.kalCatatan);return;}
       const templat=e.target.closest('[data-kal-templat]');
       if(templat){
         const detail=templat.closest('.kal-form-detail');

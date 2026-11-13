@@ -14,7 +14,7 @@ import { kuadranTugas, jatuhPada } from '../kalender.js?v=20261105210000';
 import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261105210000';
 import { rowFor } from './row.js?v=20261105210000';
 import { terlihat } from '../kunci.js?v=20261105210000';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261105210000';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261113231200';
 import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261105210000';
 import { toast } from '../../core/toast.js?v=20261105210000';
 import { touch, makeNote } from '../note-model.js?v=20261105210000';
@@ -178,6 +178,7 @@ export function simpanAcaraKalender(form) {
   const input = {
     id: acaraEditId || undefined, judul: data.get('judul'), kategori: data.get('kategori'),
     sepanjangHari, zonaWaktu,
+    catatanId:String(data.get('catatanId')||''),
     persiapanMenit:Number(data.get('persiapanMenit'))||0,perjalananMenit:Number(data.get('perjalananMenit'))||0,
     ...(frekuensi?{pengulangan:{frekuensi,interval:1,hari:data.getAll('hariUlang').map(Number),sampai:sampai||null}}:{}),
   };
@@ -333,6 +334,9 @@ const formAcaraHtml = () => {
   const awal = acara?.sepanjangHari ? { tanggal: acara.tanggalMulai, jam: '09:00' } : acara ? bagianZona(acara.mulai, zona) : { tanggal: isoHari(kalPilih), jam: '09:00' };
   const akhir = acara?.sepanjangHari ? { tanggal: acara.tanggalAkhir, jam: '10:00' } : acara ? bagianZona(acara.selesai, zona) : { tanggal: isoHari(kalPilih), jam: '10:00' };
   const zonaPilihan = [...new Set([zona, 'Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC'])];
+  const catatanTerkait=aktif().slice().sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),localeKalender()));
+  const tautanHilang=!!acara?.catatanId&&!catatanTerkait.some(n=>n.id===acara.catatanId);
+  const pilihanCatatan=[`<option value="">${tr('Tanpa catatan terkait')}</option>`,...(tautanHilang?[`<option value="${esc(acara.catatanId)}" selected>${tr('Catatan tertaut tidak tersedia')}</option>`]:[]),...catatanTerkait.map(n=>`<option value="${esc(n.id)}" ${n.id===acara?.catatanId?'selected':''}>${esc(n.title||tr('Tanpa judul'))}</option>`)].join('');
   const rule=acara?.pengulangan||{},hariUlang=rule.hari||[];
   return `<details class="kal-form-detail" ${acara ? 'open' : ''}><summary>${acara ? tr('Edit acara') : tr('Tambah acara')}</summary>
     ${!acara?`<div class="kal-templat"><label>${tr('Templat acara')}<select data-kal-templat-pilihan><option value="">${tr('Pilih templat')}</option>${[['rapat','Rapat'],['kelas','Kelas'],['olahraga','Olahraga'],['belajar','Belajar']].map(([v,l])=>`<option value="${v}">${tr(l)}</option>`).join('')}</select></label><button type="button" class="btn" data-kal-templat>${tr('Gunakan templat')}</button></div>
@@ -356,6 +360,7 @@ const formAcaraHtml = () => {
         </select></label>
         <label>${tr('Zona waktu')}<select name="zonaWaktu">${zonaPilihan.map(z => `<option value="${esc(z)}" ${z === zona ? 'selected' : ''}>${esc(z)}${z === zonaLokal() ? ` · ${tr('lokal')}` : ''}</option>`).join('')}</select></label>
       </div>
+      <label class="kal-catatan-terkait">${tr('Catatan terkait (opsional)')}<select name="catatanId">${pilihanCatatan}</select><small>${tr('Kalender hanya menyimpan tautan ke catatan; isi catatan tidak disalin.')}</small></label>
       <fieldset class="kal-ulang"><legend>${tr('Pengulangan')}</legend>
         <label>${tr('Frekuensi')}<select name="frekuensiUlang"><option value="">${tr('Tidak berulang')}</option><option value="harian" ${rule.frekuensi==='harian'?'selected':''}>${tr('Setiap hari')}</option><option value="mingguan" ${rule.frekuensi==='mingguan'?'selected':''}>${tr('Setiap minggu')}</option><option value="bulanan" ${rule.frekuensi==='bulanan'?'selected':''}>${tr('Setiap bulan')}</option></select></label>
         <label>${tr('Berulang sampai')}<input type="date" name="sampaiUlang" value="${esc(rule.sampai||'')}"></label>
@@ -365,8 +370,13 @@ const formAcaraHtml = () => {
       <div class="kal-form-aksi"><button class="btn btn-pri" type="submit">${acara ? tr('Simpan perubahan') : tr('Simpan acara')}</button>${acara ? `<button class="btn" type="button" data-kal-batal-edit>${tr('Batal')}</button>` : ''}</div>
     </form></details>`;
 };
+const tautanCatatanAcara = acara => {
+  if(!acara.catatanId)return '';
+  const note=aktif().find(n=>n.id===acara.catatanId);
+  return note?`<button type="button" class="kal-acara-tautan" data-kal-catatan="${esc(note.id)}">${tr('Buka catatan terkait')}: ${esc(note.title||tr('Tanpa judul'))}</button>`:`<small class="kal-acara-tautan-hilang">${tr('Catatan tertaut tidak tersedia')}</small>`;
+};
 const kartuAcara = acara => `<div class="kal-acara kal-acara-${esc(acara.kategori)}" ${acara.adalahKejadianUlang?'':`draggable="true" data-kal-seret="${esc(acara.id)}"`} title="${tr(acara.adalahKejadianUlang?'Kejadian berulang dikelola lewat aksi rangkaian atau pengecualian':'Seret acara ke tanggal lain untuk memindahkannya')}">
-  <div class="kal-acara-teks"><b>${esc(acara.judul)}</b><span>${esc(labelWaktuAcara(acara, bahasaSekarang()))} · ${tr(acara.kategori === 'work' ? 'Kerja' : acara.kategori === 'study' ? 'Belajar' : acara.kategori === 'personal' ? 'Pribadi' : 'Lainnya')}${acara.adalahKejadianUlang?` · ${tr('Pengulangan')}`:''}</span></div>
+  <div class="kal-acara-teks"><b>${esc(acara.judul)}</b><span>${esc(labelWaktuAcara(acara, bahasaSekarang()))} · ${tr(acara.kategori === 'work' ? 'Kerja' : acara.kategori === 'study' ? 'Belajar' : acara.kategori === 'personal' ? 'Pribadi' : 'Lainnya')}${acara.adalahKejadianUlang?` · ${tr('Pengulangan')}`:''}</span>${tautanCatatanAcara(acara)}</div>
   <div class="kal-acara-aksi"><button type="button" class="kal-acara-btn" data-kal-edit="${esc(acara.id)}">${tr(acara.adalahKejadianUlang?'Edit rangkaian':'Edit')}</button>${acara.adalahKejadianUlang?`<button type="button" class="kal-acara-btn" data-kal-kecualikan="${esc(acara.id)}" data-kal-kejadian="${esc(acara.kejadianTanggal)}">${tr('Lewati kejadian ini')}</button>`:''}<button type="button" class="kal-acara-btn" data-kal-hapus="${esc(acara.id)}">${tr(acara.adalahKejadianUlang?'Hapus rangkaian':'Hapus')}</button></div>
 </div>`;
 const kartuBlokJadwal = blok => {
@@ -596,7 +606,7 @@ export function tampilkanKalenderTanggal(ms) {
   go('task');
   /* kalender ada di bawah daftar tugas. Gulir ke kartunya supaya tombol Buka jurnal
      langsung terlihat (di HP tidak tertutup bilah navigasi bawah). */
-  setTimeout(() => document.getElementById('kal-bagian')?.scrollIntoView({ block: 'start' }), 0);
+  setTimeout(() => { const el=document.getElementById('kal-bagian');if(el?.scrollIntoView){try{el.scrollIntoView({block:'start',behavior:'smooth'});}catch{el.scrollIntoView();}} }, 0);
 }
 
 /* ── K8 · ekspor & impor .ics ── */
