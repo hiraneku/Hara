@@ -27,13 +27,14 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 
 ## Tahap 1 — Model acara dan fondasi kalender
 
-- [ ] Tambahkan **acara kalender mandiri**, terpisah dari tugas yang memiliki tenggat.
-- [ ] Dukung acara sepanjang hari, acara dengan waktu mulai/selesai, dan acara multi-hari.
-- [ ] Tetapkan model tanggal, waktu, dan zona waktu yang aman terhadap perubahan DST; bedakan tanggal lokal dari waktu absolut.
-- [ ] Sediakan warna/kategori acara yang konsisten, tetapi jangan memakai warna sebagai satu-satunya pembeda.
-- [ ] Tambahkan lapisan kalender yang bisa dinyalakan atau disembunyikan: acara, tugas/tenggat, pengingat, jurnal, serta kalender hasil impor.
-- [ ] Tampilkan satu **panel detail tanggal** yang merangkum semua jenis data pada hari terpilih dan memberi tautan kembali ke sumbernya.
-- [ ] Pastikan perubahan model tidak merusak kalender tugas, jurnal, dashboard, atau kalender properti catatan yang sudah ada.
+- [x] Tambahkan **acara kalender mandiri**, terpisah dari tugas yang memiliki tenggat. Model tersimpan bersama snapshot IndexedDB Hara dan ikut cadangan/pemulihan JSON; acara dapat dibuat, diedit, dihapus, dan penghapusan dapat diurungkan.
+- [x] Dukung acara sepanjang hari (tanggal akhir inklusif), acara dengan waktu mulai/selesai, dan acara multi-hari.
+- [x] Tetapkan model tanggal, waktu, dan zona waktu IANA: tanggal acara sepanjang hari tidak bergeser, waktu acara dijabarkan pada zona pilihannya, dan waktu lokal DST yang tidak ada ditolak.
+- [x] Sediakan kategori dengan warna/label (pribadi, kerja, belajar, lainnya); pembedaan tidak mengandalkan warna saja.
+- [x] Tambahkan saklar lapisan acara, tenggat/pengingat, dan jurnal.
+- [ ] Tambahkan lapisan kalender hasil impor. **Ditunda:** impor `.ics` yang sudah ada masih diubah menjadi to-do, belum menjadi sumber kalender terpisah; dikerjakan bersama Tahap 6 agar pratinjau dan deduplikasi tidak menghasilkan acara ganda.
+- [x] Tampilkan satu **panel detail tanggal** untuk acara, tenggat, dan status jurnal terpilih, dengan aksi ke catatan/tugas/jurnal terkait.
+- [x] Pertahankan perilaku kalender bulanan, jurnal, dan impor/ekspor `.ics` yang sudah ada; regresi otomatis kalender dan ICS tetap lulus. Dashboard dan kalender properti catatan tidak diubah.
 
 ## Tahap 2 — Tampilan, navigasi, dan interaksi
 

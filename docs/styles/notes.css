@@ -2846,3 +2846,22 @@ button.uj-baris-item:hover{background:var(--sunken)}
 .vq-confirm{display:flex;align-items:center;flex-wrap:wrap;gap:6px;width:100%;padding:8px;border-radius:var(--r-sm);background:var(--sunken)}
 .vq-dialog button{min-height:44px;touch-action:manipulation}
 @media(max-width:520px){.vq-dialog{max-height:86vh!important}.vq-attachment>button{min-width:58px}}
+
+/* ── Kalender Tahap 1: acara mandiri, lapisan, dan panel tanggal ── */
+.kal-lapisan{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin:0 0 10px;padding:8px 2px;border-block:1px solid var(--border)}
+.kal-layer{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);cursor:pointer;min-height:28px}
+.kal-layer input{accent-color:var(--accent);width:15px;height:15px;margin:0}
+.kal-layer-dot,.kal-acara-titik{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b6fe8}
+.kal-layer-tenggat{background:var(--accent)}
+.kal-layer-jurnal{background:#32a879}
+.kal-titik{z-index:1}
+.kal-acara-titik{position:absolute;right:5px;bottom:5px;background:#8b6fe8;width:5px;height:5px}
+.kal-detail{display:flex;flex-direction:column;gap:7px}
+.kal-acara-daftar,.kal-tenggat-daftar{display:flex;flex-direction:column;gap:6px}
+.kal-acara{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:9px 10px;border:1px solid var(--border);border-left:3px solid #8b6fe8;border-radius:9px;background:var(--surface);min-width:0}
+.kal-acara-work{border-left-color:#e58a35}.kal-acara-study{border-left-color:#3888d6}.kal-acara-personal{border-left-color:#32a879}
+.kal-acara-teks{display:flex;flex-direction:column;gap:3px;min-width:0}.kal-acara-teks b{font-size:12.5px;overflow-wrap:anywhere}.kal-acara-teks span{font-size:10.5px;color:var(--muted);line-height:1.35}
+.kal-acara-aksi{display:flex;gap:3px;flex:none}.kal-acara-btn{border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;padding:5px 6px;border-radius:6px;cursor:pointer}.kal-acara-btn:hover{background:var(--sunken);color:var(--text)}
+.kal-form-detail{margin-top:5px;border-top:1px solid var(--border);padding-top:8px}.kal-form-detail>summary{cursor:pointer;list-style:none;width:max-content;color:var(--accent);font-size:12px;font-weight:650;padding:4px 2px}.kal-form-detail>summary::-webkit-details-marker{display:none}.kal-form-detail>summary::before{content:'＋';margin-right:5px}
+.kal-acara-form{display:flex;flex-direction:column;gap:9px;padding:7px 0 2px}.kal-acara-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:var(--muted);min-width:0}.kal-acara-form input:not([type=checkbox]),.kal-acara-form select{box-sizing:border-box;width:100%;min-width:0;height:36px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);padding:0 9px;font:inherit;font-size:12px}.kal-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kal-centang{flex-direction:row!important;align-items:center;min-height:28px}.kal-centang input{width:16px;height:16px;accent-color:var(--accent)}.kal-form-hint{margin:0;color:var(--faint);font-size:10.5px;line-height:1.4}.kal-form-aksi{display:flex;gap:7px;flex-wrap:wrap}.kal-form-aksi .btn{min-height:34px;font-size:12px}
+@media(max-width:520px){.kal-lapisan{gap:4px 10px}.kal-layer{font-size:10.5px}.kal-acara{padding:8px}.kal-acara-btn{font-size:10.5px;padding:5px 4px}.kal-form-grid{gap:6px}}

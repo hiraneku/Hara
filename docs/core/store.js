@@ -12,6 +12,7 @@ import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=202611
 import { toast } from './toast.js?v=20261105210000';
 import { normalizeKartu } from '../notes/kartu-murni.js?v=20261105210000';
 import { normalizeUjian } from '../notes/ujian-murni.js?v=20261105210000';
+import { normalisasiDaftarAcara } from '../notes/kalender-acara-murni.js?v=20261105210001';
 
 const SCHEMA = 2;
 const pendengarSimpan = new Set();
@@ -70,6 +71,8 @@ export const state = {
   kartu: [],
   /* ruang persiapan ujian (C8): materi dan soal. Ikut snapshot yang sama. */
   ujian: [],
+  /* Acara kalender mandiri (Tahap 1); dipisah dari to-do di dalam catatan. */
+  acaraKalender: [],
   openId: 'w',
   /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
      untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
@@ -86,6 +89,7 @@ function snapshot() {
     notes: state.notes,
     kartu: state.kartu,
     ujian: state.ujian,
+    acaraKalender: state.acaraKalender,
   });
 }
 
@@ -152,6 +156,8 @@ export async function load() {
     state.kartu = normalizeKartu(data.kartu);
     /* data sebelum C8 tidak punya kunci ujian */
     state.ujian = normalizeUjian(data.ujian);
+    /* Acara mandiri ditambahkan tanpa mengubah data catatan/to-do lama. */
+    state.acaraKalender = normalisasiDaftarAcara(data.acaraKalender);
     state.openId = (data.openId && state.notes.some(n => n.id === data.openId))
       ? data.openId : state.notes[0].id;
 

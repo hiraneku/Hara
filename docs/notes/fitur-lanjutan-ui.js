@@ -21,7 +21,7 @@ import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=2026110
 import { openNote } from './model.js?v=20261105210000';
 import { waktuTenggat } from './pengingat.js?v=20261105210000';
 import { terlihat } from './kunci.js?v=20261105210000';
-import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261105210000';
+import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261113230100';
 import { openPop, closeAll } from './menus/pop.js?v=20261105210000';
 import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalender,
          setKelompok, setKalenderKunci } from './papan.js?v=20261105210000';

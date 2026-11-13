@@ -7,7 +7,8 @@ import { berandaView } from '../home/beranda.js?v=20261105210000';
 import { editorView } from './views/editor.js?v=20261105210000';
 import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar,
          setKueriCari } from './views/misc.js?v=20261105210000';
-import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar } from './views/tugas.js?v=20261105210000';
+import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
+         ubahLapisanKalender, bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender } from './views/tugas.js?v=20261113230100';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';
@@ -84,7 +85,7 @@ import { t as tr, setBahasa, bahasaSekarang, terjemahStatis } from '../core/i18n
 import { ujianViews, ujianTitles, ujianInduk, pasangUjian } from './ujian.js?v=20261105210000';
 import { cadanganJson, eksporVaultMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
-  from './data-io.js?v=20261105210000';
+  from './data-io.js?v=20261113230100';
 
 /* Halaman Pengaturan: daftar kontrol bar + saklar getar + ruang terpakai. */
 function isiPengaturan() {
@@ -721,6 +722,29 @@ export const notesModule = {
       if (hari) return geserKalender('pilih', hari.dataset.kalHari);
       const nav = e.target.closest('[data-kal]');
       if (nav) return geserKalender(nav.dataset.kal);
+    });
+    /* Tahap 1 Kalender: lapisan, acara mandiri, dan rentang sepanjang hari. */
+    document.addEventListener('change', e => {
+      const layer = e.target.closest('[data-kal-lapisan]');
+      if (layer) { ubahLapisanKalender(layer.dataset.kalLapisan, layer.checked); return; }
+      if (e.target.matches('[data-kal-sepanjang]')) {
+        const waktu = e.target.closest('form')?.querySelector('.kal-waktu');
+        if (waktu) {
+          waktu.hidden = e.target.checked;
+          waktu.querySelectorAll('input').forEach(x => { x.required = !e.target.checked; });
+        }
+      }
+    });
+    document.addEventListener('click', e => {
+      const edit = e.target.closest('[data-kal-edit]');
+      if (edit) { bukaEditAcara(edit.dataset.kalEdit); return; }
+      const hapus = e.target.closest('[data-kal-hapus]');
+      if (hapus) { hapusAcaraKalender(hapus.dataset.kalHapus); return; }
+      if (e.target.closest('[data-kal-batal-edit]')) { bukaEditAcara(''); return; }
+    });
+    document.addEventListener('submit', e => {
+      const form = e.target.closest('[data-kal-acara-form]');
+      if (form) { e.preventDefault(); simpanAcaraKalender(form); }
     });
     /* K8: unduh & impor kalender .ics */
     document.addEventListener('click', e => {

@@ -7,7 +7,7 @@
 import { openPop, closeAll } from '../notes/menus/pop.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
-import { unduh } from '../notes/data-io.js?v=20261105210000';
+import { unduh } from '../notes/data-io.js?v=20261113230100';
 import { RULE_TYPES, RULE_METADATA, createRule } from './model.js?v=20261105210000';
 import {
   PUSTAKA_POLA, jelaskanRegex, validasiRegex, belajarDariContoh,

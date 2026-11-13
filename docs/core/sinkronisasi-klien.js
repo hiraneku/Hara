@@ -3,11 +3,11 @@ import { bacaWebdav, tulisWebdav } from './sinkronisasi-webdav.js?v=202611052100
 import { rencanaSinkronisasi, selesaikanRencanaSinkronisasi } from './sinkronisasi-rencana.js?v=20261105210000';
 const KUNCI_BASE = 'hara.sync.n6.base.v1';
 const ambilSnapshotLokal = async () => {
-  const { cadanganJson } = await import('../notes/data-io.js?v=20261105210000');
+  const { cadanganJson } = await import('../notes/data-io.js?v=20261113230100');
   return JSON.parse((await cadanganJson()).teks);
 };
 const terapkanSnapshotLokal = async snapshot => {
-  const { siapImporJson, terapkanImporJson } = await import('../notes/data-io.js?v=20261105210000');
+  const { siapImporJson, terapkanImporJson } = await import('../notes/data-io.js?v=20261113230100');
   return terapkanImporJson(await siapImporJson(JSON.stringify(snapshot)), 'timpa');
 };
 const bacaBaselineLokal = async () => (await import('./db-catatan.js?v=20261105210000')).bacaKv(KUNCI_BASE);

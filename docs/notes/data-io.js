@@ -26,6 +26,7 @@ import { kunciSusunan } from './pdf/susunan.js?v=20261105210000';
 import { kunciOcr } from './ocr/ocr-teks.js?v=20261105210000';
 import { idBlobDariGoresan } from './editor/goresan.js?v=20261105210000';
 import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261105210000';
+import { normalisasiDaftarAcara } from './kalender-acara-murni.js?v=20261105210001';
 import { sinkronTag, tagDariIsi } from './tags.js?v=20261105210000';
 import { terlihat } from './kunci.js?v=20261105210000';
 import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261105210000';
@@ -126,6 +127,7 @@ export async function cadanganJson() {
     format: 'hara-cadangan', versi: 1, schema: SCHEMA,
     diekspor: new Date().toISOString(), seq: state.seq,
     catatan: state.notes, blobs,
+    acaraKalender: state.acaraKalender || [],
     ...(hamojiCustom.length ? { hamojiCustom } : {}),
     ...(ruang.length ? { ruang } : {}),
     ...(state.kartu && state.kartu.length ? { kartu: state.kartu } : {}),
@@ -149,6 +151,7 @@ export async function siapImporJson(teks) {
     ruang: Array.isArray(data.ruang) ? data.ruang : [],
     kartu: normalizeKartu(data.kartu),
     ujian: normalizeUjian(data.ujian),
+    acaraKalender: normalisasiDaftarAcara(data.acaraKalender),
     jumlahBlob: Object.keys(data.blobs || {}).length,
     seq: data.seq || 1,
   };
@@ -274,6 +277,12 @@ export async function terapkanImporJson(r, mode, resolutions = {}) {
       for (const u of r.ujian) { if (ada.has(u.id)) state.ujian[ada.get(u.id)] = u; else state.ujian.push(u); }
     }
   } else if (mode === 'timpa') state.ujian = [];
+  const acaraImpor = normalisasiDaftarAcara(r.acaraKalender);
+  if (mode === 'timpa') state.acaraKalender = acaraImpor;
+  else {
+    const ids = new Set(state.acaraKalender.map(a => a.id));
+    for (const a of acaraImpor) if (!ids.has(a.id)) { state.acaraKalender.push(a); ids.add(a.id); }
+  }
   if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');
 
   /* Jangan menimpa blob lokal yang kebetulan memakai ID sama. Jika isinya
