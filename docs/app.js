@@ -9,6 +9,7 @@ import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=2
 import { bukaStatistik } from './notes/statistik-ui.js?v=20261023235452';
 import { notesModule } from './notes/index.js?v=20261023235452';
 import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261023235452';
+import { musikModule } from './musik/index.js?v=20261023235452';
 import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261023235452';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,
@@ -30,7 +31,7 @@ import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261023235452';
 import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261023235452';
 import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261023235452';
 
-const MODULES = [notesModule, renamerModule];
+const MODULES = [notesModule, renamerModule, musikModule];
 
 /* Muat data dulu (IndexedDB, asinkron), baru pasang modul. */
 await load();

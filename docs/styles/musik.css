@@ -1,0 +1,148 @@
+/* Music module styles. Scoped to .mus so the rest of the app remains untouched. */
+:root { --mus-bg: var(--bg); --mus-kartu: var(--surface); --mus-kartu-tebal: var(--sunken); --mus-teks: var(--text); --mus-redup: var(--muted); --mus-faint: var(--faint); --mus-garis: var(--border); --mus-aksen: #a9cfa6; --mus-aksen-tua: #172117; }
+.mus { --mus-radius: 20px; width: min(100%, 1060px); margin: 0 auto; padding: 16px 16px calc(28px + env(safe-area-inset-bottom)); color: var(--mus-teks); }
+.mus * { box-sizing: border-box; }
+.mus button, .mus input, .mus select { font: inherit; }
+.mus button { color: inherit; }
+.mus button:disabled { opacity: .42; cursor: default; }
+.mus-atas { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 2px 12px; }
+.mus-atas-teks,.mus-catatan { margin:0; color:var(--mus-redup); font-size:13px; line-height:1.5; }
+.mus-atas-aksi { display:flex; align-items:center; gap:8px; }
+.mus-ikon-btn { position:relative; width:44px; height:44px; min-width:44px; display:grid; place-items:center; border:1px solid var(--mus-garis); border-radius:50%; background:rgba(255,255,255,.05); cursor:pointer; }
+.mus-ikon-btn .mus-ico { width:20px; height:20px; }
+.mus-ikon-btn:active,.mus-tombol:active,.mus-chip:active { transform:scale(.97); }
+.mus-peringatan { padding:11px 14px; border-radius:12px; background:rgba(224,133,111,.14); color:#f2b8a8; }
+.mus-kolom { min-width:0; }
+.mus-kiri { grid-area:player; }
+.mus-kanan { grid-area:tools; display:flex; flex-direction:column; gap:14px; }
+.mus-pemutar-halaman { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); grid-template-areas:'head head' 'player tools'; gap:0 18px; }
+.mus-pemutar-halaman > .mus-latar { display:none; }
+.mus-pemutar-halaman > .mus-atas { grid-area:head; }
+.mus-pemutar,.mus-kartu { position:relative; border:1px solid var(--mus-garis); border-radius:var(--mus-radius); background:var(--mus-kartu); box-shadow:0 10px 36px rgba(0,0,0,.1); }
+.mus-pemutar { padding:22px; display:flex; flex-direction:column; align-items:center; gap:15px; overflow:hidden; }
+.mus-pemutar-kosong { min-height:320px; justify-content:center; text-align:center; }
+.mus-sampul-besar { width:min(70%,320px); aspect-ratio:1; border-radius:20px; overflow:hidden; background:linear-gradient(145deg,#303a31,#1c211d); box-shadow:0 16px 36px rgba(0,0,0,.24); flex:none; }
+.mus-sampul-besar img,.mus-sampul-besar .sampul-gambar { width:100%;height:100%;object-fit:cover; }
+.mus-sampul-kosong { display:grid;place-items:center;color:var(--mus-aksen); }
+.mus-sampul-kosong .mus-ico { width:64px;height:64px; }
+.mus-judul-blok { width:100%; min-width:0; text-align:center; }
+.mus-judul { margin:0; overflow-wrap:anywhere; font:600 clamp(20px,3vw,26px)/1.2 Inter,system-ui,sans-serif; }
+.mus-sub { margin:7px 0 0; color:var(--mus-redup);font-size:13px; }
+.mus-limiter { margin:4px 0 0;color:var(--mus-faint);font-size:11px;font-variant-numeric:tabular-nums; }
+.mus-gel-blok { width:100%; }
+.mus-gel { position:relative;height:74px;touch-action:none;cursor:pointer;outline:none; }
+.mus-gel canvas { position:absolute;inset:4px 0 15px;width:100%;height:48px;pointer-events:none; }
+.mus-jalur { position:absolute;left:0;right:0;bottom:8px;height:3px;border-radius:4px;background:rgba(255,255,255,.18); }
+.mus-isi { display:block;height:100%;border-radius:inherit;background:var(--mus-aksen); }
+.mus-knob,.mus-knob-bulat { position:absolute;bottom:4px;width:11px;height:11px;border-radius:50%;background:var(--mus-aksen);transform:translateX(-50%);pointer-events:none; }
+.mus-knob-bulat { width:8px;height:8px;bottom:5.5px;background:#fff;opacity:.9; }
+.mus-knob { opacity:0; }.mus-gel:hover .mus-knob { opacity:1; }
+.mus-band { position:absolute;bottom:2px;height:16px;border:1px solid var(--mus-aksen);background:rgba(169,207,166,.14);pointer-events:none; }
+.mus-tanda { position:absolute;bottom:0;transform:translateX(-50%);color:var(--mus-aksen);font-size:10px;pointer-events:none; }
+.mus-tanda b { padding:1px 4px;border-radius:5px;background:var(--mus-bg); }
+.mus-waktu { display:flex;justify-content:space-between;color:var(--mus-redup);font-size:12px;font-variant-numeric:tabular-nums; }
+.mus-transport { width:100%;display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px); }
+.mus-btn,.mus-play { display:grid;place-items:center;border:0;border-radius:50%;cursor:pointer;background:transparent;color:var(--mus-redup); }
+.mus-btn { width:44px;height:44px; }.mus-btn .mus-ico { width:22px;height:22px; }
+.mus-play { width:62px;height:62px;background:var(--mus-aksen);color:var(--mus-aksen-tua);box-shadow:0 8px 20px rgba(0,0,0,.18); }
+.mus-play .mus-ico { width:27px;height:27px; }
+.mus-mode { display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%; }
+.mus-modebtn { position:relative;width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--mus-garis);border-radius:50%;background:transparent;color:var(--mus-redup);cursor:pointer; }
+.mus-modebtn .mus-ico { width:21px;height:21px; }.mus-modebtn.on { color:var(--mus-aksen);border-color:var(--mus-aksen); }
+.mus-modebtn b,.mus-lencana-antrean { position:absolute;top:-3px;right:-3px;min-width:18px;padding:2px 4px;border-radius:99px;background:var(--mus-aksen);color:var(--mus-aksen-tua);font-size:10px;text-align:center; }
+.mus-loop { display:flex;flex-wrap:wrap;justify-content:center;gap:7px;width:100%; }
+.mus-chip,.mus-tombol,.mus-set-bahaya { display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:8px 13px;border:1px solid var(--mus-garis);border-radius:999px;background:rgba(255,255,255,.04);color:var(--mus-teks);font-size:13px;cursor:pointer; }
+.mus-chip .mus-ico,.mus-tombol .mus-ico,.mus-set-bahaya .mus-ico { width:17px;height:17px; }
+.mus-chip.on { background:var(--mus-aksen);border-color:var(--mus-aksen);color:var(--mus-aksen-tua); }
+.mus-chip-hantu { background:transparent; }
+.mus-chip-kecil { min-width:42px;padding:6px; }
+.mus-kartu { padding:17px; }
+.mus-kartu-kepala { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px; }
+.mus-kartu-kepala h3,.mus-set-judul-bagian { margin:0;font-size:16px;font-weight:650; }
+.mus-nilai { color:var(--mus-aksen);font-weight:700;font-variant-numeric:tabular-nums; }
+.mus-catatan { color:var(--mus-redup);font-size:12px;line-height:1.5; }
+.mus-range { width:100%;accent-color:var(--mus-aksen); }
+.mus-skala,.mus-pg-skala { display:flex;justify-content:space-between;color:var(--mus-faint);font-size:11px; }
+.mus-preset { display:flex;flex-wrap:wrap;gap:7px;margin:10px 0; }
+.mus-chip-lebar { width:100%; }
+.mus-preset-grup,.mus-chip-grup { display:inline-flex;align-items:center; }
+.mus-angka,.mus-teks,.mus-eq-angka { min-height:42px;padding:8px 10px;border:1px solid var(--mus-garis);border-radius:10px;background:rgba(255,255,255,.04);color:var(--mus-teks); }
+.mus-pitch-atur { display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px; }
+.mus-pitch-atur .mus-angka { width:90px;text-align:center; }
+.mus-pustaka { padding-bottom:10px; }
+.mus-daftar { display:flex;flex-direction:column;list-style:none;margin:0;padding:0; }
+.mus-item { display:flex;align-items:center;gap:5px;min-width:0;padding:6px 0;border-bottom:1px solid var(--mus-garis); }
+.mus-item:last-child { border-bottom:0; }
+.mus-item-buka { display:flex;align-items:center;gap:11px;flex:1;min-width:0;padding:5px;border:0;background:transparent;color:var(--mus-teks);text-align:left;cursor:pointer; }
+.mus-thumb-wrap { width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:11px;overflow:hidden;background:rgba(255,255,255,.06);color:var(--mus-aksen); }
+.mus-thumb { width:100%;height:100%;display:grid;place-items:center;object-fit:cover; }
+.mus-thumb .mus-ico { width:20px;height:20px; }
+.mus-item-teks { display:flex;flex:1;min-width:0;flex-direction:column;gap:3px; }
+.mus-item-judul { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600; }
+.mus-item-sub { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mus-faint);font-size:11px; }
+.mus-item-antre { width:44px;height:44px;min-width:44px;display:grid;place-items:center;border:0;border-radius:12px;background:transparent;color:var(--mus-faint);cursor:pointer; }
+.mus-item-antre .mus-ico { width:18px;height:18px; }.mus-item-antre.on { color:var(--mus-aksen); }
+.mus-item-hapus { border:0;background:transparent;color:var(--mus-redup); }
+.mus-tombol { background:var(--mus-aksen);border-color:var(--mus-aksen);color:var(--mus-aksen-tua);font-weight:650; }
+.mus-kosong-kecil { margin:12px 0;color:var(--mus-faint);text-align:center;font-size:13px;line-height:1.5; }
+.mus-pustaka-batas { color:var(--mus-faint);font-size:11px;line-height:1.5; }
+.mus-pustaka-lebih { width:100%;margin-top:8px; }
+.mus-musik { min-width:0; }
+.mus-eq { display:inline-flex;align-items:end;gap:2px;height:14px; }.mus-eq i { width:3px;height:55%;background:var(--mus-aksen);animation:mus-eq .65s ease-in-out infinite alternate; }.mus-eq i:nth-child(2){height:100%;animation-delay:.2s}.mus-eq i:nth-child(3){height:70%;animation-delay:.4s}
+@keyframes mus-eq { to { transform:scaleY(.35); } }
+.mus-set { display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto; }
+.mus-set-kepala { display:flex;align-items:center;gap:13px;padding:4px 4px 9px; }
+.mus-set-ikon { width:48px;height:48px;display:grid;place-items:center;flex:none;border-radius:15px;background:rgba(169,207,166,.14);color:var(--mus-aksen); }
+.mus-set-ikon .mus-ico { width:23px;height:23px; }
+.mus-set-h { margin:0 0 4px;font-size:21px;font-weight:700; }
+.mus-set-kartu { display:flex;flex-direction:column;gap:12px; }
+.mus-set-judul-bagian { margin:0 0 5px; }
+.mus-set-pad { margin:0 3px; }
+.mus-daftar-baru,.mus-aksi-baris { display:flex;align-items:center;gap:9px;flex-wrap:wrap; }
+.mus-daftar-baru .mus-teks { flex:1;min-width:140px; }
+.mus-set-bahaya { color:#e5a69a;border-color:rgba(229,166,154,.3);background:rgba(180,74,58,.09); }
+.mus-set-bahaya-kecil { min-height:40px; }
+.mus-aksi-baris { justify-content:flex-start; }
+.mus-item-statis { cursor:default; }
+.mus-chev { width:18px;height:18px; }
+.mus-pg { display:flex;flex-direction:column;gap:14px; }
+.mus-pg-kartu { padding:18px; }.mus-pg-judul { margin:0 0 5px;font-size:16px;font-weight:650; }
+.mus-pg-desc { margin:0;color:var(--mus-redup);font-size:12.5px;line-height:1.5; }.mus-pg-catatan { margin-top:10px;color:var(--mus-faint); }
+.mus-pg-head,.mus-pg-baris { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+.mus-pg-baris { min-height:44px;color:var(--mus-teks);font-size:13px; }
+.mus-pg-baris-label { margin-top:12px; }
+.mus-pg-seg { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0; }
+.mus-pg-opsi { min-height:42px;border:1px solid var(--mus-garis);border-radius:11px;background:transparent;color:var(--mus-teks); }
+.mus-pg-opsi.on { background:var(--mus-aksen);color:var(--mus-aksen-tua); }
+.mus-pg-grid4 { display:grid;grid-template-columns:repeat(4,1fr);gap:7px; }
+.mus-pg-tombol { width:100%;min-height:44px;margin-top:12px;border:1px solid var(--mus-garis);border-radius:12px;background:transparent;color:var(--mus-teks); }
+.mus-pg-tombol.utama { background:var(--mus-aksen);color:var(--mus-aksen-tua); }
+.mus-saklar { position:relative;width:50px;height:30px;flex:none;border:1px solid var(--mus-garis);border-radius:99px;background:#444;cursor:pointer; }
+.mus-saklar span { position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#eee;transition:transform .15s; }
+.mus-saklar.on { background:#72936f; }.mus-saklar.on span { transform:translateX(20px); }
+.mus-pg-geser .mus-range { width:100%; }
+.mus-pustaka-lengkap { width:100%;max-width:760px;margin:0 auto;padding:18px 4px; }
+.mus-pustaka-judul { margin:0;font-size:20px; }
+.mus-pustaka-cari { display:flex;align-items:center;gap:9px;min-height:44px;margin:12px 0;padding:0 11px;border:1px solid var(--mus-garis);border-radius:12px;background:var(--mus-kartu);color:var(--mus-redup); }
+.mus-pustaka-cari .mus-ico { width:18px;height:18px;flex:none; }.mus-pustaka-cari input { width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--mus-teks); }
+.mus-pustaka-alat { display:grid;grid-template-columns:minmax(140px,1fr) auto auto;gap:8px;align-items:center;margin:8px 0 12px; }
+.mus-pustaka-alat label { display:flex;align-items:center;gap:6px;color:var(--mus-redup);font-size:12px; }
+.mus-pustaka-alat select { max-width:155px;min-height:40px;padding:0 7px;border:1px solid var(--mus-garis);border-radius:10px;background:var(--mus-kartu);color:var(--mus-teks); }
+.mus-pindai-status { margin:5px 0;color:var(--mus-redup);font-size:12px; }
+.mus-duplikat { margin-top:12px;padding:12px;border:1px solid var(--mus-garis);border-radius:14px; }
+.mus-lirik { width:100%;padding:12px;border:1px solid var(--mus-garis);border-radius:14px;text-align:center; }
+.mus-lirik p { min-height:1.5em;margin:0 0 8px;color:var(--mus-teks);font-size:14px;line-height:1.5; }
+.mus-eq-grafik { position:relative;margin:16px 4px 24px; }.mus-eq-grafik svg { width:100%;height:150px;overflow:visible; }
+.mus-eq-kisi { stroke:var(--mus-garis);stroke-width:1; }.mus-eq-nol { stroke:var(--mus-faint);stroke-dasharray:3 3; }.mus-eq-kurva { fill:none;stroke:var(--mus-aksen);stroke-width:3; }
+.mus-eq-skala { display:flex;justify-content:space-between;color:var(--mus-faint);font-size:10px; }
+.mus-eq-baris,.mus-eq-atur { display:grid;grid-template-columns:58px minmax(60px,1fr) 70px 40px;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--mus-garis); }
+.mus-eq-label { color:var(--mus-redup);font-size:12px; }.mus-eq-geser { width:100%;accent-color:var(--mus-aksen); }.mus-eq-angka { width:70px;min-height:38px;padding:5px;text-align:center; }
+.mus-eq-sub { color:var(--mus-redup);font-size:13px; }
+.mus-baris-saklar { display:flex;justify-content:space-between;align-items:center; }
+.mus-fx-kartu { padding:16px 18px 6px; }.mus-fx-daftar { display:flex;flex-direction:column; }.mus-fx { border-top:1px solid var(--mus-garis); }.mus-fx-baris { display:flex;align-items:center;gap:12px;padding:14px 0; }.mus-fx-teks { flex:1;display:flex;flex-direction:column;gap:3px; }.mus-fx-judul { font-size:15px;font-weight:650; }.mus-fx-sub { color:var(--mus-faint);font-size:12px;line-height:1.4; }.mus-fx-panel { display:flex;flex-direction:column;gap:14px;padding:4px 0 18px; }.mus-fx-kontrol { display:flex;flex-direction:column;gap:8px; }.mus-fx-kepala { display:flex;justify-content:space-between;gap:12px;font-size:13px; }.mus-fx-kontrol .mus-range { width:100%; }
+.mus-efek-daftar { display:flex;flex-direction:column;gap:12px; }.mus-efek-item { width:100%;display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--mus-garis);border-radius:18px;background:var(--mus-kartu);text-align:left; }.mus-efek-ikon { width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:rgba(169,207,166,.15);color:var(--mus-aksen); }.mus-efek-teks { flex:1;display:flex;flex-direction:column;gap:4px; }.mus-efek-judul { font-weight:650; }.mus-efek-sub { color:var(--mus-redup);font-size:12px; }.mus-efek-badge { font-size:11px;color:var(--mus-faint); }
+.mus-pustaka-daftar { margin-top:8px; }.mus-pustaka-daftar [hidden] { display:none!important; }
+.mus button:focus-visible,.mus input:focus-visible,.mus select:focus-visible,.mus [tabindex]:focus-visible { outline:2px solid var(--mus-aksen);outline-offset:2px; }
+@media(max-width:760px) { .mus-pemutar-halaman { display:flex;flex-direction:column;gap:14px; }.mus-pemutar { padding:17px; }.mus-sampul-besar { width:min(72%,300px); }.mus-pustaka-alat { grid-template-columns:1fr 1fr; }.mus-pustaka-alat .mus-pustaka-cari { grid-column:1/-1; } }
+@media(max-width:420px) { .mus { padding-left:10px;padding-right:10px; }.mus-atas-aksi { gap:4px; }.mus-ikon-btn { width:40px;height:40px;min-width:40px; }.mus-transport { gap:7px; }.mus-btn { width:40px;height:40px; }.mus-pustaka-alat label { font-size:11px; }.mus-pustaka-alat select { max-width:120px; }.mus-eq-baris,.mus-eq-atur { grid-template-columns:48px minmax(40px,1fr) 62px 35px;gap:5px; } }
+@media(prefers-reduced-motion:reduce) { .mus *, .mus *::before,.mus *::after { scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important; } }

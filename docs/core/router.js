@@ -3,6 +3,8 @@ import { t as tr } from './i18n.js?v=20261023235452';
 
 const views  = {};
 const titles = {};
+const induk = {};
+const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq', 'musik-antrean', 'musik-pintar', 'musik-riwayat'];
 export let cur = 'home';
 
 /* Layar sebelum layar sekarang — untuk tombol \"Kembali\" di halaman yang
@@ -13,20 +15,26 @@ export let sebelumnya = 'home';
 const beforeLeave = [];
 export const onBeforeLeave = fn => beforeLeave.push(fn);
 
-export function registerViews(map, titleMap) {
+export function registerViews(map, titleMap, indukMap) {
   Object.assign(views, map);
   Object.assign(titles, titleMap || {});
+  Object.assign(induk, indukMap || {});
 }
 
-export function go(v) {
+const akar = v => { while (induk[v]) v = induk[v]; return v; };
+const saudara = (a, b) => akar(a) === akar(b);
+
+export function go(v, opsi = {}) {
   if (!views[v]) return;
-  beforeLeave.forEach(fn => { try { fn(cur, v); } catch (e) {} });
-  if (v !== cur) sebelumnya = cur;
+  if (!opsi.segar) {
+    beforeLeave.forEach(fn => { try { fn(cur, v); } catch (e) {} });
+    if (v !== cur && !saudara(v, cur)) sebelumnya = cur;
+  }
   cur = v;
 
   const w = document.getElementById('wrap');
   w.innerHTML = views[v]();
-  w.scrollTop = 0;
+  w.scrollTop = opsi.segar ? (opsi.gulir || 0) : 0;
   /* Judul layar disimpan sebagai kunci bahasa Indonesia (id) dan
      diterjemahkan saat digambar — mengganti bahasa lalu render ulang
      (go ke layar yang sama) langsung menyegarkan judulnya. */
@@ -35,7 +43,7 @@ export function go(v) {
   const isEd = v === 'editor';
   /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,
      dengan panah kembali — jalannya cuma dua: buka PIN atau kembali */
-  const pakaiEd = isEd || v === 'kunci';
+  const pakaiEd = isEd || v === 'kunci' || MUSIK_LAYAR.includes(v);
   /* panah kembali ikut tampil di halaman yang tidak ada di nav bawah
      (Pengaturan) supaya selalu ada jalan keluar */
   const pakaiBack = pakaiEd || v === 'set';
@@ -56,6 +64,7 @@ export function go(v) {
 
 /* Pulang ke layar sebelum layar sekarang (dipakai tombol Kembali). */
 export function kembali() {
+  if (induk[cur] && views[induk[cur]]) return go(induk[cur]);
   go(sebelumnya && views[sebelumnya] ? sebelumnya : 'home');
 }
 
