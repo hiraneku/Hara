@@ -146,3 +146,28 @@
 @media(max-width:760px) { .mus-pemutar-halaman { display:flex;flex-direction:column;gap:14px; }.mus-pemutar { padding:17px; }.mus-sampul-besar { width:min(72%,300px); }.mus-pustaka-alat { grid-template-columns:1fr 1fr; }.mus-pustaka-alat .mus-pustaka-cari { grid-column:1/-1; } }
 @media(max-width:420px) { .mus { padding-left:10px;padding-right:10px; }.mus-atas-aksi { gap:4px; }.mus-ikon-btn { width:40px;height:40px;min-width:40px; }.mus-transport { gap:7px; }.mus-btn { width:40px;height:40px; }.mus-pustaka-alat label { font-size:11px; }.mus-pustaka-alat select { max-width:120px; }.mus-eq-baris,.mus-eq-atur { grid-template-columns:48px minmax(40px,1fr) 62px 35px;gap:5px; } }
 @media(prefers-reduced-motion:reduce) { .mus *, .mus *::before,.mus *::after { scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important; } }
+
+/* Compact layout for the player card rendered on the home screen. The card is
+   outside .mus, so its SVGs need explicit dimensions here as well. */
+.mk { display:flex; align-items:center; gap:10px; min-width:0; width:100%; padding:12px; border-radius:24px; }
+.mk .mus-ico { display:block; width:22px; height:22px; flex:none; }
+.mk-buka { display:flex; align-items:center; gap:12px; flex:1; min-width:0; width:100%; padding:0; border:0; background:transparent; color:inherit; text-align:left; }
+.mk-art { width:56px; height:56px; flex:none; display:grid; place-items:center; overflow:hidden; border-radius:16px; background:rgba(255,255,255,.08); color:#a9cfa6; }
+.mk-art .mus-ico { width:26px; height:26px; }
+.mk-art img { display:block; width:100%; height:100%; object-fit:cover; }
+.mk-info { display:flex; flex:1; flex-direction:column; min-width:0; gap:3px; }
+.mk-label { color:var(--bh-redup, var(--muted)); font-size:11px; line-height:1.3; }
+.mk-judul { overflow:hidden; color:inherit; font-size:14px; font-weight:600; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.mk-bar { display:block; width:100%; height:3px; margin-top:2px; overflow:hidden; border-radius:3px; background:rgba(255,255,255,.16); }
+.mk-bar-isi { display:block; height:100%; border-radius:inherit; background:#a9cfa6; }
+.mk-waktu { display:flex; justify-content:space-between; gap:8px; color:var(--bh-redup, var(--muted)); font-size:10px; line-height:1.3; font-variant-numeric:tabular-nums; }
+.mk-putar { width:42px; height:42px; min-width:42px; flex:none; display:grid; place-items:center; border:1px solid var(--bh-garis, var(--border)); border-radius:50%; background:rgba(255,255,255,.06); color:inherit; }
+.mk-putar .mus-ico { width:18px; height:18px; }
+
+/* Bound SVG sizing globally within the Music UI; otherwise an unstyled SVG
+   falls back to the browser's 300×150 intrinsic size on mobile WebViews. */
+.mus { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+.mus .mus-ico { display:block; width:18px; height:18px; flex:none; }
+.mus .mus-item-hapus { flex:none; min-width:48px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:3px 4px; border:0; background:transparent; color:var(--mus-redup); font-size:10px; line-height:1.2; text-align:center; }
+.mus .mus-item-hapus .mus-ico { width:20px; height:20px; }
+.mus .mus-hapus-teks { display:block; }
