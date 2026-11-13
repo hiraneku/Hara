@@ -24,11 +24,12 @@ export function registerViews(map, titleMap, indukMap) {
   Object.assign(induk, indukMap || {});
 }
 
-const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq'];
+const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq', 'musik-antrean', 'musik-pintar', 'musik-riwayat'];
 /* Persiapan ujian (C8): tiga layar dengan tombol kembali, tanpa navigasi bawah. */
 const UJIAN_LAYAR = ['ujian', 'ujian-ruang', 'ujian-latihan'];
 
-const saudara = (a, b) => induk[a] === b || induk[b] === a;
+const akar = v => { while (induk[v]) v = induk[v]; return v; };
+const saudara = (a, b) => akar(a) === akar(b);
 
 /* Apakah layar sekarang punya induk (dipakai tombol panah kembali). */
 export const adaInduk = () => !!(induk[cur] && views[induk[cur]]);
