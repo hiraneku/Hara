@@ -14,9 +14,10 @@ import { kuadranTugas, jatuhPada } from '../kalender.js?v=20261105210000';
 import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261105210000';
 import { rowFor } from './row.js?v=20261105210000';
 import { terlihat } from '../kunci.js?v=20261105210000';
-import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261113231200';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261113232100';
 import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261105210000';
 import { toast } from '../../core/toast.js?v=20261105210000';
+import { htmlPengaturanPengingat } from '../kalender-pengingat.js?v=20261113232100';
 import { touch, makeNote } from '../note-model.js?v=20261105210000';
 import { go, cur } from '../../core/router.js?v=20261105210000';
 import { flush } from '../../core/autosave.js?v=20261105210000';
@@ -177,7 +178,7 @@ export function simpanAcaraKalender(form) {
   if(frekuensi&&sampai&&sampai<String(data.get('tanggalMulai')||'')){toast(tr('Tanggal akhir pengulangan harus sama atau setelah tanggal mulai'));return false;}
   const input = {
     id: acaraEditId || undefined, judul: data.get('judul'), kategori: data.get('kategori'),
-    sepanjangHari, zonaWaktu,
+    sepanjangHari, zonaWaktu, penting:data.get('penting')==='on',
     catatanId:String(data.get('catatanId')||''),
     persiapanMenit:Number(data.get('persiapanMenit'))||0,perjalananMenit:Number(data.get('perjalananMenit'))||0,
     ...(frekuensi?{pengulangan:{frekuensi,interval:1,hari:data.getAll('hariUlang').map(Number),sampai:sampai||null}}:{}),
@@ -361,6 +362,7 @@ const formAcaraHtml = () => {
         <label>${tr('Zona waktu')}<select name="zonaWaktu">${zonaPilihan.map(z => `<option value="${esc(z)}" ${z === zona ? 'selected' : ''}>${esc(z)}${z === zonaLokal() ? ` · ${tr('lokal')}` : ''}</option>`).join('')}</select></label>
       </div>
       <label class="kal-catatan-terkait">${tr('Catatan terkait (opsional)')}<select name="catatanId">${pilihanCatatan}</select><small>${tr('Kalender hanya menyimpan tautan ke catatan; isi catatan tidak disalin.')}</small></label>
+      <label class="kal-centang"><input type="checkbox" name="penting" ${acara?.penting?'checked':''}> ${tr('Acara penting (boleh melewati jam tenang jika diizinkan)')}</label>
       <fieldset class="kal-ulang"><legend>${tr('Pengulangan')}</legend>
         <label>${tr('Frekuensi')}<select name="frekuensiUlang"><option value="">${tr('Tidak berulang')}</option><option value="harian" ${rule.frekuensi==='harian'?'selected':''}>${tr('Setiap hari')}</option><option value="mingguan" ${rule.frekuensi==='mingguan'?'selected':''}>${tr('Setiap minggu')}</option><option value="bulanan" ${rule.frekuensi==='bulanan'?'selected':''}>${tr('Setiap bulan')}</option></select></label>
         <label>${tr('Berulang sampai')}<input type="date" name="sampaiUlang" value="${esc(rule.sampai||'')}"></label>
@@ -491,7 +493,7 @@ const kerangkaKalender = isi => `<section class="card kal kal-${prefKal.kepadata
       <label class="kal-lompat" title="${tr('Pilih tanggal')}"><svg class="kal-lompat-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M7.5 3.5v3M16.5 3.5v3M4 9h16M8 12.5h.01M12 12.5h.01M16 12.5h.01M8 16h.01M12 16h.01"/></svg><input type="date" data-kal-tanggal aria-label="${tr('Pilih tanggal')}" value="${isoHari(kalPilih)}"></label>
     </div>
     <nav class="kal-mode" aria-label="${tr('Tampilan kalender')}">${[['bulan','Bulan'],['agenda','Agenda'],['hari','Hari'],['minggu','Minggu'],['tahun','Tahun']].map(([v,l])=>`<button type="button" data-kal-mode="${v}" aria-pressed="${prefKal.mode===v}">${tr(l)}</button>`).join('')}</nav>
-    ${kontrolLapisanHtml()}${kontrolCariHtml()}${kontrolPreferensiHtml()}${isi}
+    ${kontrolLapisanHtml()}${kontrolCariHtml()}${kontrolPreferensiHtml()}${htmlPengaturanPengingat()}${isi}
   </section>`;
 
 /* ── K9 · kalender bulanan + tampilan Tahap 2 ── */

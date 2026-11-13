@@ -29,7 +29,8 @@ const klik=el=>{ if(el) el.dispatchEvent(new w.MouseEvent('click',{bubbles:true,
 
 /* ── MB1 · papan Kanban & kalender di modal Tabel properti ── */
 const fla=await st('notes/fitur-lanjutan-ui.js');
-const papan=await st('notes/papan.js');
+const papanVersion=fs.readFileSync('docs/notes/fitur-lanjutan-ui.js','utf8').match(/papan\.js\?v=(\d+)/)[1];
+const papan=await import(`${AKAR}/docs/notes/papan.js?v=${papanVersion}`);
 state.notes.splice(0);
 const hari=(y,m,dd)=>`${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
 state.notes.push(makeNote({id:'k1',title:'Proyek A',createdAt:Date.now(),updatedAt:Date.now(),props:[{k:'status',v:'Draf'},{k:'tenggat',v:hari(2026,10,9)}],blocks:[makeBlock({type:'paragraph',content:'x'})]}));

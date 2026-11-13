@@ -10,7 +10,7 @@ import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar
 import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
          ubahLapisanKalender, ubahTampilanKalender, cariKalender, pilihBulanKalender, pilihTanggalTahun,
          bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender, isiPratinjauAcaraCepat,
-         simpanBlokJadwal, hapusBlokJadwal, kecualikanKejadianKalender, terapkanTemplatAcara } from './views/tugas.js?v=20261113231100';
+         simpanBlokJadwal, hapusBlokJadwal, kecualikanKejadianKalender, terapkanTemplatAcara } from './views/tugas.js?v=20261113232100';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';
@@ -25,6 +25,7 @@ import { konfigurasi, onStatus, flush, reset as resetAutosave, STATUS, cobaUlang
   from '../core/autosave.js?v=20261105210000';
 import { bacaDraf, hapusDraf } from '../core/recovery.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
+import { togglePengingatKalender, setPengingatDariKontrol, tanganiAksiBanner } from './kalender-pengingat.js?v=20261113232100';
 import { esc } from '../core/dom.js?v=20261105210000';
 import { blocksToDom, domToBlocks, touch } from './note-model.js?v=20261105210000';
 import { renumber, pastikanKolomAkhir } from './editor/blocks.js?v=20261105210000';
@@ -83,7 +84,7 @@ import { aturMutu, opsiMutu } from './mutu-gambar.js?v=20261105210000';
 import { aturProp, hapusProp, namaProp, barisProps, KET_PROP, contohProp } from './meta-ui.js?v=20261105210000';
 import { cariJudul, judulSpan, bagianSpan, tandaiTautan, sasaranPdfSpan } from './wikilink.js?v=20261105210000';
 import { lompatKe, bukaSasaranTautan, bukaPdfSasaran } from './lompat-tautan.js?v=20261105210000';
-import { t as tr, setBahasa, bahasaSekarang, terjemahStatis } from '../core/i18n.js?v=20261105210000';
+import { t as tr, setBahasa, bahasaSekarang, terjemahStatis } from '../core/i18n.js?v=20261113232100';
 import { ujianViews, ujianTitles, ujianInduk, pasangUjian } from './ujian.js?v=20261105210000';
 import { cadanganJson, eksporVaultMarkdown, markdownDariCatatan, namaBerkasAman,
          unduh, buatZip, siapImpor, terapkanImpor }
@@ -714,6 +715,9 @@ export const notesModule = {
     });
     /* K9: navigasi kalender bulanan & pilih hari */
     document.addEventListener('click', e => {
+      if (tanganiAksiBanner(e.target)) return;
+      const aktifNotif = e.target.closest('[data-kal-notif-aktif]');
+      if (aktifNotif) { togglePengingatKalender().then(() => go('task')); return; }
       /* B8: buka atau buat jurnal untuk hari yang dipilih di kalender */
       const kj = e.target.closest('[data-kal-jurnal]');
       if (kj) return bukaJurnalTanggal(new Date(Number(kj.dataset.kalJurnal)));
@@ -749,6 +753,7 @@ export const notesModule = {
     });
     /* Tahap 1 Kalender: lapisan, acara mandiri, dan rentang sepanjang hari. */
     document.addEventListener('change', e => {
+      if (e.target.closest('[data-kal-notif-menit],[data-kal-notif-seharian],[data-kal-notif-tenang],[data-kal-notif-mulai],[data-kal-notif-selesai],[data-kal-notif-penting]')) { setPengingatDariKontrol(e.target); return; }
       const layer = e.target.closest('[data-kal-lapisan]');
       if (layer) { ubahLapisanKalender(layer.dataset.kalLapisan, layer.checked); return; }
       if (e.target.matches('[data-kal-sepanjang]')) {

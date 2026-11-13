@@ -2,6 +2,7 @@
 import { load, state } from './core/store.js?v=20261105210000';
 import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261105210000';
 import { toast } from './core/toast.js?v=20261105210000';
+import { mulaiPengingatKalender } from './notes/kalender-pengingat.js?v=20261113232100';
 import { mulaiPembaruan } from './core/pembaruan.js?v=20261105210000';
 import { mulaiBeranda } from './home/beranda.js?v=20261113231200';
 import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261105210000';
@@ -9,7 +10,7 @@ import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=2
 import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261105210000';
 import { buatTinjauan } from './notes/pintar-aksi.js?v=20261105210000';
 import { bukaStatistik } from './notes/statistik-ui.js?v=20261105210000';
-import { notesModule } from './notes/index.js?v=20261113231000';
+import { notesModule } from './notes/index.js?v=20261113232100';
 import { bukaFokus, pasangFokus } from './notes/fokus.js?v=20261105210000';
 import { bukaAmbience, pasangAmbience } from './notes/ambience.js?v=20261105210000';
 import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261105210000';
@@ -36,7 +37,7 @@ import { bukaCariGanti } from './notes/cari-ganti.js?v=20261105210000';
 import { bukaInfoCatatan } from './notes/info-catatan.js?v=20261105210000';
 import { panelKunciCatatan, terlihat, kunciUlangSekarang } from './notes/kunci.js?v=20261105210000';
 import { itemPintar } from './notes/pintar-aksi.js?v=20261105210000';
-import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261113231200';
+import { t as tr, setBahasa, bahasaSekarang } from './core/i18n.js?v=20261113232100';
 
 const MODULES = [notesModule, renamerModule, musikModule];
 
@@ -45,6 +46,8 @@ const MODULES = [notesModule, renamerModule, musikModule];
 await setBahasa(bahasaSekarang());
 /* Muat data dulu (IndexedDB, asinkron), baru pasang modul. */
 await load();
+/* Tahap 5: jadwalkan pengingat acara lokal setelah data kalender tersedia. */
+mulaiPengingatKalender();
 MODULES.forEach(m => m.init());
 terapkanTema();
 

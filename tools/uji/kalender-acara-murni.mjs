@@ -41,6 +41,8 @@ cek('zona waktu invalid jatuh aman ke UTC ketika normalisasi', normalisasiAcara(
 const tertaut=normalisasiAcara({...dasar,catatanId:'note-local-42',mulai:1,selesai:2});
 cek('acara mempertahankan ID tautan catatan saja sebagai metadata opsional',tertaut?.catatanId==='note-local-42'&&!('isiCatatan' in tertaut));
 cek('ID tautan catatan dengan karakter kontrol ditolak',!normalisasiAcara({...dasar,catatanId:'bad\u0000id',mulai:1,selesai:2})?.catatanId);
+const acaraPenting=normalisasiAcara({...dasar,penting:true,mulai:1,selesai:2});
+cek('penanda acara penting bertahan setelah normalisasi untuk pengecualian jam tenang',acaraPenting?.penting===true&&!normalisasiAcara({...dasar,penting:'true',mulai:1,selesai:2})?.penting);
 
 const daftar = normalisasiDaftarAcara([
   { ...dasar, sepanjangHari: true, tanggalMulai: '2028-02-28', id: 'x' },

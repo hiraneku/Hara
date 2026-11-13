@@ -1,6 +1,6 @@
 # Roadmap fitur Kalender Hara
 
-**Status:** Tahap 3 selesai untuk cakupan yang disetujui (termasuk templat acara dan pengecualian satu kejadian); Tahap 4 Integrasi Hara sudah diimplementasikan pada workspace dan menunggu verifikasi akhir.
+**Status:** Tahap 1–4 selesai untuk cakupan yang disetujui. Tahap 5 Pengingat dan notifikasi lokal juga sudah diimplementasikan dan lulus verifikasi otomatis; pengiriman latar perangkat nyata belum diuji dan tidak dijamin.
 
 Dokumen ini mencatat seluruh gagasan Kalender yang telah dibahas agar cakupan dan urutannya tidak hilang. Ini roadmap usulan, bukan janji tanggal rilis. Keputusan cakupan atau perubahan prioritas perlu dicatat sebelum mengubah butirnya.
 
@@ -73,11 +73,11 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 
 ## Tahap 5 — Pengingat dan notifikasi
 
-- [ ] Dukung satu atau beberapa pengingat sebelum acara dengan pilihan waktu yang mudah dipahami.
-- [ ] Tambahkan aksi tunda yang praktis: “10 menit lagi”, “nanti hari ini”, dan “besok”.
-- [ ] Tambahkan jam tenang yang dapat diatur, dengan pengecualian opsional untuk acara penting.
-- [ ] Pastikan notifikasi tidak menggandakan pengingat lama setelah acara diedit atau dihapus.
-- [ ] Jelaskan keterbatasan notifikasi latar berdasarkan platform; jangan menjanjikan pengiriman tepat waktu sebelum diuji pada perangkat nyata.
+- [x] Dukung satu atau beberapa pengingat sebelum acara dengan pilihan waktu yang mudah dipahami; waktu lead dan jam pengingat acara seharian dapat diatur lokal.
+- [x] Tambahkan aksi tunda yang praktis: “10 menit lagi”, “nanti hari ini”, dan “besok”.
+- [x] Tambahkan jam tenang yang dapat diatur, dengan pengecualian opsional untuk acara penting.
+- [x] Pastikan notifikasi tidak menggandakan pengingat lama setelah acara diedit atau dihapus; timer usang dibatalkan, notifikasi bertag, dan status kejadian disaring. Notifikasi yang sudah telanjur ditampilkan sistem mungkin tidak bisa ditarik dan perlu ditutup manual.
+- [x] Jelaskan keterbatasan notifikasi latar berdasarkan platform: web dapat menangguhkan tab; Android WebView perlu tetap aktif karena belum ada alarm OS. Pengiriman tepat waktu di latar tidak dijamin dan belum diuji pada perangkat nyata.
 
 ## Tahap 6 — Impor, ekspor, dan pemulihan
 

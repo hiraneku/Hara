@@ -3101,3 +3101,25 @@ button.uj-baris-item:hover{background:var(--sunken)}
 }
 .papan-kal-hint{margin:4px 0 8px;color:var(--muted);font-size:12px;line-height:1.45}
 @media(prefers-reduced-motion:reduce){.kal *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Tahap 5 — pengaturan pengingat lokal dan tindakan snooze responsif. */
+.kal-pengingat-prefs{margin:10px 0;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.kal-pengingat-prefs>summary{min-height:40px;display:flex;align-items:center;font-weight:650;cursor:pointer}
+.kal-pengingat-isi{display:grid;gap:10px;padding-top:8px}
+.kal-notif-status,.kal-pengingat-isi>small{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.kal-notif-pilihan,.kal-notif-tenang{display:flex;flex-wrap:wrap;gap:8px 12px;margin:0;padding:10px;border:1px solid var(--border);border-radius:10px}
+.kal-notif-pilihan legend,.kal-notif-tenang legend{padding:0 5px;font-weight:600}
+.kal-notif-pilihan label,.kal-notif-tenang label,.kal-notif-seharian{display:flex;align-items:center;gap:7px;min-height:40px}
+.kal-notif-seharian{justify-content:space-between;max-width:340px}
+.kal-notif-tenang{display:grid;grid-template-columns:1fr;}
+.kal-notif-jam{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kal-notif-jam label{justify-content:space-between}
+.kal-notif-jam input,.kal-notif-seharian input{min-height:40px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+.kal-notif-banner{position:fixed;z-index:10000;inset:auto max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));max-width:560px;margin-inline:auto;padding:14px 48px 14px 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:0 12px 44px #0005;color:var(--text)}
+.kal-notif-banner>b{display:block;font-size:15px;overflow-wrap:anywhere}
+.kal-notif-banner>p{margin:5px 0 10px;color:var(--muted);font-size:13px}
+.kal-notif-actions{display:flex;flex-wrap:wrap;gap:7px}
+.kal-notif-actions .btn{min-height:42px}
+.kal-notif-tutup{position:absolute;right:8px;top:8px;width:40px;height:40px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:24px;cursor:pointer}
+.kal-notif-banner :focus-visible,.kal-pengingat-prefs :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:420px){.kal-notif-actions{display:grid;grid-template-columns:1fr}.kal-notif-actions .btn{width:100%}.kal-notif-banner{padding-inline:12px 46px}.kal-notif-jam{grid-template-columns:1fr}}
