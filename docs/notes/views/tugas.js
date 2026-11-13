@@ -6,7 +6,8 @@
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
 import { state, save } from '../../core/store.js?v=20261105210000';
-import { acaraPadaTanggal, labelWaktuAcara, normalisasiAcara, timestampDariDinding } from '../kalender-acara-murni.js?v=20261105210001';
+import { kejadianAcaraPadaTanggal, labelWaktuAcara, normalisasiAcara, timestampDariDinding } from '../kalender-acara-murni.js?v=20261113230700';
+import { tafsirAcaraCepat } from '../kalender-produktivitas-murni.js?v=20261113230400';
 import { esc } from '../../core/dom.js?v=20261105210000';
 import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261105210000';
 import { kuadranTugas, jatuhPada } from '../kalender.js?v=20261105210000';
@@ -116,12 +117,42 @@ export function hapusAcaraKalender(id) {
   } });
 }
 
+export function isiPratinjauAcaraCepat(container) {
+  const teks=container?.querySelector('[data-kal-cepat-teks]')?.value||'';
+  const hasil=tafsirAcaraCepat(teks,zonaLokal());
+  const preview=container?.querySelector('[data-kal-cepat-hasil]');
+  if(!preview)return false;
+  if(!hasil){preview.textContent=tr('Tanggal atau waktu tidak dikenali. Perbaiki teks atau isi formulir secara manual.');preview.hidden=false;return false;}
+  const form=container.querySelector('[data-kal-acara-form]');
+  if(!form)return false;
+  const set=(nama,nilai)=>{const el=form.elements.namedItem(nama);if(el)el.value=nilai??'';};
+  set('judul',hasil.judul);set('zonaWaktu',hasil.zonaWaktu);set('tanggalMulai',hasil.tanggalMulai);set('tanggalAkhir',hasil.tanggalMulai);
+  const sepanjang=form.elements.namedItem('sepanjangHari');
+  sepanjang.checked=hasil.sepanjangHari;
+  form.querySelector('.kal-waktu').hidden=hasil.sepanjangHari;
+  form.querySelectorAll('.kal-waktu input').forEach(x=>{x.required=!hasil.sepanjangHari;});
+  const j=hasil.jamMulai;
+  if(j){const [h,m]=j.split(':').map(Number),total=h*60+m+hasil.durasiMenit,end=`${String(Math.floor(total/60)%24).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`,d=new Date(`${hasil.tanggalMulai}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+Math.floor(total/1440));const endDate=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;set('jamMulai',j);set('jamAkhir',end);set('tanggalAkhir',endDate);}
+  const ulang=hasil.pengulangan;
+  set('frekuensiUlang',ulang?.frekuensi||'');
+  for(const cb of form.querySelectorAll('[name=hariUlang]'))cb.checked=!!ulang?.hari?.includes(Number(cb.value));
+  set('sampaiUlang',ulang?.sampai||'');
+  const ulangan=ulang?` · ${tr(ulang.frekuensi==='harian'?'Setiap hari':ulang.frekuensi==='mingguan'?'Setiap minggu':'Setiap bulan')}`:'';
+  preview.textContent=`${tr('Pratinjau')}: ${hasil.judul} · ${hasil.tanggalMulai}${j?` ${j}`:` · ${tr('Sepanjang hari')}`}${ulangan}. ${tr('Periksa atau ubah detail, lalu simpan untuk mengonfirmasi.')}`;
+  preview.hidden=false;
+  return true;
+}
+
 export function simpanAcaraKalender(form) {
   const data = new FormData(form), sepanjangHari = data.get('sepanjangHari') === 'on';
   const zonaWaktu = String(data.get('zonaWaktu') || zonaLokal());
+  const frekuensi=data.get('frekuensiUlang'),sampai=data.get('sampaiUlang');
+  if(frekuensi&&sampai&&sampai<String(data.get('tanggalMulai')||'')){toast(tr('Tanggal akhir pengulangan harus sama atau setelah tanggal mulai'));return false;}
   const input = {
     id: acaraEditId || undefined, judul: data.get('judul'), kategori: data.get('kategori'),
     sepanjangHari, zonaWaktu,
+    persiapanMenit:Number(data.get('persiapanMenit'))||0,perjalananMenit:Number(data.get('perjalananMenit'))||0,
+    ...(frekuensi?{pengulangan:{frekuensi,interval:1,hari:data.getAll('hariUlang').map(Number),sampai:sampai||null}}:{}),
   };
   if (sepanjangHari) {
     input.tanggalMulai = data.get('tanggalMulai');
@@ -275,7 +306,9 @@ const formAcaraHtml = () => {
   const awal = acara?.sepanjangHari ? { tanggal: acara.tanggalMulai, jam: '09:00' } : acara ? bagianZona(acara.mulai, zona) : { tanggal: isoHari(kalPilih), jam: '09:00' };
   const akhir = acara?.sepanjangHari ? { tanggal: acara.tanggalAkhir, jam: '10:00' } : acara ? bagianZona(acara.selesai, zona) : { tanggal: isoHari(kalPilih), jam: '10:00' };
   const zonaPilihan = [...new Set([zona, 'Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC'])];
+  const rule=acara?.pengulangan||{},hariUlang=rule.hari||[];
   return `<details class="kal-form-detail" ${acara ? 'open' : ''}><summary>${acara ? tr('Edit acara') : tr('Tambah acara')}</summary>
+    ${!acara?`<div class="kal-cepat"><label>${tr('Tambah cepat')}<input type="text" maxlength="500" data-kal-cepat-teks placeholder="${tr('Contoh: Rapat tim Jumat jam 10')}"></label><button type="button" class="btn" data-kal-cepat-tafsir>${tr('Pratinjau')}</button><p class="kal-cepat-hasil" data-kal-cepat-hasil aria-live="polite" hidden></p></div>`:''}
     <form class="kal-acara-form" data-kal-acara-form>
       <label>${tr('Judul')}<input name="judul" maxlength="240" required value="${esc(acara?.judul || '')}" placeholder="${tr('Nama acara')}"></label>
       <div class="kal-form-grid">
@@ -285,6 +318,8 @@ const formAcaraHtml = () => {
       <div class="kal-form-grid kal-waktu" ${acara?.sepanjangHari ? 'hidden' : ''}>
         <label>${tr('Jam mulai')}<input type="time" name="jamMulai" value="${awal.jam}" ${acara?.sepanjangHari ? '' : 'required'}></label>
         <label>${tr('Jam selesai')}<input type="time" name="jamAkhir" value="${akhir.jam}" ${acara?.sepanjangHari ? '' : 'required'}></label>
+        <label>${tr('Persiapan (menit)')}<input type="number" name="persiapanMenit" min="0" max="1440" step="5" value="${Number(acara?.persiapanMenit)||0}"></label>
+        <label>${tr('Perjalanan (menit)')}<input type="number" name="perjalananMenit" min="0" max="1440" step="5" value="${Number(acara?.perjalananMenit)||0}"></label>
       </div>
       <label class="kal-centang"><input type="checkbox" name="sepanjangHari" data-kal-sepanjang ${acara?.sepanjangHari ? 'checked' : ''}> ${tr('Sepanjang hari')}</label>
       <div class="kal-form-grid">
@@ -293,6 +328,11 @@ const formAcaraHtml = () => {
         </select></label>
         <label>${tr('Zona waktu')}<select name="zonaWaktu">${zonaPilihan.map(z => `<option value="${esc(z)}" ${z === zona ? 'selected' : ''}>${esc(z)}${z === zonaLokal() ? ` · ${tr('lokal')}` : ''}</option>`).join('')}</select></label>
       </div>
+      <fieldset class="kal-ulang"><legend>${tr('Pengulangan')}</legend>
+        <label>${tr('Frekuensi')}<select name="frekuensiUlang"><option value="">${tr('Tidak berulang')}</option><option value="harian" ${rule.frekuensi==='harian'?'selected':''}>${tr('Setiap hari')}</option><option value="mingguan" ${rule.frekuensi==='mingguan'?'selected':''}>${tr('Setiap minggu')}</option><option value="bulanan" ${rule.frekuensi==='bulanan'?'selected':''}>${tr('Setiap bulan')}</option></select></label>
+        <label>${tr('Berulang sampai')}<input type="date" name="sampaiUlang" value="${esc(rule.sampai||'')}"></label>
+        <div class="kal-ulangan-hari" role="group" aria-label="${tr('Hari dalam minggu')}">${[['1','Sen'],['2','Sel'],['3','Rab'],['4','Kam'],['5','Jum'],['6','Sab'],['0','Min']].map(([v,l])=>`<label><input type="checkbox" name="hariUlang" value="${v}" ${hariUlang.includes(Number(v))?'checked':''}>${tr(l)}</label>`).join('')}</div>
+      </fieldset>
       <p class="kal-form-hint">${tr('Jam ditafsirkan pada zona waktu yang dipilih. Tanggal acara sepanjang hari tidak bergeser antar-zona.')}</p>
       <div class="kal-form-aksi"><button class="btn btn-pri" type="submit">${acara ? tr('Simpan perubahan') : tr('Simpan acara')}</button>${acara ? `<button class="btn" type="button" data-kal-batal-edit>${tr('Batal')}</button>` : ''}</div>
     </form></details>`;
@@ -324,7 +364,8 @@ const jurnalPeta = (mulai, jumlah, tahunCache = new Map()) => {
 const catatanTenggatHari = (ms, daftarTenggat) => lapisan.tenggat && filterKalender !== 'acara'
   ? daftarTenggat.filter(x => jatuhPada(x, ms) && cocokCari(teksTugas(x))) : [];
 const acaraHariTampil = (ms, acara) => lapisan.acara && filterKalender !== 'tenggat'
-  ? acara.filter(a => acaraPadaTanggal(a, isoHari(ms)) && cocokKategori(a) && cocokCari(a.judul)) : [];
+  ? acara.flatMap(a => kejadianAcaraPadaTanggal(a, isoHari(ms)))
+    .filter(a => cocokKategori(a) && cocokCari(a.judul)) : [];
 const kontrolLapisanHtml = () => `<div class="kal-lapisan" role="group" aria-label="${tr('Tampilkan lapisan kalender')}">
   ${[['tenggat','Tenggat & pengingat'],['acara','Acara'],['jurnal','Jurnal']].map(([k,l]) => `<label class="kal-layer"><input type="checkbox" data-kal-lapisan="${k}" ${lapisan[k] ? 'checked' : ''}><span class="kal-layer-dot kal-layer-${k}"></span>${tr(l)}</label>`).join('')}
 </div>`;

@@ -2,7 +2,7 @@
    acara berjam lintas zona/DST, dan penyimpanan model pada snapshot Hara. */
 import fs from 'node:fs';
 import {
-  normalisasiAcara, normalisasiDaftarAcara, acaraPadaTanggal,
+  normalisasiAcara, normalisasiDaftarAcara, acaraPadaTanggal, kejadianAcaraPadaTanggal,
   timestampDariDinding, tanggalKalenderValid, labelWaktuAcara,
 } from '../../docs/notes/kalender-acara-murni.js';
 
@@ -46,6 +46,27 @@ const daftar = normalisasiDaftarAcara([
   null,
 ]);
 cek('normalisasi daftar membuang ID duplikat dan item tak valid', daftar.length === 1 && daftar[0].id === 'x');
+
+const seri = normalisasiAcara({ ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-01',
+  pengulangan: { frekuensi: 'mingguan', interval: 1, hari: [1, 4] } });
+cek('pengulangan mingguan tidak memunculkan sisa pekan dasar sebelum hari terpilih pertama',
+  !acaraPadaTanggal(seri, '2026-07-02') && acaraPadaTanggal(seri, '2026-07-06') && acaraPadaTanggal(seri, '2026-07-09'));
+const hariKerja=normalisasiAcara({...dasar,sepanjangHari:true,tanggalMulai:'2026-07-06',pengulangan:{frekuensi:'mingguan',hari:[1,2,3,4,5]}});
+cek('pengulangan hari kerja mencakup hari tersisa pada pekan pertama saat hari dasar dipilih',acaraPadaTanggal(hariKerja,'2026-07-07')&&acaraPadaTanggal(hariKerja,'2026-07-10'));
+const seriDuaPekan = normalisasiAcara({ ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-01',
+  pengulangan: { frekuensi: 'mingguan', interval: 2, hari: [1] } });
+cek('interval mingguan ditambatkan ke awal rangkaian dan tidak bergeser tiap kueri',
+  !acaraPadaTanggal(seriDuaPekan, '2026-07-06') && acaraPadaTanggal(seriDuaPekan, '2026-07-13') && acaraPadaTanggal(seriDuaPekan, '2026-07-27'));
+const seriAkhir = normalisasiAcara({ ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-01',
+  pengulangan: { frekuensi: 'harian', sampai: '2026-07-03' } });
+cek('tanggal akhir pengulangan inklusif', acaraPadaTanggal(seriAkhir, '2026-07-03') && !acaraPadaTanggal(seriAkhir, '2026-07-04'));
+const seriKecuali = normalisasiAcara({ ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-01',
+  pengulangan: { frekuensi: 'harian', kecuali: ['2026-07-02'] } });
+cek('pengecualian menghilangkan satu kejadian berulang', !acaraPadaTanggal(seriKecuali, '2026-07-02') && acaraPadaTanggal(seriKecuali, '2026-07-03'));
+const perubahan = normalisasiAcara({ ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-01',
+  pengulangan: { frekuensi: 'harian', kecuali: ['2026-07-02'], perubahan: [{ tanggalAsal: '2026-07-02', acara: { ...dasar, sepanjangHari: true, tanggalMulai: '2026-07-04', judul: 'Dipindah' } }] } });
+cek('perubahan satu kejadian tampil pada tanggal baru dengan sumber seri',
+  !acaraPadaTanggal(perubahan, '2026-07-02') && kejadianAcaraPadaTanggal(perubahan, '2026-07-04').some(x => x.judul === 'Dipindah' && x.seriId === perubahan.id));
 
 const store = fs.readFileSync('docs/core/store.js', 'utf8');
 const layar = fs.readFileSync('docs/notes/views/tugas.js', 'utf8');

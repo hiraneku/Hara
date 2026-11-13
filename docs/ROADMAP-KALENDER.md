@@ -1,6 +1,6 @@
 # Roadmap fitur Kalender Hara
 
-**Status:** rencana — belum ada butir di dokumen ini yang dimulai sebagai pekerjaan implementasi.
+**Status:** Tahap 3 sedang berjalan. Fondasi pengulangan, tambah-cepat berpratinjau, dan model blok jadwal lokal sedang diterapkan; tahap ini belum selesai.
 
 Dokumen ini mencatat seluruh gagasan Kalender yang telah dibahas agar cakupan dan urutannya tidak hilang. Ini roadmap usulan, bukan janji tanggal rilis. Keputusan cakupan atau perubahan prioritas perlu dicatat sebelum mengubah butirnya.
 
@@ -53,8 +53,8 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 ## Tahap 3 — Pengaturan jadwal dan produktivitas
 
 - [ ] Buat alur tambah acara yang ringkas, dengan templat acara untuk pola umum (misalnya rapat, kelas, olahraga, belajar).
-- [ ] Tambahkan **tambah cepat dengan bahasa alami** untuk tanggal dan waktu, misalnya “rapat Jumat jam 10” atau “bayar tagihan setiap tanggal 5”.
-- [ ] Parsing bahasa alami harus menampilkan ringkasan hasil dan menunggu konfirmasi pengguna sebelum menyimpan; sediakan cara memperbaiki hasil yang keliru.
+- [x] Tambahkan **tambah cepat dengan bahasa alami** untuk tanggal dan waktu, termasuk contoh “rapat Jumat jam 10” dan “bayar tagihan setiap tanggal 5”.
+- [x] Parsing menampilkan pratinjau yang bisa diperiksa/diedit di formulir; acara baru tersimpan hanya setelah pengguna mengirim formulir sebagai konfirmasi.
 - [ ] Dukung pengulangan mingguan/bulanan, hari kerja tertentu, tanggal akhir, dan pengecualian satu kejadian atau seluruh rangkaian.
 - [ ] Tambahkan **blok waktu tugas**: jadwalkan waktu pengerjaan terpisah dari tenggat tugas. Menandai tugas selesai tidak boleh menghapus riwayat jadwalnya.
 - [ ] Tambahkan deteksi bentrok waktu dan peringatan jadwal terlalu padat; tampilkan penyebabnya, jangan memindahkan acara otomatis.
