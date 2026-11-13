@@ -72,7 +72,7 @@ cek('harian.js tidak punya salinan PREFIX sendiri', !/const PREFIX\b/.test(haria
 cek('harian.js mengekspor bukaJurnalTanggal', /export function bukaJurnalTanggal\(/.test(harian));
 cek('bukaJurnalHari tetap memakai pesan "hari ini"', /bukaJurnalTanggal\(new Date\(\), true\)/.test(harian));
 const tugas = baca('docs/notes/views/tugas.js');
-cek('kalender menyaring catatan dengan terlihat()', /hariBerjurnal\(state\.notes\.filter\(n => terlihat\(n\)\)/.test(tugas));
+cek('kalender menyaring catatan terkunci sebelum membangun indeks jurnal', /const terlihatCatatan = state\.notes\.filter\(n => terlihat\(n\)\)/.test(tugas) && /hariBerjurnal\(terlihatCatatan/.test(tugas));
 cek('tombol "Buka jurnal" ada di panel hari terpilih', /class="kal-jurnal" data-kal-jurnal="\$\{kalPilih\}"/.test(tugas));
 cek('penanda jurnal ada di sel hari', /kal-jurnal-titik/.test(tugas));
 const indeks = baca('docs/notes/index.js');

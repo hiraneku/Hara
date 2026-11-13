@@ -8,7 +8,8 @@ import { editorView } from './views/editor.js?v=20261105210000';
 import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar,
          setKueriCari } from './views/misc.js?v=20261105210000';
 import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
-         ubahLapisanKalender, bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender } from './views/tugas.js?v=20261113230100';
+         ubahLapisanKalender, ubahTampilanKalender, cariKalender, pilihBulanKalender, pilihTanggalTahun,
+         bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender } from './views/tugas.js?v=20261113230200';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';
@@ -718,10 +719,32 @@ export const notesModule = {
       /* B8 lanjutan: bilah navigasi di atas judul jurnal (prev, next, kalender) */
       const jur = e.target.closest('[data-jur]');
       if (jur) return navigasiJurnal(jur.dataset.jur);
+      const mode = e.target.closest('[data-kal-mode]');
+      if (mode) return ubahTampilanKalender('mode', mode.dataset.kalMode);
+      const bulan = e.target.closest('[data-kal-bulan]');
+      if (bulan) return pilihBulanKalender(bulan.dataset.kalBulan);
+      const tanggalTahun = e.target.closest('[data-kal-tahun-tanggal]');
+      if (tanggalTahun) return pilihTanggalTahun(tanggalTahun.dataset.kalTahunTanggal);
       const hari = e.target.closest('[data-kal-hari]');
       if (hari) return geserKalender('pilih', hari.dataset.kalHari);
       const nav = e.target.closest('[data-kal]');
       if (nav) return geserKalender(nav.dataset.kal);
+    });
+    /* Tahap 2: navigasi mode/tanggal, filter, preferensi, dan geser acara. */
+    document.addEventListener('dragstart', e => {
+      const kartu = e.target.closest('[data-kal-seret]');
+      if (!kartu || e.target.closest('.kal-acara-aksi')) { if (kartu) e.preventDefault(); return; }
+      e.dataTransfer?.setData('text/plain', kartu.dataset.kalSeret);
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    });
+    document.addEventListener('dragover', e => {
+      const target = e.target.closest('[data-kal-drop]');
+      if (target) { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; target.classList.add('kal-drop-aktif'); }
+    });
+    document.addEventListener('dragleave', e => e.target.closest('[data-kal-drop]')?.classList.remove('kal-drop-aktif'));
+    document.addEventListener('drop', e => {
+      const target=e.target.closest('[data-kal-drop]'), id=e.dataTransfer?.getData('text/plain');
+      if(target&&id){e.preventDefault();target.classList.remove('kal-drop-aktif');pindahAcaraKalender(id,Number(target.dataset.kalDrop));}
     });
     /* Tahap 1 Kalender: lapisan, acara mandiri, dan rentang sepanjang hari. */
     document.addEventListener('change', e => {
@@ -733,7 +756,20 @@ export const notesModule = {
           waktu.hidden = e.target.checked;
           waktu.querySelectorAll('input').forEach(x => { x.required = !e.target.checked; });
         }
+        return;
       }
+      const pref = e.target.closest('[data-kal-pref]');
+      if (pref) { ubahTampilanKalender(pref.dataset.kalPref, pref.type === 'checkbox' ? pref.checked : pref.value); return; }
+      const filter = e.target.closest('[data-kal-filter]');
+      if (filter) { ubahTampilanKalender('filter', filter.value); return; }
+      const kategori = e.target.closest('[data-kal-kategori]');
+      if (kategori) { ubahTampilanKalender('kategori', kategori.value); return; }
+      const tanggal = e.target.closest('[data-kal-tanggal]');
+      if (tanggal && tanggal.value) geserKalender('pilih', new Date(`${tanggal.value}T12:00:00`).getTime());
+    });
+    document.addEventListener('submit', e => {
+      const form = e.target.closest('[data-kal-cari-form]');
+      if (form) { e.preventDefault(); cariKalender(form.querySelector('[name="q"]')?.value || ''); }
     });
     document.addEventListener('click', e => {
       const edit = e.target.closest('[data-kal-edit]');

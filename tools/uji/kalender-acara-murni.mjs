@@ -57,7 +57,8 @@ cek('label utama acara memiliki terjemahan EN/JA', ['Tambah acara','Edit acara',
 cek('acara ikut snapshot penyimpanan dan migrasi data lama aman', /acaraKalender: state\.acaraKalender/.test(store) && /normalisasiDaftarAcara\(data\.acaraKalender\)/.test(store));
 cek('acara masuk ekspor dan pemulihan cadangan JSON', /acaraKalender: state\.acaraKalender/.test(dataIO) && /normalisasiDaftarAcara\(data\.acaraKalender\)/.test(dataIO));
 cek('panel kalender memiliki layer dan CRUD acara mandiri', /data-kal-lapisan/.test(layar) && /data-kal-acara-form/.test(layar) && /data-kal-hapus/.test(layar));
-cek('CSS responsif tersedia untuk acara dan form', /\.kal-acara-form/.test(css) && /@media\(max-width:520px\)/.test(css));
+cek('lima mode kalender dan kontrol pencarian/filter tersedia', ['bulan','agenda','hari','minggu','tahun'].every(k => layar.includes(`'${k}'`)) && /data-kal-cari-form/.test(layar));
+cek('CSS responsif tersedia untuk acara, navigasi, dan tata letak ponsel', /\.kal-acara-form/.test(css) && /\.kal-nav-utama/.test(css) && /@media\(max-width:520px\)/.test(css));
 
 console.log(`\nHasil: ${total - gagal}/${total} lulus`);
 process.exitCode = gagal ? 1 : 0;

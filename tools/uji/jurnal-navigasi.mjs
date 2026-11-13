@@ -57,7 +57,7 @@ cek('harian.js: navigasiJurnal memanggil flush() sebelum pindah', /export functi
 cek('harian.js: prev/next pindah satu hari (±1)', /getDate\(\) \+ arah/.test(harian) && /aksi === 'next' \? 1 : -1/.test(harian));
 cek('harian.js: kalender memakai tampilkanKalenderTanggal dengan tanggal jurnal', /aksi === 'kalender'\) return tampilkanKalenderTanggal\(t\.getTime\(\)\)/.test(harian));
 cek('harian.js: escape teks bilah (esc) dipakai', /esc\(tglSebelum\)/.test(harian) && /esc\(tr\(/.test(harian));
-cek('tugas.js: tampilkanKalenderTanggal menyetel kalPilih & kalBulan lalu go(task)', /export function tampilkanKalenderTanggal\(ms\)[\s\S]*?kalPilih = awalHari\(Number\(ms\)\)[\s\S]*?kalBulan = [\s\S]*?go\('task'\)/.test(tugas));
+cek('tugas.js: tampilkanKalenderTanggal memilih tanggal lalu membuka Tugas', /export function tampilkanKalenderTanggal\(ms\)[\s\S]*?kalPilih = awalHari\(Number\(ms\)\)[\s\S]*?go\('task'\)/.test(tugas));
 cek('editor.js: bilah dipasang di atas judul catatan', /renderQuickKeysHtml\(\)\}\s*\n\s*\$\{jurnalBarHtml\(n\)\}\s*\n\s*<input class="ed-t"/.test(editor));
 cek('index.js: handler [data-jur] memanggil navigasiJurnal', /closest\('\[data-jur\]'\)[\s\S]*?navigasiJurnal\(jur\.dataset\.jur\)/.test(index));
 cek('index.js: navigasiJurnal diimpor dari harian.js', /navigasiJurnal \} from '\.\/harian\.js/.test(index));

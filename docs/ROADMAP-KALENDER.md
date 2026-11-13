@@ -38,15 +38,17 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 
 ## Tahap 2 — Tampilan, navigasi, dan interaksi
 
-- [ ] Pertahankan tampilan **bulan** yang ada dan tingkatkan keterbacaan kepadatan acara.
-- [ ] Tambahkan tampilan **Agenda** sebagai daftar kronologis kegiatan mendatang.
-- [ ] Tambahkan tampilan **Hari** dan **Minggu** berbentuk garis waktu, dengan rentang waktu dan durasi yang terlihat.
-- [ ] Tambahkan tampilan **Tahun** berupa ringkasan 12 bulan untuk melihat tanggal penting dan tingkat kepadatan.
-- [ ] Sediakan navigasi “Hari ini”, pemilih tanggal langsung, dan perpindahan hari/minggu/bulan yang konsisten.
-- [ ] Tambahkan preferensi awal minggu (Senin atau Minggu), nomor minggu opsional, dan pengaturan tampilan tanggal/waktu yang mengikuti locale.
-- [ ] Buat mode **ringkas** dan **nyaman** untuk bulan agar tetap mudah dibaca di layar ponsel.
-- [ ] Dukung seret-lepas untuk memindahkan acara atau tugas terjadwal; selalu sediakan konfirmasi/urungkan dan jangan mengubah tenggat sumber tanpa persetujuan.
-- [ ] Tambahkan pencarian serta filter kalender berdasarkan kata kunci, lapisan, kalender, tag, prioritas, dan rentang tanggal.
+- [x] Pertahankan tampilan **bulan** dan rapikan kontrol, ruang, target sentuh, kepadatan, lapisan, dan detail agar lebih tertata di ponsel.
+- [x] Tambahkan tampilan **Agenda** kronologis untuk 30 hari dari tanggal terpilih.
+- [x] Tambahkan tampilan **Hari** dan **Minggu** dengan daftar linimasa berwaktu; acara bertanggal seharian dan tenggat tanpa jam tetap ditandai jelas.
+- [x] Tambahkan tampilan **Tahun** berupa 12 mini-kalender dengan hitungan agenda dan navigasi ke bulan/tanggal.
+- [x] Sediakan navigasi “Hari ini”, pemilih tanggal langsung, dan perpindahan rentang yang mengikuti mode kalender.
+- [x] Tambahkan preferensi awal minggu (Senin/Minggu), nomor minggu opsional, dan tanggal sesuai bahasa aplikasi.
+- [x] Sediakan kepadatan **Ringkas** dan **Nyaman**, dengan setelan tersimpan lokal.
+- [x] Dukung seret-lepas acara mandiri ke tanggal lain pada kalender. Pemindahan meminta konfirmasi dan bisa diurungkan; untuk saat ini tenggat tugas tidak dapat diseret karena tenggatnya bagian dari isi catatan.
+- [ ] Seret-lepas **blok waktu tugas** akan mengikuti model penjadwalan tugas Tahap 3; tidak akan mengubah tenggat di catatan tanpa persetujuan eksplisit.
+- [x] Tambahkan pencarian judul/deskripsi dan filter jenis agenda serta kategori acara.
+- [ ] Filter menurut tag, prioritas, dan rentang tanggal lanjutan belum ada; pencarian saat ini mencakup rentang yang ditampilkan.
 
 ## Tahap 3 — Pengaturan jadwal dan produktivitas
 

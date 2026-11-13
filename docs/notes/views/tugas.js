@@ -9,7 +9,7 @@ import { state, save } from '../../core/store.js?v=20261105210000';
 import { acaraPadaTanggal, labelWaktuAcara, normalisasiAcara, timestampDariDinding } from '../kalender-acara-murni.js?v=20261105210001';
 import { esc } from '../../core/dom.js?v=20261105210000';
 import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261105210000';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261105210000';
+import { kuadranTugas, jatuhPada } from '../kalender.js?v=20261105210000';
 import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261105210000';
 import { rowFor } from './row.js?v=20261105210000';
 import { terlihat } from '../kunci.js?v=20261105210000';
@@ -22,13 +22,25 @@ import { flush } from '../../core/autosave.js?v=20261105210000';
 import { openNote } from '../model.js?v=20261105210000';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
-const SEHARI = 86400000;
 const awalHari = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
 /* Keadaan tampilan kalender (bukan data): bulan yang dilihat & hari dipilih. */
 const sekarangAwal = () => awalHari(Date.now());
-let kalBulan = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); })();
 let kalPilih = sekarangAwal();
+const PREF_KALENDER_KUNCI = 'hara.kalender.tampilan.v1';
+const prefKalDefault = { mode: 'bulan', awalMinggu: 1, nomorMinggu: false, kepadatan: 'ringkas' };
+const bacaPrefKal = () => {
+  try {
+    const v=JSON.parse(localStorage.getItem(PREF_KALENDER_KUNCI)||'{}');
+    return { mode:['bulan','agenda','hari','minggu','tahun'].includes(v.mode)?v.mode:'bulan',
+      awalMinggu:v.awalMinggu===0?0:1, nomorMinggu:!!v.nomorMinggu,
+      kepadatan:v.kepadatan==='nyaman'?'nyaman':'ringkas' };
+  } catch { return { ...prefKalDefault }; }
+};
+let prefKal = bacaPrefKal();
+let kueriKalender = '';
+let filterKalender = 'semua';
+let kategoriKalender = 'semua';
 let acaraEditId = '';
 const LAPISAN_KUNCI = 'hara.kalender.lapisan.v1';
 const lapisanDefault = { tenggat: true, acara: true, jurnal: true };
@@ -47,10 +59,48 @@ export function ubahLapisanKalender(kunci, aktif) {
   if (cur === 'task') go('task');
 }
 
+export function ubahTampilanKalender(kunci, nilai) {
+  if (kunci === 'mode' && ['bulan','agenda','hari','minggu','tahun'].includes(nilai)) prefKal.mode = nilai;
+  else if (kunci === 'awalMinggu' && ['0','1'].includes(String(nilai))) prefKal.awalMinggu = Number(nilai);
+  else if (kunci === 'nomorMinggu') prefKal.nomorMinggu = !!nilai;
+  else if (kunci === 'kepadatan' && ['ringkas','nyaman'].includes(nilai)) prefKal.kepadatan = nilai;
+  else if (kunci === 'filter') filterKalender = ['semua','acara','tenggat'].includes(nilai) ? nilai : 'semua';
+  else if (kunci === 'kategori') kategoriKalender = ['semua','personal','work','study','other'].includes(nilai) ? nilai : 'semua';
+  else return;
+  try { localStorage.setItem(PREF_KALENDER_KUNCI, JSON.stringify(prefKal)); } catch { /* pengaturan sesi tetap berlaku */ }
+  if (cur === 'task') go('task');
+}
+
+export function cariKalender(teks) {
+  kueriKalender = String(teks || '').trim().slice(0, 100);
+  if (cur === 'task') go('task');
+}
+
 export function bukaEditAcara(id) {
   acaraEditId = id || '';
   if (cur === 'task') go('task');
 };
+
+export function pindahAcaraKalender(id, targetMs) {
+  const index=state.acaraKalender.findIndex(a=>a.id===id), asal=state.acaraKalender[index];
+  if(!asal||!Number.isFinite(Number(targetMs)))return false;
+  const target=isoHari(Number(targetMs)), awal=asal.sepanjangHari?asal.tanggalMulai:bagianZona(asal.mulai,asal.zonaWaktu).tanggal;
+  const dateMs=iso=>{const [y,m,d]=iso.split('-').map(Number);return Date.UTC(y,m-1,d);};
+  const selisih=Math.round((dateMs(target)-dateMs(awal))/86400000);if(!selisih)return false;
+  const geserIso=iso=>{const d=new Date(dateMs(iso));d.setUTCDate(d.getUTCDate()+selisih);return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;};
+  const baru={...asal};
+  if(asal.sepanjangHari){baru.tanggalMulai=geserIso(asal.tanggalMulai);baru.tanggalAkhir=geserIso(asal.tanggalAkhir);}
+  else{
+    const a=bagianZona(asal.mulai,asal.zonaWaktu),b=bagianZona(asal.selesai,asal.zonaWaktu);
+    baru.mulai=timestampDariDinding(geserIso(a.tanggal),a.jam,asal.zonaWaktu);
+    baru.selesai=timestampDariDinding(geserIso(b.tanggal),b.jam,asal.zonaWaktu);
+    if(baru.mulai===null||baru.selesai===null)return toast(tr('Waktu acara tidak valid pada tanggal tujuan'));
+  }
+  if(!window.confirm(`${tr('Pindahkan acara')} “${asal.judul}” ke ${judulTanggal(Number(targetMs),{day:'numeric',month:'long',year:'numeric'})}?`))return false;
+  baru.diubah=Date.now();state.acaraKalender[index]=baru;save();if(cur==='task')go('task');
+  toast(tr('Acara dipindahkan'),{label:tr('Urungkan'),cb:()=>{state.acaraKalender[index]=asal;save();if(cur==='task')go('task');}});
+  return true;
+}
 
 export function hapusAcaraKalender(id) {
   const index = state.acaraKalender.findIndex(a => a.id === id);
@@ -247,96 +297,176 @@ const formAcaraHtml = () => {
       <div class="kal-form-aksi"><button class="btn btn-pri" type="submit">${acara ? tr('Simpan perubahan') : tr('Simpan acara')}</button>${acara ? `<button class="btn" type="button" data-kal-batal-edit>${tr('Batal')}</button>` : ''}</div>
     </form></details>`;
 };
-const kartuAcara = acara => `<div class="kal-acara kal-acara-${esc(acara.kategori)}">
+const kartuAcara = acara => `<div class="kal-acara kal-acara-${esc(acara.kategori)}" draggable="true" data-kal-seret="${esc(acara.id)}" title="${tr('Seret acara ke tanggal lain untuk memindahkannya')}">
   <div class="kal-acara-teks"><b>${esc(acara.judul)}</b><span>${esc(labelWaktuAcara(acara, bahasaSekarang()))} · ${tr(acara.kategori === 'work' ? 'Kerja' : acara.kategori === 'study' ? 'Belajar' : acara.kategori === 'personal' ? 'Pribadi' : 'Lainnya')}</span></div>
   <div class="kal-acara-aksi"><button type="button" class="kal-acara-btn" data-kal-edit="${esc(acara.id)}">${tr('Edit')}</button><button type="button" class="kal-acara-btn" data-kal-hapus="${esc(acara.id)}">${tr('Hapus')}</button></div>
 </div>`;
 
-/* ── K9 · kalender bulanan ── */
-const kalenderHtml = daftar => {
-  const awal = new Date(kalBulan);
-  const tahun = awal.getFullYear(), bulan = awal.getMonth();
-  const semua = daftar.flatMap(n => tenggatTodo(n).map(x => ({ n, ...x })));
-  const peta = kalenderBulan(lapisan.tenggat ? semua : [], tahun, bulan);
-  const acaraSemua = lapisan.acara ? state.acaraKalender : [];
-  const acaraHari = ms => acaraSemua.filter(a => acaraPadaTanggal(a, isoHari(ms)));
-  const hariPertama = (new Date(tahun, bulan, 1).getDay() + 6) % 7;   /* Senin = 0 */
-  const jumlah = new Date(tahun, bulan + 1, 0).getDate();
-  const hariSingkat = Array.from({ length: 7 }, (_, i) =>
-    new Date(2024, 0, 1 + i).toLocaleDateString(undefined, { weekday: 'narrow' }));
-  const judulBulan = awal.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-  const hariIni = sekarangAwal();
-  /* B8: hari yang sudah punya jurnal. Catatan terkunci yang tidak terlihat tidak ikut. */
-  const berjurnal = hariBerjurnal(state.notes.filter(n => terlihat(n)), tahun, bulan, bahasaSekarang());
-
-  let sel = '';
-  for (let i = 0; i < hariPertama; i++) sel += '<span class="kal-kosong"></span>';
-  for (let tgl = 1; tgl <= jumlah; tgl++) {
-    const ms = new Date(tahun, bulan, tgl).getTime();
-    const isi = peta.get(tgl) || [];
-    const acaraIsi = acaraHari(ms);
-    const jumlahTitik = isi.length + acaraIsi.length;
-    const kelas = ['kal-hari'];
-    if (ms === hariIni) kelas.push('kal-kini');
-    if (ms === kalPilih) kelas.push('kal-pilih');
-    if (jumlahTitik) kelas.push('kal-ada');
-    const adaJurnal = lapisan.jurnal && berjurnal.has(tgl);
-    sel += `<button type="button" class="${kelas.join(' ')}" data-kal-hari="${ms}"
-      aria-label="${tgl}${isi.length ? ' · ' + isi.length + ' ' + tr('tenggat') : ''}${acaraIsi.length ? ' · ' + acaraIsi.length + ' ' + tr('acara') : ''}${adaJurnal ? ' · ' + tr('ada jurnal') : ''}" aria-pressed="${ms === kalPilih}">
-      <span>${tgl}</span>${jumlahTitik ? `<i class="kal-titik">${jumlahTitik > 9 ? '9+' : jumlahTitik}</i>` : ''}${acaraIsi.length ? '<i class="kal-acara-titik" aria-hidden="true"></i>' : ''}${adaJurnal ? '<i class="kal-jurnal-titik" aria-hidden="true"></i>' : ''}</button>`;
+const tambahHari = (ms, jumlah) => { const d = new Date(ms); d.setDate(d.getDate() + jumlah); return awalHari(d.getTime()); };
+const awalMingguMs = ms => { const d = new Date(ms), mundur = (d.getDay() - prefKal.awalMinggu + 7) % 7; d.setDate(d.getDate() - mundur); return awalHari(d.getTime()); };
+const nomorMinggu = ms => { const d = new Date(Date.UTC(new Date(ms).getFullYear(), new Date(ms).getMonth(), new Date(ms).getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); const awal = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); return Math.ceil((((d - awal) / 86400000) + 1) / 7); };
+const localeKalender = () => ({ id: 'id-ID', en: 'en-US', ja: 'ja-JP' })[bahasaSekarang()] || 'id-ID';
+const judulTanggal = (ms, opsi = {}) => new Date(ms).toLocaleDateString(localeKalender(), opsi);
+const semuaTenggat = daftar => daftar.flatMap(n => tenggatTodo(n).map(x => ({ n, ...x })));
+const teksTugas = x => `${x.sisa || x.blok.content || ''} ${x.n.title || ''}`.replace(/<[^>]*>/g, ' ').toLocaleLowerCase();
+const cocokCari = teks => !kueriKalender || String(teks || '').toLocaleLowerCase().includes(kueriKalender.toLocaleLowerCase());
+const cocokKategori = acara => kategoriKalender === 'semua' || acara.kategori === kategoriKalender;
+const jurnalPeta = (mulai, jumlah, tahunCache = new Map()) => {
+  const terlihatCatatan = state.notes.filter(n => terlihat(n));
+  const hasil = new Map();
+  for (let i = 0; i < jumlah; i++) {
+    const ms = tambahHari(mulai, i), d = new Date(ms), k = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!tahunCache.has(k)) tahunCache.set(k, hariBerjurnal(terlihatCatatan, d.getFullYear(), d.getMonth(), bahasaSekarang()));
+    if (tahunCache.get(k).has(d.getDate())) hasil.set(isoHari(ms), true);
   }
-
-  const terpilih = lapisan.tenggat ? semua.filter(x => jatuhPada(x, kalPilih)) : [];
-  const acaraTerpilih = lapisan.acara ? acaraHari(kalPilih).sort((a, b) => a.sepanjangHari ? (b.sepanjangHari ? a.tanggalMulai.localeCompare(b.tanggalMulai) : -1) : b.sepanjangHari ? 1 : a.mulai - b.mulai) : [];
-  const judulPilih = new Date(kalPilih).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-  return `<div class="sec" id="kal-bagian" style="margin-top:22px"><h2>${tr('Kalender')}</h2></div>
-  <div class="card kal">
-    <div class="kal-head">
-      <button type="button" class="kal-nav" data-kal="prev" aria-label="${tr('Bulan sebelumnya')}">‹</button>
-      <b>${esc(judulBulan)}</b>
-      <button type="button" class="kal-nav" data-kal="next" aria-label="${tr('Bulan berikutnya')}">›</button>
+  return hasil;
+};
+const catatanTenggatHari = (ms, daftarTenggat) => lapisan.tenggat && filterKalender !== 'acara'
+  ? daftarTenggat.filter(x => jatuhPada(x, ms) && cocokCari(teksTugas(x))) : [];
+const acaraHariTampil = (ms, acara) => lapisan.acara && filterKalender !== 'tenggat'
+  ? acara.filter(a => acaraPadaTanggal(a, isoHari(ms)) && cocokKategori(a) && cocokCari(a.judul)) : [];
+const kontrolLapisanHtml = () => `<div class="kal-lapisan" role="group" aria-label="${tr('Tampilkan lapisan kalender')}">
+  ${[['tenggat','Tenggat & pengingat'],['acara','Acara'],['jurnal','Jurnal']].map(([k,l]) => `<label class="kal-layer"><input type="checkbox" data-kal-lapisan="${k}" ${lapisan[k] ? 'checked' : ''}><span class="kal-layer-dot kal-layer-${k}"></span>${tr(l)}</label>`).join('')}
+</div>`;
+const kontrolCariHtml = () => `<details class="kal-filter-detail" ${kueriKalender||filterKalender!=='semua'||kategoriKalender!=='semua'?'open':''}><summary>${tr('Cari & filter')}</summary><form class="kal-cari" data-kal-cari-form role="search">
+  <label class="kal-cari-input"><span aria-hidden="true">⌕</span><input type="search" name="q" value="${esc(kueriKalender)}" placeholder="${tr('Cari acara atau tugas')}" aria-label="${tr('Cari acara atau tugas')}"></label>
+  <select data-kal-filter aria-label="${tr('Filter jenis agenda')}">${[['semua','Semua'],['acara','Acara'],['tenggat','Tenggat']].map(([v,l])=>`<option value="${v}" ${filterKalender===v?'selected':''}>${tr(l)}</option>`).join('')}</select>
+  <select data-kal-kategori aria-label="${tr('Kategori acara')}">${[['semua','Semua kategori'],['personal','Pribadi'],['work','Kerja'],['study','Belajar'],['other','Lainnya']].map(([v,l])=>`<option value="${v}" ${kategoriKalender===v?'selected':''}>${tr(l)}</option>`).join('')}</select>
+  <button type="submit" class="kal-cari-tombol">${tr('Cari')}</button>
+</form></details>`;
+const kontrolPreferensiHtml = () => `<details class="kal-prefs"><summary>${tr('Tampilan kalender')}</summary><div class="kal-prefs-isi">
+  <label>${tr('Awal minggu')}<select data-kal-pref="awalMinggu"><option value="1" ${prefKal.awalMinggu===1?'selected':''}>${tr('Senin')}</option><option value="0" ${prefKal.awalMinggu===0?'selected':''}>${tr('Minggu')}</option></select></label>
+  <label class="kal-pref-centang"><input type="checkbox" data-kal-pref="nomorMinggu" ${prefKal.nomorMinggu?'checked':''}> ${tr('Tampilkan nomor minggu')}</label>
+  <label>${tr('Kepadatan')}<select data-kal-pref="kepadatan"><option value="ringkas" ${prefKal.kepadatan==='ringkas'?'selected':''}>${tr('Ringkas')}</option><option value="nyaman" ${prefKal.kepadatan==='nyaman'?'selected':''}>${tr('Nyaman')}</option></select></label>
+</div></details>`;
+const judulRentang = mode => {
+  const d = new Date(kalPilih);
+  if (mode === 'bulan') return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleDateString(localeKalender(), { month: 'long', year: 'numeric' });
+  if (mode === 'tahun') return String(d.getFullYear());
+  if (mode === 'hari') return judulTanggal(kalPilih, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const awal = mode === 'minggu' ? awalMingguMs(kalPilih) : kalPilih;
+  const akhir = tambahHari(awal, mode === 'minggu' ? 6 : 29);
+  const a = new Date(awal), b = new Date(akhir);
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${b.toLocaleDateString(localeKalender(),{month:'long',year:'numeric'})}`
+    : `${judulTanggal(awal,{day:'numeric',month:'short'})} – ${judulTanggal(akhir,{day:'numeric',month:'short',year:'numeric'})}`;
+};
+const kerangkaKalender = isi => `<div class="sec kal-judul-halaman" id="kal-bagian"><h2>${tr('Kalender')}</h2></div>
+  <section class="card kal kal-${prefKal.kepadatan}" aria-label="${tr('Kalender')}">
+    <div class="kal-head kal-nav-utama">
+      <button type="button" class="kal-nav" data-kal="prev" aria-label="${tr('Sebelumnya')}">‹</button>
+      <b class="kal-rentang">${esc(judulRentang(prefKal.mode))}</b>
+      <button type="button" class="kal-nav" data-kal="next" aria-label="${tr('Berikutnya')}">›</button>
       <button type="button" class="kal-today" data-kal="today">${tr('Hari ini')}</button>
+      <label class="kal-lompat"><span class="sr-only">${tr('Pilih tanggal')}</span><input type="date" data-kal-tanggal value="${isoHari(kalPilih)}"></label>
     </div>
-    <div class="kal-lapisan" role="group" aria-label="${tr('Tampilkan lapisan kalender')}">
-      ${[['tenggat','Tenggat & pengingat'],['acara','Acara'],['jurnal','Jurnal']].map(([k,l]) => `<label class="kal-layer"><input type="checkbox" data-kal-lapisan="${k}" ${lapisan[k] ? 'checked' : ''}><span class="kal-layer-dot kal-layer-${k}"></span>${tr(l)}</label>`).join('')}
-    </div>
-    <div class="kal-grid" role="grid">
-      ${hariSingkat.map(h => `<span class="kal-dow">${esc(h)}</span>`).join('')}
-      ${sel}
-    </div>
-    <div class="kal-detail">
-      <div class="kal-judul">${esc(judulPilih)}</div>
-      ${lapisan.jurnal ? `<div class="kal-jurnal-status">${berjurnal.has(new Date(kalPilih).getDate()) ? tr('Jurnal tersedia') : tr('Belum ada jurnal untuk tanggal ini.')}</div><button type="button" class="kal-jurnal" data-kal-jurnal="${kalPilih}">${tr(berjurnal.has(new Date(kalPilih).getDate()) ? 'Buka jurnal' : 'Buat jurnal')}</button>` : ''}
-      ${acaraTerpilih.length ? `<div class="kal-acara-daftar">${acaraTerpilih.map(kartuAcara).join('')}</div>` : ''}
-      ${terpilih.length ? `<div class="kal-tenggat-daftar">${terpilih.map(x => kartuTenggat(x, sisaWaktu(x.waktu))).join('')}</div>` : ''}
-      ${!acaraTerpilih.length && !terpilih.length ? `<p class="dm-kosong">${tr('Tidak ada agenda pada tanggal ini.')}</p>` : ''}
-      ${lapisan.acara ? formAcaraHtml() : ''}
-    </div>
-  </div>`;
+    <nav class="kal-mode" aria-label="${tr('Tampilan kalender')}">${[['bulan','Bulan'],['agenda','Agenda'],['hari','Hari'],['minggu','Minggu'],['tahun','Tahun']].map(([v,l])=>`<button type="button" data-kal-mode="${v}" aria-pressed="${prefKal.mode===v}">${tr(l)}</button>`).join('')}</nav>
+    ${kontrolLapisanHtml()}${kontrolCariHtml()}${kontrolPreferensiHtml()}${isi}
+  </section>`;
+
+/* ── K9 · kalender bulanan + tampilan Tahap 2 ── */
+const kalenderHtml = daftar => {
+  const tenggat = semuaTenggat(daftar), acara = state.acaraKalender || [];
+  const cacheJurnal = new Map();
+  const adaJurnal = ms => jurnalPeta(ms, 1, cacheJurnal).has(isoHari(ms));
+  const isiHari = ms => ({
+    acara: acaraHariTampil(ms, acara).sort((a,b)=>a.sepanjangHari?(b.sepanjangHari?a.tanggalMulai.localeCompare(b.tanggalMulai):-1):b.sepanjangHari?1:a.mulai-b.mulai),
+    tugas: catatanTenggatHari(ms, tenggat),
+  });
+  let isi = '';
+  if (prefKal.mode === 'bulan') {
+    const d = new Date(kalPilih), tahun = d.getFullYear(), bulan = d.getMonth();
+    const pertama = new Date(tahun, bulan, 1), jumlah = new Date(tahun, bulan + 1, 0).getDate();
+    const awalan = (pertama.getDay() - prefKal.awalMinggu + 7) % 7;
+    const offsetHari = prefKal.awalMinggu === 1 ? 0 : -1;
+    const hariLabel = Array.from({length:7},(_,i)=>new Date(2024,0,1+i+offsetHari).toLocaleDateString(localeKalender(),{weekday:'narrow'}));
+    const berjurnal = hariBerjurnal(state.notes.filter(n=>terlihat(n)),tahun,bulan,bahasaSekarang());
+    const sel=[];
+    for(let i=0;i<awalan;i++)sel.push('<span class="kal-kosong" aria-hidden="true"></span>');
+    for(let tgl=1;tgl<=jumlah;tgl++){
+      const ms=new Date(tahun,bulan,tgl).getTime(), {acara:ea,tugas:et}=isiHari(ms), jurnal=lapisan.jurnal&&berjurnal.has(tgl), count=ea.length+et.length;
+      const kelas=['kal-hari']; if(ms===sekarangAwal())kelas.push('kal-kini');if(ms===kalPilih)kelas.push('kal-pilih');if(count)kelas.push('kal-ada');
+      sel.push(`<button type="button" class="${kelas.join(' ')}" data-kal-hari="${ms}" data-kal-drop="${ms}" aria-label="${esc(judulTanggal(ms,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${et.length?' · '+et.length+' '+tr('tenggat'):''}${ea.length?' · '+ea.length+' '+tr('acara'):''}${jurnal?' · '+tr('ada jurnal'):''}" aria-pressed="${ms===kalPilih}"><span>${tgl}</span>${count?`<i class="kal-titik">${count>9?'9+':count}</i>`:''}${ea.length?'<i class="kal-acara-titik" aria-hidden="true"></i>':''}${jurnal?'<i class="kal-jurnal-titik" aria-hidden="true"></i>':''}</button>`);
+    }
+    while(sel.length%7)sel.push('<span class="kal-kosong" aria-hidden="true"></span>');
+    const rows=[];
+    for(let i=0;i<sel.length;i+=7){
+      const tanggalMinggu=tambahHari(awalHari(pertama.getTime()),i/7*7-awalan);
+      rows.push(`${prefKal.nomorMinggu?`<span class="kal-minggu-no" aria-label="${tr('Minggu')} ${nomorMinggu(tanggalMinggu)}">${nomorMinggu(tanggalMinggu)}</span>`:''}${sel.slice(i,i+7).join('')}`);
+    }
+    isi=`<div class="kal-grid${prefKal.nomorMinggu?' kal-grid-nomor':''}" role="grid" aria-label="${esc(judulRentang('bulan'))}">
+      ${prefKal.nomorMinggu?'<span class="kal-dow kal-dow-no">#</span>':''}${hariLabel.map(h=>`<span class="kal-dow">${esc(h)}</span>`).join('')}
+      ${rows.join('')}</div>
+      <section class="kal-detail" aria-live="polite"><div class="kal-judul">${esc(judulTanggal(kalPilih,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}</div>
+      ${lapisan.jurnal?`<div class="kal-jurnal-status">${adaJurnal(kalPilih)?tr('Jurnal tersedia'):tr('Belum ada jurnal untuk tanggal ini.')}</div><button type="button" class="kal-jurnal" data-kal-jurnal="${kalPilih}">${tr(adaJurnal(kalPilih)?'Buka jurnal':'Buat jurnal')}</button>`:''}
+      ${isiHari(kalPilih).acara.map(kartuAcara).join('')}${isiHari(kalPilih).tugas.map(x=>kartuTenggat(x,sisaWaktu(x.waktu))).join('')}
+      ${!isiHari(kalPilih).acara.length&&!isiHari(kalPilih).tugas.length?`<p class="dm-kosong">${tr('Tidak ada agenda pada tanggal ini.')}</p>`:''}
+      ${lapisan.acara?formAcaraHtml():''}</section>`;
+  } else if (prefKal.mode === 'tahun') {
+    const year=new Date(kalPilih).getFullYear(), months=[];
+    for(let m=0;m<12;m++){
+      const start=new Date(year,m,1), days=new Date(year,m+1,0).getDate(), lead=(start.getDay()-prefKal.awalMinggu+7)%7, cells=[];
+      for(let i=0;i<lead;i++)cells.push('<span></span>');
+      let eventCount=0,taskCount=0;
+      for(let day=1;day<=days;day++){
+        const ms=new Date(year,m,day).getTime(),{acara:ea,tugas:et}=isiHari(ms);eventCount+=ea.length;taskCount+=et.length;
+        cells.push(`<button type="button" data-kal-tahun-tanggal="${ms}" data-kal-drop="${ms}" aria-label="${esc(judulTanggal(ms,{day:'numeric',month:'long',year:'numeric'}))}${ea.length+et.length?' · '+(ea.length+et.length)+' '+tr('agenda'):''}">${day}${ea.length+et.length?'<i></i>':''}</button>`);
+      }
+      const title=start.toLocaleDateString(localeKalender(),{month:'long'});
+      months.push(`<section class="kal-mini-bulan"><button type="button" data-kal-bulan="${m}" class="kal-mini-judul">${esc(title)} <small>${eventCount+taskCount}</small></button><div class="kal-mini-grid">${cells.join('')}</div></section>`);
+    }
+    isi=`<div class="kal-tahun">${months.join('')}</div>`;
+  } else {
+    const count=prefKal.mode==='minggu'?7:prefKal.mode==='agenda'?30:1;
+    const start=prefKal.mode==='minggu'?awalMingguMs(kalPilih):kalPilih;
+    const journalMap=jurnalPeta(start,count,cacheJurnal), groups=[];
+    for(let i=0;i<count;i++){
+      const ms=tambahHari(start,i), {acara:ea,tugas:et}=isiHari(ms), journal=journalMap.has(isoHari(ms));
+      if(prefKal.mode==='agenda'&&!ea.length&&!et.length&&!journal)continue;
+      const data=[...ea.map(a=>({kind:'event',at:a.sepanjangHari?-Infinity:a.mulai,html:kartuAcara(a),time:a.sepanjangHari?tr('Sepanjang hari'):bagianZona(a.mulai,a.zonaWaktu).jam})),
+        ...et.map(x=>({kind:'task',at:x.waktu,html:kartuTenggat(x,sisaWaktu(x.waktu)),time:x.jam||tr('Tenggat')}))].sort((a,b)=>a.at-b.at);
+      groups.push(`<section class="kal-hari-agenda"><header><button type="button" class="kal-hari-pilih" data-kal-hari="${ms}" data-kal-drop="${ms}">${esc(judulTanggal(ms,{weekday:'long',day:'numeric',month:'long',year:prefKal.mode==='agenda'?'numeric':undefined}))}</button>${prefKal.mode==='minggu'&&prefKal.nomorMinggu?`<small>${tr('Minggu')} ${nomorMinggu(ms)}</small>`:''}</header>
+        ${journal&&lapisan.jurnal?`<button type="button" class="kal-agenda-jurnal" data-kal-jurnal="${ms}">${tr('Jurnal tersedia')} · ${tr('Buka jurnal')}</button>`:''}
+        ${data.map(x=>`<div class="kal-linimasa-item"><time>${esc(x.time)}</time>${x.html}</div>`).join('')||`<p class="kal-agenda-kosong">${tr('Tidak ada agenda pada tanggal ini.')}</p>`}</section>`);
+    }
+    isi=`<div class="kal-linimasa kal-linimasa-${prefKal.mode}">${groups.join('')||`<p class="kal-agenda-kosong">${tr('Tidak ada hasil pada rentang tanggal ini.')}</p>`}</div>${lapisan.acara?formAcaraHtml():''}`;
+  }
+  return kerangkaKalender(isi);
 };
 
 /* Navigasi kalender: ganti bulan atau kembali ke hari ini. Dipanggil dari index.js. */
 export function geserKalender(aksi, ms) {
   if (aksi === 'prev' || aksi === 'next') {
-    const d = new Date(kalBulan);
-    d.setMonth(d.getMonth() + (aksi === 'next' ? 1 : -1), 1);
-    kalBulan = d.getTime();
-  } else if (aksi === 'today') {
-    const d = new Date(); kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-    kalPilih = sekarangAwal();
-  } else if (aksi === 'pilih' && ms) {
-    kalPilih = Number(ms);
-    const d = new Date(kalPilih); kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-  }
+    const arah=aksi==='next'?1:-1, d=new Date(kalPilih), hari=d.getDate();
+    if(prefKal.mode==='hari')d.setDate(hari+arah);
+    else if(prefKal.mode==='minggu')d.setDate(hari+7*arah);
+    else if(prefKal.mode==='agenda')d.setDate(hari+30*arah);
+    else { d.setDate(1); d.setMonth(d.getMonth()+arah*(prefKal.mode==='tahun'?12:1)); d.setDate(Math.min(hari,new Date(d.getFullYear(),d.getMonth()+1,0).getDate())); }
+    kalPilih=awalHari(d.getTime());
+  } else if (aksi === 'today') kalPilih = sekarangAwal();
+  else if (aksi === 'pilih' && ms) kalPilih = awalHari(Number(ms));
   if (cur === 'task') go('task');
+}
+
+export function pilihBulanKalender(bulan) {
+  const d=new Date(kalPilih), hari=d.getDate();
+  d.setDate(1);d.setMonth(Number(bulan));
+  d.setDate(Math.min(hari,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  kalPilih=awalHari(d.getTime());prefKal.mode='bulan';
+  try { localStorage.setItem(PREF_KALENDER_KUNCI, JSON.stringify(prefKal)); } catch {}
+  if(cur==='task')go('task');
+}
+
+export function pilihTanggalTahun(ms) {
+  kalPilih=awalHari(Number(ms));prefKal.mode='bulan';
+  try { localStorage.setItem(PREF_KALENDER_KUNCI, JSON.stringify(prefKal)); } catch {}
+  if(cur==='task')go('task');
 }
 
 /* B8 lanjutan: dari jurnal, buka layar Tugas dengan tanggal itu terpilih di kalender.
    ms bisa tengah hari; dipangkas ke awal hari supaya cocok dengan sel kalender. */
 export function tampilkanKalenderTanggal(ms) {
   kalPilih = awalHari(Number(ms));
-  const d = new Date(kalPilih);
-  kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   go('task');
   /* kalender ada di bawah daftar tugas. Gulir ke kartunya supaya tombol Buka jurnal
      langsung terlihat (di HP tidak tertutup bilah navigasi bawah). */
