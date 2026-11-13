@@ -54,7 +54,8 @@ state.notes.push(makeNote({id:'u1',title:'Catatan pribadi saya',
 const u1Sblm={title:state.notes.find(n=>n.id==='u1').title, isi:isiCat(state.notes.find(n=>n.id==='u1'))};
 
 /* ganti bahasa → sambutan ikut (judul + isi + welcomeLang) */
-i18n.setBahasa('en');
+await i18n.setBahasa('en');
+ok('kamus Inggris dimuat on-demand sebelum t() dipanggil', i18n.t('Beranda') === 'Home', i18n.t('Beranda'));
 const berubah1=store.sinkronWelcome();
 ok('W9 pindah en: sinkron mengubah sambutan', berubah1===true);
 ok('W10 pindah en: judul Welcome to Hara', wl().title==='Welcome to Hara', wl().title);
@@ -65,7 +66,8 @@ ok('W13 pindah en: catatan pengguna TIDAK berubah',
   state.notes.find(n=>n.id==='u1').title===u1Sblm.title && isiCat(state.notes.find(n=>n.id==='u1'))===u1Sblm.isi);
 ok('W14 idempoten: sinkron ulang tidak mengubah apa pun', store.sinkronWelcome()===false);
 
-i18n.setBahasa('ja');
+await i18n.setBahasa('ja');
+ok('kamus Jepang dimuat on-demand sebelum t() dipanggil', i18n.t('Beranda') === 'ホーム', i18n.t('Beranda'));
 ok('W15 pindah ja: sinkron mengubah sambutan', store.sinkronWelcome()===true);
 ok('W16 pindah ja: judul Hara へようこそ', wl().title==='Hara へようこそ', wl().title);
 ok('W17 pindah ja: welcomeLang=ja', wl().welcomeLang==='ja', wl().welcomeLang);
@@ -77,7 +79,7 @@ ok('W19 pindah ja: catatan pengguna TIDAK berubah',
 /* muat ulang dari penyimpanan: sambutan lama versi 3 (bahasa id, tanpa
    field welcomeLang) langsung dinaikkan ke versi & bahasa aktif */
 store.save();
-i18n.setBahasa('id');
+await i18n.setBahasa('id');
 const lama=JSON.parse(await bacaCatatanIdb(w));
 const wLama=lama.notes.find(n=>n.id==='w');
 delete wLama.welcomeLang; wLama.welcomeV=3;      /* bentuk lama */
@@ -94,7 +96,7 @@ ok('W22 muat ulang: catatan pengguna tetap utuh',
   state.notes.find(n=>n.id==='u1') && isiCat(state.notes.find(n=>n.id==='u1'))===u1Sblm.isi);
 
 /* bahasa Inggris tersimpan → muat ulang langsung menghasilkan sambutan Inggris */
-i18n.setBahasa('en');
+await i18n.setBahasa('en');
 const dataEn=JSON.parse(await bacaCatatanIdb(w));
 await tulisCatatanIdb(w,JSON.stringify(dataEn));
 await store.load();

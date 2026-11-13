@@ -4,16 +4,20 @@
    Berkasnya sendiri masuk IndexedDB. Ini menjaga catatan tetap ringan dan
    membuat autosave ke localStorage tidak pernah kepenuhan. */
 
-import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20261023235452';
-import { refresh } from './cleanup.js?v=20261023235452';
-import { pastikanKolomAkhir } from './blocks.js?v=20261023235452';
+import { docEl, sel, ensureCaret, caretEnd } from './caret.js?v=20261105210000';
+import { refresh } from './cleanup.js?v=20261105210000';
+import { pastikanKolomAkhir } from './blocks.js?v=20261105210000';
 import { simpanBlob, urlUntuk, hapusBlob, semuaId, usiaBlob, prunUsiaBlob }
-  from '../../core/blobs.js?v=20261023235452';
-import { state } from '../../core/store.js?v=20261023235452';
-import { cur } from '../../core/router.js?v=20261023235452';
-import { toast } from '../../core/toast.js?v=20261023235452';
-import { t as tr } from '../../core/i18n.js?v=20261023235452';
-import { rencanaKecil } from '../mutu-gambar.js?v=20261023235452';
+  from '../../core/blobs.js?v=20261105210000';
+import { state } from '../../core/store.js?v=20261105210000';
+import { cur } from '../../core/router.js?v=20261105210000';
+import { toast } from '../../core/toast.js?v=20261105210000';
+import { t as tr } from '../../core/i18n.js?v=20261105210000';
+import { rencanaKecil } from '../mutu-gambar.js?v=20261105210000';
+import { idBlobDariGoresan } from './goresan.js?v=20261105210000';
+import { kunciAnotasi } from '../pdf/anotasi.js?v=20261105210000';
+import { kunciSusunan } from '../pdf/susunan.js?v=20261105210000';
+import { kunciOcr } from '../ocr/ocr-teks.js?v=20261105210000';
 
 /* Id blob dengan pola waktu+acak+urut (sama seperti id blok/catatan) —
    id model lama (`Date.now() % 100000` + counter sesi) bisa terbit lagi
@@ -193,9 +197,12 @@ export async function pasangGambar() {
 function blobDipakai(id) {
   const d = docEl();
   if (d && d.querySelector(`img[data-blob="${id}"]`)) return true;
+  /* objek visual sketsa menyimpan id blob di dalam data-goresan */
+  if (d && Array.from(d.querySelectorAll('[data-goresan]'))
+    .some(el => idBlobDariGoresan(el.getAttribute('data-goresan')).includes(id))) return true;
   return state.notes.some(n =>
     n.id !== state.openId && (n.blocks || []).some(b =>
-      !!(b.meta && b.meta.blobId === id)));
+      !!(b.meta && (b.meta.blobId === id || idBlobDariGoresan(b.meta.goresan).includes(id)))));
 }
 
 /* Hapus satu gambar dari editor.
@@ -237,13 +244,25 @@ export async function bersihkanBlobYatim() {
     state.notes.forEach(n =>
       (n.blocks || []).forEach(b => {
         if (b.meta && b.meta.blobId) dipakai.add(b.meta.blobId);
+        if (b.meta) idBlobDariGoresan(b.meta.goresan).forEach(x => dipakai.add(x));
       }));
     const dd = docEl();
     if (dd) {
+      Array.from(dd.querySelectorAll('[data-goresan]')).forEach(el =>
+        idBlobDariGoresan(el.getAttribute('data-goresan')).forEach(x => dipakai.add(x)));
       Array.from(dd.querySelectorAll('img[data-blob], [data-blob]')).forEach(el => {
         const id = el.getAttribute('data-blob');
         if (id) dipakai.add(id);
       });
+    }
+    /* Anotasi PDF (B1b) disimpan dengan kunci 'anot-<blobId>'. Selama blob
+       PDF-nya dipakai, kuncinya ikut dianggap dipakai, supaya tidak disapu. */
+    for (const id of Array.from(dipakai)) {
+      dipakai.add(kunciAnotasi(id));
+      /* Susunan halaman PDF (B2) dengan kunci 'susun-<blobId>', sama polanya. */
+      dipakai.add(kunciSusunan(id));
+      /* Hasil OCR PDF (B6) dengan kunci 'ocr-<blobId>'. */
+      dipakai.add(kunciOcr(id));
     }
     const ids = await semuaId();
     const hidup = new Set(ids);

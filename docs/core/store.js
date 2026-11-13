@@ -4,14 +4,19 @@
    dari versi mana ia berangkat. Data v1 memakai field `html`; sejak v2
    isi catatan disimpan sebagai `blocks`. */
 
-import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261023235452';
-import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261023235452';
-import { sinkronTag } from '../notes/tags.js?v=20261023235452';
-import { bahasaSekarang, t as tr } from './i18n.js?v=20261023235452';
-import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261023235452';
-import { toast } from './toast.js?v=20261023235452';
+import { makeNote, normalizeNotes, htmlToBlocks } from '../notes/note-model.js?v=20261105210000';
+import { isiWelcome, judulWelcome, WELCOME_V } from '../notes/views/welcome.js?v=20261105210000';
+import { sinkronTag } from '../notes/tags.js?v=20261105210000';
+import { bahasaSekarang, t as tr } from './i18n.js?v=20261105210000';
+import { muatMentah, tulisAntre, cadangkanRusak } from './db-catatan.js?v=20261105210000';
+import { toast } from './toast.js?v=20261105210000';
+import { normalizeKartu } from '../notes/kartu-murni.js?v=20261105210000';
+import { normalizeUjian } from '../notes/ujian-murni.js?v=20261105210000';
 
 const SCHEMA = 2;
+const pendengarSimpan = new Set();
+export const onAfterSave = fn => { if (typeof fn !== 'function') return () => {}; pendengarSimpan.add(fn); return () => pendengarSimpan.delete(fn); };
+function beriTahuSimpan() { for (const fn of pendengarSimpan) { try { fn(state); } catch (e) { /* modul pengamat tidak boleh menggagalkan simpan inti */ } } }
 /* Penyimpanan utama: IndexedDB (lihat db-catatan.js). Kunci localStorage
    `hara.v1` tetap dibaca untuk migrasi dan TIDAK dihapus di rilis ini. */
 
@@ -61,6 +66,10 @@ export function sinkronWelcome() {
 export const state = {
   seq: 1,
   notes: DEFAULT_NOTES(),
+  /* flashcard (C7). Ikut tersimpan di snapshot yang sama dengan catatan. */
+  kartu: [],
+  /* ruang persiapan ujian (C8): materi dan soal. Ikut snapshot yang sama. */
+  ujian: [],
   openId: 'w',
   /* data tersimpan tidak terbaca pada pemuatan terakhir — dipakai app.js
      untuk memberi tahu pengguna, bukan menyembunyikan kegagalan */
@@ -75,6 +84,8 @@ function snapshot() {
     seq: state.seq,
     openId: state.openId,
     notes: state.notes,
+    kartu: state.kartu,
+    ujian: state.ujian,
   });
 }
 
@@ -89,6 +100,7 @@ export function save() {
     state.dataGagal = !ok;
     if (!ok) toast(tr('Penyimpanan gagal — perubahan terakhir mungkin belum tersimpan'));
   });
+  beriTahuSimpan();
   return true;
 }
 
@@ -97,10 +109,12 @@ export function save() {
 export function simpanTahan() {
   let s;
   try { s = snapshot(); } catch (e) { return Promise.resolve(false); }
-  return tulisAntre(s).then(ok => {
+  const hasil = tulisAntre(s).then(ok => {
     state.dataGagal = !ok;
     return ok;
   });
+  beriTahuSimpan();
+  return hasil;
 }
 
 /* Data tersimpan ada tapi tidak bisa dibaca (JSON rusak / bentuk tak
@@ -134,6 +148,10 @@ export async function load() {
     const notes = normalizeNotes(data.notes);
     state.notes = notes.length ? notes : DEFAULT_NOTES();
     state.seq = data.seq || 1;
+    /* data sebelum C7 tidak punya kunci kartu: dimulai dari daftar kosong */
+    state.kartu = normalizeKartu(data.kartu);
+    /* data sebelum C8 tidak punya kunci ujian */
+    state.ujian = normalizeUjian(data.ujian);
     state.openId = (data.openId && state.notes.some(n => n.id === data.openId))
       ? data.openId : state.notes[0].id;
 

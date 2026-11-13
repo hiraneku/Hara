@@ -1,7 +1,7 @@
 /**
  * Pengujian menyeluruh Peta Master Catatan Mobile Generasi Baru (#1 s/d #14):
  *  #1 Menu Aksi Blok Sentuh (Turn into, Warna Latar Blok, Duplikat, Salin Link Blok, Hapus)
- *  #2 Bar Pintas Keyboard Mobile (#qk-strip: Indent, Cap Jam, To-do, [[ ]], Alat Teks, Aksi Blok)
+ *  #2 Bar Pintas Keyboard Mobile (#qk-strip: Cap Jam, Alat Teks, Aksi Blok)
  *  #3 Studio Kanvas Coretan & Tanda Tangan (/sketch -> blob gambar + atribut data-sketch)
  *  #4 Blok Rumus Matematika Offline (/math -> pecahan, akar, simbol Yunani & round-trip Markdown)
  *  #5 Blok Kartu Tautan / Bookmark Visual (/bookmark -> domain otomatis & round-trip Markdown)

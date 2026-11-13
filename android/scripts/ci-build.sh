@@ -104,6 +104,16 @@ cp "$ROOT/docs/version.json" "$OUT/version.json"
 echo "web bundle: $(du -h "$OUT/hara-web.zip" | cut -f1)" | tee -a "$LOG"
 
 # Rilis hanya untuk branch sesi.
+# Build APK khusus branch Arena dengan tautan Release publik (artefak Actions
+# meminta pengguna login, terutama dari browser HP).
+if [ "${GITHUB_REF:-}" = "refs/heads/arena/4c22176a-hara" ] && [ -n "${GH_TOKEN:-}" ]; then
+  TAG=apk-arena-4c22176a
+  APK_NOTE="APK dari branch Arena, commit ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER})."
+  gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --title "Hara APK (Arena terbaru)" --notes "$APK_NOTE"
+  gh release edit "$TAG" --notes "$APK_NOTE" --prerelease
+  gh release upload "$TAG" "$OUT/Hara.apk" --clobber
+fi
+
 if [ "${GITHUB_REF:-}" = "refs/heads/arena/c3f71ef0-hara" ] && [ -n "${GH_TOKEN:-}" ]; then
   NOTE="Dibangun dari commit ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}). Dipakai APK untuk pembaruan isi di dalam aplikasi."
 

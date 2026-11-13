@@ -1,0 +1,72 @@
+/* Saran wikilink harus eksplisit, mengarah hanya ke judul yang terlihat,
+   dan Undo mengembalikan isi asli. */
+import { JSDOM } from 'jsdom';
+import fs from 'fs';
+import { indexedDB as fakeIDB } from 'fake-indexeddb';
+import path from 'path';
+import { fileURLToPath } from 'url';
+process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
+const AKAR=process.cwd();
+const dom=new JSDOM(fs.readFileSync('docs/index.html','utf8'),{url:'https://x.test/',pretendToBeVisual:true});
+const {window:w}=dom;w.indexedDB=fakeIDB;
+for(const k of ['document','getSelection','HTMLElement','Node','Range','MouseEvent','KeyboardEvent','Event','InputEvent','localStorage','Image','Blob','NodeFilter'])if(w[k]!==undefined)globalThis[k]=w[k];
+globalThis.window=w;globalThis.self=w;globalThis.indexedDB=w.indexedDB;
+globalThis.addEventListener=w.addEventListener.bind(w);Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true});
+w.URL.createObjectURL=()=>'blob:x/1';w.URL.revokeObjectURL=()=>{};globalThis.URL=w.URL;
+const V=fs.readFileSync('docs/app.js','utf8').match(/\?v=(\d+)/)[1];
+await import(`${AKAR}/docs/app.js?v=${V}`);
+const {go}=await import(`${AKAR}/docs/core/router.js?v=${V}`);
+const {state}=await import(`${AKAR}/docs/core/store.js?v=${V}`);
+const {makeNote}=await import(`${AKAR}/docs/notes/note-model.js?v=${V}`);
+const {resetHistory}=await import(`${AKAR}/docs/notes/editor/history.js?v=${V}`);
+const {cocokJudulDiAkhir,jadikanWikilink}=await import(`${AKAR}/docs/notes/editor/saran-wikilink.js?v=${V}`);
+const {pasangKunci,resetSesi}=await import(`${AKAR}/docs/notes/kunci.js?v=${V}`);
+const d=w.document,S=w.getSelection(),wait=ms=>new Promise(r=>setTimeout(r,ms));
+const DOC=()=>d.querySelector('.ed-doc'),click=e=>e&&e.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
+let total=0,gagal=0;
+const ok=(n,c,det='')=>{total++;if(c)console.log('LULUS',n);else{gagal++;console.log('GAGAL',n,det?'→ '+det:'');}};
+const target=makeNote({id:'wikilink-target',title:'Project Atlas'});
+const source=makeNote({id:'wikilink-source',title:'Source note'});
+state.notes.push(target,source);
+go('notes');await wait(50);click(d.querySelector('[data-open="wikilink-source"]'));await wait(100);
+d.querySelector('#toast')?.classList.remove('on');
+
+console.log('── Pencocokan aman ──');
+ok('judul cocok tanpa membedakan kapital dan menerima tanda akhir',cocokJudulDiAkhir('Lihat project atlas!')?.id===target.id);
+ok('judul di tengah kata tidak cocok',!cocokJudulDiAkhir('Project Atlasx'));
+ok('judul yang belum diakhiri delimiter tidak disarankan',!cocokJudulDiAkhir('Catatan: Project Atlasx'));
+ok('judul aktif tidak menautkan dirinya sendiri',!cocokJudulDiAkhir('Project Atlas',target.id));
+ok('teks diikuti kata lanjutan tidak disarankan',!cocokJudulDiAkhir('Lihat Project Atlas nanti'));
+const locked=makeNote({id:'wikilink-locked',title:'Secret Archive'});state.notes.push(locked);
+await pasangKunci(locked.id,'1234');resetSesi();
+ok('judul catatan terkunci tidak bocor sebagai saran',!cocokJudulDiAkhir('Open Secret Archive!',state.openId));
+
+console.log('── Konfirmasi editor ──');
+DOC().setAttribute('contenteditable','true');DOC().innerHTML='';
+const b=d.createElement('div');b.className='b-p';b.dataset.bid='wiki-p';const text=d.createTextNode('Lihat project atlas!');b.appendChild(text);DOC().appendChild(b);
+const r=d.createRange();r.setStart(text,text.length);r.collapse(true);S.removeAllRanges();S.addRange(r);resetHistory(null);
+DOC().dispatchEvent(new w.InputEvent('input',{bubbles:true,inputType:'insertText',data:'!'}));
+await wait(1250);
+ok('isi tidak berubah otomatis sebelum persetujuan',b.textContent==='Lihat project atlas!'&&!b.querySelector('.wl'));
+const tawaran=d.querySelector('#toast .toast-a');
+ok('saran eksplisit tampil sebagai aksi',!!tawaran&&tawaran.textContent==='Jadikan wikilink',d.querySelector('#toast')?.textContent);
+click(tawaran);await wait(50);
+const span=DOC().querySelector('.wl');
+ok('persetujuan mengubah judul menjadi wikilink',!!span&&span.textContent==='[[Project Atlas]]',DOC().innerHTML);
+ok('kapitalisasi dan tanda baca di sekelilingnya dipertahankan',DOC().textContent==='Lihat [[Project Atlas]]!',DOC().textContent);
+const undo=d.querySelector('#toast .toast-a');
+ok('konversi menyediakan Undo',!!undo&&undo.textContent==='Urungkan');click(undo);await wait(50);
+ok('Undo memulihkan teks asli',DOC().textContent==='Lihat project atlas!'&&!DOC().querySelector('.wl'),DOC().innerHTML);
+
+console.log('── Konversi langsung tetap eksplisit ──');
+const c=d.createElement('div');c.className='b-p';c.appendChild(d.createTextNode('Project Atlas!'));
+DOC().appendChild(c);
+const calon=cocokJudulDiAkhir(c.textContent,state.openId);
+ok('fungsi hanya mengubah setelah dipanggil eksplisit',!!calon&&jadikanWikilink(c,calon)&&!!c.querySelector('.wl'));
+c.appendChild(d.createTextNode(' edit baru'));
+click(d.querySelector('#toast .toast-a'));
+ok('Undo toast basi tidak membatalkan edit yang lebih baru',!!c.querySelector('.wl')&&c.textContent.endsWith('edit baru'));
+
+console.log(`\nTotal: ${total} · Lulus: ${total-gagal} · Gagal: ${gagal}`);
+if(gagal)process.exit(1);
+process.exit(0);

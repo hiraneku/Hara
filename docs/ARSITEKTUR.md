@@ -24,6 +24,9 @@ docs/
 │   ├── bahasa-ja.js    kamus Jepang
 │   ├── theme.js        tema terang/gelap + warna aksen
 │   ├── dom.js          el, esc, stamp, tglHari — helper DOM dipakai semua modul
+│   ├── enkripsi.js     K17/K18: PBKDF2 + AES-GCM, cadangan terenkripsi frasa sandi
+│   ├── kunci-data.js   MB3: kunci data acak 256-bit, pembungkus, segel isi catatan (murni WebCrypto)
+│   ├── kunci-perangkat.js MB3: kunci pembungkus dari WebAuthn PRF (sidik jari perangkat)
 │   └── toast.js
 │
 ├── notes/              SEMUA fungsi fitur Catatan
@@ -42,8 +45,13 @@ docs/
 │   ├── wikilink.js     catatan yang menyebut/menaut catatan lain
 │   ├── panels.js       panel balik, rujukan, graf
 │   ├── daftar-isi.js   daftar heading di panel
+│   ├── pintar.js       fitur pintar MURNI: TF-IDF, catatan serupa, saran tag, ringkasan, tinjauan (diuji tools/uji/pintar.mjs)
+│   ├── pintar-aksi.js  integrasi fitur pintar ke palette; aturan: catatan terkunci tidak pernah dipakai
 │   ├── meta-ui.js      editor properti catatan
 │   ├── kunci.js        kunci catatan (PIN + sidik jari)
+│   ├── tabel-rumus.js  MB2: urut, saring, dan rumus tabel (murni, diuji tools/uji/tabel-rumus.mjs)
+│   ├── papan-logika.js MB1: pengelompokan Kanban & hari kalender (murni)
+│   ├── papan.js        MB1: render Kanban & kalender dari properti catatan
 │   ├── share.js        bagikan / salin catatan
 │   ├── mode-baca.js    mode baca, A−/A+, zen, cari di dalam catatan
 │   ├── baca-plus.js    ukuran teks baca + zen
@@ -72,6 +80,9 @@ docs/
 │   │   ├── tempel-mekanik.js  teks polos dari luar → mekanik Hara (daftar, heading, tautan)
 │   │   ├── bilah-teks.js      bilah format di atas teks yang disorot
 │   │   ├── sorotan.js / warna.js / font.js  format lekat (sorot, warna, font)
+│   │   ├── blok-modern.js          blok khusus: toggle (lipat), tabel, memo suara, pill wikilink
+│   │   ├── blok-generasi-baru.js   rumus, kartu tautan, lampiran berkas, menu aksi blok, quick keys
+│   │   ├── sketsa.js               studio sketsa (blok gambar tangan)
 │   │   └── events.js   input, beforeinput, keydown, selectionchange
 │   │
 │   ├── bar/
@@ -79,6 +90,7 @@ docs/
 │   │   ├── prefs.js    kontrol mana yang tampil + saklar getar
 │   │   ├── actions.js  peta aksi tiap tombol
 │   │   ├── render.js   gambar bar + focusKeep
+│   │   ├── perilaku.js kapan bar tampil di HP (fokus teks / menu / gulir) + reset ke kiri
 │   │   └── help.js     teks bantuan tiap tombol
 │   │
 │   ├── menus/          pop, slash, slash-trigger, wikilink, tag, insert, link,
@@ -143,6 +155,14 @@ docs/
 
 5. **Tanpa handler inline di HTML.** `onclick="..."` tidak bisa melihat scope
    modul. Semua kejadian dipasang lewat `addEventListener`.
+
+6. **Bar dan menu `/` — dua pintu, satu aturan.** Jenis blok (heading,
+   daftar, kutipan, kode, pembatas, gambar) boleh ada di bar DAN di menu `/`.
+   Aksi non-blok (tanggal, warna tag) hanya di menu `/`, karena tombol `/` di
+   bar sudah membukanya dengan satu ketuk. Saat menambah aksi baru, pilih salah
+   satu pintu, kecuali aksinya jenis blok.
+   Baris pintas di atas editor (`#qk-strip`, `blok-generasi-baru.js`) juga
+   hanya memuat aksi yang tidak ada di bar bawah.
 
 ## Menambah tools baru (mis. Reminder)
 

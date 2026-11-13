@@ -18,7 +18,17 @@ for f in tools/uji/*.mjs; do node $f; done
 | `kondisi-tepi.mjs` | pending nyangkut, sisip di tengah, toggle tanpa ketik |
 | `spasi-dan-penanda.mjs` | spasi termakan, huruf berpindah saat ganti format |
 | `editor-dasar.mjs` | acceptance criteria editor dasar: tipe blok, Enter/ID, todo meta, slash menu |
-| `paste.mjs` | paste plain/rich, keamanan clipboard, ID blok, caret, undo |
+| `auto-pasangan.mjs` | pasangan kurung/kutip/backtick, skip-over, Backspace pasangan kosong, konteks kode/URL, Undo & preferensi |
+| `auto-tugas.mjs` | kandidat natural-language tanggal→todo memakai parser tenggat yang sama |
+| `auto-tugas-ui.mjs` | saran tanpa perubahan diam-diam, konfirmasi, pembuatan todo, dan Undo |
+| `ubah-seleksi.mjs` | pratinjau, batal, Undo, daftar/checklist/kutipan/callout/tabel/kartu, ID serta blok khusus |
+| `saran-wikilink.mjs` | pencocokan batas judul, catatan terkunci, saran dengan persetujuan eksplisit, dan Undo |
+| `vault-tools.mjs` | pemeriksaan vault tanpa perubahan, inventaris lampiran, konflik restore, dan remap blob bentrok |
+| `a11y-shell.mjs` | nama aksesibel navigasi, indikator fokus, semantik dialog, Escape, dan target sentuh alat vault |
+| `backup-preview-ui.mjs` | pratinjau restore, ringkasan penambahan/konflik, pilihan konflik lokal aman |
+| `riwayat-preview.mjs` | tinjau diff sebelum restore, tolak pratinjau basi, pulihkan versi eksplisit |
+| `attachment-center-ui.mjs` | daftar lampiran terpakai/yatim, konfirmasi kedua, proteksi berkas terpakai |
+| `paste.mjs` | paste plain/rich, keamanan clipboard, ID blok, caret, undo, mode format/Markdown/teks polos |
 | `font-menyeluruh.mjs` | matriks lengkap pergantian font + span BERSARANG |
 | `font-ganti.mjs` | ganti font nyangkut ke font lama, span font kosong menumpuk |
 | `baca-todo-tpl.mjs` | mode baca, simpan templat, panel todo (Bagian A/B) |
@@ -41,6 +51,13 @@ for f in tools/uji/*.mjs; do node $f; done
 | `statistik.mjs` | K20: heatmap aktivitas, tugas per minggu, rentetan jurnal |
 | `riwayat-sesi.mjs` | K26: undo catatan lintas sesi (IDB), catatan terkunci tidak ditulis, log CSV |
 | `enkripsi-suara.mjs` | K17 enkripsi AES-GCM + PBKDF2, K18 cadangan frasa sandi, K15 baca keras & dikte |
+| `kunci-data.mjs` | MB3 kunci data acak, bungkus/buka dengan kunci pembungkus, segel isi catatan; PRF disimulasikan (autentikator asli tidak diuji) |
+| `cadangan-besar.mjs` | K18 cadangan terenkripsi ±10 MB: roundtrip byte demi byte, frasa salah, perusakan, penanda teks tidak bocor |
+| `tabel-rumus.mjs` | MB2 urut (naik/turun, aturan Excel), saring, rumus A1 SUM/AVERAGE/MIN/MAX/COUNT, galat #DIV/0! #REF! #NILAI! #SIKLUS! |
+| `tabel-lanjut-ui.mjs` | MB2 di editor (jsdom): data-hasil, urut mengubah urutan baris, saring tanpa menghapus data |
+| `papan.mjs` | MB1 logika papan: kelompok per properti, urutan dari contoh, (kosong) di akhir, kalender Senin |
+| `papan-ui.mjs` | MB1 papan & kalender di editor (jsdom): pindah kartu mengubah properti, geser bulan |
+| `pintar-ui.mjs` | S1–S5 lewat palette (jsdom): mirip, saran tag, tangkap cepat, tinjauan, ringkasan; catatan terkunci tidak bocor |
 | `alat-renamer.mjs` | dialog renamer K21–K25 & K22–K23 lewat klik sungguhan (jsdom): regex, contoh, syarat, resep, duplikat |
 | `fitur-catatan-ui.mjs` | K31 tenggat→tugas, K19 tabel properti, K30 sumber palette tugas (memuat app.js) |
 | `lib/catatan-idb.mjs` | pembantu bersama: baca/tulis record catatan di IndexedDB untuk uji |
@@ -49,6 +66,8 @@ for f in tools/uji/*.mjs; do node $f; done
 | `cari-tajam.mjs` | F26 operator tag:/judul: · sorot hasil · riwayat pencarian |
 | `bilah-sorot.mjs` | F27 bilah format di atas teks yang disorot |
 | `mutu-gambar.mjs` | C17 pilihan mutu gambar di Pengaturan · keputusan pengecilan |
+| `musik-logika.mjs` | pemutar musik tahap 1: batas tempo/nada, loop A-B, format waktu, puncak gelombang, pengaturan per lagu (murni, <1 detik) |
+| `musik-layar.mjs` | pemutar musik tahap 1: navigasi tanpa navigasi bawah, pustaka & pengaturan dipulihkan, kartu beranda, hapus dua-ketuk (jsdom) |
 | `tempel-mekanik.mjs` | tempel dari luar: batas baris `<br>`/elemen blok, daftar 1/2/3 (termasuk nomor tebal & bersarang), butir, to-do, heading, kutipan, callout, pembatas, pagar kode, tautan (a.lk) |
 
 **Aturan:** semua harus lolos. Kalau satu gagal, jangan tambal gejalanya —

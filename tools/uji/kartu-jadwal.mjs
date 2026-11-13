@@ -1,0 +1,27 @@
+import { buatKartu, normalizeKartu, catatNilai, kartuJatuhTempo, kartuBerikutnya, antrianAwal, langkahAntrean, JEDA_AGAIN_MS } from '../../docs/notes/kartu-murni.js';
+let gagal = 0;
+function cek(n, ok, detail = '') { console.log(`${ok ? 'OK  ' : 'FAIL'} ${n}${detail ? ` — ${detail}` : ''}`); if (!ok) gagal++; }
+const now = 1_800_000_000_000;
+const fresh = buatKartu({ depan: 'Q', belakang: 'A', id: 'new', sekarang: now }).kartu;
+cek('kartu baru langsung jatuh tempo', fresh.dueAt === now && fresh.intervalDays === 0 && fresh.repetitions === 0);
+cek('antrian hanya berisi kartu jatuh tempo dan terurut', antrianAwal([fresh, { ...fresh, id: 'later', dueAt: now + 1000 }], now).join() === 'new');
+const lagi = { ...fresh };
+catatNilai(lagi, 'again', now);
+cek('Lagi menjadwalkan ulang 10 menit dan mencatat lapse', lagi.dueAt === now + JEDA_AGAIN_MS && lagi.lapses === 1 && lagi.repetitions === 0 && lagi.salah === 1);
+cek('kartu Lagi tidak jatuh tempo sebelum jeda', kartuJatuhTempo([lagi], now + JEDA_AGAIN_MS - 1).length === 0);
+cek('waktu jatuh tempo berikutnya ditemukan', kartuBerikutnya([lagi], now) === now + JEDA_AGAIN_MS);
+const hard = { ...fresh }; catatNilai(hard, 'hard', now);
+cek('Sulit memberi interval pendek 1 hari dan menurunkan ease', hard.intervalDays === 1 && hard.ease < 2.5 && hard.benar === 1);
+const good = { ...fresh }; catatNilai(good, 'good', now);
+cek('Ingat pertama memberi interval 1 hari', good.intervalDays === 1 && good.dueAt === now + 86400000);
+catatNilai(good, 'good', good.dueAt);
+cek('Ingat kedua memberi interval 3 hari', good.intervalDays === 3 && good.repetitions === 2);
+const easy = { ...fresh }; catatNilai(easy, 'easy', now);
+cek('Mudah pertama memberi interval 4 hari dan menaikkan ease', easy.intervalDays === 4 && easy.ease > 2.5);
+const resumed = normalizeKartu([{ id: 'old', depan: 'Q', belakang: 'A', dibuat: now - 5 }])[0];
+cek('kartu lama dimigrasikan menjadi jatuh tempo tanpa kehilangan isi', resumed.dueAt === now - 5 && resumed.repetitions === 0 && resumed.intervalDays === 0);
+const restored = normalizeKartu([{ ...good, dueAt: -1, intervalDays: 999999, ease: 99 }])[0];
+cek('jadwal cadangan rusak dibatasi aman', restored.dueAt === good.dibuat && restored.intervalDays === 3650 && restored.ease === 3.2);
+cek('gagal di sesi dapat muncul sekali lagi di belakang', langkahAntrean(['a', 'b'], 'a', 'again').join() === 'b,a');
+console.log(gagal ? `\n${gagal} GAGAL` : '\nSemua uji N1 kartu terjadwal LOLOS');
+process.exit(gagal ? 1 : 0);

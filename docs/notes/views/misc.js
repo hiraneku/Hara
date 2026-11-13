@@ -1,18 +1,23 @@
 /* Layar pendukung modul catatan: cari, tag, sampah, arsip, pengaturan.
    Reminder & Tugas masih menunggu modulnya sendiri (tools/reminder,
    tools/tasks) — tombolnya bilang jujur, tidak pura-pura bekerja. */
-import { state } from '../../core/store.js?v=20261023235452';
-import { esc, stamp } from '../../core/dom.js?v=20261023235452';
-import { rowFor } from './row.js?v=20261023235452';
-import { semuaTag, tagUntukTampil } from '../tags.js?v=20261023235452';
-import { AK, akSekarang } from '../../core/theme.js?v=20261023235452';
-import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261023235452';
-import { tandaTag, WARNA_TAG } from '../label.js?v=20261023235452';
-import { terlihat } from '../kunci.js?v=20261023235452';
-import { pecahKueri, kataSorot, riwayatCari, cariPeringkat } from '../cari.js?v=20261023235452';
-import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261023235452';
-import { namaSekarang } from '../../home/nama.js?v=20261023235452';
-import { renderSimpanSaringanHtml } from '../saringan.js?v=20261023235452';
+import { state } from '../../core/store.js?v=20261105210000';
+import { logAktif } from '../log-ketik.js?v=20261105210000';
+import { esc, stamp } from '../../core/dom.js?v=20261105210000';
+import { rowFor } from './row.js?v=20261105210000';
+import { semuaTag, tagUntukTampil } from '../tags.js?v=20261105210000';
+import { AK, akSekarang } from '../../core/theme.js?v=20261105210000';
+import { t as tr, bahasaSekarang, DAFTAR_BAHASA } from '../../core/i18n.js?v=20261105210000';
+import { tandaTag, WARNA_TAG } from '../label.js?v=20261105210000';
+import { terlihat } from '../kunci.js?v=20261105210000';
+import { pecahKueri, kataSorot, riwayatCari, cariPeringkat, labelOperator } from '../cari.js?v=20261105210000';
+import { petaNamaRuang } from '../ruang.js?v=20261105210000';
+import { PILIHAN, mutuSekarang } from '../mutu-gambar.js?v=20261105210000';
+import { pengaturanPasangan } from '../editor/pasangan.js?v=20261105210000';
+import { modeTempel } from '../editor/tempel-mode.js?v=20261105210000';
+import { saranTugasAktif } from '../editor/auto-tugas.js?v=20261105210000';
+import { namaSekarang } from '../../home/nama.js?v=20261105210000';
+import { renderSimpanSaringanHtml } from '../saringan.js?v=20261105210000';
 
 /* Kueri pencarian terakhir — dibawa lintas render ulang layar, supaya
    pindah layar (atau aksi dari hasil cari) tidak menghapus ketikan. */
@@ -58,10 +63,7 @@ export function daftarTagHtml(q) {
    sebuah catatan ikut muncul. Riwayat pencarian tampil saat kolom
    masih kosong. */
 const chipOperator = k => {
-  const isi = [
-    ...k.tag.map(x => `tag:${x}`),
-    ...k.judul.map(x => `judul:${x}`),
-  ];
+  const isi = labelOperator(k);
   if (!isi.length) return '';
   return `<div class="rx-op">${isi.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>`;
 };
@@ -96,7 +98,7 @@ export function renderHasilCari(q) {
      tertentu mengandung kata kunci itu. Hanya yang terlihat dikirim ke
      indeks/Worker. */
   const terlihatSaja = state.notes.filter(n => !n.deletedAt && terlihat(n));
-  cariPeringkat(terlihatSaja, k).then(r => {
+  cariPeringkat(terlihatSaja, k, { namaRuang: petaNamaRuang() }).then(r => {
     if (gilir !== gilirCari) return;
     const wadah = document.getElementById('cari-hasil');
     if (wadah) tampilkanHasil(wadah, mentah, k, terlihatSaja, r);
@@ -157,7 +159,7 @@ search:()=>`<div class="page">
       aria-label="${tr('Cari catatan')}" value="${esc(kueriCari)}"></div>
   ${renderSimpanSaringanHtml()}
   <div id="cari-hasil">${riwayatHtml()}<p class="dm-kosong" style="padding:6px 2px">${tr('Ketik kata kunci untuk mencari di judul, isi, dan tag.')}</p></div>
-  <p class="note" style="padding:20px 2px 0">${tr('Pencarian membaca data asli: semua kata harus cocok (judul, isi, atau tag). Persempit dengan tag:nama atau judul:kata, dan bungkus tanda kutip untuk frasa utuh — mis. judul:"resep kue".')}</p></div>`,
+  <p class="note" style="padding:20px 2px 0">${tr('Pencarian deterministik tanpa AI: semua kata harus cocok (judul, isi, atau tag). Pakai tag:nama, judul:kata, folder:ruang, properti:kunci=nilai, sebelum:/sesudah:, has:pdf|audio|image|todo|link, dan is:pinned|archived|empty. Awali operator dengan - untuk mengecualikan; kutip frasa utuh, mis. judul:"resep kue".')}</p></div>`,
 
 tags:()=>{
   const sem = semuaTag();
@@ -227,6 +229,9 @@ trash:()=>{
 },
 
 set:()=>{ const akPilih = akSekarang() || '';
+  const pasangan = pengaturanPasangan();
+  const modeTempelAktif = modeTempel();
+  const saranTugasOn = saranTugasAktif();
   const swAksen = AK.map(a =>
     `<button type="button" class="ak-dot${(a.k || '') === akPilih ? ' on' : ''}"
        data-ak="${a.k || ''}" aria-pressed="${(a.k || '') === akPilih}"
@@ -250,6 +255,31 @@ set:()=>{ const akPilih = akSekarang() || '';
     <div class="row"><div class="row-b"><div class="row-t">${tr('Pembaruan aplikasi')}</div>
       <div class="row-s">${tr('Cek versi terbaru dari GitHub')}</div></div>
       <button type="button" class="btn btn-sec" data-cek-pembaruan>${tr('Cek sekarang')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Log ketik (diagnosis)')}</div>
+      <div class="row-s">${tr('Catat urutan tombol di editor. Hanya di perangkat ini, berisi teks yang kamu ketik.')}</div></div>
+      <button class="sw${logAktif() ? ' on' : ''}" data-log-ketik role="switch" aria-checked="${logAktif()}"><span></span></button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Lihat log ketik')}</div>
+      <div class="row-s">${tr('Buka isi log untuk disalin dan dikirim lewat chat')}</div></div>
+      <button type="button" class="btn btn-sec" data-log-lihat>${tr('Lihat')}</button></div>
+  </div>
+  <div class="sec"><h2>${tr('Editor')}</h2></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Pasangkan kurung otomatis')}</div>
+      <div class="row-s">${tr('Lengkapi (), [], {} dan hapus pasangan kosong dengan Backspace.')}</div></div>
+      <button type="button" class="sw${pasangan.kurung ? ' on' : ''}" data-pasangan="kurung" role="switch" aria-checked="${pasangan.kurung}"><span></span></button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Pasangkan kutip dan kode otomatis')}</div>
+      <div class="row-s">${tr('Lengkapi tanda kutip dan backtick; tidak aktif di blok kode.')}</div></div>
+      <button type="button" class="sw${pasangan.kutip ? ' on' : ''}" data-pasangan="kutip" role="switch" aria-checked="${pasangan.kutip}"><span></span></button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Saran tugas dari tanggal')}</div>
+      <div class="row-s">${tr('Tawarkan konversi kalimat bertanggal di akhir paragraf; tidak mengubah tanpa persetujuan.')}</div></div>
+      <button type="button" class="sw${saranTugasOn ? ' on' : ''}" data-saran-tugas role="switch" aria-checked="${saranTugasOn}"><span></span></button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Cara menempel default')}</div>
+      <div class="row-s">${tr('Shift+Ctrl/⌘+V selalu menempel sebagai teks polos.')}</div></div>
+      <div class="lang-pilih"><select data-tempel-mode aria-label="${tr('Cara menempel default')}">
+        <option value="format"${modeTempelAktif === 'format' ? ' selected' : ''}>${tr('Pertahankan format')}</option>
+        <option value="markdown"${modeTempelAktif === 'markdown' ? ' selected' : ''}>${tr('Tafsirkan Markdown')}</option>
+        <option value="plain"${modeTempelAktif === 'plain' ? ' selected' : ''}>${tr('Teks polos')}</option>
+      </select></div></div>
   </div>
   <div class="sec"><h2>${tr('Tampilan')}</h2></div>
   <div class="card" style="margin-bottom:24px">
@@ -281,6 +311,8 @@ set:()=>{ const akPilih = akSekarang() || '';
   <p class="note" style="padding:0 0 24px">${tr('Berlaku untuk gambar yang baru disisipkan; gambar yang sudah ada di catatan tidak diubah. GIF selalu disimpan apa adanya supaya animasinya tidak hilang.')}</p>
   <div class="sec"><h2>${tr('Data')}</h2></div>
   <div class="card">
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Kesehatan vault')}</div><div class="row-s">${tr('Temukan judul ganda, catatan kosong, dan wikilink tanpa sasaran tanpa mengubah data.')}</div></div><button type="button" class="btn btn-sec" data-vault-health>${tr('Periksa')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Pusat lampiran')}</div><div class="row-s">${tr('Tinjau berkas lokal, ukurannya, pemakaian, dan lampiran yang tidak dirujuk.')}</div></div><button type="button" class="btn btn-sec" data-attachment-center>${tr('Kelola')}</button></div>
     <div class="row"><div class="row-b"><div class="row-t">${tr('Impor')}</div>
       <div class="row-s">${tr('Cadangan JSON Hara (termasuk gambar) · berkas .md · .zip markdown')}</div></div>
       <button type="button" class="btn btn-sec" data-impor>${tr('Pilih berkas…')}</button></div>
@@ -298,9 +330,24 @@ set:()=>{ const akPilih = akSekarang() || '';
         <button type="button" class="btn btn-sec" data-cad-enkrip>${tr('Enkripsi')}</button>
         <button type="button" class="btn btn-sec" data-cad-pulih>${tr('Pulihkan')}</button>
       </div></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Sinkronisasi E2E')}</div>
+      <div class="row-s">${tr('Sinkronisasi lintas perangkat terenkripsi dengan WebDAV milikmu; tidak ada server Hara.')}</div></div>
+      <button type="button" class="btn btn-sec" data-sinkronisasi>${tr('Atur & sinkronkan')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Otomasi aturan')}</div>
+      <div class="row-s">${tr('Jalankan aksi lokal berdasar kondisi note yang kamu tentukan.')}</div></div>
+      <button type="button" class="btn btn-sec" data-aturan-buka>${tr('Kelola aturan')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Dashboard note')}</div>
+      <div class="row-s">${tr('Atur komponen bawaan, susunan, dan filter dashboard.')}</div></div>
+      <button type="button" class="btn btn-sec" data-dashboard-open>${tr('Buka dashboard')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('Kolaborasi note')}</div>
+      <div class="row-s">${tr('Kelola identitas lokal, akses anggota, dan komentar beratribusi. Relay belum terhubung.')}</div></div>
+      <button type="button" class="btn btn-sec" data-n10-open>${tr('Ruang lokal')}</button></div>
+    <div class="row"><div class="row-b"><div class="row-t">${tr('API ekstensi terkontrol')}</div>
+      <div class="row-s">${tr('Tinjau kemampuan ekstensi bawaan dan atur izin note.')}</div></div>
+      <button type="button" class="btn btn-sec" data-n11-open>${tr('Kelola izin')}</button></div>
     <div class="row"><div class="row-b"><div class="row-t">${tr('Penyimpanan')}</div>
       <div class="row-s" id="ruang">${tr('menghitung…')}</div></div></div>
   </div>
   <input type="file" id="impor-in" hidden
-    accept=".json,.md,.markdown,.txt,.zip,application/json,text/markdown,application/zip">
+    accept=".json,.md,.markdown,.txt,.csv,.zip,application/json,text/markdown,text/csv,application/zip">
   <p class="note" style="padding:20px 0 0">${tr('Keluar-masuk kapan saja: Unduh cadangan untuk memulihkan semua persis, Markdown untuk berpindah ke aplikasi lain tanpa kehilangan isi. Gambar ikut dalam cadangan; ekspor Markdown hanya membawa teks.')} ${tr('Catatan terkunci ikut dicadangkan — PIN dan sidik jari tidak pernah meninggalkan perangkat, jadi setelah dipulihkan di perangkat lain kuncinya dipasang ulang bila perlu.')}</p></div>`}};

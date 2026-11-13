@@ -57,6 +57,11 @@ export const BAR = [
       { m: 'strike', ikon: 'i-strike',nama: 'Coret',        kunci: '~~' },
       { m: 'icode',  ikon: 'i-code',  nama: 'Kode inline',  kunci: '`' },
       { m: 'clear',  ikon: 'i-eraser',nama: 'Hapus format', kunci: '' },
+      { m: 'tape',   ikon: 'i-eye-off',nama: 'Tape (sembunyikan teks)', kunci: '' },
+      { m: 'tapeBuka', ikon: 'i-eye', nama: 'Buka semua tape', kunci: '' },
+      { m: 'tapeTutup', ikon: 'i-eye-off', nama: 'Tutup semua tape', kunci: '' },
+      { m: 'kartuBuat', ikon: 'i-plus', nama: 'Jadikan kartu', kunci: '' },
+      { m: 'kartuLatih', ikon: 'i-book', nama: 'Latihan kartu', kunci: '' },
     ]
   },
   {
@@ -68,17 +73,18 @@ export const BAR = [
       { m: 'todo', ikon: 'i-check2', nama: 'To-do',           kunci: '- [ ]' },
     ]
   },
+  /* Aturan: JENIS BLOK (Gambar, Pembatas) boleh ada di bar DAN di menu "/".
+     AKSI NON-BLOK (Tanggal, Warna tag) hanya di menu "/" — tombol "/" di
+     bar membukanya dengan satu ketuk, jadi tidak perlu tombol kedua. */
   {
     g: 'sisip', label: '<svg class="bi"><use href="#i-plus"/></svg>', title: 'Sisipkan',
     items: [
       { m: 'wl',   ikon: 'i-note',  nama: 'Tautan catatan', kunci: '[[' },
       { m: 'img',  ikon: 'i-img',   nama: 'Gambar',         kunci: '' },
-      { m: 'gal',  ikon: 'i-img',   nama: 'Dari galeri',    kunci: '' },
+      { m: 'gal',  ikon: 'i-gallery', nama: 'Dari galeri',  kunci: '' },
       { m: 'tag',  ikon: 'i-tag',   nama: 'Tag',            kunci: '#' },
-      { m: 'tagwarna', ikon: 'i-drop', nama: 'Warna tag',   kunci: '' },
       { m: 'ref',  ikon: 'i-anchor',nama: 'Tandai blok',    kunci: '^' },
       { m: 'hr',   ikon: 'i-minus', nama: 'Pembatas',       kunci: '---' },
-      { m: 'date', ikon: 'i-cal',   nama: 'Tanggal',        kunci: '' },
     ]
   },
   {

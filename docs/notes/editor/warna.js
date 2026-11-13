@@ -14,8 +14,9 @@
    • pilih "Bawaan" di dalam teks berwarna → karakter berikutnya
      dipecah keluar dari span warna, tanpa membuat span baru. */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261023235452';
-import { refresh } from './cleanup.js?v=20261023235452';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261105210000';
+import { refresh } from './cleanup.js?v=20261105210000';
+import { bungkusKomposisi } from './komposisi.js?v=20261105210000';
 
 /* Normalisasi masukan warna → "#rrggbb", atau null kalau tak dikenal.
    Menerima dengan ramah — biar kolom kode tidak pernah menolak kode yang
@@ -151,6 +152,22 @@ export function warnaPerluBungkus() {
   return !host || host.getAttribute('data-warna') !== _lekat;
 }
 
+/* Caret di ujung span warna yang LEKAT (dan bukan mode Bawaan): karakter
+   berikutnya harus ditulis manual ke dalam span. Browser kalau dibiarkan
+   sering melempar teks ke LUAR span di batas akhir elemen inline — akibatnya
+   huruf pertama hilang dari warna dan baru masuk sesudah karakter kedua. */
+export function warnaIkutUjung() {
+  /* Mode Bawaan: setiap karakter ditulis manual juga — browser bisa menaruh
+     huruf berikutnya kembali ke ujung span yang baru ditinggalkan (kursor
+     tepat di batas dua elemen). Pecah-keluarnya dilakukan oleh jalur manual. */
+  if (_modeBawaan) return true;
+  if (!_lekat) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = warnaAround(s.getRangeAt(0).startContainer);
+  return !!host && host.getAttribute('data-warna') === _lekat;
+}
+
 /* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai
    setelah normalize() menggabungkan text node. */
 function pilihTeks(induk, dari, panjang) {
@@ -182,8 +199,15 @@ export function setWarna(hex) {
   const d = docEl();
   if (!d) return;
   hex = normalizeWarna(hex) || '';
+  /* Caret harus ada di editor. Kalau tidak (menu baru ditutup, fokus pindah),
+     pulihkan dulu — jangan membuang niat warna diam-diam. */
+  if (!seleksiDiEditor()) ensureCaret();
+  if (!seleksiDiEditor()) {
+    /* editor belum pernah disentuh: simpan niatnya saja, berlaku saat mengetik */
+    _pending = hex || null; _lekat = hex || null; _modeBawaan = false;
+    return;
+  }
   const s = sel();
-  if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return;
   const r = s.getRangeAt(0);
 
   /* ── Tanpa teks terpilih ──
@@ -337,10 +361,45 @@ export function bungkusWarnaPending() {
 }
 
 
+/* Warna yang akan dipakai untuk komposisi IME yang sedang mulai, atau '' bila
+   tidak ada. Dipakai events.js (keluhan 1, opsi A): warna itu dipasang ke
+   elemen blok sementara, bukan ke node teks. Logika sama dengan
+   bungkusWarnaKomposisi: pending dulu, lalu lekat; Bawaan tidak ikut. */
+export function warnaUntukKomposisi() {
+  if (_pending === HAPUS) return '';
+  if (_modeBawaan && !_pending) return '';
+  return _pending || _lekat || '';
+}
+
+/* Setelah komposisi IME selesai: n karakter hasil komposisi ikut diwarnai
+   kalau ada warna yang menunggu, atau warna lekat tapi teksnya mendarat di
+   luar span warna. Mode Bawaan belum didukung untuk komposisi (lihat
+   komposisi.js). */
+export function bungkusWarnaKomposisi(n, awal) {
+  if (_pending === HAPUS) { _pending = null; return false; }
+  if (_modeBawaan && !_pending) return false;
+  const hex = _pending || _lekat;
+  if (!hex) return false;
+  _pending = null;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = warnaAround(s.getRangeAt(0).startContainer);
+  if (host && host.getAttribute('data-warna') === hex) return false;
+  return bungkusKomposisi(awal, n, frag => {
+    const el = buatSpan(hex);
+    el.appendChild(frag);
+    return el;
+  });
+}
+
 /* Pindah blok membatalkan warna yang menunggu — sama seperti font. */
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
+  /* seleksi di luar editor = bukan pindah blok (keyboard turun, fokus pindah) */
+  if (!seleksiDiEditor()) return;
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
+  if (blokTerakhir && blokTerakhir !== b) {
+    _pending = null; _lekat = null; _modeBawaan = false;
+  }
   blokTerakhir = b;
 });

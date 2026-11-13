@@ -10,18 +10,22 @@
  * sehingga mesin caret teks utama (`editor/caret.js`) sama sekali tidak terganggu.
  */
 
-import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261023235452';
-import { refresh } from './cleanup.js?v=20261023235452';
-import { snap } from './history.js?v=20261023235452';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261023235452';
-import { cariJudul, judulSpan } from '../wikilink.js?v=20261023235452';
-import { openNote } from '../model.js?v=20261023235452';
-import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261023235452';
-import { newBlockId, blockToHtml } from '../note-model.js?v=20261023235452';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261023235452';
-import { esc } from '../../core/dom.js?v=20261023235452';
-import { toast } from '../../core/toast.js?v=20261023235452';
-import { t as tr } from '../../core/i18n.js?v=20261023235452';
+import { docEl, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261105210000';
+import { refresh } from './cleanup.js?v=20261105210000';
+import { snap } from './history.js?v=20261105210000';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261105210000';
+import { cariJudul, judulSpan, bagianSpan, sasaranPdfSpan } from '../wikilink.js?v=20261105210000';
+import { bukaSasaranTautan, bukaPdfSasaran } from '../lompat-tautan.js?v=20261105210000';
+import { simpanBlob, urlUntuk, hapusBlob } from '../../core/blobs.js?v=20261105210000';
+import { newBlockId, blockToHtml, makeBlock, touch, normalisasiTanda, tandaAudioHtml, bacaTandaDom, normalisasiTranskrip, transkripAudioHtml, bacaTranskripDom } from '../note-model.js?v=20261105210000';
+import { state } from '../../core/store.js?v=20261105210000';
+import { simpan } from '../../core/autosave.js?v=20261105210000';
+import { mulaiRekam, hentikanRekam, sedangMerekam, segarkanRekam, tandaiRekam } from './perekam-suara.js?v=20261105210000';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261105210000';
+import { esc } from '../../core/dom.js?v=20261105210000';
+import { toast } from '../../core/toast.js?v=20261105210000';
+import { t as tr } from '../../core/i18n.js?v=20261105210000';
+import { urutBaris, lolosSaring, hitungTabel, simpanKeadaanTabel, adalahRumus } from '../tabel-rumus.js?v=20261105210000';
 
 const BAHASA_KODE = ['', 'js', 'ts', 'py', 'html', 'css', 'json', 'bash', 'sql', 'md'];
 
@@ -97,6 +101,30 @@ function bacaRowsDariEl(tblEl) {
   );
 }
 
+/* MB2: saring hanya menyembunyikan baris di DOM (data tetap utuh) dan
+   menyimpan keadaannya per blok, tanpa menyentuh catatan. */
+function terapkanSaringTabel(box) {
+  const kol = Number((box.querySelector('[data-tbl-kol]') || {}).value) || 0;
+  const teks = (box.querySelector('[data-tbl-saring]') || {}).value || '';
+  simpanKeadaanTabel(box.getAttribute('data-bid') || '', kol, teks);
+  const lolos = lolosSaring(bacaRowsDariEl(box), kol, teks);
+  Array.from(box.querySelectorAll('tbody tr')).forEach((tr, i) => {
+    tr.hidden = lolos[i] === false;
+  });
+}
+
+/* MB2: hasil rumus ditulis sebagai atribut data-hasil (CSS menampilkannya di
+   bawah sel). Teks sel tidak berubah, jadi tidak ikut tersimpan. */
+function segarkanRumusTabel(box) {
+  const hasil = hitungTabel(bacaRowsDariEl(box));
+  Array.from(box.querySelectorAll('tr')).forEach((tr, ri) => {
+    Array.from(tr.querySelectorAll('th,td')).forEach((cell, ci) => {
+      if (adalahRumus((cell.textContent || '').trim())) cell.setAttribute('data-hasil', (hasil[ri] && hasil[ri][ci]) ?? '');
+      else cell.removeAttribute('data-hasil');
+    });
+  });
+}
+
 function renderUlangTabel(bTable, rows) {
   snap();
   const bid = bTable.getAttribute('data-bid') || newBlockId();
@@ -111,7 +139,7 @@ function renderUlangTabel(bTable, rows) {
 }
 
 /* ════════ 3. BLOK MEMO SUARA OFFLINE (AUDIO) ════════ */
-export function insertAudioBlock(blobId, durasiDetik = 0, judul = '') {
+export function insertAudioBlock(blobId, durasiDetik = 0, judul = '', tanda = []) {
   const el = sisipkanBlokKhusus({
     id: newBlockId(),
     type: 'audio',
@@ -120,6 +148,7 @@ export function insertAudioBlock(blobId, durasiDetik = 0, judul = '') {
       blobId,
       duration: Math.max(0, Math.round(durasiDetik)),
       title: judul || tr('Memo suara'),
+      marks: normalisasiTanda(tanda),
     },
   });
   pasangAudio();
@@ -141,15 +170,50 @@ export async function pasangAudio() {
   }
 }
 
-let _perekam = null;
-let _timerRekam = null;
+/* C2 · Input di dalam blok memo (judul dan catatan tanda waktu) adalah kolom teks biasa.
+   Penangan keydown/beforeinput editor di .ed-doc akan mengambil fokus dan membuang
+   ketikan pertama, jadi keduanya dihentikan sebelum sampai ke editor. Event `input`
+   tetap lewat karena autosave bergantung padanya. */
+for (const jenis of ['keydown', 'beforeinput']) {
+  document.addEventListener(jenis, e => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.closest && t.closest('.b-audio')) e.stopPropagation();
+  }, true);
+}
+
+/* Sesi rekaman dipegang perekam-suara.js (tidak mati saat popup ditutup). */
+function memoSelesai(noteId, { blobId, dur, judul, tanda = [] }) {
+  const judulAkhir = judul || tr('Memo suara');
+  if (noteId && state.openId === noteId && docEl()) {
+    insertAudioBlock(blobId, dur, judulAkhir, tanda);
+    toast(tr('Memo suara disimpan ke catatan'));
+    return;
+  }
+  /* Catatan asal sudah tidak terbuka (pengguna pindah saat merekam): sisipkan ke datanya langsung. */
+  const n = noteId ? state.notes.find(x => x.id === noteId && !x.deletedAt) : null;
+  if (n && Array.isArray(n.blocks)) {
+    n.blocks.push(makeBlock({
+      type: 'audio',
+      content: '',
+      meta: { blobId, duration: Math.max(0, Math.round(dur)), title: judulAkhir, marks: normalisasiTanda(tanda) },
+    }));
+    touch(n);
+    simpan();
+    toast(tr('Memo suara disimpan ke catatan'));
+    return;
+  }
+  hapusBlob(blobId).catch(() => {});
+  toast(tr('Catatan asal sudah tidak ada. Memo suara dibuang.'));
+}
 
 export async function bukaPerekamMemoSuara(anchor) {
-  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261023235452');
+  const { openPop: bukaPop, closeAll: tutupPop } = await import('../menus/pop.js?v=20261105210000');
   if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     toast(tr('Perekam suara tidak tersedia di peramban ini'));
     return;
   }
+  const sedang = sedangMerekam();
+  const noteId = state.openId;
   bukaPop(`
     <div class="rn-modal-box" style="max-width:340px">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -158,84 +222,75 @@ export async function bukaPerekamMemoSuara(anchor) {
       </div>
       <input type="text" class="rn-input-text" id="aud-judul" placeholder="${tr('Judul memo (opsional)')}" maxlength="60">
       <div class="aud-rec-status">
-        <span class="aud-rec-dot" id="aud-dot"></span>
+        <span class="aud-rec-dot${sedang ? ' on' : ''}" id="aud-dot"></span>
         <span id="aud-waktu">00:00</span>
       </div>
       <div class="rn-actions-top" style="justify-content:flex-end;gap:8px">
-        <button type="button" class="btn btn-sec" id="aud-batal">${tr('Batal')}</button>
-        <button type="button" class="btn btn-pri" id="aud-mulai">${tr('Mulai rekam')}</button>
+        <button type="button" class="btn btn-sec" id="aud-tanda"${sedang ? '' : ' disabled'}>${tr('Tandai')}</button>
+        <button type="button" class="btn btn-sec" id="aud-batal">${tr(sedang ? 'Buang' : 'Batal')}</button>
+        <button type="button" class="btn btn-pri" id="aud-mulai">${tr(sedang ? 'Selesai & Simpan' : 'Mulai rekam')}</button>
       </div>
     </div>
   `, anchor);
-
-  let mulaiMs = 0;
-  let potongan = [];
-  let stream = null;
-
-  const bersihkanStream = () => {
-    clearInterval(_timerRekam);
-    _timerRekam = null;
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
-    _perekam = null;
-  };
+  if (sedang) segarkanRekam();
 
   const btnMulai = document.getElementById('aud-mulai');
   const btnBatal = document.getElementById('aud-batal');
-  const elWaktu = document.getElementById('aud-waktu');
-  const elDot = document.getElementById('aud-dot');
+  const btnTanda = document.getElementById('aud-tanda');
+  if (btnTanda) {
+    btnTanda.onclick = () => {
+      if (tandaiRekam()) toast(tr('Tanda ditambahkan'));
+    };
+  }
 
   if (btnBatal) {
     btnBatal.onclick = () => {
-      if (_perekam && _perekam.state !== 'inactive') {
-        _perekam.onstop = null;
-        try { _perekam.stop(); } catch (e) {}
-      }
-      bersihkanStream();
+      if (sedangMerekam()) hentikanRekam(false);
       tutupPop();
     };
   }
 
   if (btnMulai) {
     btnMulai.onclick = async () => {
-      if (_perekam && _perekam.state === 'recording') {
-        _perekam.stop();
+      if (sedangMerekam()) {
+        hentikanRekam(true);
+        tutupPop();
         return;
       }
+      const judulInp = document.getElementById('aud-judul');
+      const judul = (judulInp ? judulInp.value : '').trim() || tr('Memo suara');
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        potongan = [];
-        const rec = new MediaRecorder(stream);
-        _perekam = rec;
-        mulaiMs = Date.now();
+        const mulai = await mulaiRekam({ judul, onSelesai: m => memoSelesai(noteId, m) });
+        if (!mulai) return;
         btnMulai.textContent = tr('Selesai & Simpan');
-        if (elDot) elDot.classList.add('on');
-        _timerRekam = setInterval(() => {
-          const dtk = Math.floor((Date.now() - mulaiMs) / 1000);
-          if (elWaktu) elWaktu.textContent = `${String(Math.floor(dtk / 60)).padStart(2, '0')}:${String(dtk % 60).padStart(2, '0')}`;
-        }, 500);
-        rec.ondataavailable = ev => { if (ev.data && ev.data.size > 0) potongan.push(ev.data); };
-        rec.onstop = async () => {
-          const dur = Math.max(1, Math.round((Date.now() - mulaiMs) / 1000));
-          const judulInp = document.getElementById('aud-judul');
-          const judul = (judulInp ? judulInp.value : '').trim() || tr('Memo suara');
-          bersihkanStream();
-          const blob = new Blob(potongan, { type: rec.mimeType || 'audio/webm' });
-          const blobId = 'aud_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          await simpanBlob(blobId, blob);
-          tutupPop();
-          insertAudioBlock(blobId, dur, judul);
-          toast(tr('Memo suara disimpan ke catatan'));
-        };
-        rec.start();
+        if (btnBatal) btnBatal.textContent = tr('Buang');
+        if (btnTanda) btnTanda.disabled = false;
       } catch (err) {
-        bersihkanStream();
         toast(tr('Izin mikrofon ditolak atau tidak tersedia'));
       }
     };
   }
+}
+
+/* C2 · penanda waktu memo: baca dari DOM, tulis ulang daftarnya (urutan dirapikan saat tampil). */
+function tulisTanda(box, daftar) {
+  const lama = box.querySelector('.aud-marks');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = tandaAudioHtml(daftar);
+  const baru = wrap.firstElementChild;
+  if (lama) lama.replaceWith(baru); else box.appendChild(baru);
+  const baca = modeBacaBerlaku();
+  baru.querySelectorAll('.aud-mark-teks').forEach(i => { i.readOnly = baca; });
+}
+
+function tulisTranskrip(box, daftar) {
+  const lama = box.querySelector('.aud-transcript');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = transkripAudioHtml(normalisasiTranskrip(daftar));
+  const baru = wrap.firstElementChild;
+  if (lama) lama.replaceWith(baru); else box.appendChild(baru);
+  const baca = modeBacaBerlaku();
+  baru.querySelectorAll('.aud-trans-teks').forEach(i => { i.readOnly = baca; });
 }
 
 /* Sinkronkan atribut editable di dalam blok toggle/tabel/audio sesuai Mode Baca / Tulis */
@@ -251,6 +306,7 @@ export function sinkronBacaBlokModern() {
     cell.setAttribute('contenteditable', String(!baca));
   });
   d.querySelectorAll('.b-audio .aud-title').forEach(inp => { inp.readOnly = baca; });
+  d.querySelectorAll('.b-audio .aud-mark-teks, .b-audio .aud-trans-teks').forEach(inp => { inp.readOnly = baca; });
 }
 
 /* ════════ 4. BILAH KODE MENGAMBANG (#code-bar) & 5. PILL SENTUH WIKILINK (#wl-pill) ════════ */
@@ -258,6 +314,8 @@ let _codeBar = null;
 let _aktifCodeEl = null;
 let _wlPill = null;
 let _aktifWlJudul = '';
+let _aktifWlBagian = '';   /* bagian #Heading / #^ref dari tautan yang sedang ditunjuk pil */
+let _aktifWlPdf = null;    /* B3b: sasaran halaman PDF ([[Nama.pdf#hal=N]]) yang ditunjuk pil */
 
 function pastikanCodeBar() {
   if (_codeBar && _codeBar.isConnected) return _codeBar;
@@ -314,6 +372,8 @@ export function sembunyikanOverlayModern() {
   if (_wlPill) _wlPill.hidden = true;
   _aktifCodeEl = null;
   _aktifWlJudul = '';
+  _aktifWlBagian = '';
+  _aktifWlPdf = null;
 }
 
 function tampilkanCodeBarUntuk(codeEl) {
@@ -336,12 +396,21 @@ function tampilkanCodeBarUntuk(codeEl) {
   } catch (e) {}
 }
 
+/* B3b: teks label pil — nama PDF dan halamannya, atau judul catatan. */
+function sasaranPdfAktif(pdf, ada) {
+  if (pdf) return `${pdf.judul} · ${tr('Halaman')} ${pdf.halaman}`;
+  return ada ? ada.title : '';
+}
+
 export function tampilkanPillWikilink(wlEl) {
   const judul = judulSpan(wlEl);
   if (!judul) return;
-  const ada = cariJudul(judul);
-  if (!ada) return;
+  const pdf = sasaranPdfSpan(wlEl);   /* B3b: tautan halaman PDF */
+  const ada = pdf ? null : cariJudul(judul);
+  if (!ada && !(pdf && pdf.berkas)) return;
   _aktifWlJudul = judul;
+  _aktifWlBagian = bagianSpan(wlEl);
+  _aktifWlPdf = pdf && pdf.berkas ? pdf : null;
   if (!_wlPill || !_wlPill.isConnected) {
     const p = document.createElement('div');
     p.id = 'wl-pill';
@@ -349,15 +418,18 @@ export function tampilkanPillWikilink(wlEl) {
     p.hidden = true;
     p.addEventListener('mousedown', e => e.preventDefault());
     p.addEventListener('click', () => {
+      const sasPdf = _aktifWlPdf;      /* disimpan dulu: sembunyikanOverlayModern() mengosongkannya */
       const target = cariJudul(_aktifWlJudul);
+      const bagian = _aktifWlBagian;
       sembunyikanOverlayModern();
-      if (target) openNote(target.id);
+      if (sasPdf) { bukaPdfSasaran(sasPdf); return; }
+      if (target) bukaSasaranTautan(target, bagian);
     });
     document.body.appendChild(p);
     _wlPill = p;
   }
   _wlPill.innerHTML = `<svg class="ico" style="width:13px;height:13px"><use href="#i-link2"/></svg>` +
-    `<span>${esc(tr('Buka'))} «${esc(ada.title)}»</span>` +
+    `<span>${esc(tr('Buka'))} «${esc(sasaranPdfAktif(_aktifWlPdf, ada))}»</span>` +
     `<svg class="ico" style="width:12px;height:12px"><use href="#i-arrow-ne"/></svg>`;
   _wlPill.hidden = false;
   try {
@@ -428,6 +500,12 @@ export function bindBlokModern() {
           rows.forEach(r => r.pop());
           renderUlangTabel(box, rows);
         }
+      } else if (act === 'urut-naik' || act === 'urut-turun') {
+        /* MB2: urut mengubah urutan baris data (tersimpan), header tetap */
+        const kol = Number((box.querySelector('[data-tbl-kol]') || {}).value) || 0;
+        const teks = (box.querySelector('[data-tbl-saring]') || {}).value || '';
+        simpanKeadaanTabel(box.getAttribute('data-bid') || '', kol, teks);
+        renderUlangTabel(box, urutBaris(rows, kol, act === 'urut-naik'));
       } else if (act === 'del-table') {
         snap();
         const next = nearestEditable(box);
@@ -464,6 +542,101 @@ export function bindBlokModern() {
       const next = urutan[(urutan.indexOf(aud.playbackRate) + 1) % urutan.length] || 1;
       aud.playbackRate = next;
       audSpeed.textContent = next + '×';
+      return;
+    }
+
+    /* 3b. Penanda waktu memo (C2): tandai posisi putar, lompat ke tanda, hapus tanda */
+    const audTanda = e.target.closest('[data-aud-mark]');
+    if (audTanda) {
+      if (modeBacaBerlaku()) return;
+      const box = audTanda.closest('.b-audio');
+      const aud = box && box.querySelector('audio');
+      if (!aud) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      const daftar = bacaTandaDom(box.querySelector('.aud-marks'));
+      snap();
+      daftar.push({ t: aud.currentTime || 0, teks: '' });
+      tulisTanda(box, daftar);
+      refresh();
+      toast(tr('Tanda ditambahkan'));
+      return;
+    }
+
+    /* Transkrip manual: segmen bertanda waktu, tanpa layanan pengenalan suara. */
+    const transAdd = e.target.closest('[data-aud-trans-add]');
+    if (transAdd) {
+      if (modeBacaBerlaku()) return;
+      const box = transAdd.closest('.b-audio');
+      const aud = box && box.querySelector('audio');
+      if (!box || !aud) return;
+      snap();
+      const segmen = bacaTranskripDom(box.querySelector('.aud-transcript-list'));
+      segmen.push({ t: aud.currentTime || 0, teks: '' });
+      tulisTranskrip(box, segmen);
+      refresh();
+      box.querySelector('.aud-trans-row:last-child .aud-trans-teks')?.focus();
+      return;
+    }
+
+    const transSeek = e.target.closest('[data-aud-trans-seek]');
+    if (transSeek) {
+      const box = transSeek.closest('.b-audio');
+      const row = transSeek.closest('.aud-trans-row');
+      const aud = box && box.querySelector('audio');
+      if (!aud || !row) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      aud.currentTime = Number(row.getAttribute('data-t')) || 0;
+      if (aud.paused) {
+        aud.play().catch(() => toast(tr('Berkas suara tidak dapat diputar')));
+        box.classList.add('playing');
+      }
+      return;
+    }
+
+    const transDel = e.target.closest('[data-aud-trans-del]');
+    if (transDel) {
+      if (modeBacaBerlaku()) return;
+      const box = transDel.closest('.b-audio');
+      const row = transDel.closest('.aud-trans-row');
+      if (!box || !row) return;
+      const segmen = bacaTranskripDom(box.querySelector('.aud-transcript-list'));
+      const i = Array.from(row.parentNode.children).indexOf(row);
+      if (i < 0) return;
+      snap();
+      segmen.splice(i, 1);
+      tulisTranskrip(box, segmen);
+      refresh();
+      return;
+    }
+
+    const audSeek = e.target.closest('[data-aud-seek]');
+    if (audSeek) {
+      const box = audSeek.closest('.b-audio');
+      const li = audSeek.closest('.aud-mark');
+      const aud = box && box.querySelector('audio');
+      if (!aud || !li) return;
+      if (!aud.getAttribute('src')) await pasangAudio();
+      aud.currentTime = Number(li.getAttribute('data-t')) || 0;
+      if (aud.paused) {
+        aud.play().catch(() => toast(tr('Berkas suara tidak dapat diputar')));
+        box.classList.add('playing');
+      }
+      return;
+    }
+
+    const audTandaDel = e.target.closest('[data-aud-mark-del]');
+    if (audTandaDel) {
+      if (modeBacaBerlaku()) return;
+      const box = audTandaDel.closest('.b-audio');
+      const li = audTandaDel.closest('.aud-mark');
+      if (!box || !li) return;
+      const daftar = bacaTandaDom(box.querySelector('.aud-marks'));
+      const i = Array.from(li.parentNode.children).indexOf(li);
+      if (i < 0) return;
+      snap();
+      daftar.splice(i, 1);
+      tulisTanda(box, daftar);
+      refresh();
       return;
     }
 
@@ -506,9 +679,22 @@ export function bindBlokModern() {
   /* Perubahan isi pada Toggle / Tabel / Judul Audio langsung memicu autosave */
   document.addEventListener('input', e => {
     if (!e.target.closest) return;
-    if (e.target.closest('.b-toggle') || e.target.closest('.b-table') || e.target.closest('.b-audio')) {
+    const box = e.target.closest('.b-table');
+    if (box && e.target.matches && e.target.matches('[data-tbl-saring]')) {
+      terapkanSaringTabel(box);
+      return;
+    }
+    if (e.target.closest('.b-toggle') || box || e.target.closest('.b-audio')) {
+      if (box) segarkanRumusTabel(box);
       refresh();
     }
+  });
+
+  /* MB2: ganti kolom urut/saring → saring ulang baris yang terlihat */
+  document.addEventListener('change', e => {
+    if (!e.target.closest || !e.target.matches || !e.target.matches('[data-tbl-kol]')) return;
+    const box = e.target.closest('.b-table');
+    if (box) terapkanSaringTabel(box);
   });
 
   /* Navigasi Tab / Shift+Tab antar sel di dalam Tabel */

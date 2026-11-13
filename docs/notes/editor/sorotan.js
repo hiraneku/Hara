@@ -16,9 +16,10 @@
    Warna teks dan sorotan berdiri sendiri-sendiri; keduanya boleh aktif
    bersamaan (span bersarang: wsr di luar, wrn di dalam). */
 
-import { docEl, sel, curBlock } from './caret.js?v=20261023235452';
-import { refresh } from './cleanup.js?v=20261023235452';
-import { normalizeWarna } from './warna.js?v=20261023235452';
+import { docEl, sel, curBlock, seleksiDiEditor, ensureCaret } from './caret.js?v=20261105210000';
+import { refresh } from './cleanup.js?v=20261105210000';
+import { bungkusKomposisi } from './komposisi.js?v=20261105210000';
+import { normalizeWarna } from './warna.js?v=20261105210000';
 
 /* Elemen sorotan yang membungkus sebuah node. */
 export function sorotAround(node) {
@@ -80,6 +81,18 @@ export function sorotPerluBungkus() {
   return !host || host.getAttribute('data-sorotan') !== _lekat;
 }
 
+/* Caret di ujung span sorotan yang LEKAT (dan bukan mode Bawaan): karakter
+   berikutnya ditulis manual ke dalam span — lihat warnaIkutUjung(). */
+export function sorotIkutUjung() {
+  /* mode Bawaan: setiap karakter ditulis manual — lihat warnaIkutUjung() */
+  if (_modeBawaan) return true;
+  if (!_lekat) return false;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = sorotAround(s.getRangeAt(0).startContainer);
+  return !!host && host.getAttribute('data-sorotan') === _lekat;
+}
+
 /* Seleksi ulang berdasarkan offset karakter di dalam satu induk, dipakai
    setelah normalize() menggabungkan text node. */
 function pilihTeks(induk, dari, panjang) {
@@ -111,8 +124,12 @@ export function setSorotan(hex) {
   const d = docEl();
   if (!d) return;
   hex = normalizeWarna(hex) || '';
+  if (!seleksiDiEditor()) ensureCaret();
+  if (!seleksiDiEditor()) {
+    _pending = hex || null; _lekat = hex || null; _modeBawaan = false;
+    return;
+  }
   const s = sel();
-  if (!(s && s.rangeCount && d.contains(s.getRangeAt(0).startContainer))) return;
   const r = s.getRangeAt(0);
 
   /* ── Tanpa teks terpilih ──
@@ -266,10 +283,33 @@ export function bungkusSorotanPending() {
 }
 
 
+/* Setelah komposisi IME selesai: n karakter hasil komposisi ikut disorot
+   kalau ada sorotan yang menunggu, atau sorotan lekat tapi teksnya mendarat
+   di luar span sorotan. Lihat komposisi.js dan bungkusWarnaKomposisi. */
+export function bungkusSorotKomposisi(n, awal) {
+  if (_pending === HAPUS) { _pending = null; return false; }
+  if (_modeBawaan && !_pending) return false;
+  const hex = _pending || _lekat;
+  if (!hex) return false;
+  _pending = null;
+  const s = sel();
+  if (!(s && s.rangeCount)) return false;
+  const host = sorotAround(s.getRangeAt(0).startContainer);
+  if (host && host.getAttribute('data-sorotan') === hex) return false;
+  return bungkusKomposisi(awal, n, frag => {
+    const el = buatSpan(hex);
+    el.appendChild(frag);
+    return el;
+  });
+}
+
 /* Pindah blok membatalkan sorotan yang menunggu — sama seperti font. */
 let blokTerakhir = null;
 document.addEventListener('selectionchange', () => {
+  if (!seleksiDiEditor()) return;
   const b = curBlock();
-  if (blokTerakhir && b !== blokTerakhir) { _pending = null; _lekat = null; _modeBawaan = false; }
+  if (blokTerakhir && blokTerakhir !== b) {
+    _pending = null; _lekat = null; _modeBawaan = false;
+  }
   blokTerakhir = b;
 });

@@ -22,11 +22,12 @@
      penyimpanan atau riwayat kedua.
 */
 
-import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261023235452';
-import { sisipGambar } from './image.js?v=20261023235452';
+import { docEl, sel, curBlock, caretEnd, nearestEditable } from './caret.js?v=20261105210000';
+import { sisipGambar } from './image.js?v=20261105210000';
+import { bersihkanHtmlBlok } from '../html-aman.js?v=20261105210000';
 import { barisMekanik, teksKeBaris, bagiIndent, polaBaris, padUntuk,
   tautkanTeks, tautanAman, hrefDari, htmlTautan }
-  from './tempel-mekanik.js?v=20261023235452';
+  from './tempel-mekanik.js?v=20261105210000';
 
 /* Tag inline yang boleh bertahan — sama persis dengan yang dikenal marks.js.
    Selain ini, isinya dipertahankan tapi bungkusnya dibuang. */
@@ -298,7 +299,7 @@ export function htmlKeBaris(html) {
   const wadah = document.createElement('div');
   /* innerHTML pada elemen lepas TIDAK mengeksekusi <script> maupun
      memuat sumber daya, jadi aman sebagai tahap parsing. */
-  wadah.innerHTML = html;
+  wadah.innerHTML = bersihkanHtmlBlok(html);   /* B4c: lapisan kedua; tanganiPaste sudah menyaring */
 
   const keluar = [];
   pecahBaris(wadah, keluar, { jenis: 'p' });
@@ -590,7 +591,7 @@ function ambilGambar(cd) {
 }
 
 /* ── Titik masuk: dipanggil dari handler paste ── */
-export function tanganiPaste(e) {
+export function tanganiPaste(e, mode = 'format') {
   const d = docEl();
   if (!d) return false;
   const cd = e.clipboardData || (typeof window !== 'undefined' && window.clipboardData);
@@ -603,7 +604,8 @@ export function tanganiPaste(e) {
   if (berkas) { sisipGambar(berkas); return true; }
 
   let html = '', teks = '';
-  try { html = cd.getData('text/html') || ''; } catch (err) {}
+  /* B4c: HTML clipboard disaring dulu (on*, <img onerror>, <iframe>, href/src berbahaya) sebelum diurai */
+  try { html = bersihkanHtmlBlok(cd.getData('text/html') || ''); } catch (err) {}
   try { teks = cd.getData('text/plain') || ''; } catch (err) {}
   if (!html && !teks) return false;
 
@@ -611,17 +613,20 @@ export function tanganiPaste(e) {
   const diKode = !!(blok && blok.classList.contains('b-code'));
 
   let baris = [];
-  if (html && !diKode) {
+  const mentah = teks || (html ? teksDatar(html) : '');
+  if (diKode || mode === 'plain') {
+    /* Teks saja: jangan ubah penanda Markdown, URL, atau baris daftar. */
+    baris = polosKeBaris(mentah);
+  } else if (mode === 'markdown') {
+    /* Paksa sumber text/plain melalui pengurai mekanik Hara. */
+    baris = teksKeBaris(mentah);
+  } else if (html) {
     try { baris = htmlKeBaris(html); }
     catch (err) { baris = []; }          /* parsing gagal -> jatuh ke teks */
   }
-  /* Tidak ada HTML (atau parsingnya gagal): teks polos dari luar —
-     daftar bernomor, butir, heading, tautan — ikut mekanik Hara. */
-  if (!baris.length) {
-    const mentah = teks || html.replace(/<[^>]*>/g, '');
-    /* di dalam blok kode: apa adanya — daftar & tautan tidak diubah */
-    baris = diKode ? polosKeBaris(mentah) : teksKeBaris(mentah);
-  }
+  /* Mode format tanpa HTML (atau parsing gagal) tetap menjalankan mekanik
+     Markdown seperti perilaku lama. */
+  if (!baris.length) baris = teksKeBaris(mentah);
 
   /* Buang baris HAMPA di ujung agar tidak menambah blok kosong.
      Pembatas (b-div) isinya memang kosong tapi bukan baris hampa — harus

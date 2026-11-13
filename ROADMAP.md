@@ -35,7 +35,7 @@
 
 ## Bagian E — lebih besar (nanti)
 - [ ] E22. Sinkronisasi antar-perangkat (WebDAV/Drive/server)
-- [ ] E23. Tabel (tunggu fondasi stabil)
+- [ ] E23. Tabel — SEBAGIAN. Blok tabel dasar (tambah/hapus baris & kolom, navigasi Tab) sudah ada dan bisa disisipkan lewat menu `/`. Belum diuji di perangkat; fitur lanjutan belum diputuskan.
 - [ ] E24. Widget / pintasan layar kunci
 
 ## Bagian F — ronde 7 (SELESAI)
@@ -92,6 +92,102 @@
       • Full Undo / Rollback ganti nama;
       • Suite uji otomatis 78/78 hijau (`tools/uji/renamer-*.mjs`).
 
+
+## Bagian M — ronde 12 (SEBAGIAN, bertahap)
+
+> Keputusan pengguna (ronde 12): P5 ya · S6 ditunda sampai APK siap · MB3 kunci
+> enkripsi = kunci acak yang dilindungi sidik jari perangkat, migrasi = sekali saat
+> update dengan konfirmasi. Butir yang belum selesai ditandai di bawah.
+
+### P · Perbaikan
+- [x] P1. Toolbar mobile (≤ 640 px). Kendali baca (A−/A+, cari, cari & ganti, daftar
+      isi, mode fokus) pindah ke menu ··· di header editor; baris lipat di atas judul
+      dihapus. Bar format sembunyi saat keyboard tidak aktif (tidak ada fokus teks dan
+      tidak ada menu terbuka), dan sembunyi saat menggulir ke bawah; muncul lagi saat
+      menggulir ke atas atau saat fokus teks baru. Gulir yang terjadi tepat setelah
+      mengetik diabaikan. Di layar lebar bar tidak berubah. Diuji di jsdom
+      (`tools/uji/p-mobile-daftar.mjs`, P1a–P1n); **belum diuji di HP**.
+- [~] P2. Undo, Redo, `/`, B, I tidak tampak. Penyebab paling mungkin: bar sudah
+      tergulir ke kanan (kelima tombol itu ada di awal bar). Perbaikan: pudaran di
+      tepi bar bila masih ada tombol tersembunyi, dan bar kembali ke ujung kiri setiap
+      kali editor digambar (P2a). **Belum terverifikasi di perangkat**: sandbox tidak
+      punya browser atau HP, jadi gejala asli belum direproduksi.
+- [~] P3. Daftar catatan dirender bertahap: 40 baris per langkah, dengan tombol
+      "Muat N lagi" dan pengamat (IntersectionObserver) di `#wrap`. Pilih semua dan
+      hitungan memakai daftar penuh (`idDaftarNotes`), bukan baris di DOM. Render ulang
+      tanpa `onBeforeLeave` (`go(v, {segar:true})`) agar mode pilih tidak dibatalkan.
+      **Ini BUKAN virtualisasi DOM penuh** (K34): baris yang sudah dimuat tetap ada di
+      DOM. Virtualisasi penuh butuh tinggi baris yang stabil dan uji gulir di perangkat,
+      jadi ditunda. Diuji di jsdom (P3a–P3h).
+- [x] P4. `npm test` paralel (`JOBS`, default 4) untuk semua 56 berkas. Ditambah
+      `npm run test:cepat` (13 berkas murni tanpa jsdom, ±1 detik) dan
+      `npm run test:ui` (43 berkas jsdom). Catatan: di sandbox 2 core, `npm test`
+      tetap ±5 menit karena tes jsdom mendominasi (±530 detik serial). Pengurangannya
+      butuh penulisan ulang tes jsdom yang berat, belum dikerjakan.
+- [x] P5. `docs/PLAN.md` diperbarui: ditambah bagian "Stack nyata (dipakai sekarang)".
+      Rencana awal tetap dibiarkan sebagai arsip, diberi penanda.
+
+### S · Fitur pintar (lokal, tanpa cloud)
+Logika murni di `docs/notes/pintar.js` (diuji `tools/uji/pintar.mjs`, 40 pengujian).
+Integrasi di `docs/notes/pintar-aksi.js`, muncul di palette (Ctrl/⌘+K).
+- [x] S1. Mirip dengan: catatan serupa, TF-IDF + kosinus. Hanya catatan yang terlihat
+      (tidak terkunci) yang dipakai.
+- [x] S2. Saran tag: kata khas catatan ini. Tombol "Tambah tag #…" menulis ke
+      `tagsManual`. Tidak ada tampilan penerimaan/penolakan terpisah.
+- [x] S3. Tangkap cepat: parser jam kini mengenali "jam 3 sore", "pukul 7.30",
+      "7 malam", dan "12 pagi" (`bacaJam` di `pengingat.js`). Input lewat `prompt()`
+      sederhana. **Belum:** tampilan input khusus. Diuji: parser di `pintar.mjs`
+      (jam 3 sore → 15:00, 12 pagi → 00:00, 25.00 ditolak) dan alur palette di
+      `pintar-ui.mjs` (prompt dibatalkan tidak membuat catatan).
+- [x] S4. Tinjauan minggu ini: membuat catatan baru berisi tag paling aktif, jumlah
+      catatan dibuat/diedit, tugas selesai, dan daftar terakhir diedit. Catatan
+      terkunci dikecualikan.
+- [x] S5. Ringkasan ekstraktif: 3 kalimat asli dari catatan, jadi catatan baru.
+      **Ditolak untuk catatan terkunci** agar isinya tidak bocor ke catatan tak terkunci.
+- [ ] S6. OCR foto (K14) dan dikte suara (K15). **Ditunda** sampai APK siap (keputusan
+      pengguna).
+
+### MB · Fitur modern (lanjutan dari E22–E24)
+- [x] MB1. Kanban dan kalender dari properti catatan (K19). Kolom mengikuti properti
+      apa pun (default `status`), urutan dari contoh, catatan tanpa nilai di "(kosong)".
+      Kalender mulai Senin, sumbu default `tenggat` lalu `tanggal`. Pindah kartu
+      mengubah satu properti. Hanya catatan terlihat. Diuji `papan.mjs` (35) dan
+      `papan-ui.mjs`. **Belum diuji di perangkat.**
+- [x] MB2. Tabel lanjutan: urut naik/turun per kolom (mengubah urutan baris, tersimpan),
+      saring per kolom (hanya menyembunyikan baris, data utuh), rumus A1 dengan SUM,
+      AVERAGE, MIN, MAX, COUNT, operator + - * /. Hasil rumus tidak ikut tersimpan
+      sebagai teks (`data-hasil`). Galat: `#DIV/0!`, `#REF!`, `#NILAI!`, `#SIKLUS!`.
+      Diuji `tabel-rumus.mjs` (51) dan `tabel-lanjut-ui.mjs`.
+- [~] MB3. Penyelesaian enkripsi (K17, K18). SEBAGIAN:
+      - SELESAI (diuji di Node): `core/kunci-data.js` (kunci data acak 256-bit,
+        bungkus/buka, segel isi catatan; `kunci-data.mjs`, 20 pemeriksaan);
+        `core/kunci-perangkat.js` (WebAuthn PRF sebagai kunci pembungkus, dengan
+        kredensial tiruan; `kunci-data.mjs` bagian A–B); K18 berkas ±10 MB
+        (`cadangan-besar.mjs`, 9 pemeriksaan).
+      - **BELUM:** disambungkan ke penyimpanan catatan terkunci. Catatan terkunci
+        masih polos di IndexedDB, dan kunci hanya gerbang akses (`kunci.js`).
+        Menyambungkannya mengubah bentuk data yang dibaca pencarian, statistik,
+        tugas, ekspor, dan pemulihan cadangan. Itu butuh keputusan (lihat di bawah)
+        dan uji di perangkat.
+      - **BELUM:** migrasi sekali saat update dengan dialog konfirmasi.
+      - **Keputusan yang masih terbuka:** cadangan catatan terkunci pada perangkat lain
+        (kunci data terikat sidik jari perangkat asal); PRF tidak didukung di semua
+        perangkat, dan jalur cadangannya belum ditentukan.
+      - Autentikator asli tidak bisa diuji di sandbox.
+
+### Tidak diambil pada ronde ini
+- Sinkronisasi antar-perangkat (E22): belum diputuskan.
+- Tangkap dari share sheet dan widget (K13, E24): menunggu APK. Manifest Android
+  belum punya intent SEND, dan belum ada manifest web.
+- Fitur AI: non-goal v1 di `docs/PLAN.md`, dan ditahan.
+
+## Bagian L — perapian bar & menu editor (SELESAI)
+- [x] L1. Aksi non-blok tidak lagi ganda di bar: "Tanggal" dan "Warna tag" hanya di menu `/` (dibuka lewat tombol `/` di bar). Jenis blok (Gambar, Pembatas) tetap di keduanya — aturannya ada di `docs/ARSITEKTUR.md`.
+- [x] L2. Ikon tidak lagi bentrok: Rumus memakai `i-sigma`, Dari galeri memakai `i-gallery` (keduanya baru di sprite), Warna tag memakai `i-palette`.
+- [x] L3. "Dari galeri" punya teks bantuan (ID/EN/JA), jadi tombol info muncul di grup Sisipkan.
+- [x] L4. Dokumen disesuaikan dengan kode: fitur editor di README, peta folder editor di ARSITEKTUR, status E23 di sini.
+- [x] L5. Baris pintas di atas editor (`#qk-strip`) tidak lagi mengulang bar bawah: Indent, Outdent, ↑, ↓, To-do, [[ ]] dan # dihapus darinya (sudah ada di bar). Sisa: Cap jam, Hitung ekspresi, Alat teks pintar, Aksi blok.
+- Ditunda (bukan bagian ronde ini): menggabungkan `blok-modern.js` dan `blok-generasi-baru.js` — perlu keputusan dulu, lihat ARSITEKTUR.
 
 ## Bagian K — ronde 11 (BERJALAN, bertahap)
 > Dikerjakan per tahap; tiap tahap punya suite uji sendiri. Butir yang butuh
@@ -180,7 +276,7 @@
       apa adanya. Catatan: kurung kurawal di templat tersimpan lama juga kini
       dibaca sebagai variabel. Modul `notes/templat-var.js`.
       Uji: `templat-variabel.mjs` (23).
-- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — SEBAGIAN. `core/enkripsi.js`: PBKDF2-SHA256 310.000 + AES-GCM-256, uji tamper & sandi salah. BELUM disambungkan ke catatan terkunci: perlu keputusan dari audit PIN.
+- [ ] K17. Enkripsi nyata catatan terkunci (WebCrypto AES-GCM + PBKDF2) — SEBAGIAN (lihat MB3). `core/enkripsi.js`: PBKDF2-SHA256 310.000 + AES-GCM-256, uji tamper & sandi salah. BELUM disambungkan ke catatan terkunci: perlu keputusan dari audit PIN.
 - [ ] K18. Cadangan terenkripsi (frasa sandi) — SEBAGIAN. Perintah palette unduh & pulihkan cadangan terenkripsi (frasa ≥ 8 karakter), format diuji. Belum diuji dengan berkas besar atau di perangkat.
 - [ ] K19. Tampilan database: tabel, papan Kanban, kalender (catatan dengan properti) — SEBAGIAN. Tabel properti (perintah palette) membaca `props` dari semua catatan. Tampilan Kanban dan kalender BELUM dibuat.
 - [x] K20. Statistik & heatmap jurnal / to-do selesai per minggu — `notes/statistik.js` (heatmap 26 minggu, tugas per minggu, rentetan jurnal), dialog dari palette. Uji `statistik.mjs` 19/19.
@@ -197,10 +293,10 @@
 - [x] K31. Aksi lintas modul: catatan → Reminder/tugas sekali langkah — Perintah 'Ubah baris bertenggat jadi tugas': baris yang mengandung tenggat (parser pengingat) menjadi to-do. Uji `fitur-catatan-ui.mjs`. Pembuatan Reminder terpisah belum dipasang.
 - [ ] K32. Penyimpanan OPFS untuk berkas besar — BELUM. OPFS bukan pilihan untuk WebView Android; rencana: Capacitor Filesystem.
 - [ ] K33. Pembaruan PWA eksplisit ("versi baru tersedia") — TIDAK BERLAKU. Target produk APK, bukan PWA.
-- [ ] K34. Virtualisasi daftar catatan — BELUM. Daftar masih dirender sekaligus. Virtualisasi butuh verifikasi scroll di browser.
+- [ ] K34. Virtualisasi daftar catatan — SEBAGIAN. Daftar kini bertahap (40 baris, "Muat lagi"; lihat P3). Virtualisasi DOM penuh BELUM, menunggu uji gulir di perangkat.
 - [ ] K35. Aksesibilitas & navigasi keyboard penuh — SEBAGIAN. Palette (Ctrl/⌘+K) bisa dinavigasi keyboard. Navigasi keyboard penuh untuk daftar dan editor BELUM.
 
 ### Ditahan — menunggu keputusan pengguna
-- D18 riwayat versi · E22 sync (CRDT) · E23 tabel · E24 widget (butir lama)
+- D18 riwayat versi · E22 sync (CRDT) · E23 tabel (fitur lanjutan) · E24 widget (butir lama)
 - Fitur AI (ringkas / tanya-jawab catatan) — bertentangan dengan non-goal v1 di PLAN
 - Notifikasi terjadwal (web terbatas saat aplikasi tertutup; APK lewat Capacitor)

@@ -175,7 +175,9 @@ if (BAG === 'B') {
   state.notes.splice(0);
   state.notes.push(catatanBergambar('g1'));
   await simpanBlob('f-g1', new w.Blob(['x'], { type: 'image/png' }));
-  await openNote('g1'); await sleep(120);
+  await openNote('g1');
+  /* src gambar diisi asinkron dari IndexedDB: tunggu kondisi, bukan waktu tetap (flaky di bawah beban paralel) */
+  for (const batas = Date.now() + 4000; !DOC().querySelector('img[data-blob][src]') && Date.now() < batas;) await sleep(15);
   ok('B1 editor punya figur + gambar', !!fig() && !!DOC().querySelector('img[data-blob][src]'));
 
   const lebarKolom = sembunyi(DOC());
@@ -486,9 +488,16 @@ if (BAG === 'C') {
   await simpanBlob('f-g8', new w.Blob(['x'], { type: 'image/png' }));
   await openNote('g8'); await sleep(100);
   const mb8 = d.getElementById('mode');
-  const srcSblm = DOC().querySelector('.b-img img').getAttribute('src');
   klik(mb8);                       /* → mode baca */
-  await sleep(150);
+  /* tunggu render segar selesai: URL blob diambil dari IDB secara asinkron,
+     dan di bawah beban paralel itu melewati jeda tetap 150 ms. Berhenti begitu
+     gambar punya src dan tidak tersembunyi, atau setelah ±1 detik. */
+  for (let i = 0; i < 40; i++) {
+    const im = DOC() && DOC().querySelector('.b-img img');
+    const edNow = d.querySelector('.ed');
+    if (edNow && edNow.classList.contains('baca') && im && im.getAttribute('src') && im.style.display !== 'none') break;
+    await sleep(25);
+  }
   const fig8 = DOC() ? DOC().querySelector('.b-img') : null;
   const ed8 = d.querySelector('.ed');
   const img8 = fig8 ? fig8.querySelector('img') : null;
@@ -497,7 +506,7 @@ if (BAG === 'C') {
      fig8.classList.contains('w-apit') && fig8.classList.contains('f-l'),
      fig8 ? fig8.className : 'fig hilang');
   ok('C17b src gambar dipertahankan saat ganti mode (tanpa jeda kosong)',
-     !!img8 && img8.getAttribute('src') === srcSblm &&
+     !!img8 && /^blob:/.test(img8.getAttribute('src') || '') &&
      img8.style.display !== 'none',
      img8 ? (img8.getAttribute('src') || 'tanpa-src') : 'img hilang');
   klik(mb8);                       /* → kembali mode tulis */

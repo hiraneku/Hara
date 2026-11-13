@@ -2,7 +2,12 @@
 
 > Satu aplikasi, banyak tools kecil (catatan, reminder, dan lainnya) yang berbagi satu core.
 
-Status: draft v1 · Target awal: **Web PWA**, nanti dibungkus jadi APK · Data: **local-first**
+Status: draft v1 (diperbarui ronde 12 agar sesuai kode) · Target: **web (GitHub Pages)**, lalu dibungkus jadi APK dengan Capacitor (bukan PWA, lihat K33) · Data: **local-first**
+
+> **Catatan pembaruan (ronde 12).** Bagian 2 dan 3.1 di bawah adalah **rencana awal**.
+> Kode yang berjalan sekarang memakai stack yang berbeda (vanilla ES modules, tanpa build).
+> Sumber kebenaran untuk struktur kode adalah [`ARSITEKTUR.md`](ARSITEKTUR.md);
+> tabel di bawah ini menunjukkan perbandingan rencana dan kenyataan.
 
 ---
 
@@ -30,6 +35,26 @@ AI, dan sistem plugin dari pihak ketiga.
 ---
 
 ## 2. Stack Teknologi
+
+### 2.0 Stack nyata (dipakai sekarang)
+
+| Lapisan | Rencana awal (bagian 2 di bawah) | Yang dipakai sekarang |
+|---|---|---|
+| Bahasa | TypeScript | JavaScript ES modules murni, tanpa build step |
+| UI | React 18 + Vite | DOM vanilla (`docs/notes/views/*.js`) |
+| Styling | Tailwind CSS | CSS biasa, berlapis (`docs/styles/*.css`) |
+| Routing | React Router | `core/router.js` (buatan sendiri) |
+| State | Zustand | `core/store.js` (satu pintu tulis data) |
+| Database | Dexie.js (IndexedDB) | IndexedDB lewat `core/db-catatan.js`; localStorage untuk preferensi kecil |
+| PWA | vite-plugin-pwa | Belum ada. Target APK lewat Capacitor (K33) |
+| Test | Vitest + Testing Library | Skrip Node dengan jsdom dan fake-indexeddb (`tools/uji/*.mjs`, `npm test`) |
+| Lint/Format | ESLint + Prettier | Belum ada |
+| Pembungkus APK | Capacitor | Capacitor 8 (`webDir: "docs"`), workflow APK di `.github/workflows/apk.yml` |
+
+Alasan perubahan: kode yang ada sudah berjalan tanpa build, dan GitHub Pages cukup menyajikan
+berkas apa adanya. Keputusan ini sudah tercermin di `ARSITEKTUR.md`.
+
+### 2.1 Rencana awal (draft v1, tidak semuanya dipakai)
 
 | Lapisan | Pilihan | Alasan |
 |---|---|---|

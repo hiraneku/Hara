@@ -28,8 +28,13 @@
    reference, undo per-blok, dan sinkronisasi nanti bisa diandalkan. */
 
 /* ── jenis blok yang dikenal ── */
-import { t as tr } from '../core/i18n.js?v=20261023235452';
-import { ukuranTerbaca } from '../core/blobs.js?v=20261023235452';
+import { t as tr } from '../core/i18n.js?v=20261105210000';
+import { ukuranTerbaca } from '../core/blobs.js?v=20261105210000';
+import { hitungTabel, lolosSaring, ambilKeadaanTabel, adalahRumus } from './tabel-rumus.js?v=20261105210000';
+import { adalahPdf } from './pdf/logika.js?v=20261105210000';
+import { tautanAman } from './url-aman.js?v=20261105210000';
+import { bersihKutipan, escHtml } from './tautan-murni.js?v=20261105210000';
+import { bersihkanHtmlBlok, PERLU_SARING } from './html-aman.js?v=20261105210000';
 
 export const BLOCK_TYPES = [
   'paragraph',
@@ -110,6 +115,73 @@ export const newNoteId  = () => uid('n');
 /* ════════ FACTORY ════════ */
 
 /* Blok baru yang selalu valid. */
+/* Batas teks OCR yang disimpan di atribut gambar (B6). Sama dengan ocr/ocr-teks.js. */
+const MAKS_OCR_GAMBAR = 20000;
+/* Teks OCR bisa berisi & dan <; escAttr hanya menangani tanda kutip, jadi ini melengkapinya. */
+const escOcr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+/* ── C2 · penanda waktu pada memo suara ──
+   meta.marks = [{ t: detik (0.1 dtk), teks }]. Diurutkan saat ditampilkan. */
+export function normalisasiTanda(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter(m => m && typeof m === 'object')
+    .map(m => ({
+      t: Math.max(0, Math.round((Number(m.t) || 0) * 10) / 10),
+      teks: String(m.teks || '').slice(0, 200),
+    }));
+}
+
+/* Baca penanda dari DOM blok audio (urutan DOM apa adanya). */
+export function bacaTandaDom(el) {
+  if (!el || !el.querySelectorAll) return [];
+  return Array.from(el.querySelectorAll('.aud-mark')).map(li => {
+    const inp = li.querySelector('.aud-mark-teks');
+    return { t: Number(li.getAttribute('data-t')) || 0, teks: inp ? inp.value : '' };
+  });
+}
+
+/* Transkrip manual terhubung ke waktu audio. Tidak ada STT/pengenalan suara. */
+export function normalisasiTranskrip(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter(x => x && typeof x === 'object').map(x => ({
+    t: Math.max(0, Math.round((Number(x.t) || 0) * 10) / 10),
+    teks: String(x.teks || '').slice(0, 2000),
+  })).sort((a, b) => a.t - b.t);
+}
+
+export function bacaTranskripDom(el) {
+  if (!el || !el.querySelectorAll) return [];
+  return Array.from(el.querySelectorAll('.aud-trans-row')).map(row => ({
+    t: Number(row.getAttribute('data-t')) || 0,
+    teks: row.querySelector('.aud-trans-teks')?.value || '',
+  }));
+}
+
+const formatDetik = d => `${String(Math.floor(d / 60)).padStart(2, '0')}:${String(Math.floor(d % 60)).padStart(2, '0')}`;
+
+/* Daftar penanda sebagai HTML. Selalu ada <ol> (meski kosong) supaya bisa diganti tanpa mencari tempatnya. */
+export function tandaAudioHtml(list) {
+  const daftar = normalisasiTanda(list).sort((a, b) => a.t - b.t);
+  const item = daftar.map(m =>
+    `<li class="aud-mark" data-t="${m.t}">` +
+    `<button type="button" class="aud-mark-t" data-aud-seek aria-label="${tr('Putar dari titik ini')}">${formatDetik(m.t)}</button>` +
+    `<input type="text" class="aud-mark-teks" value="${escAttr(m.teks)}" placeholder="${tr('Catatan di titik ini')}" aria-label="${tr('Catatan di titik ini')}">` +
+    `<button type="button" class="aud-mark-del" data-aud-mark-del aria-label="${tr('Hapus tanda')}" title="${tr('Hapus tanda')}">×</button>` +
+    `</li>`).join('');
+  return `<ol class="aud-marks" aria-label="${tr('Tanda waktu')}">${item}</ol>`;
+}
+
+export function transkripAudioHtml(list) {
+  const daftar = normalisasiTranskrip(list);
+  const item = daftar.map(s => `<li class="aud-trans-row" data-t="${s.t}">
+    <button type="button" class="aud-mark-t" data-aud-trans-seek aria-label="${tr('Putar dari titik ini')}">${formatDetik(s.t)}</button>
+    <textarea class="aud-trans-teks" rows="2" maxlength="2000" placeholder="${tr('Tulis transkrip di sini')}" aria-label="${tr('Transkrip')}" spellcheck="true">${String(s.teks).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+    <button type="button" class="aud-mark-del" data-aud-trans-del aria-label="${tr('Hapus segmen transkrip')}" title="${tr('Hapus segmen transkrip')}">×</button>
+  </li>`).join('');
+  return `<section class="aud-transcript"><div class="aud-trans-head"><strong>${tr('Transkrip manual')}</strong><button type="button" class="aud-trans-add" data-aud-trans-add>${tr('Tambah baris')}</button></div><ol class="aud-transcript-list" aria-label="${tr('Transkrip manual')}">${item}</ol></section>`;
+}
+
 export function makeBlock(patch = {}) {
   const type = BLOCK_TYPES.includes(patch.type) ? patch.type : 'paragraph';
   const blok = {
@@ -130,6 +202,58 @@ export function makeBlock(patch = {}) {
 }
 
 /* Catatan baru yang selalu valid. */
+/* B7a: latar kertas catatan. 'polos' (tanpa latar) adalah bawaan dan tidak disimpan.
+   B7c: 'kustom' = salah satu pola (titik/garis/grid) dengan spasi, warna, dan margin
+   sendiri. Pengaturannya disimpan di `kertasAtur`, hanya bila kertas === 'kustom'.
+   Warna dan margin hanya boleh dari daftar tetap di bawah (nilai ini masuk ke CSS). */
+export const KERTAS_POLA = ['titik', 'garis', 'grid'];
+export const KERTAS_JENIS = [...KERTAS_POLA, 'kustom'];
+export const KERTAS_SPASI = { min: 16, max: 48, bawaan: 28 };
+export const KERTAS_WARNA = { abu: '#8b9099', biru: '#4a7bd0', hijau: '#4f9a6a', merah: '#d0554f', coklat: '#9a7450' };
+export const KERTAS_MARGIN = [0, 48, 72, 96];
+export const kelasKertas = k => (KERTAS_POLA.includes(k) ? `kertas-${k}` : '');
+
+/* Membersihkan pengaturan kustom. Spasi di luar batas dijepit, warna/margin tak dikenal
+   memakai bawaan. Mengembalikan null bila bukan objek atau pola tidak dikenal. */
+export function sanitasiAturKertas(a) {
+  if (!a || typeof a !== 'object' || !KERTAS_POLA.includes(a.pola)) return null;
+  const s = Math.round(Number(a.spasi));
+  const spasi = Number.isFinite(s)
+    ? Math.min(KERTAS_SPASI.max, Math.max(KERTAS_SPASI.min, s)) : KERTAS_SPASI.bawaan;
+  const warna = Object.prototype.hasOwnProperty.call(KERTAS_WARNA, a.warna) ? a.warna : 'abu';
+  const m = Number(a.margin);
+  const margin = KERTAS_MARGIN.includes(m) ? m : 0;
+  return { pola: a.pola, spasi, warna, margin };
+}
+
+/* Kelas CSS latar catatan: B7a (titik/garis/grid) dan B7c (kustom). Teks kosong = polos. */
+export function kelasKertasNote(n) {
+  if (!n || !KERTAS_JENIS.includes(n.kertas)) return '';
+  if (n.kertas !== 'kustom') return kelasKertas(n.kertas);
+  const a = sanitasiAturKertas(n.kertasAtur);
+  if (!a) return '';
+  return ['kertas-kustom', `kertas-kustom-${a.pola}`, a.margin ? 'kertas-kustom-margin' : '']
+    .filter(Boolean).join(' ');
+}
+
+/* Variabel CSS (--kt-*) untuk latar kustom; null bila bukan kustom. */
+export function variabelKertasNote(n) {
+  if (!n || n.kertas !== 'kustom') return null;
+  const a = sanitasiAturKertas(n.kertasAtur);
+  if (!a) return null;
+  return {
+    '--kt-spasi': `${a.spasi}px`,
+    '--kt-warna': KERTAS_WARNA[a.warna],
+    '--kt-margin': `${a.margin}px`,
+  };
+}
+
+/* Atribut style untuk .ed-doc. Nilainya selalu dari daftar tetap, jadi aman ditulis apa adanya. */
+export function gayaKertasNote(n) {
+  const v = variabelKertasNote(n);
+  return v ? Object.entries(v).map(([k, x]) => `${k}:${x}`).join(';') : '';
+}
+
 export function makeNote(patch = {}) {
   const now = Date.now();
   const blocks = Array.isArray(patch.blocks) && patch.blocks.length
@@ -146,6 +270,11 @@ export function makeNote(patch = {}) {
       ? { tagsManual: patch.tagsManual.slice() } : {}),
     stickers: Array.isArray(patch.stickers) ? patch.stickers.map(s => ({ ...s })) : [],
     ...(patch.cover ? { cover: String(patch.cover) } : {}),
+    /* B7a/B7c: latar kertas. Polos (bawaan) tidak disimpan, sama seperti cover.
+       'kustom' hanya disimpan bila pengaturannya valid. */
+    ...(patch.kertas === 'kustom' && sanitasiAturKertas(patch.kertasAtur)
+      ? { kertas: 'kustom', kertasAtur: sanitasiAturKertas(patch.kertasAtur) }
+      : KERTAS_POLA.includes(patch.kertas) ? { kertas: patch.kertas } : {}),
     folderId: patch.folderId ?? null,
     createdAt: patch.createdAt || now,
     updatedAt: patch.updatedAt || now,
@@ -183,13 +312,17 @@ export function plainText(note) {
         return b.meta.rows.map(r => r.join(' ')).join('\n').trim();
       }
       if (b.type === 'audio') {
-        return String((b.meta && b.meta.title) || '');
+        const m = b.meta || {};
+        return [String(m.title || ''), ...(Array.isArray(m.marks) ? m.marks.map(x => x && x.teks ? String(x.teks) : '') : []), ...(Array.isArray(m.transcript) ? m.transcript.map(x => x && x.teks ? String(x.teks) : '') : [])].filter(Boolean).join(' ');
+      }
+      if (b.type === 'image') {
+        return String((b.meta && b.meta.ocr) || '');
       }
       if (b.type === 'math') {
         return String((b.meta && b.meta.expr) || '');
       }
       if (b.type === 'bookmark') {
-        return [b.meta?.title, b.meta?.desc, b.meta?.url].filter(Boolean).join(' ');
+        return [b.meta?.title, b.meta?.desc, b.meta?.kutipan, b.meta?.url].filter(Boolean).join(' ');
       }
       if (b.type === 'file') {
         return String((b.meta && b.meta.name) || '');
@@ -253,7 +386,21 @@ function renderMathHtmlRingan(mentah) {
   return s;
 }
 
+/* B4: lencana kecil di pojok kiri-bawah gambar yang punya tautan. Klik membuka tautan di tab baru. */
+export function badgeTautanGambar(url) {
+  const t = escAttr(tr('Buka tautan'));
+  return `<a class="img-tautan" href="${escAttr(url)}" target="_blank" rel="noopener noreferrer"` +
+    ` title="${t}" aria-label="${t}"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg></a>`;
+}
+
 export function blockToHtml(b) {
+  /* B4/B4c: lapisan kedua penyaringan di tampilan (lapisan pertama di normalizeNote).
+     Markup aplikasi sendiri tidak memicu penyaringan; isi yang mencurigakan disaring. */
+  const h = blockToHtmlMentah(b);
+  return PERLU_SARING.test(h) ? bersihkanHtmlBlok(h) : h;
+}
+
+function blockToHtmlMentah(b) {
   const meta = b.meta || {};
   const gaya = meta.indent ? ` style="padding-left:${Number(meta.indent) || 0}px"` : '';
   const ref  = meta.ref ? ` data-ref="${escAttr(meta.ref)}"` : '';
@@ -271,18 +418,25 @@ export function blockToHtml(b) {
   }
 
   if (b.type === 'bookmark') {
-    const url = escAttr(meta.url || 'https://');
+    /* B4: alamat yang tidak aman tidak pernah jadi href; '#' sebagai pengganti */
+    const aman = tautanAman(meta.url);
+    const url = escAttr(aman || '#');
+    const urlData = escAttr(aman);
     let host = 'tautan';
-    try { host = new URL(meta.url || 'https://contoh.id').hostname.replace(/^www\./, ''); } catch {}
-    const jdl = escAttr(meta.title || host);
-    const ket = escAttr(meta.desc || '');
-    return `<div class="b-bmk" contenteditable="false" data-url="${url}" data-title="${jdl}" data-desc="${ket}"${bid}${ref}${bgAttr}>` +
+    try { if (aman) host = new URL(aman).hostname.replace(/^www\./, ''); } catch {}
+    /* D4: judul, catatan, dan kutipan di-escape HTML penuh (dari pengguna atau cadangan) */
+    const jdl = escHtml(meta.title || host);
+    const ket = escHtml(meta.desc || '');
+    const kut = bersihKutipan(meta.kutipan);
+    const dia = escHtml(meta.diambil || '');
+    return `<div class="b-bmk" contenteditable="false" data-url="${urlData}" data-title="${jdl}" data-desc="${ket}" data-kutipan="${escHtml(kut)}" data-diambil="${dia}"${bid}${ref}${bgAttr}>` +
       `<a class="bmk-main" href="${url}" target="_blank" rel="noopener noreferrer">` +
       `<span class="bmk-ico" aria-hidden="true"><svg class="ico"><use href="#i-link"/></svg></span>` +
       `<span class="bmk-info">` +
       `<span class="bmk-title">${jdl}</span>` +
       `${ket ? `<span class="bmk-desc">${ket}</span>` : ''}` +
-      `<span class="bmk-host">${escAttr(host)}</span>` +
+      `${kut ? `<span class="bmk-kutipan">${escHtml(kut)}</span>` : ''}` +
+      `<span class="bmk-host">${escHtml(host)}${dia ? ` · <span class="bmk-diambil">${tr('Diambil')} ${dia}</span>` : ''}</span>` +
       `</span></a>` +
       `<button type="button" class="bmk-act" data-bmk-edit title="${tr('Sunting')}" aria-label="${tr('Sunting')}"><svg class="ico"><use href="#i-pen"/></svg></button>` +
       `<button type="button" class="bmk-act" data-bmk-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
@@ -298,6 +452,7 @@ export function blockToHtml(b) {
     return `<div class="b-file" contenteditable="false" data-blob="${blobId}" data-name="${nama}" data-size="${uk}" data-mime="${mime}"${bid}${ref}${bgAttr}>` +
       `<span class="fl-ext">${escAttr(ekst)}</span>` +
       `<div class="fl-info"><div class="fl-name">${nama}</div><div class="fl-size">${ukuranTerbaca(uk)}</div></div>` +
+      `${adalahPdf(meta) ? `<button type="button" class="btn btn-sec fl-btn" data-file-buka>${tr('Buka PDF')}</button>` : ''}` +
       `<button type="button" class="btn btn-sec fl-btn" data-file-dl>${tr('Unduh')}</button>` +
       `<button type="button" class="bmk-act" data-file-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `${pegangan()}</div>`;
@@ -323,6 +478,23 @@ export function blockToHtml(b) {
     const head = rawRows[0] || [''];
     const body = rawRows.length > 1 ? rawRows.slice(1) : [head.map(() => '')];
     const escCell = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    /* MB2: hasil rumus (atribut, bukan teks — tidak ikut tersimpan) & keadaan saring/urut */
+    const keadaan = ambilKeadaanTabel(b.id);
+    const kolAktif = Math.min(keadaan.kol, Math.max(0, head.length - 1));
+    const hasil = hitungTabel(rawRows);
+    const lolos = lolosSaring(rawRows, kolAktif, keadaan.saring);
+    const hasilSel = (ri, idx) => {
+      const teks = String((rawRows[ri] && rawRows[ri][idx]) ?? '');
+      return adalahRumus(teks) ? ` data-hasil="${escAttr(hasil[ri][idx])}"` : '';
+    };
+    const tools = `<div class="tbl-urut">` +
+      `<label class="tbl-lbl">${tr('Kolom')} <select data-tbl-kol aria-label="${tr('Kolom untuk urut & saring')}">` +
+        head.map((h, i) => `<option value="${i}"${i === kolAktif ? ' selected' : ''}>${escAttr(h || (tr('Kolom') + ' ' + (i + 1)))}</option>`).join('') +
+      `</select></label>` +
+      `<button type="button" data-tbl-act="urut-naik" title="${tr('Urut naik')}" aria-label="${tr('Urut naik')}">↑</button>` +
+      `<button type="button" data-tbl-act="urut-turun" title="${tr('Urut turun')}" aria-label="${tr('Urut turun')}">↓</button>` +
+      `<input type="search" data-tbl-saring value="${escAttr(keadaan.saring)}" placeholder="${tr('Saring…')}" aria-label="${tr('Saring baris')}">` +
+      `</div>`;
     return `<div class="b-table" contenteditable="false"${bid}${ref}>` +
       `<div class="tbl-bar">` +
       `<button type="button" data-tbl-act="add-row">+ ${tr('Baris')}</button>` +
@@ -331,9 +503,10 @@ export function blockToHtml(b) {
       `<button type="button" data-tbl-act="del-col">− ${tr('Kolom')}</button>` +
       `<button type="button" data-tbl-act="del-table" class="tbl-danger" title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
       `</div>` +
+      tools +
       `<div class="tbl-scroll"><table>` +
       `<thead><tr>${head.map(c => `<th contenteditable="true">${escCell(c)}</th>`).join('')}</tr></thead>` +
-      `<tbody>${body.map(r => `<tr>${head.map((_, idx) => `<td contenteditable="true">${escCell(r[idx])}</td>`).join('')}</tr>`).join('')}</tbody>` +
+      `<tbody>${body.map((r, i) => `<tr${lolos[i] === false ? ' hidden' : ''}>${head.map((_, idx) => `<td contenteditable="true"${hasilSel(i + 1, idx)}>${escCell(r[idx])}</td>`).join('')}</tr>`).join('')}</tbody>` +
       `</table></div>${pegangan()}</div>`;
   }
 
@@ -346,9 +519,10 @@ export function blockToHtml(b) {
       `<button type="button" class="aud-btn" data-aud-play aria-label="${tr('Putar memo suara')}"><svg class="ico aud-i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="ico aud-i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>` +
       `<input type="text" class="aud-title" value="${judul}" aria-label="${tr('Judul memo')}">` +
       `<span class="aud-dur">${labelDur}</span>` +
+      `<button type="button" class="aud-mark-btn" data-aud-mark title="${tr('Tandai')}" aria-label="${tr('Tandai')}">${tr('Tandai')}</button>` +
       `<button type="button" class="aud-speed" data-aud-speed>1×</button>` +
       `<button type="button" class="aud-del" data-aud-del title="${tr('Hapus')}" aria-label="${tr('Hapus')}"><svg class="ico"><use href="#i-x"/></svg></button>` +
-      `<audio preload="metadata"></audio>${pegangan()}</figure>`;
+      `<audio preload="metadata"></audio>${tandaAudioHtml(meta.marks)}${transkripAudioHtml(meta.transcript)}${pegangan()}</figure>`;
   }
 
   if (b.type === 'image') {
@@ -381,12 +555,19 @@ export function blockToHtml(b) {
         (ga ? ` data-ga="${ga}"` : '') + (gb ? ` data-gb="b"` : '');
     }
     const skAttr = meta.sketch ? ' data-sketch="1"' : '';
+    const gorAttr = meta.goresan ? ` data-goresan="${escAttr(meta.goresan)}"` : '';
     const scanAttr = meta.scan ? ` data-scan="${escAttr(meta.scan)}"` : '';
     const origAttr = meta.origBlob ? ` data-orig-blob="${escAttr(meta.origBlob)}"` : '';
-    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${scanAttr}${origAttr}${bgAttr}>` +
+    /* B6: teks hasil OCR gambar. Ikut disimpan di catatan, jadi tercari dan tercadangkan. */
+    const ocrAttr = meta.ocr ? ` data-ocr="${escOcr(String(meta.ocr).slice(0, MAKS_OCR_GAMBAR))}"` : '';
+    /* B4: tautan pada gambar/objek tulisan. Alamat tidak aman tidak pernah ditulis. */
+    const tautan = tautanAman(meta.url);
+    const urlAttr = tautan ? ` data-url="${escAttr(tautan)}"` : '';
+    return `<div class="${cls.join(' ')}" contenteditable="false"${gaya}${bid}${skAttr}${gorAttr}${scanAttr}${origAttr}${ocrAttr}${urlAttr}${bgAttr}>` +
       `<img data-blob="${blob}" alt="${alt}">` +
       `<button class="img-x" data-imgx="${blob}" title="${tr('Hapus gambar')}" aria-label="${tr('Hapus gambar')}">` +
-      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>${pegangan()}</div>`;
+      `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>` +
+      `${tautan ? badgeTautanGambar(tautan) : ''}${pegangan()}</div>`;
   }
 
   if (b.type === 'todo') {
@@ -503,12 +684,16 @@ export function elToBlock(el) {
     meta.blobId = el.getAttribute('data-blob') || '';
     meta.duration = Number(el.getAttribute('data-dur')) || 0;
     meta.title = inp ? inp.value : '';
+    meta.marks = normalisasiTanda(bacaTandaDom(el));
+    meta.transcript = normalisasiTranskrip(bacaTranskripDom(el));
   } else if (type === 'math') {
     meta.expr = el.getAttribute('data-expr') || '';
   } else if (type === 'bookmark') {
     meta.url = el.getAttribute('data-url') || '';
     meta.title = el.getAttribute('data-title') || '';
     meta.desc = el.getAttribute('data-desc') || '';
+    meta.kutipan = bersihKutipan(el.getAttribute('data-kutipan') || '');
+    meta.diambil = el.getAttribute('data-diambil') || '';
   } else if (type === 'file') {
     meta.blobId = el.getAttribute('data-blob') || '';
     meta.name = el.getAttribute('data-name') || 'lampiran';
@@ -522,10 +707,14 @@ export function elToBlock(el) {
       if (alt) meta.alt = alt;
     }
     if (el.getAttribute && el.getAttribute('data-sketch') === '1') meta.sketch = true;
+    const gor = el.getAttribute && el.getAttribute('data-goresan');
+    if (gor) meta.goresan = gor;
     const sc = el.getAttribute && el.getAttribute('data-scan');
     if (sc) meta.scan = sc;
     const ob = el.getAttribute && el.getAttribute('data-orig-blob');
     if (ob) meta.origBlob = ob;
+    const ocr = el.getAttribute && el.getAttribute('data-ocr');
+    if (ocr) meta.ocr = ocr.slice(0, MAKS_OCR_GAMBAR);
     /* tata letak: atribut data-gw/gr/ga/gb pada figur (baca balik dari
        tata-gambar.js). Gambar lama tanpa atribut tidak mendapat meta —
        tetap dirender sebagai gambar 100% lurus seperti sebelumnya. */
@@ -543,6 +732,10 @@ export function elToBlock(el) {
     if (ga === 'l' || ga === 'c' || ga === 'r') meta.align = ga;
     const gb = el.getAttribute && el.getAttribute('data-gb');
     if (gb === 'b') meta.zb = 'b';
+    /* B4: tautan gambar/objek tulisan; alamat tidak aman dibuang */
+    const tg = el.getAttribute && el.getAttribute('data-url');
+    const tgAman = tautanAman(tg);
+    if (tgAman) meta.url = tgAman;
   } else if (type === 'todo') {
     meta.checked = kelas.includes('done');
     /* waktu centang (ms) — untuk panel Tugas/Reminder (B9) */
@@ -692,6 +885,25 @@ export function htmlToBlocks(html) {
 
 /* Terima catatan bentuk apa pun (lama/baru/rusak) -> catatan valid.
    Idempoten: catatan yang sudah benar dikembalikan apa adanya. */
+/* B4: alamat tautan tidak aman dibuang dari data (bookmark dan href di isi blok). */
+function bersihBlokTautan(blok) {
+  if (!blok || typeof blok !== 'object') return blok;
+  let out = blok;
+  /* B4c: isi HTML blok disaring (on*, <iframe>, <img onerror>, href/src berbahaya, dll).
+     Blok kode tidak disentuh: isinya teks, bukan markup. */
+  if (blok.type !== 'code' && typeof out.content === 'string' && out.content.includes('<')) {
+    out = { ...out, content: bersihkanHtmlBlok(out.content) };
+  }
+  if ((blok.type === 'bookmark' || blok.type === 'image') && blok.meta && blok.meta.url) {
+    out = { ...out, meta: { ...blok.meta, url: tautanAman(blok.meta.url) } };
+  }
+  /* D4: kutipan dibatasi panjangnya; nilai non-string dibuang */
+  if (blok.type === 'bookmark' && blok.meta && 'kutipan' in blok.meta) {
+    out = { ...out, meta: { ...out.meta, kutipan: bersihKutipan(blok.meta.kutipan) } };
+  }
+  return out;
+}
+
 export function normalizeNote(raw) {
   if (!raw || typeof raw !== 'object') return makeNote();
 
@@ -704,7 +916,7 @@ export function normalizeNote(raw) {
         if (!b || b.type === 'code' || b.type === 'divider') return makeBlock(b);
         /* sapu sisa span tag rusak dari data lama (bug Enter membelah
            tag / span kosong) — isi teksnya tidak berubah */
-        return makeBlock({ ...b, content: sapuTagRusak(b.content) });
+        return bersihBlokTautan(makeBlock({ ...b, content: sapuTagRusak(b.content) }));
       }),
     });
   }
@@ -714,7 +926,7 @@ export function normalizeNote(raw) {
   return makeNote({
     id: raw.id,
     title: raw.title ?? raw.t ?? '',
-    blocks: htmlToBlocks(raw.html),
+    blocks: htmlToBlocks(raw.html).map(bersihBlokTautan),
     tags: raw.tags,
     tagsManual: raw.tagsManual,
     folderId: raw.folderId,
