@@ -8,25 +8,27 @@
  * - Pindah Ruang / Folder & Riwayat Versi Lokal Catatan
  */
 
-import { state, save } from '../core/store.js?v=20261023235452';
-import { go, cur } from '../core/router.js?v=20261023235452';
-import { flush } from '../core/autosave.js?v=20261023235452';
-import { toast } from '../core/toast.js?v=20261023235452';
-import { stamp } from '../core/dom.js?v=20261023235452';
-import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261023235452';
-import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261023235452';
+import { state, save } from '../core/store.js?v=20261105210000';
+import { go, cur } from '../core/router.js?v=20261105210000';
+import { flush } from '../core/autosave.js?v=20261105210000';
+import { toast } from '../core/toast.js?v=20261105210000';
+import { stamp } from '../core/dom.js?v=20261105210000';
+import { t as tr, bahasaSekarang } from '../core/i18n.js?v=20261105210000';
+import { bacaKeras, hentikanBaca, mulaiDikte, tersediaDikte } from '../core/suara.js?v=20261105210000';
 export { hentikanBaca };
-import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261023235452';
-import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261023235452';
-import { openNote } from './model.js?v=20261023235452';
-import { waktuTenggat } from './pengingat.js?v=20261023235452';
-import { terlihat } from './kunci.js?v=20261023235452';
-import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261023235452';
-import { openPop, closeAll } from './menus/pop.js?v=20261023235452';
+import { buatCadanganTerenkripsi, bukaCadanganTerenkripsi, adalahCadanganTerenkripsi, MIN_FRASA } from '../core/enkripsi.js?v=20261105210000';
+import { makeNote, makeBlock, plainText, touch } from './note-model.js?v=20261105210000';
+import { openNote } from './model.js?v=20261105210000';
+import { waktuTenggat } from './pengingat.js?v=20261105210000';
+import { terlihat } from './kunci.js?v=20261105210000';
+import { cadanganJson, siapImporJson, terapkanImporJson, unduh, namaHariIni } from './data-io.js?v=20261105210000';
+import { openPop, closeAll } from './menus/pop.js?v=20261105210000';
+import { htmlKanban, htmlKalender, pindahKeKolom, geserKalender, pilihHariKalender,
+         setKelompok, setKalenderKunci } from './papan.js?v=20261105210000';
 import {
-  daftarRuang, tambahRuang, pindahkanCatatanKeRuang,
-  ambilVersiCatatan, pulihkanVersiCatatan,
-} from './ruang.js?v=20261023235452';
+  daftarRuang, jalurRuang, tambahRuang, pindahkanCatatanKeRuang,
+  ambilVersiCatatan, pulihkanVersiCatatan, bandingVersiDenganSekarang,
+} from './ruang.js?v=20261105210000';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const KODE_BAHASA = { id: 'id-ID', en: 'en-US', ja: 'ja-JP' };
@@ -155,22 +157,14 @@ export function jadikanBarisTenggatTugas() {
   toast(tr('{n} baris jadi tugas', { n: jumlah }));
 }
 
-/* ───────── K19 · tabel properti + Papan Kanban (status) ───────── */
+/* ───────── K19 · tabel properti + papan Kanban & kalender (MB1) ───────── */
 
 let _modeDb = 'tabel';
-const KOLOM_KANBAN_BAWAAN = ['ide', 'draf', 'berjalan', 'selesai'];
 
 export function bukaTabelProperti(modeAwal = '') {
   if (modeAwal) _modeDb = modeAwal;
   const aktif = state.notes.filter(n => !n.deletedAt && !n.archived && terlihat(n) && Array.isArray(n.props) && n.props.length);
   const kolom = [...new Set(aktif.flatMap(n => n.props.map(p => p.k)).filter(Boolean))];
-
-  /* Kolom Kanban dikumpulkan dari nilai `status` nyata + lajur standar */
-  const statusTambahan = aktif
-    .map(n => (n.props.find(p => p.k === 'status') || {}).v || '')
-    .map(v => v.trim())
-    .filter(v => v && !KOLOM_KANBAN_BAWAAN.includes(v.toLowerCase()));
-  const lajurKanban = [...KOLOM_KANBAN_BAWAAN, ...new Set(statusTambahan)];
 
   const baris = aktif.map(n => `<tr>
     <td style="padding:7px 8px;border-bottom:1px solid var(--border)"><a href="#" data-buka="${esc(n.id)}" style="color:var(--accent);font-weight:500">${esc(n.title || tr('Tanpa judul'))}</a></td>
@@ -180,69 +174,51 @@ export function bukaTabelProperti(modeAwal = '') {
     }).join('')}
   </tr>`).join('');
 
-  const kanbanHtml = `
-    <div class="kb-board">
-      ${lajurKanban.map(st => {
-        const kartu = aktif.filter(n => {
-          const v = ((n.props.find(p => p.k === 'status') || {}).v || '').trim().toLowerCase();
-          return st === 'ide' ? (!v || v === 'ide') : v === st.toLowerCase();
-        });
-        return `<div class="kb-col">
-          <div class="kb-head"><span>${esc(st)}</span><span class="chip">${kartu.length}</span></div>
-          <div class="kb-list">
-            ${kartu.map(n => `
-              <div class="kb-card">
-                <a href="#" class="kb-title" data-buka="${esc(n.id)}">${esc(n.title || tr('Tanpa judul'))}</a>
-                <div class="kb-move">
-                  ${KOLOM_KANBAN_BAWAAN.filter(x => x !== st.toLowerCase()).map(target =>
-                    `<button type="button" class="kb-mv-btn" data-kb-id="${esc(n.id)}" data-kb-st="${esc(target)}">→ ${esc(target)}</button>`
-                  ).join('')}
-                </div>
-              </div>`).join('') || `<span class="kb-empty">—</span>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  const tombolMode = (mode, label) =>
+    `<button type="button" class="btn ${_modeDb === mode ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="${mode}">${label}</button>`;
+
+  let isi;
+  if (aktif.length === 0) isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada catatan dengan properti.')}</p>`;
+  else if (_modeDb === 'kanban') isi = htmlKanban(aktif);
+  else if (_modeDb === 'kalender') isi = htmlKalender(aktif);
+  else isi = `<div style="overflow-x:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${tr('Catatan')}</th>${kolom.map(k => `<th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${esc(k)}</th>`).join('')}</tr></thead>
+      <tbody>${baris}</tbody></table></div>`;
 
   openPop(`
-    <div class="rn-modal-box" style="max-width:720px;max-height:82vh;overflow:auto">
+    <div class="rn-modal-box" style="max-width:760px;max-height:82vh;overflow:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <h3 class="rn-modal-title">${tr('Tabel properti')}</h3>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button type="button" class="btn ${_modeDb === 'tabel' ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="tabel">${tr('Tabel')}</button>
-          <button type="button" class="btn ${_modeDb === 'kanban' ? 'btn-pri' : 'btn-sec'}" style="height:30px;font-size:12px" data-db-mode="kanban">Kanban</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${tombolMode('tabel', tr('Tabel'))}
+          ${tombolMode('kanban', 'Kanban')}
+          ${tombolMode('kalender', tr('Kalender'))}
           <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px"><svg class="ico"><use href="#i-x"/></svg></button>
         </div>
       </div>
-      ${aktif.length === 0
-        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada catatan dengan properti.')}</p>`
-        : _modeDb === 'kanban'
-          ? kanbanHtml
-          : `<div style="overflow-x:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse">
-              <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${tr('Catatan')}</th>${kolom.map(k => `<th style="text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--border-strong)">${esc(k)}</th>`).join('')}</tr></thead>
-              <tbody>${baris}</tbody></table></div>`}
+      ${isi}
     </div>`);
 
-  document.getElementById('pop').onclick = e => {
+  const pop = document.getElementById('pop');
+  pop.onchange = e => {
+    if (e.target.matches('[data-papan-kelompok]')) { setKelompok(e.target.value); bukaTabelProperti('kanban'); }
+    else if (e.target.matches('[data-kal-kunci]')) { setKalenderKunci(e.target.value); bukaTabelProperti('kalender'); }
+  };
+  pop.onclick = e => {
     const modeBtn = e.target.closest('[data-db-mode]');
-    if (modeBtn) {
-      bukaTabelProperti(modeBtn.dataset.dbMode);
-      return;
-    }
+    if (modeBtn) { bukaTabelProperti(modeBtn.dataset.dbMode); return; }
     const mv = e.target.closest('[data-kb-id]');
     if (mv) {
-      const targetNote = state.notes.find(x => x.id === mv.dataset.kbId);
-      if (targetNote) {
-        targetNote.props = Array.isArray(targetNote.props) ? targetNote.props : [];
-        const existing = targetNote.props.find(p => p.k === 'status');
-        if (existing) existing.v = mv.dataset.kbSt;
-        else targetNote.props.push({ k: 'status', v: mv.dataset.kbSt });
-        touch(targetNote);
-        save();
+      /* pindah kolom = ubah satu properti; kolom kosong menghapus nilainya */
+      if (pindahKeKolom(mv.dataset.kbId, mv.dataset.kbK || 'status', mv.dataset.kbSt)) {
         bukaTabelProperti('kanban');
       }
       return;
     }
+    const geser = e.target.closest('[data-kal-geser]');
+    if (geser) { geserKalender(+geser.dataset.kalGeser); bukaTabelProperti('kalender'); return; }
+    const hari = e.target.closest('[data-kal-hari]');
+    if (hari) { pilihHariKalender(hari.dataset.kalHari); bukaTabelProperti('kalender'); return; }
     const a = e.target.closest('[data-buka]');
     if (a) { e.preventDefault(); closeAll(); openNote(a.dataset.buka); }
   };
@@ -357,7 +333,7 @@ export function bukaPanelRuangCatatan(anchor) {
     </button>
     ${daftar.map(r => `
       <button type="button" class="pop-i${n.folderId === r.id ? ' on' : ''}" data-set-ruang="${esc(r.id)}">
-        <svg class="ico"><use href="#i-arch"/></svg>${esc(r.nama)}
+        <svg class="ico"><use href="#i-arch"/></svg>${esc(jalurRuang(r.id, daftar))}
       </button>`).join('')}
     <div style="display:flex;gap:6px;padding:6px 10px 10px">
       <input id="ruang-baru-in" class="pop-in" placeholder="${tr('Nama ruang baru…')}" maxlength="32">
@@ -392,30 +368,87 @@ export async function bukaPanelVersiCatatan(anchor) {
   const n = catatanBuka();
   if (!n) { toast(tr('Buka catatan dulu')); return; }
   const versi = await ambilVersiCatatan(n.id);
-  openPop(`
-    <div class="rn-modal-box" style="max-width:460px;max-height:76vh;overflow:auto">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <h3 class="rn-modal-title">${tr('Riwayat versi lokal')}</h3>
-        <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px"><svg class="ico"><use href="#i-x"/></svg></button>
-      </div>
+
+  let snapshotSaatDitinjau = null;
+  const kepala = judul => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <h3 class="rn-modal-title" id="versi-dialog-title" style="margin:0">${judul}</h3>
+        <button type="button" class="iconbtn" data-pop-close style="width:28px;height:28px;flex:none"><svg class="ico"><use href="#i-x"/></svg></button>
+      </div>`;
+
+  const tampilDaftar = () => {
+    openPop(`
+    <div class="rn-modal-box" role="dialog" aria-modal="true" aria-labelledby="versi-dialog-title" tabindex="-1" style="max-width:460px;max-height:76vh;overflow:auto">
+      ${kepala(tr('Riwayat versi lokal'))}
       ${versi.length === 0
-        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada snapshot versi tersimpan untuk catatan ini. Snapshot direkam otomatis saat kamu menyunting.')}</p>`
+        ? `<p style="font-size:12.5px;color:var(--muted)">${tr('Belum ada versi tersimpan untuk catatan ini. Versi direkam otomatis tiap 5 menit saat kamu menyunting, disimpan 30 hari.')}</p>`
         : versi.map((v, i) => `
           <div class="ver-item">
             <div style="min-width:0;flex:1">
               <div style="font-size:13px;font-weight:600">${esc(v.title || tr('Tanpa judul'))} · <span style="font-weight:400;color:var(--muted)">${stamp(v.at)}</span></div>
               <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(plainText(v).slice(0, 90) || tr('Kosong'))}</div>
             </div>
-            <button type="button" class="btn btn-sec" style="height:30px;font-size:12px;flex:none" data-versi-pulih="${i}">${tr('Pulihkan')}</button>
+            <button type="button" class="btn btn-sec" style="height:36px;font-size:12px;flex:none" data-versi-banding="${i}">${tr('Tinjau perubahan')}</button>
           </div>`).join('')}
     </div>
-  `, anchor);
+  `);
+    document.querySelector('#pop [role="dialog"]')?.focus();
+    sambungPop();
+  };
 
-  const popEl = document.getElementById('pop');
-  if (popEl) {
+  const tampilBanding = i => {
+    const v = versi[i];
+    if (!v) return;
+    snapshotSaatDitinjau = JSON.stringify({ title:n.title, blocks:n.blocks });
+    const ops = bandingVersiDenganSekarang(v, n);
+    const MAKS_TAMPIL = 300;
+    let isi;
+    if (!ops) {
+      isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Catatan terlalu panjang untuk dibandingkan.')}</p>`;
+    } else if (!ops.some(x => x.o !== ' ')) {
+      isi = `<p style="font-size:12.5px;color:var(--muted)">${tr('Tidak ada perbedaan dengan catatan sekarang.')}</p>`;
+    } else {
+      const tambah = ops.filter(x => x.o === '+').length;
+      const hapus = ops.filter(x => x.o === '-').length;
+      const baris = ops.slice(0, MAKS_TAMPIL).map(x => {
+        const gaya = x.o === '+' ? 'background:rgba(34,197,94,.14)'
+          : x.o === '-' ? 'background:rgba(239,68,68,.14);text-decoration:line-through;opacity:.85' : '';
+        const tanda = x.o === '+' ? '+' : x.o === '-' ? '−' : ' ';
+        return `<div style="font-size:12.5px;padding:2px 6px;border-radius:4px;white-space:pre-wrap;word-break:break-word;${gaya}"><span style="color:var(--muted);margin-right:6px">${tanda}</span>${esc(x.t)}</div>`;
+      }).join('');
+      isi = `<div style="font-size:12px;color:var(--muted);margin:6px 0">${tr('Hanya di versi ini: {h} baris · Hanya di sekarang: {t} baris', { h: hapus, t: tambah })}</div>
+        <div class="ver-diff" style="display:flex;flex-direction:column;gap:2px">${baris}</div>
+        ${ops.length > MAKS_TAMPIL ? `<p style="font-size:12px;color:var(--muted)">${tr('… {n} baris lagi tidak ditampilkan.', { n: ops.length - MAKS_TAMPIL })}</p>` : ''}`;
+    }
+    openPop(`
+    <div class="rn-modal-box" role="dialog" aria-modal="true" aria-labelledby="versi-dialog-title" tabindex="-1" style="max-width:460px;max-height:76vh;overflow:auto">
+      ${kepala(tr('Bandingkan dengan sekarang'))}
+      <div style="font-size:12.5px;color:var(--muted);margin:4px 0 8px">${esc(v.title || tr('Tanpa judul'))} · ${stamp(v.at)}</div>
+      ${isi}
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px">
+        <button type="button" class="btn btn-sec" data-versi-kembali="1">${tr('Kembali')}</button>
+        <button type="button" class="btn btn-pri" data-versi-pulih="${i}">${tr('Pulihkan versi ini')}</button>
+      </div>
+    </div>
+  `);
+    document.querySelector('#pop [role="dialog"]')?.focus();
+    sambungPop();
+  };
+
+  const sambungPop = () => {
+    const popEl = document.getElementById('pop');
+    if (!popEl) return;
     popEl.onclick = async e => {
+      if (e.target.closest('[data-versi-kembali]')) { tampilDaftar(); return; }
+      const bd = e.target.closest('[data-versi-banding]');
+      if (bd) { tampilBanding(Number(bd.dataset.versiBanding)); return; }
       const btn = e.target.closest('[data-versi-pulih]');
       if (!btn) return;
+      const kini = state.notes.find(x=>x.id===n.id);
+      if (!kini || JSON.stringify({ title:kini.title, blocks:kini.blocks }) !== snapshotSaatDitinjau) {
+        toast(tr('Catatan berubah setelah pratinjau; tinjau perubahan lagi sebelum memulihkan.'));
+        await bukaPanelVersiCatatan(anchor);
+        return;
+      }
       const ok = await pulihkanVersiCatatan(n.id, Number(btn.dataset.versiPulih));
       closeAll();
       if (ok) {
@@ -423,7 +456,9 @@ export async function bukaPanelVersiCatatan(anchor) {
         toast(tr('Versi catatan dipulihkan'));
       }
     };
-  }
+  };
+
+  tampilDaftar();
 }
 
 /* ───────── K30 · sumber pencarian lintas modul (dipakai palette) ───────── */

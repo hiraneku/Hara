@@ -1,0 +1,32 @@
+import { JSDOM } from 'jsdom';
+import fs from 'node:fs';
+import { indexedDB } from 'fake-indexeddb';
+const dom = new JSDOM(fs.readFileSync('docs/index.html', 'utf8'), { url: 'https://x.test/', pretendToBeVisual: true });
+const w = dom.window;
+w.indexedDB = indexedDB;
+for (const k of ['document','HTMLElement','Node','Range','MouseEvent','Event','InputEvent','localStorage','Image','Blob']) if (w[k] !== undefined) globalThis[k] = w[k];
+globalThis.window = w; globalThis.self = w; globalThis.document = w.document; globalThis.localStorage = w.localStorage; globalThis.indexedDB = indexedDB;
+globalThis.addEventListener = w.addEventListener.bind(w);
+Object.defineProperty(globalThis, 'navigator', { value: w.navigator, configurable: true });
+w.HTMLCanvasElement.prototype.getContext = () => null;
+const version = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+await import(`../../docs/app.js?v=${version}`);
+const model = await import(`../../docs/notes/note-model.js?v=${version}`);
+let failed = 0;
+const cek = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if (!ok) failed++; };
+const transcript = model.normalisasiTranskrip([
+  { t: 9.96, teks: '<unsafe & text>' }, { t: -4, teks: 'Mulai' }, { t: 'abc', teks: '' },
+]);
+cek('segmen ditata menurut waktu dan waktu dibatasi non-negatif', transcript.map(x => x.t).join(',') === '0,0,10');
+cek('teks transkrip dibatasi dan tidak hilang saat normalisasi', transcript[2].teks === '<unsafe & text>');
+const block = model.makeBlock({ type: 'audio', meta: { blobId: 'b1', title: 'Rekaman', transcript } });
+const html = model.blockToHtml(block);
+cek('HTML meng-escape teks manual dan tidak merender markup', html.includes('&lt;unsafe &amp; text&gt;') && !html.includes('<unsafe'));
+cek('transkrip mendapat kontrol tambah baris dan lompat waktu', html.includes('data-aud-trans-add') && html.includes('data-aud-trans-seek'));
+const wrap = w.document.createElement('div'); wrap.innerHTML = html;
+const domRows = model.bacaTranskripDom(wrap.firstElementChild);
+cek('transkrip bisa dirender dan dibaca balik dari DOM', domRows.length === 3 && domRows[2].teks === '<unsafe & text>');
+const note = model.makeNote({ id: 'n1', title: 'Audio', blocks: [block] });
+cek('teks transkrip masuk ke teks polos untuk pencarian', model.plainText(note).includes('<unsafe & text>'));
+console.log(failed ? `\n${failed} GAGAL` : '\nSemua uji transkrip manual LOLOS');
+process.exit(failed ? 1 : 0);

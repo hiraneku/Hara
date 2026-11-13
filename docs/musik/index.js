@@ -2,25 +2,25 @@
    menghubungkan event mesin ke penyimpanan dan layar, serta memasang kontrol
    layar kunci. Dipasang dari app.js seperti modul lain. */
 
-import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261023235452';
-import * as M from './mesin.js?v=20261023235452';
-import * as A from './aksi.js?v=20261023235452';
-import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261023235452';
-import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261023235452';
-import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261023235452';
-import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261023235452';
-import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261023235452';
-import { terapkanEfekTersimpan } from './efek.js?v=20261023235452';
-import { pustakaView, pasangPustakaLagu } from './pustaka-layar.js?v=20261023235452';
-import { pasangKontrolNotifikasi, sinkronkanKontrolNotifikasi } from './kontrol-notif.js?v=20261023235452';
-import * as S from './simpan.js?v=20261023235452';
-import { ambilSet } from './set.js?v=20261023235452';
-import { segarkanKartuMusik } from './kartu.js?v=20261023235452';
-import { segarSampul } from './sampul-dom.js?v=20261023235452';
-import { antreanView, pasangAntrean } from './antrean-layar.js?v=20261023235452';
-import { pintarView, pasangPintar } from './pintar-layar.js?v=20261023235452';
-import { riwayatView, pasangRiwayat } from './riwayat-layar.js?v=20261023235452';
-import * as R from './riwayat.js?v=20261023235452';
+import { registerViews, cur, go, onAfterRender } from '../core/router.js?v=20261105210000';
+import * as M from './mesin.js?v=20261105210000';
+import * as A from './aksi.js?v=20261105210000';
+import { musikView, pasangLayar, segarkanLayar } from './layar.js?v=20261105210000';
+import { pengaturanView, pasangPengaturan } from './pengaturan.js?v=20261105210000';
+import { daftarView, pasangDaftar } from './daftar-layar.js?v=20261105210000';
+import { eqView, pasangEq, terapkanEqTersimpan } from './eq-layar.js?v=20261105210000';
+import { efekView, effectView, pasangEfek } from './efek-layar.js?v=20261105210000';
+import { terapkanEfekTersimpan } from './efek.js?v=20261105210000';
+import { pustakaView, pasangPustakaLagu } from './pustaka-layar.js?v=20261105210000';
+import { pasangKontrolNotifikasi, sinkronkanKontrolNotifikasi } from './kontrol-notif.js?v=20261105210000';
+import * as S from './simpan.js?v=20261105210000';
+import { ambilSet } from './set.js?v=20261105210000';
+import { segarkanKartuMusik } from './kartu.js?v=20261105210000';
+import { segarSampul } from './sampul-dom.js?v=20261105210000';
+import { antreanView, pasangAntrean } from './antrean-layar.js?v=20261105210000';
+import { pintarView, pasangPintar } from './pintar-layar.js?v=20261105210000';
+import { riwayatView, pasangRiwayat } from './riwayat-layar.js?v=20261105210000';
+import * as R from './riwayat.js?v=20261105210000';
 
 let simpanTimer = null;
 let posisiTerakhirSimpan = 0;

@@ -14,7 +14,9 @@ Berjalan di web dan layak dipakai harian. Yang sudah ada di modul Catatan:
 
 - **Editor blok** WYSIWYG: heading, daftar & daftar bernomor, to-do (dengan tenggat),
   kutipan, callout, kode, pembatas, gambar (lebar/zona/kompresi), format inline
-  (tebal, miring, coret, sorot, kode, warna, font).
+  (tebal, miring, coret, sorot, kode, warna, font), tabel (tambah/hapus baris &
+  kolom), blok lipat, memo suara, sketsa, rumus matematika, kartu tautan,
+  lampiran berkas, dan tanggal hari ini.
 - **Jaringan catatan**: wikilink, backlink, rujukan, graf, tag + warna label,
   properti, daftar isi.
 - **Kerja harian**: jurnal harian, templat, pencarian (operator `tag:` / `judul:` / `#` / `"frasa"`),

@@ -1,10 +1,8 @@
 /* Perpindahan layar. Modul mendaftarkan view-nya lewat registerViews(). */
-import { t as tr } from './i18n.js?v=20261023235452';
+import { t as tr } from './i18n.js?v=20261105210000';
 
 const views  = {};
 const titles = {};
-const induk = {};
-const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq', 'musik-antrean', 'musik-pintar', 'musik-riwayat'];
 export let cur = 'home';
 
 /* Layar sebelum layar sekarang — untuk tombol \"Kembali\" di halaman yang
@@ -15,15 +13,30 @@ export let sebelumnya = 'home';
 const beforeLeave = [];
 export const onBeforeLeave = fn => beforeLeave.push(fn);
 
+/* Layar anak → induk (mis. 'musik-eq' → 'musik'). Tombol kembali di layar anak
+   pulang ke induknya; perpindahan induk↔anak tidak mengubah 'sebelumnya', jadi
+   dari induk tombol kembali tetap menuju layar asal (mis. Beranda). */
+const induk = {};
+
 export function registerViews(map, titleMap, indukMap) {
   Object.assign(views, map);
   Object.assign(titles, titleMap || {});
   Object.assign(induk, indukMap || {});
 }
 
-const akar = v => { while (induk[v]) v = induk[v]; return v; };
-const saudara = (a, b) => akar(a) === akar(b);
+const MUSIK_LAYAR = ['musik', 'musik-set', 'musik-daftar', 'musik-pustaka', 'musik-efek', 'musik-effect', 'musik-eq'];
+/* Persiapan ujian (C8): tiga layar dengan tombol kembali, tanpa navigasi bawah. */
+const UJIAN_LAYAR = ['ujian', 'ujian-ruang', 'ujian-latihan'];
 
+const saudara = (a, b) => induk[a] === b || induk[b] === a;
+
+/* Apakah layar sekarang punya induk (dipakai tombol panah kembali). */
+export const adaInduk = () => !!(induk[cur] && views[induk[cur]]);
+
+/* opsi.segar: gambar ulang layar yang SAMA tanpa mengusik keadaannya —
+   onBeforeLeave tidak dijalankan (mode pilih & sejenisnya tetap hidup) dan
+   posisi gulir dipulihkan ke opsi.gulir. Dipakai untuk memuat baris daftar
+   berikutnya (P3). */
 export function go(v, opsi = {}) {
   if (!views[v]) return;
   if (!opsi.segar) {
@@ -43,7 +56,7 @@ export function go(v, opsi = {}) {
   const isEd = v === 'editor';
   /* layar kunci (D19) tampil seperti editor: tanpa nav bawah & fab,
      dengan panah kembali — jalannya cuma dua: buka PIN atau kembali */
-  const pakaiEd = isEd || v === 'kunci' || MUSIK_LAYAR.includes(v);
+  const pakaiEd = isEd || v === 'kunci' || MUSIK_LAYAR.includes(v) || UJIAN_LAYAR.includes(v);
   /* panah kembali ikut tampil di halaman yang tidak ada di nav bawah
      (Pengaturan) supaya selalu ada jalan keluar */
   const pakaiBack = pakaiEd || v === 'set';
@@ -64,7 +77,7 @@ export function go(v, opsi = {}) {
 
 /* Pulang ke layar sebelum layar sekarang (dipakai tombol Kembali). */
 export function kembali() {
-  if (induk[cur] && views[induk[cur]]) return go(induk[cur]);
+  if (adaInduk()) return go(induk[cur]);
   go(sebelumnya && views[sebelumnya] ? sebelumnya : 'home');
 }
 

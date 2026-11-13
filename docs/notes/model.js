@@ -7,17 +7,17 @@
    menghapus permanen atau lewat 30 hari (disapu otomatis saat aplikasi
    dibuka). Pola ini sesuai DESIGN.md §3.9 & NOTES.md ("tempat sampah
    30 hari") — tanpa dialog konfirmasi untuk aksi yang bisa diurungkan. */
-import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20261023235452';
-import { makeNote, touch, duplicateBlock } from './note-model.js?v=20261023235452';
-import { toast } from '../core/toast.js?v=20261023235452';
-import { go } from '../core/router.js?v=20261023235452';
-import { saveSoon } from './editor/cleanup.js?v=20261023235452';
-import { flush, reset as resetAutosave } from '../core/autosave.js?v=20261023235452';
-import { hapusDrafMilik } from '../core/recovery.js?v=20261023235452';
-import { bersihkanBlobYatim } from './editor/image.js?v=20261023235452';
-import { terkunciAktif, lepasKunci } from './kunci.js?v=20261023235452';
-import { tagUntukTampil } from './tags.js?v=20261023235452';
-import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { state, save, DEFAULT_NOTES } from '../core/store.js?v=20261105210000';
+import { makeNote, touch, duplicateBlock } from './note-model.js?v=20261105210000';
+import { toast } from '../core/toast.js?v=20261105210000';
+import { go } from '../core/router.js?v=20261105210000';
+import { saveSoon } from './editor/cleanup.js?v=20261105210000';
+import { flush, reset as resetAutosave } from '../core/autosave.js?v=20261105210000';
+import { hapusDrafMilik } from '../core/recovery.js?v=20261105210000';
+import { bersihkanBlobYatim } from './editor/image.js?v=20261105210000';
+import { terkunciAktif, lepasKunci } from './kunci.js?v=20261105210000';
+import { tagUntukTampil } from './tags.js?v=20261105210000';
+import { t as tr } from '../core/i18n.js?v=20261105210000';
 
 export const findNote = id => state.notes.find(n => n.id === id);
 export const current  = () => findNote(state.openId);
@@ -281,6 +281,8 @@ export function duplikatNote() {
     }),
     tags: tagUntukTampil(n),
     props: n.props,
+    kertas: n.kertas,
+    kertasAtur: n.kertasAtur,   /* B7c: ikut disalin; makeNote memvalidasi */
     folderId: n.folderId,
     pinned: false,
     archived: false,

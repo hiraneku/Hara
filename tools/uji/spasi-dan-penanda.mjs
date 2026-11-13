@@ -102,3 +102,5 @@ fresh(); await tog('b'); type('x   y');
 await tog('b'); type('   z');
 ok('spasi ganda utuh', teks()==='x   y   z', `teks=${JSON.stringify(teks())}`);
 console.log(F?`\n${F} GAGAL / ${P+F}`:`\nSEMUA ${P} LOLOS`);
+/* sinyal kegagalan untuk npm test (A5): exit 1 bila ada cek gagal */
+if (F) process.exit(1);

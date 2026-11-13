@@ -238,3 +238,5 @@ console.log('══ M. span font BERSARANG (akar bug "font sebelumnya") ══')
 console.log('\n════════ HASIL ════════');
 if(!gagal.length) console.log(`SEMUA ${P} LOLOS`);
 else { console.log(`${F} GAGAL / ${P+F}`); gagal.slice(0,25).forEach(x=>console.log('  ✗',x)); }
+/* sinyal kegagalan untuk npm test (A5): exit 1 bila ada cek gagal */
+if (gagal.length) process.exit(1);

@@ -1,25 +1,26 @@
 /**
  * Blok & Interaksi Editor Generasi Baru (Mobile-First Android):
  * #1 Menu Aksi Blok Ramah Sentuh (ketuk gagang blok / tombol bar -> Bottom Sheet 44px)
- * #2 Bar Pintas Keyboard Mobile (Indent, Outdent, ↑/↓, [[, #, To-do, Jam, =, Alat Teks, Aksi Blok)
+ * #2 Bar Pintas Keyboard Mobile (#qk-strip: hanya aksi yang TIDAK ada di bar bawah — Jam, =, Alat Teks, Aksi Blok)
  * #4 Blok Rumus Matematika Offline (/math — pecahan, akar, pangkat, indeks, simbol Yunani & kalkulus)
  * #5 Blok Kartu Tautan / Bookmark Visual (/bookmark — domain rapi, judul, catatan, buka 1 ketuk)
  * #6 Blok Lampiran Berkas Offline (/file — simpan PDF/dokumen ke IndexedDB blobs + unduh/buka)
  */
 
-import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261023235452';
-import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261023235452';
-import { setBlock, setCallout, indent, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261023235452';
-import { insertInline } from '../menus/insert.js?v=20261023235452';
-import { openPop, closeAll } from '../menus/pop.js?v=20261023235452';
-import { refresh, saveNow } from './cleanup.js?v=20261023235452';
-import { snap } from './history.js?v=20261023235452';
-import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261023235452';
-import { state } from '../../core/store.js?v=20261023235452';
-import { modeBacaBerlaku } from '../mode-baca.js?v=20261023235452';
-import { toast } from '../../core/toast.js?v=20261023235452';
-import { esc } from '../../core/dom.js?v=20261023235452';
-import { t as tr } from '../../core/i18n.js?v=20261023235452';
+import { docEl, ensureCaret, caretEnd, curBlock } from './caret.js?v=20261105210000';
+import { makeBlock, blockToHtml, elToBlock, duplicateBlock, newBlockId } from '../note-model.js?v=20261105210000';
+import { setBlock, setCallout, moveBlock, pastikanKolomAkhir, renumber } from './blocks.js?v=20261105210000';
+import { openPop, closeAll } from '../menus/pop.js?v=20261105210000';
+import { refresh, saveNow } from './cleanup.js?v=20261105210000';
+import { snap } from './history.js?v=20261105210000';
+import { simpanBlob, ambilBlob, ukuranTerbaca } from '../../core/blobs.js?v=20261105210000';
+import { state } from '../../core/store.js?v=20261105210000';
+import { modeBacaBerlaku } from '../mode-baca.js?v=20261105210000';
+import { toast } from '../../core/toast.js?v=20261105210000';
+import { esc } from '../../core/dom.js?v=20261105210000';
+import { bersihKutipan, tanggalDiambil, escHtml } from '../tautan-murni.js?v=20261105210000';
+import { t as tr } from '../../core/i18n.js?v=20261105210000';
+import { bukaPenampilPdf } from '../pdf/penampil.js?v=20261105210000';
 
 const SIMBOL_MATH = {
   '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
@@ -191,7 +192,7 @@ export function domainDariUrl(url) {
   }
 }
 
-export function insertBookmarkBlock(url, title = '', desc = '') {
+export function insertBookmarkBlock(url, title = '', desc = '', kutipan = '') {
   const bersihUrl = /^https?:\/\//i.test(String(url || '').trim())
     ? String(url).trim()
     : 'https://' + String(url || '').trim();
@@ -199,7 +200,8 @@ export function insertBookmarkBlock(url, title = '', desc = '') {
   return sisipElemenBlok(makeBlock({
     type: 'bookmark',
     content: '',
-    meta: { url: bersihUrl, title: judul, desc: String(desc || '').trim() },
+    /* D4: teks pilihan pengguna dan tanggal pengambilan (zona waktu lokal) */
+    meta: { url: bersihUrl, title: judul, desc: String(desc || '').trim(), kutipan: bersihKutipan(kutipan), diambil: tanggalDiambil() },
   }));
 }
 
@@ -207,11 +209,13 @@ export function bukaDialogBookmark(elExisting = null) {
   const u0 = elExisting ? (elExisting.getAttribute('data-url') || '') : '';
   const t0 = elExisting ? (elExisting.getAttribute('data-title') || '') : '';
   const d0 = elExisting ? (elExisting.getAttribute('data-desc') || '') : '';
+  const k0 = elExisting ? (elExisting.getAttribute('data-kutipan') || '') : '';
   const html = `<div class="pop-h">${tr('Kartu Tautan Web')}</div>
     <div style="padding:8px 12px;display:flex;flex-direction:column;gap:8px">
       <input class="in" id="bmk-url" type="url" placeholder="https://contoh.id/artikel" value="${esc(u0)}">
       <input class="in" id="bmk-judul" type="text" placeholder="${tr('Judul kartu (opsional)')}" value="${esc(t0)}">
       <input class="in" id="bmk-ket" type="text" placeholder="${tr('Catatan singkat (opsional)')}" value="${esc(d0)}">
+      <textarea class="in bmk-kutipan-in" id="bmk-kutipan" rows="3" maxlength="2000" placeholder="${tr('Teks pilihan dari halaman (opsional)')}">${escHtml(k0)}</textarea>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button type="button" class="btn btn-sec" id="bmk-batal">${tr('Batal')}</button>
         <button type="button" class="btn btn-pri" id="bmk-simpan">${tr('Simpan')}</button>
@@ -226,6 +230,7 @@ export function bukaDialogBookmark(elExisting = null) {
     if (!rawUrl) { toast(tr('Masukkan alamat tautan terlebih dahulu')); return; }
     const j = (p.querySelector('#bmk-judul')?.value || '').trim();
     const ket = (p.querySelector('#bmk-ket')?.value || '').trim();
+    const kut = bersihKutipan(p.querySelector('#bmk-kutipan')?.value || '');
     closeAll();
     if (elExisting && elExisting.isConnected) {
       snap();
@@ -233,17 +238,21 @@ export function bukaDialogBookmark(elExisting = null) {
       elExisting.setAttribute('data-url', full);
       elExisting.setAttribute('data-title', j || domainDariUrl(full));
       elExisting.setAttribute('data-desc', ket);
+      /* tanggal pengambilan kartu lama dipertahankan */
+      const diambil = elExisting.getAttribute('data-diambil') || tanggalDiambil();
+      elExisting.setAttribute('data-kutipan', kut);
+      elExisting.setAttribute('data-diambil', diambil);
       const baru = blockToHtml(makeBlock({
         id: elExisting.getAttribute('data-bid') || newBlockId(),
         type: 'bookmark',
-        meta: { url: full, title: j || domainDariUrl(full), desc: ket },
+        meta: { url: full, title: j || domainDariUrl(full), desc: ket, kutipan: kut, diambil },
       }));
       const w = document.createElement('div');
       w.innerHTML = baru;
       elExisting.replaceWith(w.firstElementChild);
       refresh();
     } else {
-      insertBookmarkBlock(rawUrl, j, ket);
+      insertBookmarkBlock(rawUrl, j, ket, kut);
     }
   });
 }
@@ -286,6 +295,20 @@ export function pilihLampiranBerkas() {
     if (f) await lampirkanBerkasKeCatatan(f);
   };
   inp.click();
+}
+
+/* Buka PDF dari blok lampiran di penampil (B1a). Berkas asli tidak diubah;
+   anotasinya disimpan terpisah (B1b). */
+export async function bukaPdfDariBlok(box) {
+  const blob = await ambilBlob(box.getAttribute('data-blob'));
+  if (!blob) {
+    toast(tr('Berkas lampiran tidak ditemukan'));
+    return false;
+  }
+  const data = await blob.arrayBuffer();
+  /* blobId dikirim supaya anotasi PDF ikut dimuat dan disimpan (B1b) */
+  await bukaPenampilPdf(data, box.getAttribute('data-name') || 'PDF', { blobId: box.getAttribute('data-blob') });
+  return true;
 }
 
 export async function unduhLampiranBerkas(blobId, nama = 'lampiran') {
@@ -470,13 +493,6 @@ export function renderQuickKeysHtml() {
     (isi ? `<span class="qk-t">${isi}</span>` : '') + '</button>';
 
   return `<div class="qk-strip" id="qk-strip" role="toolbar" aria-label="${esc(tr('Pintas cepat keyboard'))}">
-    ${tombol('out', 'i-outdent', tr('Kurangi indent'))}
-    ${tombol('in', 'i-indent', tr('Tambah indent'))}
-    ${tombol('up', 'i-up', tr('Naikkan baris'))}
-    ${tombol('down', 'i-down', tr('Turunkan baris'))}
-    ${tombol('todo', 'i-check2', tr('Jadikan To-do'))}
-    ${tombol('wl', '', tr('Tautan catatan'), '[[ ]]')}
-    ${tombol('tag', '', tr('Tagar'), '#')}
     ${tombol('jam', 'i-clock', tr('Cap jam sekarang'))}
     ${tombol('calc', '', tr('Hitung ekspresi'), '=')}
     ${tombol('teks', 'i-sparkle', tr('Alat teks pintar'))}
@@ -537,6 +553,13 @@ export function bindBlokGenerasiBaru() {
     }
 
     /* Aksi blok lampiran berkas */
+    const flBuka = e.target.closest && e.target.closest('[data-file-buka]');
+    if (flBuka) {
+      e.preventDefault();
+      const box = flBuka.closest('.b-file');
+      if (box) bukaPdfDariBlok(box);
+      return;
+    }
     const flDl = e.target.closest && e.target.closest('[data-file-dl]');
     if (flDl) {
       e.preventDefault();
@@ -557,34 +580,12 @@ export function bindBlokGenerasiBaru() {
       e.preventDefault();
       docEl()?.focus();
       const k = qk.dataset.qk;
-      if (k === 'in') indent(1);
-      else if (k === 'out') indent(-1);
-      else if (k === 'up') moveBlock(-1);
-      else if (k === 'down') moveBlock(1);
-      else if (k === 'todo') setBlock('b-todo');
-      else if (k === 'wl') insertInline('wl', '[[]]');
-      else if (k === 'tag') {
-        const b0 = curBlock();
-        const s0 = window.getSelection();
-        if (b0 && (!(s0 && s0.rangeCount) || s0.getRangeAt(0).startContainer === docEl())) {
-          caretEnd(b0);
-        }
-        const r = ensureCaret();
-        if (r) {
-          const tn = document.createTextNode('#');
-          r.insertNode(tn);
-          const nr = document.createRange();
-          nr.setStart(tn, 1); nr.collapse(true);
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(nr);
-        }
-      }
-      else if (k === 'jam') sisipCapJamSekarang();
+      if (k === 'jam') sisipCapJamSekarang();
       else if (k === 'calc') {
-        import('../alat-cerdas.js?v=20261023235452').then(m => m.cobaHitungInlineSekarang(true));
+        import('../alat-cerdas.js?v=20261105210000').then(m => m.cobaHitungInlineSekarang(true));
       }
       else if (k === 'teks') {
-        import('../alat-cerdas.js?v=20261023235452').then(m => m.bukaAlatTeksPintar());
+        import('../alat-cerdas.js?v=20261105210000').then(m => m.bukaAlatTeksPintar());
       }
       else if (k === 'blok') bukaMenuAksiBlok();
     }

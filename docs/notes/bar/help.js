@@ -69,6 +69,38 @@ export const HELP = {
     tahu: 'Tanpa seleksi, indent dan checkbox to-do ikut dibersihkan. Berguna kalau format terasa nyangkut.'
   },
 
+  tape: {
+    nama: 'Tape (sembunyikan teks)',
+    apa: 'Menyembunyikan teks yang dipilih, supaya bisa diingat dulu sebelum dibuka. Dipakai untuk latihan mengingat (active recall).',
+    cara: 'Sorot teks, lalu pilih Tape di bilah format atau di menu Penandaan. Ketuk teks yang tersembunyi untuk menampilkannya, ketuk lagi untuk menutupnya.',
+    tahu: 'Tape tidak bisa melewati batas paragraf dan tidak bisa dibuat di dalam tape lain. Teks tape tetap ikut pencarian dan ekspor, jadi tidak rahasia.'
+  },
+  tapeBuka: {
+    nama: 'Buka semua tape',
+    apa: 'Menampilkan semua teks tape di catatan ini sekaligus.',
+    cara: 'Pilih dari menu Penandaan.',
+    tahu: 'Status buka atau tutup disimpan bersama catatan, jadi tetap seperti itu saat catatan dibuka lagi.'
+  },
+  tapeTutup: {
+    nama: 'Tutup semua tape',
+    apa: 'Menyembunyikan semua teks tape di catatan ini sekaligus, untuk mulai latihan mengingat dari awal.',
+    cara: 'Pilih dari menu Penandaan.',
+    tahu: 'Tape yang baru dibuat selalu dalam keadaan tertutup.'
+  },
+
+  kartuBuat: {
+    nama: 'Jadikan kartu',
+    apa: 'Membuat kartu belajar dari teks yang disorot. Teks sorot menjadi bagian depan, dan jawabannya ditulis sendiri di belakang.',
+    cara: 'Sorot teks, lalu pilih menu ini. Isi jawabannya, lalu tekan Simpan kartu.',
+    tahu: 'Kartu disimpan bersama data catatan dan ikut cadangan JSON. Kartu tidak berubah saat catatan asalnya diedit atau dihapus.'
+  },
+  kartuLatih: {
+    nama: 'Latihan kartu',
+    apa: 'Mengulang kartu satu per satu: lihat bagian depan, balik untuk melihat jawaban, lalu tandai Ingat atau Belum.',
+    cara: 'Pilih menu ini. Ketuk Lihat jawaban, lalu pilih Ingat atau Belum.',
+    tahu: 'Hasil latihan menjadwalkan kartu berikutnya secara otomatis. Kartu baru langsung jatuh tempo; jadwal dan riwayat ikut cadangan.'
+  },
+
   /* ── gaya paragraf ── */
   p: {
     nama: 'Teks biasa',
@@ -151,6 +183,12 @@ export const HELP = {
     apa: 'Menyisipkan gambar dari perangkat ke dalam catatan.',
     cara: 'Pilih menu ini lalu pilih berkasnya. Arahkan ke gambar untuk memunculkan tombol hapus.',
     tahu: 'Foto besar dikecilkan otomatis ke maksimal 1600 px agar hemat ruang. Gambar disimpan terpisah di perangkat, bukan di dalam teks catatan, jadi catatan tetap ringan.'
+  },
+  gal: {
+    nama: 'Dari galeri',
+    apa: 'Menyisipkan gambar yang sudah pernah dipakai di catatan mana pun, tanpa memilih berkas lagi.',
+    cara: 'Pilih menu ini, lalu ketuk gambar yang diinginkan. Gambar disisipkan di posisi kursor.',
+    tahu: 'Gambar yang baru muncul paling depan. Untuk berkas baru dari perangkat, pakai menu Gambar.'
   },
   tag: {
     nama: 'Tag',

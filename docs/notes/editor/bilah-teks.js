@@ -18,12 +18,14 @@
    • hilang saat sorotan menguncup, saat menggulir, pindah layar,
      jendela berubah ukuran, atau Escape. */
 
-import { docEl, sel } from './caret.js?v=20261023235452';
-import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261023235452';
-import { jalankan } from '../bar/render.js?v=20261023235452';
-import { openPop } from '../menus/pop.js?v=20261023235452';
-import { warnaMenu } from '../menus/warna.js?v=20261023235452';
-import { t as tr } from '../../core/i18n.js?v=20261023235452';
+import { docEl, sel } from './caret.js?v=20261105210000';
+import { cur, onAfterRender, onBeforeLeave } from '../../core/router.js?v=20261105210000';
+import { jalankan } from '../bar/render.js?v=20261105210000';
+import { openPop } from '../menus/pop.js?v=20261105210000';
+import { warnaMenu } from '../menus/warna.js?v=20261105210000';
+import { kartuBuatMenu } from '../kartu.js?v=20261105210000';
+import { bukaMenuUbah, tanganiKlikUbah } from './ubah-seleksi.js?v=20261105210000';
+import { t as tr } from '../../core/i18n.js?v=20261105210000';
 
 const JEDA = 90;          /* ms — selectionchange datang beruntun */
 const LUANG = 8;          /* px jarak bilah dari sorotan / tepi layar */
@@ -37,11 +39,22 @@ const TOMBOL = [
   { m: 'icode',  l: '<svg class="bi"><use href="#i-code"/></svg>', t: 'Kode inline' },
   { m: 'warna',  l: '<svg class="bi"><use href="#i-drop"/></svg>', t: 'Warna teks & sorotan' },
   { m: 'link',   l: '<svg class="bi"><use href="#i-link2"/></svg>', t: 'Tautan web' },
+  { m: 'tape',   l: '<svg class="bi"><use href="#i-eye-off"/></svg>', t: 'Tape (sembunyikan teks)' },
+  { m: 'kartu',  l: '<svg class="bi"><use href="#i-plus"/></svg>', t: 'Jadikan kartu' },
+  { m: 'struktur', l: '<svg class="bi"><use href="#i-list"/></svg>', t: 'Ubah struktur teks' },
   { m: 'clear',  l: '<svg class="bi"><use href="#i-eraser"/></svg>', t: 'Hapus format' },
 ];
 
 let el = null;
 let timer = null;
+let statusSeleksiNative = null;
+
+function laporkanSeleksiNative(aktif) {
+  const bridge = window.HaraNative;
+  if (!bridge || statusSeleksiNative === aktif) return;
+  statusSeleksiNative = aktif;
+  try { bridge.setTextSelectionActive(aktif); } catch (e) { /* non-Android/WebView lama */ }
+}
 
 function bilah() {
   if (el && el.isConnected) return el;
@@ -65,6 +78,15 @@ function bilah() {
     const m = b.dataset.m;
     if (m === 'warna') {           /* palet warna punya menunya sendiri */
       openPop(warnaMenu(), b);
+      return;
+    }
+    if (m === 'kartu') {           /* flashcard (C7): isi depan dari seleksi, lalu lembar */
+      openPop(kartuBuatMenu(), b);
+      return;
+    }
+    if (m === 'struktur') {
+      const s = sel();
+      if (s && s.rangeCount) bukaMenuUbah(s.getRangeAt(0).cloneRange(), b);
       return;
     }
     jalankan(m, b);
@@ -124,7 +146,31 @@ export function segarkanBilahTeks() {
 }
 
 export function bindBilahTeks() {
+  /* Android WebView memakai satu ActionMode native yang memuat submenu Hara.
+     Bridge-nya hanya memberi status seleksi; browser biasa tetap memakai
+     toolbar DOM floating yang sama seperti sebelumnya. */
+  window.haraSetNativeSelectionToolbar = aktif => {
+    document.body.classList.toggle('native-selection-actionmode', !!aktif);
+    if (aktif) sembunyikanBilahTeks();
+    else if (!document.getElementById('pop')?.classList.contains('on'))
+      setTimeout(segarkanBilahTeks, 10);
+  };
+  window.haraNativeSelectionAction = m => {
+    if (!TOMBOL.some(x => x.m === m) || !sorotanAktif()) return false;
+    /* Aksi menu yang memiliki panel memakai jalur yang sama seperti tombol
+       web; format inline tetap diteruskan ke mesin bar mekanik. */
+    if (m === 'warna') { openPop(warnaMenu(), null); return true; }
+    if (m === 'kartu') { openPop(kartuBuatMenu(), null); return true; }
+    if (m === 'struktur') {
+      const s = sel();
+      return !!(s && s.rangeCount && bukaMenuUbah(s.getRangeAt(0).cloneRange(), null));
+    }
+    jalankan(m, null);
+    return true;
+  };
+  document.addEventListener('click', tanganiKlikUbah);
   document.addEventListener('selectionchange', () => {
+    laporkanSeleksiNative(!!sorotanAktif());
     clearTimeout(timer);
     timer = setTimeout(segarkanBilahTeks, JEDA);
   });
@@ -138,5 +184,8 @@ export function bindBilahTeks() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') sembunyikanBilahTeks(); });
   /* layar berganti / catatan ditutup → bilah tidak boleh menggantung */
   onAfterRender(() => sembunyikanBilahTeks());
-  onBeforeLeave(() => sembunyikanBilahTeks());
+  onBeforeLeave(() => {
+    laporkanSeleksiNative(false);
+    sembunyikanBilahTeks();
+  });
 }

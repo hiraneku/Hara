@@ -5,19 +5,20 @@
    layar ini tidak pernah bisa berbeda dari catatan aslinya. Matriks dan
    kalender hanya membaca; ekspor/impor ICS memakai ics.js. */
 
-import { state, save } from '../../core/store.js?v=20261023235452';
-import { esc } from '../../core/dom.js?v=20261023235452';
-import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261023235452';
-import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261023235452';
-import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261023235452';
-import { rowFor } from './row.js?v=20261023235452';
-import { terlihat } from '../kunci.js?v=20261023235452';
-import { t as tr } from '../../core/i18n.js?v=20261023235452';
-import { toast } from '../../core/toast.js?v=20261023235452';
-import { touch, makeNote } from '../note-model.js?v=20261023235452';
-import { go, cur } from '../../core/router.js?v=20261023235452';
-import { flush } from '../../core/autosave.js?v=20261023235452';
-import { openNote } from '../model.js?v=20261023235452';
+import { state, save } from '../../core/store.js?v=20261105210000';
+import { esc } from '../../core/dom.js?v=20261105210000';
+import { tugasMendatang, tenggatHariIni, tenggatTodo, sisaWaktu, chipTenggat, jadwalUlang, ulangSetelahCentang } from '../pengingat.js?v=20261105210000';
+import { kuadranTugas, kalenderBulan, jatuhPada } from '../kalender.js?v=20261105210000';
+import { bangunIcs, uraiIcs, barisTodoDariAcara } from '../ics.js?v=20261105210000';
+import { rowFor } from './row.js?v=20261105210000';
+import { terlihat } from '../kunci.js?v=20261105210000';
+import { t as tr, bahasaSekarang } from '../../core/i18n.js?v=20261105210000';
+import { hariBerjurnal } from '../jurnal-tanggal.js?v=20261105210000';
+import { toast } from '../../core/toast.js?v=20261105210000';
+import { touch, makeNote } from '../note-model.js?v=20261105210000';
+import { go, cur } from '../../core/router.js?v=20261105210000';
+import { flush } from '../../core/autosave.js?v=20261105210000';
+import { openNote } from '../model.js?v=20261105210000';
 
 const aktif = () => state.notes.filter(n => !n.archived && !n.deletedAt && terlihat(n));
 const SEHARI = 86400000;
@@ -160,6 +161,8 @@ const kalenderHtml = daftar => {
     new Date(2024, 0, 1 + i).toLocaleDateString(undefined, { weekday: 'narrow' }));
   const judulBulan = awal.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const hariIni = sekarangAwal();
+  /* B8: hari yang sudah punya jurnal. Catatan terkunci yang tidak terlihat tidak ikut. */
+  const berjurnal = hariBerjurnal(state.notes.filter(n => terlihat(n)), tahun, bulan, bahasaSekarang());
 
   let sel = '';
   for (let i = 0; i < hariPertama; i++) sel += '<span class="kal-kosong"></span>';
@@ -170,9 +173,10 @@ const kalenderHtml = daftar => {
     if (ms === hariIni) kelas.push('kal-kini');
     if (ms === kalPilih) kelas.push('kal-pilih');
     if (isi.length) kelas.push('kal-ada');
+    const adaJurnal = berjurnal.has(tgl);
     sel += `<button type="button" class="${kelas.join(' ')}" data-kal-hari="${ms}"
-      aria-label="${tgl}${isi.length ? ' · ' + isi.length : ''}" aria-pressed="${ms === kalPilih}">
-      <span>${tgl}</span>${isi.length ? `<i class="kal-titik">${isi.length > 9 ? '9+' : isi.length}</i>` : ''}</button>`;
+      aria-label="${tgl}${isi.length ? ' · ' + isi.length : ''}${adaJurnal ? ' · ' + tr('ada jurnal') : ''}" aria-pressed="${ms === kalPilih}">
+      <span>${tgl}</span>${isi.length ? `<i class="kal-titik">${isi.length > 9 ? '9+' : isi.length}</i>` : ''}${adaJurnal ? '<i class="kal-jurnal-titik" aria-hidden="true"></i>' : ''}</button>`;
   }
 
   const terpilih = semua.filter(x => jatuhPada(x, kalPilih));
@@ -191,6 +195,7 @@ const kalenderHtml = daftar => {
     </div>
     <div class="kal-detail">
       <div class="kal-judul">${esc(judulPilih)}</div>
+      <button type="button" class="kal-jurnal" data-kal-jurnal="${kalPilih}">${tr('Buka jurnal')}</button>
       ${terpilih.length
         ? terpilih.map(x => kartuTenggat(x, sisaWaktu(x.waktu))).join('')
         : `<p class="dm-kosong">${tr('Tidak ada tenggat di hari ini.')}</p>`}
@@ -212,6 +217,18 @@ export function geserKalender(aksi, ms) {
     const d = new Date(kalPilih); kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   }
   if (cur === 'task') go('task');
+}
+
+/* B8 lanjutan: dari jurnal, buka layar Tugas dengan tanggal itu terpilih di kalender.
+   ms bisa tengah hari; dipangkas ke awal hari supaya cocok dengan sel kalender. */
+export function tampilkanKalenderTanggal(ms) {
+  kalPilih = awalHari(Number(ms));
+  const d = new Date(kalPilih);
+  kalBulan = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  go('task');
+  /* kalender ada di bawah daftar tugas. Gulir ke kartunya supaya tombol Buka jurnal
+     langsung terlihat (di HP tidak tertutup bilah navigasi bawah). */
+  setTimeout(() => document.getElementById('kal-bagian')?.scrollIntoView({ block: 'start' }), 0);
 }
 
 /* ── K8 · ekspor & impor .ics ── */

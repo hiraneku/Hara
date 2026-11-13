@@ -18,15 +18,23 @@
    Semua fungsi murni terhadap data + DOM ringan; yang menyentuh
    storage (IndexedDB) hanya di ujung ekspor/impor. */
 
-import { state, save, SCHEMA } from '../core/store.js?v=20261023235452';
-import { flush } from '../core/autosave.js?v=20261023235452';
-import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261023235452';
-import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261023235452';
-import { sinkronTag, tagDariIsi } from './tags.js?v=20261023235452';
-import { terlihat } from './kunci.js?v=20261023235452';
-import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261023235452';
-import { daftarRuang, tambahRuang } from './ruang.js?v=20261023235452';
-import { t as tr } from '../core/i18n.js?v=20261023235452';
+import { state, save, SCHEMA } from '../core/store.js?v=20261105210000';
+import { flush } from '../core/autosave.js?v=20261105210000';
+import { simpanBlob, ambilBlob, semuaId } from '../core/blobs.js?v=20261105210000';
+import { kunciAnotasi } from './pdf/anotasi.js?v=20261105210000';
+import { kunciSusunan } from './pdf/susunan.js?v=20261105210000';
+import { kunciOcr } from './ocr/ocr-teks.js?v=20261105210000';
+import { idBlobDariGoresan } from './editor/goresan.js?v=20261105210000';
+import { makeNote, makeBlock, normalizeNotes } from './note-model.js?v=20261105210000';
+import { sinkronTag, tagDariIsi } from './tags.js?v=20261105210000';
+import { terlihat } from './kunci.js?v=20261105210000';
+import { muatCustomHamoji, setDaftarCustomHamoji } from './hamoji.js?v=20261105210000';
+import { daftarRuang, pulihkanRuang } from './ruang.js?v=20261105210000';
+import { t as tr } from '../core/i18n.js?v=20261105210000';
+import { extractZip } from '../renamer/unzip.js?v=20261105210000';
+import { petaTautanNotion, tulisUlangTautan, csvKeMarkdown, namaBersihNotion, normJalur } from './impor-notion.js?v=20261105210000';
+import { normalizeKartu } from './kartu-murni.js?v=20261105210000';
+import { normalizeUjian } from './ujian-murni.js?v=20261105210000';
 
 /* ════════════════ BANTUAN KECIL ════════════════ */
 
@@ -65,10 +73,16 @@ function idBlobDipakai() {
   const id = new Set();
   state.notes.forEach(n => (n.blocks || []).forEach(b => {
     if (b.meta && b.meta.blobId) id.add(b.meta.blobId);
+    if (b.meta) idBlobDariGoresan(b.meta.goresan).forEach(x => id.add(x));
     const m = String(b.content || '').match(/data-blob="([^"]+)"/g);
-    if (m) m.forEach(x => id.add(x.slice(12, -1)));
+    if (m) m.forEach(x => id.add(x.slice(11, -1)));
+    /* isi HTML menyimpan data-goresan dengan &quot; untuk tanda kutip */
+    const g = String(b.content || '').match(/data-goresan="([^"]*)"/g);
+    if (g) g.forEach(x => idBlobDariGoresan(x.slice(14, -1).replace(/&quot;/g, '"')).forEach(y => id.add(y)));
   }));
-  return [...id];
+  /* anotasi PDF (B1b) dan susunan halaman (B2) ikut dicadangkan lewat kunci
+     turunannya; kumpulBlob hanya mengambil kunci yang benar-benar ada di penyimpanan */
+  return [...id].flatMap(x => [x, kunciAnotasi(x), kunciSusunan(x), kunciOcr(x)]);
 }
 
 /* Blob → base64 (dipecah biar aman untuk string besar). */
@@ -114,6 +128,8 @@ export async function cadanganJson() {
     catatan: state.notes, blobs,
     ...(hamojiCustom.length ? { hamojiCustom } : {}),
     ...(ruang.length ? { ruang } : {}),
+    ...(state.kartu && state.kartu.length ? { kartu: state.kartu } : {}),
+    ...(state.ujian && state.ujian.length ? { ujian: state.ujian } : {}),
   });
   return { nama: `hara-cadangan-${namaHariIni()}.json`, teks };
 }
@@ -131,6 +147,8 @@ export async function siapImporJson(teks) {
     catatan, blobs: data.blobs || {},
     hamojiCustom: Array.isArray(data.hamojiCustom) ? data.hamojiCustom : [],
     ruang: Array.isArray(data.ruang) ? data.ruang : [],
+    kartu: normalizeKartu(data.kartu),
+    ujian: normalizeUjian(data.ujian),
     jumlahBlob: Object.keys(data.blobs || {}).length,
     seq: data.seq || 1,
   };
@@ -138,40 +156,158 @@ export async function siapImporJson(teks) {
 
 /* Terapkan impor JSON. mode 'timpa' = kembalikan persis cadangan;
    mode 'gabung' = sisip catatan baru + perbarui catatan ber-id sama. */
-export async function terapkanImporJson(r, mode) {
+function rewriteBlobRefs(value, map, key = '') {
+  if (typeof value === 'string') {
+    if ((key === 'blobId' || key === 'blob') && map.has(value)) return map.get(value);
+    let out = value;
+    for (const [lama, baru] of map) {
+      if (key === 'content') {
+        out = out.replaceAll(`data-blob="${lama}"`, `data-blob="${baru}"`);
+        out = out.replace(/data-goresan="([^"]*)"/g, (all, raw) => {
+          try {
+            const obj=JSON.parse(raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
+            const ubah=x=>{if(!x||typeof x!=='object')return;if(Array.isArray(x))return x.forEach(ubah);for(const k of Object.keys(x)){if((k==='blob'||k==='blobId')&&map.has(x[k]))x[k]=map.get(x[k]);else ubah(x[k]);}};
+            ubah(obj);return `data-goresan="${JSON.stringify(obj).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"`;
+          } catch { return all; }
+        });
+      }
+      if (key === 'goresan') {
+        try {
+          const obj = JSON.parse(out);
+          const ubah = x => {
+            if (!x || typeof x !== 'object') return;
+            if (Array.isArray(x)) return x.forEach(ubah);
+            for (const k of Object.keys(x)) {
+              if ((k === 'blob' || k === 'blobId') && map.has(x[k])) x[k] = map.get(x[k]);
+              else ubah(x[k]);
+            }
+          };
+          ubah(obj); out = JSON.stringify(obj);
+        } catch {}
+      }
+    }
+    return out;
+  }
+  if (Array.isArray(value)) return value.map(x => rewriteBlobRefs(x, map, key));
+  if (value && typeof value === 'object') {
+    for (const k of Object.keys(value)) value[k] = rewriteBlobRefs(value[k], map, k);
+  }
+  return value;
+}
+
+function blobIdsDalam(catatan) {
+  const ids = new Set();
+  const jalan = (v,k='') => {
+    if (typeof v === 'string') {
+      if ((k === 'blobId' || k === 'blob') && /^[A-Za-z0-9_-]{1,180}$/.test(v)) ids.add(v);
+      for (const m of v.matchAll(/data-blob="([^"]+)"/g)) ids.add(m[1]);
+      for (const m of v.matchAll(/data-goresan="([^"]*)"/g)) {
+        try {
+          const o=JSON.parse(m[1].replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
+          const scan=x=>{if(!x||typeof x!=='object')return;if(Array.isArray(x))return x.forEach(scan);for(const [kk,vv] of Object.entries(x)){if((kk==='blob'||kk==='blobId')&&typeof vv==='string')ids.add(vv);else scan(vv);}};
+          scan(o);
+        } catch {}
+      }
+      try {
+        const o=JSON.parse(v);
+        const scan=x=>{if(!x||typeof x!=='object')return;if(Array.isArray(x))return x.forEach(scan);for(const [kk,vv] of Object.entries(x)){if((kk==='blob'||kk==='blobId')&&typeof vv==='string')ids.add(vv);else scan(vv);}};
+        scan(o);
+      } catch {}
+    } else if(Array.isArray(v)) v.forEach(x=>jalan(x,k));
+    else if(v&&typeof v==='object') Object.entries(v).forEach(([kk,vv])=>jalan(vv,kk));
+  };
+  jalan(catatan.blocks || []);
+  return ids;
+}
+
+const b64Bytes = b64KeBiner;
+async function samaBlobLokal(id, isi) {
+  const ada = await ambilBlob(id).catch(()=>null);
+  if (!ada) return false;
+  try {
+    if ((ada.type || '') !== (isi.tipe || '')) return false;
+    const a = new Uint8Array(await ada.arrayBuffer()), b = b64Bytes(isi.b64 || '');
+    return a.length === b.length && a.every((x,i)=>x===b[i]);
+  } catch { return false; }
+}
+const idBlobBaru = () => 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2,9);
+
+/* Terapkan impor JSON. UI mengirim keputusan per konflik; tanpa keputusan,
+   perilaku lama tetap mengutamakan versi berkas untuk kompatibilitas API. */
+export async function terapkanImporJson(r, mode, resolutions = {}) {
+  const petaRuang = pulihkanRuang(r.ruang, mode);
+  if (petaRuang.size) for (const n of r.catatan) {
+    if (n && n.folderId && petaRuang.has(n.folderId)) n.folderId = petaRuang.get(n.folderId);
+  }
   let daftar = r.catatan;
+  let diterima = [];
+  let ditambah = 0, diganti = 0, dipertahankan = 0;
   if (mode !== 'timpa') {
-    daftar = r.catatan.map(datang => {
-      const i = state.notes.findIndex(x => x.id === datang.id);
-      if (i >= 0) { state.notes[i] = datang; return null; }
-      return datang;
-    }).filter(Boolean);
-    state.notes.push(...daftar);
+    const byId = new Map(state.notes.map((n,i)=>[n.id,i]));
+    const hasil = [];
+    for (const asal of r.catatan) {
+      const idx = byId.get(asal.id);
+      if (idx == null) { hasil.push(asal); diterima.push(asal); ditambah++; continue; }
+      const pilihan = resolutions[asal.id];
+      if (pilihan === 'lokal') { dipertahankan++; continue; }
+      state.notes[idx] = asal; diterima.push(asal); diganti++;
+    }
+    daftar = hasil;
+    state.notes.push(...hasil);
   } else {
     state.notes = daftar.length ? daftar : state.notes;
+    diterima = daftar.slice(); ditambah = daftar.length;
   }
   state.seq = Math.max(state.seq || 1, r.seq || 1);
 
-  if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) {
-    setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');
-  }
-  if (Array.isArray(r.ruang) && r.ruang.length) {
-    r.ruang.forEach(rg => { if (rg && rg.nama) tambahRuang(rg.nama); });
-  }
+  if (Array.isArray(r.kartu) && r.kartu.length) {
+    if (mode === 'timpa') state.kartu = r.kartu;
+    else {
+      const ada = new Map(state.kartu.map((k, i) => [k.id, i]));
+      for (const k of r.kartu) { if (ada.has(k.id)) state.kartu[ada.get(k.id)] = k; else state.kartu.push(k); }
+    }
+  } else if (mode === 'timpa') state.kartu = [];
+  if (Array.isArray(r.ujian) && r.ujian.length) {
+    if (mode === 'timpa') state.ujian = r.ujian;
+    else {
+      const ada = new Map(state.ujian.map((u, i) => [u.id, i]));
+      for (const u of r.ujian) { if (ada.has(u.id)) state.ujian[ada.get(u.id)] = u; else state.ujian.push(u); }
+    }
+  } else if (mode === 'timpa') state.ujian = [];
+  if (Array.isArray(r.hamojiCustom) && r.hamojiCustom.length) setDaftarCustomHamoji(r.hamojiCustom, mode !== 'timpa');
 
-  /* pulihkan gambar dulu, baru simpan — supaya catatan yang dirender
-     setelah impor langsung menemukan blobnya */
+  /* Jangan menimpa blob lokal yang kebetulan memakai ID sama. Jika isinya
+     berbeda, beri ID baru pada blob impor dan perbarui rujukan catatan impor. */
+  const refs = new Set(); diterima.forEach(n=>blobIdsDalam(n).forEach(id=>refs.add(id)));
+  const mapBlob = new Map();
+  for (const id of refs) {
+    for (const k of [id, kunciAnotasi(id), kunciSusunan(id), kunciOcr(id)]) {
+      const isi = r.blobs?.[k]; if (!isi) continue;
+      const lokal = await ambilBlob(k).catch(()=>null);
+      if (lokal && !(await samaBlobLokal(k,isi))) {
+        const baru = idBlobBaru();
+        mapBlob.set(id, baru);
+        for (const suffix of ['', 'anot-', 'susun-', 'ocr-']) {
+          const oldKey = suffix ? suffix + id : id;
+          if (r.blobs[oldKey]) mapBlob.set(oldKey, suffix ? suffix + baru : baru);
+        }
+        break;
+      }
+    }
+  }
+  if (mapBlob.size) diterima.forEach(n=>rewriteBlobRefs(n,mapBlob));
   let dipulih = 0;
-  for (const [id, isi] of Object.entries(r.blobs)) {
-    try {
-      const u = b64KeBiner(isi.b64 || '');
-      await simpanBlob(id, new Blob([u], { type: isi.tipe || '' }));
-      dipulih++;
-    } catch (e) { /* blob gagal dipulihkan — catatan tetap masuk */ }
+  for (const id of refs) {
+    for (const k of [id, kunciAnotasi(id), kunciSusunan(id), kunciOcr(id)]) {
+      const isi = r.blobs?.[k]; if (!isi) continue;
+      const tujuan = mapBlob.get(k) || mapBlob.get(id) && (k === id ? mapBlob.get(id) : k.replace(id,mapBlob.get(id))) || k;
+      const lokal = await ambilBlob(tujuan).catch(()=>null);
+      if (lokal) { if (await samaBlobLokal(tujuan,isi)) continue; else continue; }
+      try { const u=b64KeBiner(isi.b64||''); await simpanBlob(tujuan,new Blob([u],{type:isi.tipe||''})); dipulih++; } catch {}
+    }
   }
   save();
-  return { catatan: state.notes.length, baru: mode === 'timpa' ? null : daftar.length,
-           dipulihkan: dipulih, mode };
+  return { catatan:state.notes.length, baru:mode==='timpa'?null:ditambah, ditambah, diganti, dipertahankan, dipulihkan:dipulih, mode };
 }
 
 /* ════════════════ MARKDOWN: blok → teks ════════════════ */
@@ -236,11 +372,21 @@ function blokMd(b, noOl) {
       return [head, sep, ...body].join('\n');
     }
     case 'audio':
-      return `> Memo suara: ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`;
+      return [`> Memo suara: ${escT(meta.title || 'Memo suara')} (${meta.duration || 0}s)`,
+        ...(Array.isArray(meta.marks) ? meta.marks : []).map(m => {
+          const d = Number(m.t) || 0;
+          return `> - ${Math.floor(d / 60)}:${String(Math.floor(d % 60)).padStart(2, '0')} ${escT(m.teks || '')}`.trimEnd();
+        }),
+        ...(Array.isArray(meta.transcript) ? meta.transcript : []).map(seg => {
+          const d = Number(seg.t) || 0;
+          return `> - Transkrip ${Math.floor(d / 60)}:${String(Math.floor(d % 60)).padStart(2, '0')} ${escT(seg.teks || '')}`.trimEnd();
+        }),
+      ].join('\n');
     case 'math':
       return `$$\n${meta.expr || ''}\n$$`;
     case 'bookmark':
-      return `[Tautan: ${meta.title || meta.url || 'Tautan'}](${meta.url || 'https://'})${meta.desc ? ' — ' + meta.desc : ''}`;
+      return `[Tautan: ${meta.title || meta.url || 'Tautan'}](${meta.url || 'https://'})${meta.desc ? ' — ' + meta.desc : ''}`
+        + (meta.kutipan ? '\n\n> ' + String(meta.kutipan).replace(/\n/g, '\n> ') : '');
     case 'file':
       return `[Lampiran: ${meta.name || 'Lampiran'}](data:application/simpan-dalam-cadangan-json;id=${meta.blobId || ''};size=${meta.size || 0})`;
     case 'divider': return '---';
@@ -264,7 +410,7 @@ function teksKode(b) {
 
 /* Frontmatter YAML ringan: judul, waktu, tag, properti, bendera. */
 export function depanMd(n) {
-  const baris = ['---', `judul: ${kutipYaml(n.title || '')}`];
+  const baris = ['---', `judul: ${kutipYaml(n.title || '')}`, `hara_id: ${kutipYaml(n.id || '')}`];
   if (n.createdAt) baris.push(`dibuat: ${ISO(n.createdAt)}`);
   baris.push(`diubah: ${ISO(n.updatedAt || Date.now())}`);
   const tag = (n.tags || []).slice();
@@ -291,8 +437,11 @@ export function markdownDariCatatan(n) {
   const badan = [];
   let ol = 0;
   (n.blocks || []).forEach(b => {
-    if (b.type === 'ordered-list') { ol++; badan.push(blokMd(b, ol)); }
-    else { ol = 0; badan.push(blokMd(b, 1)); }
+    let teks;
+    if (b.type === 'ordered-list') { ol++; teks=blokMd(b, ol); }
+    else { ol = 0; teks=blokMd(b, 1); }
+    const marker=/^[A-Za-z0-9_-]{1,160}$/.test(String(b.id||''))?`<!-- hara:block:${b.id} -->\n`:'';
+    badan.push(marker+teks);
   });
   return depanMd(n) + '\n' + badan.filter(x => x !== '').join('\n\n') + '\n';
 }
@@ -308,9 +457,22 @@ export function eksporSemuaMarkdown() {
     let nama = dasar + '.md', i = 2;
     while (dipakai.has(nama)) nama = `${dasar}-${i++}.md`;
     dipakai.add(nama);
-    entri.push({ nama, teks: markdownDariCatatan(n) });
+    entri.push({ nama, teks: markdownDariCatatan(n), id: n.id });
   });
   return { nama: `hara-catatan-${namaHariIni()}.zip`, entri };
+}
+
+export async function eksporVaultMarkdown() {
+  const bundle=eksporSemuaMarkdown(), notes=new Map(state.notes.map(n=>[n.id,n])), out=[];
+  const blobIds=new Set();
+  for(const e of bundle.entri){const n=notes.get(e.id);for(const b of n?.blocks||[]){if(b?.meta?.blobId)blobIds.add(String(b.meta.blobId));idBlobDariGoresan(b?.meta?.goresan).forEach(x=>blobIds.add(x));for(const m of String(b?.content||'').matchAll(/data-blob="([^"]+)"/g))blobIds.add(m[1]);const g=String(b?.content||'').match(/data-goresan="([^"]*)"/);if(g)idBlobDariGoresan(g[1].replace(/&quot;/g,'"')).forEach(x=>blobIds.add(x));}}
+  const exts={'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp','image/svg+xml':'svg','audio/mpeg':'mp3','audio/ogg':'ogg','application/pdf':'pdf'}, blobs=new Map();
+  for(const id of blobIds){try{const blob=await ambilBlob(id);if(blob){const ext=exts[blob.type]||'bin';blobs.set(id,{blob,ext});out.push({nama:`attachments/${id}.${ext}`,bytes:new Uint8Array(await blob.arrayBuffer())});}}catch{}}
+  for(const e of bundle.entri){
+    const teks=e.teks.replace(/data:(?:image|application)\/[^)]*?;id=([A-Za-z0-9_-]+)(?:;size=(\d+))?\)/g,(_m,id)=>`attachments/${id}.${blobs.get(id)?.ext||'bin'})`);
+    out.unshift({nama:e.nama,teks});
+  }
+  return {nama:bundle.nama,entri:out,catatan:bundle.entri.length};
 }
 
 /* ════════════════ ZIP (store saja, tanpa dependensi) ════════════════ */
@@ -334,7 +496,7 @@ const u32 = (arr, o, v) => { arr[o] = v & 255; arr[o + 1] = (v >>> 8) & 255; arr
 const u16 = (arr, o, v) => { arr[o] = v & 255; arr[o + 1] = (v >>> 8) & 255; };
 
 export function buatZip(entri) {
-  const files = entri.map(e => ({ nama: teksUtf8(e.nama), data: teksUtf8(e.teks) }));
+  const files = entri.map(e => ({ nama: teksUtf8(e.nama), data: e.bytes ? new Uint8Array(e.bytes) : teksUtf8(e.teks || '') }));
   let uk = 0, pusat = 0;
   files.forEach(f => { uk += 30 + f.nama.length + f.data.length; });
   const arr = new Uint8Array(uk + files.reduce((a, f) => a + 46 + f.nama.length, 0) + 22);
@@ -375,6 +537,22 @@ export function buatZip(entri) {
 }
 
 /* Baca zip → [{nama, teks}] (hanya metode store; deflate dilewati). */
+/* Baca zip (STORE dan DEFLATE) dan ambil berkas teks: .md, .markdown, .csv, .json.
+   Berkas lain dihitung sebagai dilewati. Memakai pembaca zip renamer. */
+export async function bacaZipLengkap(bytes) {
+  const berkas = await extractZip(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
+  const dec = new TextDecoder('utf-8');
+  const entri = [], lampiran = [];
+  let dilewati = 0;
+  for (const f of berkas) {
+    const nama = f.fullPath || f.name || '';
+    if (/\.(md|markdown|csv|json)$/i.test(nama)) entri.push({ nama, teks: dec.decode(f.data) });
+    else if (/^attachments\/[A-Za-z0-9_-]{1,160}\.[A-Za-z0-9]{1,8}$/i.test(nama)) lampiran.push({ nama, bytes:new Uint8Array(f.data) });
+    else dilewati++;
+  }
+  return { entri, dilewati, lampiran };
+}
+
 export function bacaZip(bytes) {
   const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const baca16 = o => u[o] | (u[o + 1] << 8);
@@ -541,11 +719,12 @@ export function catatanDariMarkdown(nama, teks) {
   let diKode = false;  /* sedang di dalam ``` */
   let bahasaKode = '';
   let kode = [];
-  let noOl = 0;
+  let noOl = 0, pendingBlockId = null;
+  const denganId = b => { if(b && pendingBlockId){b.id=pendingBlockId;pendingBlockId=null;} return b; };
 
   const serap = () => {
     if (!kumpul.length) return;
-    const b = blokDariTeks(kumpul, noOl);
+    const b = denganId(blokDariTeks(kumpul, noOl));
     if (b) {
       blocks.push(b);
       noOl = b.type === 'ordered-list' ? noOl + 1 : 0;
@@ -556,15 +735,17 @@ export function catatanDariMarkdown(nama, teks) {
   baris.forEach(b => {
     if (diKode) {
       if (/^\s*(```|~~~)\s*$/.test(b)) {
-        blocks.push(makeBlock({
+        blocks.push(denganId(makeBlock({
           type: 'code',
           content: kode.join('<br>'),
           meta: bahasaKode ? { lang: bahasaKode } : {},
-        }));
+        })));
         kode = []; diKode = false; bahasaKode = '';
       } else kode.push(b.replace(/\t/g, '  '));
       return;
     }
+    const marker = b.match(/^\s*<!--\s*hara:block:([A-Za-z0-9_-]{1,160})\s*-->\s*$/);
+    if(marker){serap();pendingBlockId=marker[1];return;}
     const bukaKode = b.match(/^\s*(?:```|~~~)\s*([A-Za-z0-9_+-]*)\s*$/);
     if (bukaKode) { serap(); diKode = true; bahasaKode = bukaKode[1] || ''; return; }
     if (/^\s*$/.test(b)) { serap(); noOl = 0; return; }
@@ -572,7 +753,7 @@ export function catatanDariMarkdown(nama, teks) {
   });
   serap();
   if (diKode && kode.length)
-    blocks.push(makeBlock({ type: 'code', content: kode.join('<br>') }));
+    blocks.push(denganId(makeBlock({ type: 'code', content: kode.join('<br>') })));
 
   let judul = '';
   const jMeta = meta.judul ?? meta.title;
@@ -584,7 +765,9 @@ export function catatanDariMarkdown(nama, teks) {
   if (!judul) judul = namaBerkasAman(nama).replace(/\.md$/i, '');
 
   const now = Date.now();
+  const haraId = typeof meta.hara_id === 'string' && /^[A-Za-z0-9._:-]{1,160}$/.test(meta.hara_id) ? meta.hara_id : undefined;
   const n = makeNote({
+    ...(haraId ? { id: haraId } : {}),
     title: judul,
     blocks: blocks.length ? blocks : [makeBlock({ type: 'paragraph' })],
     /* cache tag diisi sinkronTag() di bawah — di sini dikosongkan dulu */
@@ -595,7 +778,7 @@ export function catatanDariMarkdown(nama, teks) {
     pinned: meta.disematkan === true,
     props: Object.entries(meta)
       .filter(([k]) => !['judul', 'title', 'dibuat', 'created', 'diubah', 'updated',
-        'tag', 'diarsipkan', 'disematkan'].includes(k))
+        'tag', 'diarsipkan', 'disematkan', 'hara_id'].includes(k))
       .map(([k, v]) => ({ k, v: Array.isArray(v) ? v.join(', ') : String(v) })),
   });
   /* Tag frontmatter yang TIDAK muncul sebagai #tag di isi menjadi tag
@@ -611,31 +794,77 @@ export function catatanDariMarkdown(nama, teks) {
 }
 
 /* Siapkan impor dari nama berkas + isi → ringkasan terpadu. */
+/* decodeURIComponent yang tidak melempar untuk nama berkas yang tidak valid. */
+function decodeURIComponent_aman(s) {
+  try { return decodeURIComponent(s); } catch (e) { return s; }
+}
+
 export async function siapImpor(nama, isi, mentah) {
   const nm = String(nama || '').toLowerCase();
   if (nm.endsWith('.json')) return siapImporJson(String(isi));
   if (nm.endsWith('.zip')) {
-    const { entri, dilewati } = bacaZip(mentah);
-    const catatan = [];
+    const { entri, dilewati, lampiran = [] } = await bacaZipLengkap(mentah);
+    /* Notion: tautan antar halaman dijadikan [[wikilink]] (lihat impor-notion.js).
+       Untuk zip biasa, tautan ke berkas .md lain di zip ikut diperlakukan sama. */
+    const peta = petaTautanNotion(entri);
+    const catatan = [], mapLampiran = new Map(lampiran.map(a=>[a.nama,a]));
+    const tipeExt={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',mp3:'audio/mpeg',ogg:'audio/ogg',pdf:'application/pdf'};
+    const pulihkanTautanLampiran=teks=>String(teks).replace(/!\[([^\]]*)\]\(attachments\/([A-Za-z0-9_-]+)\.([A-Za-z0-9]+)\)/g,(_m,alt,id,ext)=>{const a=mapLampiran.get(`attachments/${id}.${ext}`);return a?`![${alt}](data:${tipeExt[ext.toLowerCase()]||'application/octet-stream'};id=${id})`:_m;}).replace(/\[(?:Lampiran:\s*)?([^\]]+)\]\(attachments\/([A-Za-z0-9_-]+)\.([A-Za-z0-9]+)\)/g,(_m,label,id,ext)=>{const a=mapLampiran.get(`attachments/${id}.${ext}`);return a?`[Lampiran: ${label}](data:application/simpan-dalam-cadangan-json;id=${id};size=${a.bytes.length})`:_m;});
     for (const e of entri) {
       const eNama = e.nama.toLowerCase();
-      if (eNama.endsWith('.md')) catatan.push(catatanDariMarkdown(e.nama, e.teks));
-      else if (eNama.endsWith('.json') && !catatan.length && entri.length === 1)
+      if (eNama.endsWith('.md') || eNama.endsWith('.markdown')) {
+        const teks = pulihkanTautanLampiran(tulisUlangTautan(e.teks, normJalur(decodeURIComponent_aman(e.nama)), peta));
+        catatan.push(catatanDariMarkdown(namaBersihNotion(e.nama) + '.md', teks));
+      } else if (eNama.endsWith('.csv')) {
+        catatan.push(catatanDariMarkdown(namaBersihNotion(e.nama) + '.md', csvKeMarkdown(e.teks)));
+      } else if (eNama.endsWith('.json') && !catatan.length && entri.length === 1)
         return siapImporJson(e.teks);
     }
     if (!catatan.length && !dilewati) throw new Error(tr('Zip tidak berisi berkas .md.'));
-    return { jenis: 'md', catatan, dilewati, jumlahBlob: 0 };
+    return { jenis: 'md', catatan, dilewati, jumlahBlob: lampiran.length, lampiran };
+  }
+  if (nm.endsWith('.csv')) {
+    return { jenis: 'md', catatan: [catatanDariMarkdown(namaBersihNotion(nama) + '.md', csvKeMarkdown(String(isi)))], dilewati: 0, jumlahBlob: 0 };
   }
   if (nm.endsWith('.md') || nm.endsWith('.markdown') || nm.endsWith('.txt'))
     return { jenis: 'md', catatan: [catatanDariMarkdown(nama, String(isi))], dilewati: 0, jumlahBlob: 0 };
-  throw new Error(tr('Jenis berkas tidak dikenal — pakai .json, .md, atau .zip.'));
+  throw new Error(tr('Jenis berkas tidak dikenal — pakai .json, .md, .csv, atau .zip.'));
 }
 
 /* Terapkan impor (json: gabung/timpa; md: selalu tambah baru). */
-export async function terapkanImpor(r, mode) {
-  if (r.jenis === 'json') return terapkanImporJson(r, mode);
-  const baru = r.catatan;
-  state.notes.unshift(...baru);
-  save();
-  return { catatan: state.notes.length, baru: baru.length, dipulihkan: 0, mode: 'gabung' };
+export async function terapkanImpor(r, mode, resolutions = {}) {
+  if (r.jenis === 'json') return terapkanImporJson(r, mode, resolutions);
+  const baru = Array.isArray(r.catatan) ? r.catatan : [];
+  const same = (a,b) => markdownDariCatatan(a) === markdownDariCatatan(b);
+  const conflicts = baru.flatMap(incoming => {
+    const current = state.notes.find(n => n.id === incoming.id);
+    return current && !same(current, incoming) ? [{ id: incoming.id, title: incoming.title, current, incoming }] : [];
+  });
+  const belumDipilih = conflicts.filter(c => !['lokal','impor','salin'].includes(resolutions[c.id]));
+  if (belumDipilih.length) return { catatan: state.notes.length, baru: 0, conflicts: belumDipilih, dipulihkan: 0, mode: 'gabung' };
+  let dibuat = 0, diperbarui = 0;
+  const mime={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',mp3:'audio/mpeg',ogg:'audio/ogg',pdf:'application/pdf'};
+  const akanDiimpor=baru.filter(n=>{const cur=state.notes.find(x=>x.id===n.id);return !cur||(!same(cur,n)&&['impor','salin'].includes(resolutions[n.id]));});
+  const perluBlob=new Set();for(const n of akanDiimpor)for(const b of n.blocks||[])if(b?.meta?.blobId)perluBlob.add(String(b.meta.blobId));
+  const blobMap=new Map(), lampiranSiap=[];
+  for(const a of r.lampiran||[]){const m=a.nama.match(/^attachments\/([A-Za-z0-9_-]{1,160})\.([A-Za-z0-9]{1,8})$/i);if(!m||!perluBlob.has(m[1]))continue;let id=m[1],existing=await ambilBlob(id);
+    if(existing){const old=new Uint8Array(await existing.arrayBuffer()),next=new Uint8Array(a.bytes);if(old.length!==next.length||old.some((x,i)=>x!==next[i])){const fresh=makeNote().id;blobMap.set(id,fresh);id=fresh;}}
+    lampiranSiap.push({id,ext:m[2].toLowerCase(),bytes:a.bytes});
+  }
+  const remap=x=>{if(typeof x==='string')return blobMap.get(x)||x;if(Array.isArray(x))return x.map(remap);if(x&&typeof x==='object')return Object.fromEntries(Object.entries(x).map(([k,v])=>[k,remap(v)]));return x;};
+  for(const n of akanDiimpor){const i=baru.indexOf(n);baru[i]=remap(n);}
+  for(const a of lampiranSiap)await simpanBlob(a.id,new Blob([a.bytes],{type:mime[a.ext]||'application/octet-stream'}));
+  for (const incoming of baru) {
+    const i = state.notes.findIndex(n => n.id === incoming.id);
+    if (i < 0) { state.notes.unshift(incoming); dibuat++; continue; }
+    const current = state.notes[i];
+    if (same(current, incoming) || resolutions[incoming.id] === 'lokal') continue;
+    if (resolutions[incoming.id] === 'salin') {
+      const copy = structuredClone(incoming); copy.id = makeNote().id; copy.createdAt = Date.now();
+      state.notes.unshift(copy); dibuat++; continue;
+    }
+    if (resolutions[incoming.id] === 'impor') { state.notes[i] = incoming; diperbarui++; }
+  }
+  if (dibuat || diperbarui) save();
+  return { catatan: state.notes.length, baru: dibuat, diperbarui, conflicts: [], dipulihkan: 0, mode: 'gabung' };
 }

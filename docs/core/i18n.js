@@ -15,12 +15,10 @@
    - Modul ini TIDAK mengimpor modul inti lain — aman dipakai modul
      mana pun tanpa risiko lingkaran impor. */
 
-import { EN } from './bahasa-en.js?v=20261023235452';
-import { JA } from './bahasa-ja.js?v=20261023235452';
-
 const KUNCI = 'hara.v1.bahasa';     /* 'id' | 'en' | 'ja' — bawaan 'id' */
 const KODE = ['id', 'en', 'ja'];
-const KAMUS = { en: EN, ja: JA };
+const KAMUS = Object.create(null);
+let pemilihanBahasa = 0;
 
 /* Daftar bahasa untuk dropdown Pengaturan — nama memakai bahasa itu
    sendiri (endonim), tidak diterjemahkan. */
@@ -38,14 +36,29 @@ export function bahasaSekarang() {
   return 'id';
 }
 
-export function setBahasa(b) {
-  if (!KODE.includes(b)) return;
+export async function setBahasa(b) {
+  if (!KODE.includes(b)) return false;
+  const pilihan = ++pemilihanBahasa;
+  if (b !== 'id' && !KAMUS[b]) {
+    try {
+      const modul = b === 'en'
+        ? await import('./bahasa-en.js?v=20261105210000')
+        : await import('./bahasa-ja.js?v=20261105210000');
+      KAMUS[b] = modul[b === 'en' ? 'EN' : 'JA'];
+    } catch (e) {
+      return false;              /* biarkan bahasa aktif sebelumnya tetap utuh */
+    }
+  }
+  /* Bila pemilihannya cepat berubah saat kamus dimuat, jangan biarkan impor
+     yang lebih lambat mengembalikan bahasa yang sudah tidak diminta. */
+  if (pilihan !== pemilihanBahasa) return false;
   try {
     if (b === 'id') localStorage.removeItem(KUNCI);
     else localStorage.setItem(KUNCI, b);
   } catch (e) { /* privat */ }
   const l = document.documentElement;
   if (l) l.lang = b;
+  return true;
 }
 
 /* Lokale Intl untuk bahasa aktif — dipakai toLocaleString /

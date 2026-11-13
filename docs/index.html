@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/tokens.css?v=20261023235452">
-<link rel="stylesheet" href="./styles/base.css?v=20261023235452">
-<link rel="stylesheet" href="./styles/shell.css?v=20261023235452">
-<link rel="stylesheet" href="./styles/notes.css?v=20261023235452">
-<link rel="stylesheet" href="./styles/renamer.css?v=20261023235452">
-<link rel="stylesheet" href="./styles/beranda.css?v=20261023235452">
+<link rel="stylesheet" href="./styles/tokens.css?v=20261105210000">
+<link rel="stylesheet" href="./styles/base.css?v=20261105210000">
+<link rel="stylesheet" href="./styles/shell.css?v=20261105210000">
+<link rel="stylesheet" href="./styles/notes.css?v=20261105210000">
+<link rel="stylesheet" href="./styles/renamer.css?v=20261105210000">
+<link rel="stylesheet" href="./styles/beranda.css?v=20261105210000">
 <link rel="stylesheet" href="./styles/musik.css?v=20261105210000">
 </head>
 <body>
@@ -23,6 +23,7 @@
 <symbol id="i-check2" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h10"/></symbol>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
 <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
 <symbol id="i-arch" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></symbol>
 <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.8-1.1 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3.5 15H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.3 8.2a2 2 0 1 1 2.8-2.8 1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8 1.6 1.6 0 0 0-.3 1.8V10a1.6 1.6 0 0 0 1.5 1h.3a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
@@ -41,6 +42,8 @@
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></symbol>
 <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></symbol>
 <symbol id="i-link2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></symbol>
 <symbol id="i-pen" viewBox="0 0 24 24"><path d="m15 5 4 4"/><path d="M3 21h6l11-11a2.8 2.8 0 0 0-4-4L5 17z"/></symbol>
 <symbol id="i-strike" viewBox="0 0 24 24"><path d="M4 12h16"/><path d="M7.5 7.5A4 4 0 0 1 11 6h3a3.5 3.5 0 0 1 3.3 2.2"/><path d="M7 15.5A3.6 3.6 0 0 0 10.5 18H14a3.5 3.5 0 0 0 3.2-2"/></symbol>
 <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m5 15 6-6 7 7-4 4H9z"/><path d="M11 9 16 4l4 4-5 5"/><path d="M4 20h16"/></symbol>
@@ -97,6 +100,8 @@
 <symbol id="i-marker" viewBox="0 0 24 24"><path d="m15.2 3.6 5.2 5.2-9.6 9.6H5.6v-5.2z"/><path d="M8 21h11"/></symbol>
 <symbol id="i-flip" viewBox="0 0 24 24"><path d="M12 3.2v17.6"/><path d="m8.6 6.4-4.4 5.6 4.4 5.6"/><path d="m15.4 6.4 4.4 5.6-4.4 5.6"/></symbol>
 <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M10.4 3.4 12 8.3l4.9 1.6L12 11.5l-1.6 4.9-1.6-4.9L3.9 9.9 8.8 8.3z"/><path d="m17.8 15 .9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z"/></symbol>
+<symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 5H6l6.5 7L6 19h12"/></symbol>
+<symbol id="i-gallery" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M7 15l3-3 3 3 2-2 3 3"/><circle cx="8" cy="9" r="1.2"/><path d="M21 8v11a2 2 0 0 1-2 2H7"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z"/></symbol>
 <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
 <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/></symbol>
@@ -110,7 +115,6 @@
   <button class="nav-i" data-go="rem"><svg class="ico"><use href="#i-bell"/></svg><span data-i18n="Reminder">Reminder</span></button>
   <button class="nav-i" data-go="task"><svg class="ico"><use href="#i-check2"/></svg><span data-i18n="Tugas">Tugas</span></button>
   <button class="nav-i" data-go="renamer"><svg class="ico"><use href="#i-rename"/></svg><span data-i18n="Ganti Nama">Ganti Nama</span></button>
-  <button class="nav-i" data-go="musik"><svg class="ico"><use href="#i-note"/></svg><span data-i18n="Musik">Musik</span></button>
   <div class="nav-sep"></div>
   <button class="nav-i" data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
   <button class="nav-i" data-go="tags"><svg class="ico"><use href="#i-tag"/></svg><span data-i18n="Tag">Tag</span></button>
@@ -119,21 +123,21 @@
 </aside>
 <div class="main">
   <header class="head">
-    <button class="iconbtn" id="back" style="display:none"><svg class="ico"><use href="#i-back"/></svg></button>
+    <button class="iconbtn" id="back" style="display:none" aria-label="Kembali" title="Kembali" data-i18n-ar="Kembali" data-i18n-tip="Kembali"><svg class="ico"><use href="#i-back"/></svg></button>
     <h1 id="title" data-i18n="Beranda">Beranda</h1><div class="sp"></div>
     <button class="iconbtn" id="pal-btn" title="Palet perintah (Ctrl+K)" aria-label="Palet perintah" data-i18n-tip="Palet perintah (Ctrl+K)" data-i18n-ar="Palet perintah"><svg class="ico"><use href="#i-cmd"/></svg></button>
-    <button class="iconbtn" id="theme"><svg class="ico"><use href="#i-moon"/></svg></button>
-    <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)" data-i18n-tip="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
+    <button class="iconbtn" id="theme" aria-label="Ganti tema" title="Ganti tema" data-i18n-ar="Ganti tema" data-i18n-tip="Ganti tema"><svg class="ico"><use href="#i-moon"/></svg></button>
+    <button class="iconbtn" id="mode" style="display:none" title="Baca (mode baca)" aria-label="Baca (mode baca)" data-i18n-tip="Baca (mode baca)" data-i18n-ar="Baca (mode baca)"><svg class="ico"><use href="#i-book"/></svg></button>
     <button class="iconbtn" id="hamoji-btn" style="display:none" title="Hamoji" aria-label="Hamoji"><svg class="ico"><use href="#i-smile"/></svg></button>
-    <button class="iconbtn" id="del" style="display:none" title="Hapus catatan" data-i18n-tip="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
+    <button class="iconbtn" id="del" style="display:none" title="Hapus catatan" aria-label="Hapus catatan" data-i18n-tip="Hapus catatan" data-i18n-ar="Hapus catatan"><svg class="ico"><use href="#i-trash"/></svg></button>
     <button class="iconbtn" id="setbtn" data-go="set" title="Pengaturan" aria-label="Pengaturan" data-i18n-tip="Pengaturan" data-i18n-ar="Pengaturan"><svg class="ico"><use href="#i-cog"/></svg></button>
-    <button class="iconbtn" id="dots"><svg class="ico"><use href="#i-more"/></svg></button>
+    <button class="iconbtn" id="dots" aria-label="Menu lainnya" title="Menu lainnya" data-i18n-ar="Menu lainnya" data-i18n-tip="Menu lainnya"><svg class="ico"><use href="#i-more"/></svg></button>
   </header>
   <div class="wrap" id="wrap"></div>
 </div>
 </div>
 
-<button class="fab" id="fab"><svg class="ico"><use href="#i-plus"/></svg></button>
+<button class="fab" id="fab" aria-label="Tambah" title="Tambah" data-i18n-ar="Tambah" data-i18n-tip="Tambah"><svg class="ico"><use href="#i-plus"/></svg></button>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <button class="sheet-i" data-new="note"><svg class="ico" style="color:var(--m-notes)"><use href="#i-note"/></svg><span data-i18n="Catatan baru">Catatan baru</span></button>
@@ -141,8 +145,10 @@
   <button class="sheet-i" data-new="tpl"><svg class="ico" style="color:var(--m-notes)"><use href="#i-tpl"/></svg><span data-i18n="Dari templat…">Dari templat…</span></button>
   <button class="sheet-i" data-new="rem"><svg class="ico" style="color:var(--m-rem)"><use href="#i-bell"/></svg><span data-i18n="Reminder baru">Reminder baru</span></button>
   <button class="sheet-i" data-new="task"><svg class="ico" style="color:var(--m-task)"><use href="#i-check2"/></svg><span data-i18n="Tugas baru">Tugas baru</span></button>
+  <button class="sheet-i" data-aksi-cepat="fokus"><svg class="ico" style="color:var(--accent)"><use href="#i-clock"/></svg><span data-i18n="Timer fokus">Timer fokus</span></button>
+  <button class="sheet-i" data-aksi-cepat="suara"><svg class="ico" style="color:var(--accent)"><use href="#i-music"/></svg><span data-i18n="Suara latar">Suara latar</span></button>
+  <button class="sheet-i" data-aksi-cepat="ujian"><svg class="ico" style="color:var(--accent)"><use href="#i-book"/></svg><span data-i18n="Persiapan ujian">Persiapan ujian</span></button>
   <button class="sheet-i" data-go="renamer"><svg class="ico" style="color:var(--accent)"><use href="#i-rename"/></svg><span data-i18n="Ganti Nama Massal">Ganti Nama Massal</span></button>
-  <button class="sheet-i" data-go="musik"><svg class="ico" style="color:var(--accent)"><use href="#i-note"/></svg><span data-i18n="Musik">Musik</span></button>
 </div>
 
 <!-- BAR MEKANIK -->
@@ -163,6 +169,6 @@
   <button data-go="search"><svg class="ico"><use href="#i-search"/></svg><span data-i18n="Cari">Cari</span></button>
 </nav>
 
-<script type="module" src="./app.js?v=20261023235452"></script>
+<script type="module" src="./app.js?v=20261105210000"></script>
 </body>
 </html>

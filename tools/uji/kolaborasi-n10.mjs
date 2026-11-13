@@ -1,0 +1,20 @@
+import { buatRuangBersama, aturAnggota, terapkanPerubahanBersama, tambahKomentar, presenceSementara, gabungRuangan } from '../../docs/notes/kolaborasi-murni.js';
+let fail=0;const cek=(n,x)=>{console.log(`${x?'OK  ':'FAIL'} ${n}`);if(!x)fail++;};
+const note={id:'n',blocks:[{id:'b1',type:'paragraph',content:'one'},{id:'b2',type:'paragraph',content:'two'}]};
+let room=buatRuangBersama(note,'alice'); room=aturAnggota(room,'alice','bob','editor'); room=aturAnggota(room,'alice','cara','commenter');
+let branch=structuredClone(room);
+const a=terapkanPerubahanBersama(room,{actor:'bob',baseRevision:0,ops:[{type:'set-content',blockId:'b1',content:'edited'}]});
+const b=terapkanPerubahanBersama(branch,{actor:'bob',baseRevision:0,ops:[{type:'set-content',blockId:'b2',content:'also edited'}]});
+cek('explicit owner and editor access control',!terapkanPerubahanBersama(room,{actor:'stranger',baseRevision:0,ops:[{type:'set-content',blockId:'b1',content:'x'}]}).ok && a.ok);
+cek('operations attribute actor and revision',a.room.changes[0].actor==='bob'&&a.room.changes[0].revision===1);
+const mergedIndependent=gabungRuangan(a.room,b.room);
+cek('non-overlapping concurrent block edits merge without losing either',mergedIndependent.ok&&mergedIndependent.room.blocks[0].content==='edited'&&mergedIndependent.room.blocks[1].content==='also edited');
+const concurrent=terapkanPerubahanBersama(room,{actor:'bob',baseRevision:0,ops:[{type:'set-content',blockId:'b1',content:'other'}]});
+const mergedConflict=gabungRuangan(a.room,concurrent.room);
+cek('same-block concurrent edits become visible conflict, never silent overwrite',!mergedConflict.ok&&mergedConflict.reason==='conflict'&&mergedConflict.collisions[0].blockId==='b1');
+room=tambahKomentar(room,{actor:'cara',blockId:'b2',text:'Please review this section.'});
+cek('comments preserve attribution and block anchor',room.comments[0].actor==='cara'&&room.comments[0].blockId==='b2');
+cek('cursor presence is ephemeral and only available to editors',presenceSementara(room,{actor:'bob',blockId:'b1',offset:8})?.offset===8&&!presenceSementara(room,{actor:'cara',blockId:'b1',offset:2}));
+let denied=false;try{aturAnggota(room,'bob','eve','editor')}catch{denied=true;}
+cek('only room owner can grant or revoke access',denied);
+console.log(fail?`${fail} GAGAL`:'Semua tes core N10 lulus');process.exit(fail?1:0);
