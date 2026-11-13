@@ -61,6 +61,8 @@ klik(d.querySelector('[data-kal="today"]'));await sleep();
 const form = d.querySelector('[data-kal-acara-form]');
 check('form tambah acara tampil di panel tanggal', !!form);
 check('form mendukung frekuensi, hari tertentu, dan tanggal akhir pengulangan',!!form.querySelector('[name=frekuensiUlang]')&&form.querySelectorAll('[name=hariUlang]').length===7&&!!form.querySelector('[name=sampaiUlang]'));
+const pilihTemplat=d.querySelector('[data-kal-templat-pilihan]');pilihTemplat.value='kelas';klik(d.querySelector('[data-kal-templat]'));
+check('templat acara mengisi detail dan meminta pemeriksaan sebelum simpan',form.querySelector('[name=judul]').value==='Kelas'&&form.querySelector('[name=kategori]').value==='study'&&form.querySelector('[name=jamMulai]').value==='09:00'&&d.querySelector('[data-kal-cepat-hasil]')?.textContent.includes('Pratinjau')&&state.acaraKalender.length===0);
 const cepat=d.querySelector('[data-kal-cepat-teks]');cepat.value=`Rapat ${iso} jam 10`;
 klik(d.querySelector('[data-kal-cepat-tafsir]'));
 check('tambah-cepat menampilkan pratinjau dan mengisi formulir tanpa menyimpan',d.querySelector('[data-kal-cepat-hasil]')?.textContent.includes('Rapat')&&form.querySelector('[name=jamMulai]').value==='10:00'&&state.acaraKalender.length===0);

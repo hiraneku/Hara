@@ -80,6 +80,7 @@ cek('acara masuk ekspor dan pemulihan cadangan JSON', /acaraKalender: state\.aca
 cek('panel kalender memiliki layer dan CRUD acara mandiri', /data-kal-lapisan/.test(layar) && /data-kal-acara-form/.test(layar) && /data-kal-hapus/.test(layar));
 cek('lima mode kalender dan kontrol pencarian/filter tersedia', ['bulan','agenda','hari','minggu','tahun'].every(k => layar.includes(`'${k}'`)) && /data-kal-cari-form/.test(layar));
 cek('CSS responsif tersedia untuk acara, navigasi, dan tata letak ponsel', /\.kal-acara-form/.test(css) && /\.kal-nav-utama/.test(css) && /@media\(max-width:520px\)/.test(css));
+cek('layout kalender merapikan filter, kontrol sentuh, fokus keyboard, dan layar sangat sempit', /\.kal-cari-input\{grid-column:1\/-1\}/.test(css) && /\.kal-hari\.kal-pilih:hover/.test(css) && /:focus-visible/.test(css) && /@media\(max-width:420px\)/.test(css));
 
 console.log(`\nHasil: ${total - gagal}/${total} lulus`);
 process.exitCode = gagal ? 1 : 0;

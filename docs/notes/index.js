@@ -10,7 +10,7 @@ import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar
 import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
          ubahLapisanKalender, ubahTampilanKalender, cariKalender, pilihBulanKalender, pilihTanggalTahun,
          bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender, isiPratinjauAcaraCepat,
-         simpanBlokJadwal, hapusBlokJadwal, kecualikanKejadianKalender } from './views/tugas.js?v=20261113230900';
+         simpanBlokJadwal, hapusBlokJadwal, kecualikanKejadianKalender, terapkanTemplatAcara } from './views/tugas.js?v=20261113231100';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';
@@ -773,6 +773,12 @@ export const notesModule = {
       if (form) { e.preventDefault(); cariKalender(form.querySelector('[name="q"]')?.value || ''); }
     });
     document.addEventListener('click', e => {
+      const templat=e.target.closest('[data-kal-templat]');
+      if(templat){
+        const detail=templat.closest('.kal-form-detail');
+        if(terapkanTemplatAcara(detail)) detail.querySelector('[name="judul"]')?.focus();
+        return;
+      }
       const cepat=e.target.closest('[data-kal-cepat-tafsir]');
       if(cepat){isiPratinjauAcaraCepat(cepat.closest('.kal-form-detail'));return;}
       const skip=e.target.closest('[data-kal-kecualikan]');

@@ -152,6 +152,24 @@ export function isiPratinjauAcaraCepat(container) {
   return true;
 }
 
+export function terapkanTemplatAcara(container) {
+  const id=container?.querySelector('[data-kal-templat-pilihan]')?.value;
+  const map=new Map([
+    ['rapat',{judul:'Rapat',kategori:'work',mulai:'09:00',selesai:'10:00'}],
+    ['kelas',{judul:'Kelas',kategori:'study',mulai:'09:00',selesai:'10:30'}],
+    ['olahraga',{judul:'Olahraga',kategori:'personal',mulai:'07:00',selesai:'08:00'}],
+    ['belajar',{judul:'Sesi belajar',kategori:'study',mulai:'19:00',selesai:'19:45'}],
+  ]);
+  const t=map.get(id),form=container?.querySelector('[data-kal-acara-form]');if(!t||!form)return false;
+  form.elements.namedItem('judul').value=tr(t.judul);form.elements.namedItem('kategori').value=t.kategori;
+  form.elements.namedItem('jamMulai').value=t.mulai;form.elements.namedItem('jamAkhir').value=t.selesai;
+  const allDay=form.elements.namedItem('sepanjangHari');allDay.checked=false;
+  const waktu=form.querySelector('.kal-waktu');waktu.hidden=false;waktu.querySelectorAll('input[type=time]').forEach(x=>x.required=true);
+  const preview=container.querySelector('[data-kal-cepat-hasil]');
+  if(preview){preview.textContent=`${tr('Pratinjau')}: ${tr(t.judul)} · ${form.elements.namedItem('tanggalMulai').value} ${t.mulai}–${t.selesai}. ${tr('Periksa atau ubah detail, lalu simpan untuk mengonfirmasi.')}`;preview.hidden=false;}
+  return true;
+}
+
 export function simpanAcaraKalender(form) {
   const data = new FormData(form), sepanjangHari = data.get('sepanjangHari') === 'on';
   const zonaWaktu = String(data.get('zonaWaktu') || zonaLokal());
@@ -317,7 +335,8 @@ const formAcaraHtml = () => {
   const zonaPilihan = [...new Set([zona, 'Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura', 'UTC'])];
   const rule=acara?.pengulangan||{},hariUlang=rule.hari||[];
   return `<details class="kal-form-detail" ${acara ? 'open' : ''}><summary>${acara ? tr('Edit acara') : tr('Tambah acara')}</summary>
-    ${!acara?`<div class="kal-cepat"><label>${tr('Tambah cepat')}<input type="text" maxlength="500" data-kal-cepat-teks placeholder="${tr('Contoh: Rapat tim Jumat jam 10')}"></label><button type="button" class="btn" data-kal-cepat-tafsir>${tr('Pratinjau')}</button><p class="kal-cepat-hasil" data-kal-cepat-hasil aria-live="polite" hidden></p></div>`:''}
+    ${!acara?`<div class="kal-templat"><label>${tr('Templat acara')}<select data-kal-templat-pilihan><option value="">${tr('Pilih templat')}</option>${[['rapat','Rapat'],['kelas','Kelas'],['olahraga','Olahraga'],['belajar','Belajar']].map(([v,l])=>`<option value="${v}">${tr(l)}</option>`).join('')}</select></label><button type="button" class="btn" data-kal-templat>${tr('Gunakan templat')}</button></div>
+    <div class="kal-cepat"><label>${tr('Tambah cepat')}<input type="text" maxlength="500" data-kal-cepat-teks placeholder="${tr('Contoh: Rapat tim Jumat jam 10')}"></label><button type="button" class="btn" data-kal-cepat-tafsir>${tr('Pratinjau')}</button><p class="kal-cepat-hasil" data-kal-cepat-hasil aria-live="polite" hidden></p></div>`:''}
     <form class="kal-acara-form" data-kal-acara-form>
       <label>${tr('Judul')}<input name="judul" maxlength="240" required value="${esc(acara?.judul || '')}" placeholder="${tr('Nama acara')}"></label>
       <div class="kal-form-grid">
