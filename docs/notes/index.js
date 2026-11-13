@@ -9,7 +9,7 @@ import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar
          setKueriCari } from './views/misc.js?v=20261105210000';
 import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
          ubahLapisanKalender, ubahTampilanKalender, cariKalender, pilihBulanKalender, pilihTanggalTahun,
-         bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender } from './views/tugas.js?v=20261113230200';
+         bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender } from './views/tugas.js?v=20261113230300';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';

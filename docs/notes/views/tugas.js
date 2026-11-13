@@ -351,14 +351,13 @@ const judulRentang = mode => {
     ? `${a.getDate()}–${b.getDate()} ${b.toLocaleDateString(localeKalender(),{month:'long',year:'numeric'})}`
     : `${judulTanggal(awal,{day:'numeric',month:'short'})} – ${judulTanggal(akhir,{day:'numeric',month:'short',year:'numeric'})}`;
 };
-const kerangkaKalender = isi => `<div class="sec kal-judul-halaman" id="kal-bagian"><h2>${tr('Kalender')}</h2></div>
-  <section class="card kal kal-${prefKal.kepadatan}" aria-label="${tr('Kalender')}">
+const kerangkaKalender = isi => `<section class="card kal kal-${prefKal.kepadatan}" id="kal-bagian" aria-label="${tr('Kalender')}">
     <div class="kal-head kal-nav-utama">
       <button type="button" class="kal-nav" data-kal="prev" aria-label="${tr('Sebelumnya')}">‹</button>
       <b class="kal-rentang">${esc(judulRentang(prefKal.mode))}</b>
       <button type="button" class="kal-nav" data-kal="next" aria-label="${tr('Berikutnya')}">›</button>
       <button type="button" class="kal-today" data-kal="today">${tr('Hari ini')}</button>
-      <label class="kal-lompat"><span class="sr-only">${tr('Pilih tanggal')}</span><input type="date" data-kal-tanggal value="${isoHari(kalPilih)}"></label>
+      <label class="kal-lompat" title="${tr('Pilih tanggal')}"><svg class="kal-lompat-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M7.5 3.5v3M16.5 3.5v3M4 9h16M8 12.5h.01M12 12.5h.01M16 12.5h.01M8 16h.01M12 16h.01"/></svg><input type="date" data-kal-tanggal aria-label="${tr('Pilih tanggal')}" value="${isoHari(kalPilih)}"></label>
     </div>
     <nav class="kal-mode" aria-label="${tr('Tampilan kalender')}">${[['bulan','Bulan'],['agenda','Agenda'],['hari','Hari'],['minggu','Minggu'],['tahun','Tahun']].map(([v,l])=>`<button type="button" data-kal-mode="${v}" aria-pressed="${prefKal.mode===v}">${tr(l)}</button>`).join('')}</nav>
     ${kontrolLapisanHtml()}${kontrolCariHtml()}${kontrolPreferensiHtml()}${isi}

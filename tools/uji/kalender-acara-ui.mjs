@@ -30,6 +30,8 @@ const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}
 state.acaraKalender = [];
 router.go('task'); await sleep();
 check('kalender menampilkan kontrol lapisan tenggat, acara, jurnal', d.querySelectorAll('[data-kal-lapisan]').length === 3);
+check('date picker ringkas tanpa teks bocor dan tetap berlabel aksesibel', !!d.querySelector('.kal-lompat-ikon') && !d.querySelector('.kal-lompat span') && !!d.querySelector('[data-kal-tanggal][aria-label]'));
+check('judul kalender tidak terpotong di bawah header sticky', !d.querySelector('.kal-judul-halaman'));
 const klik = el => el?.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true, view: w }));
 klik(d.querySelector('[data-kal-mode="agenda"]')); await sleep();
 check('tampilan Agenda muncul sebagai daftar terkelompok per hari', !!d.querySelector('.kal-linimasa-agenda'));
