@@ -9,7 +9,8 @@ import { miscViews, renderHasilCari, daftarTagHtml, setSaringTag, muatMutuGambar
          setKueriCari } from './views/misc.js?v=20261105210000';
 import { tugasView, reminderView, tundaTodo, geserKalender, unduhIcs, imporIcs, toggleTodoDariDaftar,
          ubahLapisanKalender, ubahTampilanKalender, cariKalender, pilihBulanKalender, pilihTanggalTahun,
-         bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender, isiPratinjauAcaraCepat } from './views/tugas.js?v=20261113230600';
+         bukaEditAcara, hapusAcaraKalender, simpanAcaraKalender, pindahAcaraKalender, isiPratinjauAcaraCepat,
+         simpanBlokJadwal, hapusBlokJadwal, kecualikanKejadianKalender } from './views/tugas.js?v=20261113230900';
 import { bindEditor } from './editor/events.js?v=20261105210000';
 import { aturPasangan } from './editor/pasangan.js?v=20261105210000';
 import { aturModeTempel } from './editor/tempel-mode.js?v=20261105210000';
@@ -774,15 +775,21 @@ export const notesModule = {
     document.addEventListener('click', e => {
       const cepat=e.target.closest('[data-kal-cepat-tafsir]');
       if(cepat){isiPratinjauAcaraCepat(cepat.closest('.kal-form-detail'));return;}
+      const skip=e.target.closest('[data-kal-kecualikan]');
+      if(skip){kecualikanKejadianKalender(skip.dataset.kalKecualikan,skip.dataset.kalKejadian);return;}
       const edit = e.target.closest('[data-kal-edit]');
       if (edit) { bukaEditAcara(edit.dataset.kalEdit); return; }
       const hapus = e.target.closest('[data-kal-hapus]');
       if (hapus) { hapusAcaraKalender(hapus.dataset.kalHapus); return; }
+      const hapusBlok=e.target.closest('[data-kal-blok-hapus]');
+      if(hapusBlok){hapusBlokJadwal(hapusBlok.dataset.kalBlokHapus);return;}
       if (e.target.closest('[data-kal-batal-edit]')) { bukaEditAcara(''); return; }
     });
     document.addEventListener('submit', e => {
       const form = e.target.closest('[data-kal-acara-form]');
-      if (form) { e.preventDefault(); simpanAcaraKalender(form); }
+      if (form) { e.preventDefault(); simpanAcaraKalender(form); return; }
+      const blok=e.target.closest('[data-kal-blok-form]');
+      if(blok){e.preventDefault();simpanBlokJadwal(blok);}
     });
     /* K8: unduh & impor kalender .ics */
     document.addEventListener('click', e => {

@@ -81,16 +81,31 @@ export function benturanJadwal(proposal,{acara=[],blok=[],kecualikanId=''}={}){
   }
   for(const b of blok){if(b.id!==kecualikanId)kandidat.push({id:b.id,jenis:b.tipe==='fokus'?'fokus':'tugas',judul:b.judul,interval:intervalBlok(b),hari:zonaTanggal(b.mulai)});}
   const seen=new Set(),hasil=[];
-  for(const x of kandidat){const iv=x.interval;if(!iv||iv.mulai>=end||iv.selesai<=start)continue;const key=`${x.id}:${x.hari}`;if(seen.has(key))continue;seen.add(key);hasil.push({jenis:x.jenis,judul:x.judul,mulai:iv.mulai,selesai:iv.selesai});}
+  for(const x of kandidat){const iv=x.interval;if(!iv||iv.mulai>=end||iv.selesai<=start)continue;const key=`${x.id}:${x.hari}`;if(seen.has(key))continue;seen.add(key);hasil.push({id:x.id,hari:x.hari,jenis:x.jenis,judul:x.judul,mulai:iv.mulai,selesai:iv.selesai});}
   return hasil.sort((a,b)=>a.mulai-b.mulai);
 }
 
-export function ringkasanPekan({tanggalMulai,tugas=[],blok=[],acara=[]}){
-  const d=new Date(`${tanggalMulai}T12:00:00`);if(Number.isNaN(d.getTime()))return {agenda:0,blokTugas:0,tanpaBlok:0,bentrok:0};
+export function ringkasanPekan({tanggalMulai,tugas=[],blok=[],acara=[],ambangPadatMenit=480}){
+  const d=new Date(`${tanggalMulai}T12:00:00`);if(Number.isNaN(d.getTime()))return {agenda:0,blokTugas:0,tanpaBlok:0,bentrok:0,padat:[]};
   const tanggal=[];for(let i=0;i<7;i++){const x=new Date(d);x.setDate(x.getDate()+i);tanggal.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`);}
   const due=tugas.filter(x=>tanggal.some(day=>x.jatuhTanggal===day));
-  const blocks=blok.filter(x=>tanggal.some(day=>{const p=new Intl.DateTimeFormat('en',{timeZone:x.zonaWaktu,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(x.mulai));const v=Object.fromEntries(p.map(y=>[y.type,y.value]));return `${v.year}-${v.month}-${v.day}`===day;}));
+  const blocks=blok.filter(x=>tanggal.some(day=>{const a=new Date(`${day}T00:00:00`),z=new Date(a);z.setDate(z.getDate()+1);return x.mulai<z.getTime()&&x.selesai>a.getTime();}));
   const agenda=acara.reduce((n,a)=>n+tanggal.reduce((s,day)=>s+kejadianAcaraPadaTanggal(a,day).length,0),0);
   const blockKeys=new Set(blocks.filter(b=>b.tipe==='tugas').map(b=>`${b.noteId}:${b.blockId}`));
-  return {agenda:agenda+due.length,blokTugas:blocks.filter(b=>b.tipe==='tugas').length,tanpaBlok:due.filter(t=>!blockKeys.has(`${t.n.id}:${t.bid}`)).length,bentrok:benturanJadwal(blocks,{acara}).length};
+  const padat=[];
+  for(const day of tanggal){
+    const a=new Date(`${day}T00:00:00`),z=new Date(a);z.setDate(z.getDate()+1);const batas={mulai:a.getTime(),selesai:z.getTime()},rentang=[];
+    for(const b of blocks)if(b.mulai<batas.selesai&&b.selesai>batas.mulai)rentang.push({mulai:Math.max(b.mulai,batas.mulai),selesai:Math.min(b.selesai,batas.selesai),judul:b.judul});
+    for(const e of acara)for(const inst of kejadianAcaraPadaTanggal(e,day)){
+      if(inst.sepanjangHari)continue;const iv=intervalAcara(inst,day);if(iv&&iv.mulai<batas.selesai&&iv.selesai>batas.mulai)rentang.push({mulai:Math.max(iv.mulai,batas.mulai),selesai:Math.min(iv.selesai,batas.selesai),judul:inst.judul});
+    }
+    const gabung=[];for(const r of rentang.sort((x,y)=>x.mulai-y.mulai)){const last=gabung.at(-1);if(last&&r.mulai<=last.selesai){last.selesai=Math.max(last.selesai,r.selesai);last.judul.add(r.judul);}else gabung.push({mulai:r.mulai,selesai:r.selesai,judul:new Set([r.judul])});}
+    const menit=gabung.reduce((sum,x)=>sum+(x.selesai-x.mulai)/60000,0);if(menit>ambangPadatMenit)padat.push({tanggal:day,menit:Math.round(menit),sebab:[...new Set(rentang.map(x=>x.judul))]});
+  }
+  const konflik=new Set();
+  for(const b of blocks){
+    const found=benturanJadwal({mulai:b.mulai,selesai:b.selesai,zonaWaktu:b.zonaWaktu},{acara,blok:blocks,kecualikanId:b.id});
+    for(const x of found){const ids=[b.id,x.id].sort(),spans=[[b.mulai,b.selesai],[x.mulai,x.selesai]].sort((a,c)=>a[0]-c[0]);konflik.add(`${ids.join(':')}:${spans.flat().join(':')}`);}
+  }
+  return {agenda:agenda+due.length,blokTugas:blocks.filter(b=>b.tipe==='tugas').length,tanpaBlok:due.filter(t=>!blockKeys.has(`${t.n.id}:${t.bid}`)).length,bentrok:konflik.size,padat};
 }

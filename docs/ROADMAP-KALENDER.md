@@ -55,12 +55,12 @@ Pekerjaan berikutnya perlu memperluas fondasi ini secara bertahap, bukan membuat
 - [ ] Buat alur tambah acara yang ringkas, dengan templat acara untuk pola umum (misalnya rapat, kelas, olahraga, belajar).
 - [x] Tambahkan **tambah cepat dengan bahasa alami** untuk tanggal dan waktu, termasuk contoh “rapat Jumat jam 10” dan “bayar tagihan setiap tanggal 5”.
 - [x] Parsing menampilkan pratinjau yang bisa diperiksa/diedit di formulir; acara baru tersimpan hanya setelah pengguna mengirim formulir sebagai konfirmasi.
-- [ ] Dukung pengulangan mingguan/bulanan, hari kerja tertentu, tanggal akhir, dan pengecualian satu kejadian atau seluruh rangkaian.
-- [ ] Tambahkan **blok waktu tugas**: jadwalkan waktu pengerjaan terpisah dari tenggat tugas. Menandai tugas selesai tidak boleh menghapus riwayat jadwalnya.
-- [ ] Tambahkan deteksi bentrok waktu dan peringatan jadwal terlalu padat; tampilkan penyebabnya, jangan memindahkan acara otomatis.
-- [ ] Sediakan waktu persiapan/perjalanan opsional sebagai blok terkait acara.
-- [ ] Tambahkan blok **waktu fokus** yang tidak menghapus acara lain dan dapat disesuaikan pengguna.
-- [ ] Tampilkan ringkasan mingguan yang ringan: agenda mendatang dan tugas yang belum memiliki blok pengerjaan.
+- [x] Dukung pengulangan harian/mingguan/bulanan, hari kerja tertentu, tanggal akhir, melewati satu kejadian, dan aksi seluruh rangkaian.
+- [x] Tambahkan **blok waktu tugas**: waktu pengerjaan terpisah dari tenggat; menandai tugas selesai mempertahankan riwayat blok.
+- [x] Deteksi bentrok dan hari padat; tampilkan penyebab sebelum konfirmasi, jangan memindahkan agenda otomatis.
+- [x] Sediakan waktu persiapan/perjalanan opsional yang ikut diperhitungkan dalam deteksi benturan/kepadatan.
+- [x] Tambahkan blok **waktu fokus** yang tidak menghapus acara lain.
+- [x] Tampilkan ringkasan mingguan ringan: agenda, tugas tanpa blok, benturan, dan hari dengan beban tinggi beserta penyebabnya.
 
 ## Tahap 4 — Integrasi Hara
 

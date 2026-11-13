@@ -28,7 +28,10 @@ cek('buffer persiapan/perjalanan tersimpan dan ikut memperluas benturan',buffer.
 cek('benturan tidak mengubah acara atau blok sumber',acara.mulai===mulai&&tugas.mulai===mulai);
 cek('blok yang hanya bersinggungan di batas waktu bukan benturan',benturanJadwal({mulai:selesai,selesai:selesai+30*60000},{blok:[tugas]}).length===0);
 const ringkas=ringkasanPekan({tanggalMulai:'2026-07-06',tugas:[{jatuhTanggal:'2026-07-07',n:{id:'n1'},bid:'todo1'},{jatuhTanggal:'2026-07-08',n:{id:'n2'},bid:'todo2'}],blok:[tugas,fokus],acara:[acara]});
-cek('ringkasan mingguan menghitung agenda, blok tugas, dan tugas tanpa blok',ringkas.agenda===3&&ringkas.blokTugas===1&&ringkas.tanpaBlok===1,JSON.stringify(ringkas));
+cek('ringkasan mingguan menghitung agenda, blok tugas, tugas tanpa blok, dan benturan',ringkas.agenda===3&&ringkas.blokTugas===1&&ringkas.tanpaBlok===1&&ringkas.bentrok===2,JSON.stringify(ringkas));
+const panjang=normalisasiAcara({id:'long',judul:'Workshop panjang',mulai:Date.UTC(2026,6,7,0),selesai:Date.UTC(2026,6,7,9),zonaWaktu:'UTC'});
+const padat=ringkasanPekan({tanggalMulai:'2026-07-06',acara:[panjang]});
+cek('ringkasan memberi peringatan beban harian tinggi dengan penyebab agenda',padat.padat.some(x=>x.tanggal==='2026-07-07'&&x.menit>=540&&x.sebab.includes('Workshop panjang')));
 const store=fs.readFileSync('docs/core/store.js','utf8'),dataIO=fs.readFileSync('docs/notes/data-io.js','utf8');
 const {EN}=await import('../../docs/core/bahasa-en.js'),{JA}=await import('../../docs/core/bahasa-ja.js');
 cek('teks tambah-cepat, pengulangan, dan buffer punya terjemahan EN/JA',['Tambah cepat','Pengulangan','Persiapan (menit)','Perjalanan (menit)'].every(k=>EN[k]&&JA[k]));
