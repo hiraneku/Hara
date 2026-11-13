@@ -1,6 +1,6 @@
 # Roadmap fitur Kalender Hara
 
-**Status:** Tahap 3 sedang berjalan. Fondasi pengulangan, tambah-cepat berpratinjau, dan model blok jadwal lokal sedang diterapkan; tahap ini belum selesai.
+**Status:** Tahap 3 masih berlangsung. Tambah-cepat berpratinjau, pengulangan, blok tugas/fokus, benturan, dan ringkasan mingguan sudah tersedia; templat acara dan perubahan khusus pada satu kejadian masih tersisa.
 
 Dokumen ini mencatat seluruh gagasan Kalender yang telah dibahas agar cakupan dan urutannya tidak hilang. Ini roadmap usulan, bukan janji tanggal rilis. Keputusan cakupan atau perubahan prioritas perlu dicatat sebelum mengubah butirnya.
 
