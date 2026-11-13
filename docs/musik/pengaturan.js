@@ -6,12 +6,12 @@
 import { cur, go } from '../core/router.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
-import * as M from './mesin.js?v=20261105210000';
-import * as A from './aksi.js?v=20261105210000';
-import * as T from './tidur.js?v=20261105210000';
-import { ambilSet, ubahSet } from './set.js?v=20261105210000';
-import { ikon } from './ikon.js?v=20261105210000';
-import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261105210000';
+import * as M from './mesin.js?v=20261113230000';
+import * as A from './aksi.js?v=20261113230000';
+import * as T from './tidur.js?v=20261113230000';
+import { ambilSet, ubahSet } from './set.js?v=20261113230000';
+import { ikon } from './ikon.js?v=20261113230000';
+import { TIDUR_MODE, TIDUR_PRESET, TIDUR_MENIT_MAKS, CROSSFADE_MIN, CROSSFADE_MAKS } from './logika.js?v=20261113230000';
 
 /* Label singkat agar muat dalam tiga kolom pada layar kecil. */
 const LABEL_TIDUR = { waktu: 'Waktu', lagu: 'Lagu ini', daftar: 'Daftar habis' };
@@ -39,7 +39,10 @@ function kartuTidur(set) {
     <div class="mus-pg-baris">
       <span>${tr('Menit kustom')}</span>
       <span class="mus-pg-input"><input type="number" class="mus-angka" min="1" max="${TIDUR_MENIT_MAKS}" step="1" value="${set.tidurMenit}" data-set-input="tidur-menit" aria-label="${tr('Menit kustom')}"><em>${tr('menit')}</em></span>
-    </div>` : '';
+    </div>
+    <div class="mus-pg-baris"><label for="mus-fade-detik">${tr('Fade-out sebelum berhenti')}</label><output data-set-out="fade">${set.tidurFadeDetik} ${tr('detik')}</output></div>
+    <input id="mus-fade-detik" type="range" class="mus-range" min="0" max="30" step="5" value="${set.tidurFadeDetik}" data-set-input="tidur-fade" aria-label="${tr('Durasi fade-out')}" aria-valuetext="${set.tidurFadeDetik} ${tr('detik')}">
+    <div class="mus-pg-skala"><span>${tr('Mati')}</span><span>30 ${tr('detik')}</span></div>` : '';
   const tombol = ti.aktif
     ? `<button type="button" class="mus-pg-tombol" data-set="tidur-batal">${ikon('x')}<span>${tr('Batalkan timer')}</span></button>`
     : `<button type="button" class="mus-pg-tombol utama" data-set="tidur-mulai">${ikon('play')}<span>${tr('Mulai')}</span></button>`;
@@ -50,7 +53,7 @@ function kartuTidur(set) {
     <div class="mus-pg-seg" role="group" aria-label="${tr('Mode sleep timer')}">${mode}</div>
     ${lanjutan}
     ${tombol}
-    <p class="mus-pg-desc mus-pg-catatan">${tr('Volume memudar 10 detik sebelum berhenti. Timer bisa tertunda jika aplikasi berjalan di latar.')}</p>
+    <p class="mus-pg-desc mus-pg-catatan">${tr('Fade-out dapat diatur untuk timer berbatas waktu. Timer bisa tertunda jika aplikasi berjalan di latar.')}</p>
   </section>`;
 }
 
@@ -98,7 +101,7 @@ function mulaiTidurDariLayar() {
     toast(tr('Putar lagu dulu, lalu pilih mode ini'));
     return;
   }
-  const ok = T.mulaiTidur({ mode: set.tidurMode, menit: set.tidurMenit, panjang: A.jumlahDaftarAktif() });
+  const ok = T.mulaiTidur({ mode: set.tidurMode, menit: set.tidurMenit, panjang: A.jumlahDaftarAktif(), fadeDetik: set.tidurFadeDetik });
   if (!ok) toast(tr('Daftar putar kosong'));
 }
 
@@ -149,6 +152,7 @@ function onChange(e) {
     segar();
     return;
   }
+  if (t.matches('[data-set-input="tidur-fade"]')) { ubahSet({ tidurFadeDetik: Number(t.value) }); segar(); return; }
   if (t.matches('[data-set-input="cf-detik"]')) {
     const set = ambilSet();
     ubahSet({ crossfade: { aktif: set.crossfade.aktif, detik: Math.round(Number(t.value)) } });
@@ -158,6 +162,7 @@ function onChange(e) {
 
 function onInput(e) {
   const t = e.target;
+  if (t && t.matches && t.matches('[data-set-input="tidur-fade"]')) { const out = document.querySelector('[data-set-out="fade"]'); if (out) out.textContent = `${t.value} ${tr('detik')}`; t.setAttribute('aria-valuetext', `${t.value} ${tr('detik')}`); return; }
   if (t && t.matches && t.matches('[data-set-input="cf-detik"]')) {
     const out = document.querySelector('[data-set-out="cf-detik"]');
     if (out) out.textContent = `${t.value} ${tr('detik')}`;

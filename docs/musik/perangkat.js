@@ -18,8 +18,10 @@ function plugin() {
 }
 
 let statusPustaka = 'belum'; // belum | memindai | izin | siap | gagal
+let laporanPindai = { waktu: 0, jumlah: 0, pesan: '' };
 export const pustakaPerangkatTersedia = () => !!plugin();
 export const statusPustakaPerangkat = () => statusPustaka;
+export const detailPustakaPerangkat = () => ({ ...laporanPindai });
 
 export async function pindaiAudioPerangkat() {
   const p = plugin();
@@ -31,20 +33,24 @@ export async function pindaiAudioPerangkat() {
     if (!akses?.granted) akses = await p.requestAccess();
     if (!akses?.granted) {
       statusPustaka = 'izin';
+      laporanPindai = { ...laporanPindai, pesan: 'Izin audio belum diberikan.' };
       return { tersedia: true, granted: false, songs: [] };
     }
 
     const hasil = await p.listAudio();
     statusPustaka = hasil?.granted ? 'siap' : 'izin';
+    const songs = Array.isArray(hasil?.songs) ? hasil.songs : [];
+    laporanPindai = { waktu: Date.now(), jumlah: songs.length, pesan: hasil?.granted ? '' : 'Izin audio belum diberikan.' };
     return {
       tersedia: true,
       granted: !!hasil?.granted,
       audioGranted: !!hasil?.audioGranted,
       videoGranted: !!hasil?.videoGranted,
-      songs: Array.isArray(hasil?.songs) ? hasil.songs : [],
+      songs,
     };
   } catch (error) {
     statusPustaka = 'gagal';
+    laporanPindai = { ...laporanPindai, waktu: Date.now(), pesan: String(error?.message || 'Pemindaian gagal').slice(0, 180) };
     throw error;
   }
 }

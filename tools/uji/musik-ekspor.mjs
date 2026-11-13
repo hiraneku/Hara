@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const AKAR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 process.chdir(AKAR);
-const V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+const V = fs.readFileSync('docs/musik/index.js', 'utf8').match(/\.\/mesin\.js\?v=(\d+)/)[1];
 const D = await import(`${AKAR}/docs/musik/ekspor-dsp.js?v=${V}`);
 
 const HZ = 44100;

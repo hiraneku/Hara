@@ -19,9 +19,10 @@ globalThis.addEventListener = w.addEventListener.bind(w);
 Object.defineProperty(globalThis, 'navigator', { value: w.navigator, configurable: true });
 w.URL.createObjectURL = () => 'blob:x/1'; w.URL.revokeObjectURL = () => {}; globalThis.URL = w.URL;
 const AKAR = process.cwd();
-const V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+const V = fs.readFileSync('docs/musik/index.js', 'utf8').match(/\.\/mesin\.js\?v=(\d+)/)[1];
+const CORE_V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
 await import(`${AKAR}/docs/app.js?v=${V}`);
-const R = await import(`${AKAR}/docs/core/router.js?v=${V}`);
+const R = await import(`${AKAR}/docs/core/router.js?v=${CORE_V}`);
 const go = (...a) => R.go(...a);
 /* cur adalah live binding: baca lewat namespace, jangan didestrukturisasi. */
 w.HTMLCanvasElement.prototype.getContext = () => null;   /* jsdom tanpa canvas: waveform dilewati */

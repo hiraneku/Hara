@@ -7,8 +7,8 @@ import { cur, go, onAfterRender } from '../core/router.js?v=20261105210000';
 import { bukaMenuFitur, pasangMenuFitur } from './menu-fitur.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
 import { namaSekarang, setNama } from './nama.js?v=20261105210000';
-import { kartuMusikHtml } from '../musik/kartu.js?v=20261105210000';
-import { togglePutarMusik } from '../musik/index.js?v=20261105210000';
+import { kartuMusikHtml } from '../musik/kartu.js?v=20261113230000';
+import { togglePutarMusik } from '../musik/index.js?v=20261113230000';
 
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

@@ -5,15 +5,17 @@ import { cur, go } from '../core/router.js?v=20261105210000';
 import { esc } from '../core/dom.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
-import * as S from './simpan.js?v=20261105210000';
-import * as D from './daftar.js?v=20261105210000';
-import * as A from './aksi.js?v=20261105210000';
-import { formatWaktu, pindahItem } from './logika.js?v=20261105210000';
-import { ikon } from './ikon.js?v=20261105210000';
+import * as S from './simpan.js?v=20261113230000';
+import * as D from './daftar.js?v=20261113230000';
+import * as A from './aksi.js?v=20261113230000';
+import { formatWaktu, pindahItem } from './logika.js?v=20261113230000';
+import { ikon } from './ikon.js?v=20261113230000';
+import * as M3U from './m3u.js?v=20261113230000';
 
 let buka = null;          /* id daftar yang sedang dibuka; null = daftar semua */
 let hapusSiap = null;
 let hapusTimer = null;
+let pratinjauM3U = null;
 
 function kepala(judul, catatan, ikonNama) {
   return `<header class="mus-set-kepala">
@@ -33,6 +35,7 @@ function listHtml() {
         </span>
         ${ikon('chev', 'mus-chev')}
       </button>
+      <button type="button" class="mus-ikon-btn mus-ikon-kecil" data-dl="m3u-ekspor" data-id="${esc(d.id)}" aria-label="${tr('Ekspor playlist M3U')}">${ikon('ekspor')}</button>
       <button type="button" class="mus-ikon-btn mus-ikon-kecil" data-dl="putar" data-id="${esc(d.id)}" data-indeks="0"
         aria-label="${tr('Putar daftar')}"${d.lagu.length ? '' : ' disabled'}>${ikon('play')}</button>
     </li>`).join('');
@@ -42,6 +45,8 @@ function listHtml() {
         <button type="button" class="mus-tombol" data-dl="buat">${ikon('plus')}<span>${tr('Buat')}</span></button>
       </div>
       <div class="mus-aksi-baris mus-smart-links"><button type="button" class="mus-tombol" data-dl="pintar">${ikon('pintar')}<span>${tr('Daftar putar pintar')}</span></button><button type="button" class="mus-tombol" data-dl="riwayat">${ikon('list')}<span>${tr('Riwayat & statistik')}</span></button></div>
+      <div class="mus-aksi-baris"><button type="button" class="mus-chip" data-dl="m3u-impor">${ikon('impor')}<span>${tr('Impor playlist M3U')}</span></button><button type="button" class="mus-chip" data-dl="m3u-ekspor-semua">${ikon('ekspor')}<span>${tr('Ekspor seluruh pustaka')}</span></button><input type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl" data-dl-m3u hidden></div>
+      ${pratinjauM3U ? `<div class="mus-m3u-pratinjau" role="region" aria-label="${tr('Pratinjau impor playlist')}"><h3>${tr('Tinjau playlist sebelum ditambahkan')}</h3><p>${pratinjauM3U.rows.filter(x => x.lagu).length} ${tr('cocok dengan pustaka')} · ${pratinjauM3U.rows.filter(x => !x.lagu).length} ${tr('tidak ditemukan atau ambigu')}</p><label>${tr('Nama daftar')}<input class="mus-teks" data-dl-input="m3u-nama" maxlength="60" value="${esc(pratinjauM3U.nama)}"></label><p class="mus-catatan">${tr('Berkas M3U hanya berisi daftar dan metadata, bukan audio. Audio yang tidak ada di pustaka Hara tidak akan disalin.')}</p><div class="mus-aksi-baris"><button type="button" class="mus-tombol" data-dl="m3u-konfirmasi">${ikon('check')}<span>${tr('Buat daftar dari lagu cocok')}</span></button><button type="button" class="mus-chip" data-dl="m3u-batal">${tr('Batal')}</button></div></div>` : ''}
     </section>
     <section class="mus-kartu mus-set-kartu">
       ${daftar.length
@@ -124,6 +129,25 @@ function putar(id, indeks) {
   A.mainkanDaftar(id, indeks).then(() => go('musik'));
 }
 
+function eksporM3U(id = null) {
+  const daftar = id ? D.daftarById(id) : null;
+  const target = daftar || { nama: 'Pustaka Hara', lagu: S.daftarLagu().map(x => x.id) };
+  const konten = M3U.buatM3U(target, S.daftarLagu());
+  const url = URL.createObjectURL(new Blob([konten], { type: 'audio/x-mpegurl;charset=utf-8' }));
+  const a = document.createElement('a'); a.href = url; a.download = `${(target.nama || 'playlist').replace(/[^\p{L}\p{N}._ -]+/gu, '').trim() || 'playlist'}.m3u`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function mulaiImporM3U(file) {
+  if (!file) return;
+  if (file.size > 2_000_000) { toast(tr('Berkas M3U terlalu besar')); return; }
+  file.text().then(text => {
+    const rows = M3U.cocokkanM3U(M3U.parseM3U(text), S.daftarLagu());
+    if (!rows.length) { toast(tr('Playlist tidak berisi lagu')); return; }
+    pratinjauM3U = { nama: file.name.replace(/\.(m3u8?)$/i, '').slice(0, 60) || 'Playlist impor', rows };
+    go('musik-daftar', { segar: true });
+  }).catch(error => toast(tr(error?.message || 'Berkas M3U tidak dapat dibaca')));
+}
+
 function onClick(e) {
   if (!aktif()) return;
   const b = e.target.closest && e.target.closest('[data-dl]');
@@ -135,6 +159,18 @@ function onClick(e) {
     case 'buat': buat(document.querySelector('[data-dl-input="baru"]')); return;
     case 'pintar': go('musik-pintar'); return;
     case 'riwayat': go('musik-riwayat'); return;
+    case 'm3u-impor': document.querySelector('[data-dl-m3u]')?.click(); return;
+    case 'm3u-ekspor-semua': eksporM3U(); return;
+    case 'm3u-ekspor': eksporM3U(id); return;
+    case 'm3u-batal': pratinjauM3U = null; break;
+    case 'm3u-konfirmasi': {
+      if (!pratinjauM3U) return;
+      const name = document.querySelector('[data-dl-input="m3u-nama"]')?.value || pratinjauM3U.nama;
+      const idBaru = D.buatDaftar(name); if (!idBaru) { toast(tr('Nama daftar tidak boleh kosong')); return; }
+      const matched = pratinjauM3U.rows.filter(x => x.lagu);
+      matched.forEach(x => D.tambahLagu(idBaru, x.lagu.id));
+      pratinjauM3U = null; buka = idBaru; toast(tr('{n} lagu ditambahkan dari M3U', { n: matched.length })); break;
+    }
     case 'buka': buka = id; break;
     case 'kembali': buka = null; break;
     case 'putar': putar(id, indeks); return;
@@ -172,7 +208,9 @@ function onClick(e) {
 
 function onChange(e) {
   const t = e.target;
-  if (!aktif() || !t || !t.matches || !t.matches('[data-dl-input="nama"]')) return;
+  if (!aktif() || !t || !t.matches) return;
+  if (t.matches('[data-dl-m3u]')) { const file = t.files?.[0]; t.value = ''; mulaiImporM3U(file); return; }
+  if (!t.matches('[data-dl-input="nama"]')) return;
   if (!D.ubahNama(t.dataset.id, t.value)) toast(tr('Nama daftar tidak boleh kosong'));
   go('musik-daftar', { segar: true });
 }

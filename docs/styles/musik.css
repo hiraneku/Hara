@@ -171,3 +171,24 @@
 .mus .mus-item-hapus { flex:none; min-width:48px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:3px 4px; border:0; background:transparent; color:var(--mus-redup); font-size:10px; line-height:1.2; text-align:center; }
 .mus .mus-item-hapus .mus-ico { width:20px; height:20px; }
 .mus .mus-hapus-teks { display:block; }
+
+/* Library navigation, reviewable local metadata, saved listening points. */
+.mus-pustaka-grup { margin:14px 0 8px; }
+.mus-pustaka-grup h3 { display:flex;justify-content:space-between;gap:8px;margin:0 0 4px;padding:8px 4px;color:var(--mus-redup);font-size:13px;font-weight:650; }
+.mus-pustaka-grup h3 span { color:var(--mus-faint);font-variant-numeric:tabular-nums; }
+.mus-pustaka-alat { grid-template-columns:minmax(120px,1.4fr) repeat(3,minmax(90px,1fr)); }
+.mus-metadata > summary { cursor:pointer; min-height:44px;display:flex;align-items:center;font-weight:650; }
+.mus-metadata-form { display:grid;gap:10px;padding-top:12px; }
+.mus-metadata-form label { display:grid;gap:5px;color:var(--mus-redup);font-size:12px; }
+.mus-metadata-form .mus-teks { width:100%;font-size:14px; }
+.mus-markah .mus-kartu-kepala { margin-bottom:6px; }
+.mus-m3u-pratinjau { display:grid;gap:10px;margin-top:12px;padding:14px;border:1px solid var(--mus-garis);border-radius:14px;background:var(--mus-kartu); }
+.mus-m3u-pratinjau h3 { font-size:15px; }
+.mus-m3u-pratinjau label { display:grid;gap:5px;color:var(--mus-redup);font-size:12px; }
+.mus-m3u-pratinjau .mus-teks { width:100%; }
+.mus :focus-visible { outline:2px solid var(--mus-aksen);outline-offset:3px; }
+.mus button,.mus select,.mus summary { touch-action:manipulation; }
+@media(max-width:760px) { .mus-pustaka-alat { grid-template-columns:repeat(2,minmax(0,1fr)); }.mus-pustaka-alat .mus-pustaka-cari { grid-column:1/-1; } }
+@media(max-width:420px) { .mus-metadata-form .mus-aksi-baris { flex-direction:column;align-items:stretch; }.mus-metadata-form .mus-aksi-baris > * { width:100%; } }
+
+.mus-sr-only { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important; }

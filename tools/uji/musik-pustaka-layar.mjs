@@ -14,9 +14,10 @@ Object.defineProperty(globalThis, 'navigator', { value: w.navigator, configurabl
 w.URL.createObjectURL = () => 'blob:x/1'; w.URL.revokeObjectURL = () => {}; globalThis.URL = w.URL;
 w.HTMLCanvasElement.prototype.getContext = () => null;
 const root = process.cwd();
-const version = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+const version = fs.readFileSync('docs/musik/index.js', 'utf8').match(/\.\/mesin\.js\?v=(\d+)/)[1];
+const CORE_V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
 await import(`${root}/docs/app.js?v=${version}`);
-const router = await import(`${root}/docs/core/router.js?v=${version}`);
+const router = await import(`${root}/docs/core/router.js?v=${CORE_V}`);
 const S = await import(`${root}/docs/musik/simpan.js?v=${version}`);
 const tunggu = (ms = 100) => new Promise(r => setTimeout(r, ms));
 let gagal = 0;

@@ -6,7 +6,7 @@
    OfflineAudioContext dengan node yang sama dengan pemutar (mesin.js).
    Semua hasil 44.100 Hz stereo. */
 
-import { SoundTouch, SimpleFilter } from '../vendor/soundtouch/soundtouch.js?v=20261105210000';
+import { SoundTouch, SimpleFilter } from '../vendor/soundtouch/soundtouch.js?v=20261113230000';
 
 export const SAMPEL_HZ = 44100;
 const BLOK = 4096;

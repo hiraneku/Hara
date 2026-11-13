@@ -5,8 +5,8 @@
    Keadaan timer hanya di memori (tidak disimpan ulang setelah aplikasi ditutup).
    Pilihan terakhir (mode dan menit) disimpan di pengaturan Musik. */
 
-import * as M from './mesin.js?v=20261105210000';
-import { TIDUR_MENIT_MAKS } from './logika.js?v=20261105210000';
+import * as M from './mesin.js?v=20261113230000';
+import { TIDUR_MENIT_MAKS } from './logika.js?v=20261113230000';
 
 export const FADE_TIDUR_DETIK = 10;
 
@@ -33,15 +33,16 @@ export function tidurInfo() {
 
 /* Mulai timer. menit: 1..TIDUR_MENIT_MAKS (mode waktu). panjang: jumlah lagu di
    daftar aktif (mode daftar). Mengembalikan false bila tidak bisa dimulai. */
-export function mulaiTidur({ mode, menit = 30, panjang = 0 }) {
+export function mulaiTidur({ mode, menit = 30, panjang = 0, fadeDetik = FADE_TIDUR_DETIK }) {
   hentikanTimer();
   if (mode === 'waktu') {
     const m = Math.min(TIDUR_MENIT_MAKS, Math.max(1, Math.round(Number(menit) || 0)));
     const ms = m * 60000;
+    const fade = Math.min(30, Math.max(0, Math.round(Number(fadeDetik) || 0)));
     st = { aktif: true, mode, akhir: Date.now() + ms, hitung: 0, panjang: 0 };
-    timers.push(setTimeout(() => M.pudarSementara(FADE_TIDUR_DETIK), Math.max(0, ms - FADE_TIDUR_DETIK * 1000)));
+    if (fade > 0) timers.push(setTimeout(() => M.pudarSementara(fade), Math.max(0, ms - fade * 1000)));
     /* Cadangan: jeda tetap terjadi walau pemudaran terganggu (mis. transisi crossfade). */
-    timers.push(setTimeout(() => { M.jeda(); batalTidur(); }, ms));
+    timers.push(setTimeout(() => { M.jeda(); batalTidur(); }, ms + (fade > 0 ? 250 : 0)));
   } else if (mode === 'lagu') {
     st = { aktif: true, mode, akhir: 0, hitung: 0, panjang: 0 };
   } else if (mode === 'daftar') {

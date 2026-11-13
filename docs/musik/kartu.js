@@ -4,11 +4,11 @@
 
 import { esc } from '../core/dom.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
-import * as M from './mesin.js?v=20261105210000';
-import * as S from './simpan.js?v=20261105210000';
-import { formatWaktu, laguTerakhir } from './logika.js?v=20261105210000';
-import { ikon } from './ikon.js?v=20261105210000';
-import { pustakaPerangkatTersedia } from './perangkat.js?v=20261105210000';
+import * as M from './mesin.js?v=20261113230000';
+import * as S from './simpan.js?v=20261113230000';
+import { formatWaktu, laguTerakhir } from './logika.js?v=20261113230000';
+import { ikon } from './ikon.js?v=20261113230000';
+import { pustakaPerangkatTersedia } from './perangkat.js?v=20261113230000';
 
 /* Lagu yang ditampilkan: yang terakhir diputar, atau yang terakhir diimpor. */
 function laguKartu() {
@@ -68,6 +68,8 @@ export function segarkanKartuMusik() {
   const { k, posisi, durasi, loaded } = posisiDurasi(x);
   const bar = kartu.querySelector('[data-mk="bar"]');
   if (bar) bar.style.width = `${persen(posisi, durasi).toFixed(2)}%`;
+  const judul = kartu.querySelector('[data-mk="judul"]');
+  if (judul) judul.textContent = x.nama;
   const pos = kartu.querySelector('[data-mk="pos"]');
   if (pos) pos.textContent = formatWaktu(posisi);
   const sedang = loaded && k.status === 'putar';

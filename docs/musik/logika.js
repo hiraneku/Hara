@@ -147,6 +147,7 @@ export const SET_AWAL = Object.freeze({
   ulang: 'urut',
   tidurMode: 'waktu',
   tidurMenit: 30,
+  tidurFadeDetik: 10,
   crossfade: Object.freeze({ aktif: false, detik: CROSSFADE_AWAL }),
 });
 
@@ -168,6 +169,7 @@ export function normalisasiSet(raw) {
     ulang: MODE_ULANG.includes(r.ulang) ? r.ulang : SET_AWAL.ulang,
     tidurMode: TIDUR_MODE.includes(r.tidurMode) ? r.tidurMode : SET_AWAL.tidurMode,
     tidurMenit: klampBulat(r.tidurMenit, 1, TIDUR_MENIT_MAKS, SET_AWAL.tidurMenit),
+    tidurFadeDetik: klampBulat(r.tidurFadeDetik, 0, 30, SET_AWAL.tidurFadeDetik),
     crossfade: {
       aktif: typeof cf.aktif === 'boolean' ? cf.aktif : SET_AWAL.crossfade.aktif,
       detik: klampBulat(cf.detik, CROSSFADE_MIN, CROSSFADE_MAKS, SET_AWAL.crossfade.detik),

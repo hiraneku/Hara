@@ -23,9 +23,10 @@ globalThis.addEventListener = w.addEventListener.bind(w);
 Object.defineProperty(globalThis, 'navigator', { value: w.navigator, configurable: true });
 w.URL.createObjectURL = () => 'blob:x/1'; w.URL.revokeObjectURL = () => {}; globalThis.URL = w.URL;
 const AKAR = process.cwd();
-const V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+const V = fs.readFileSync('docs/musik/index.js', 'utf8').match(/\.\/mesin\.js\?v=(\d+)/)[1];
+const CORE_V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
 await import(`${AKAR}/docs/app.js?v=${V}`);
-const R = await import(`${AKAR}/docs/core/router.js?v=${V}`);
+const R = await import(`${AKAR}/docs/core/router.js?v=${CORE_V}`);
 const go = (...a) => R.go(...a);
 /* cur adalah live binding: baca lewat namespace, jangan didestrukturisasi. */
 w.HTMLCanvasElement.prototype.getContext = () => null;   /* jsdom tanpa canvas: waveform dilewati */
@@ -381,6 +382,7 @@ SET.ubahSet({ ulang: 'urut' });
 go('musik-set', { segar: true });
 await tunggu();
 oke('Pengaturan: bagian sleep timer ada', !!q('[data-set="tidur-mulai"]'));
+oke('sleep timer menyediakan pengaturan durasi fade-out', !!q('[data-set-input="tidur-fade"]') && q('[data-set-input="tidur-fade"]').getAttribute('max') === '30');
 oke('Pengaturan: saklar crossfade ada', !!q('[data-set="cf-aktif"]'));
 q('[data-set="tidur-mode"][data-nilai="lagu"]').click(); await tunggu();
 oke('mode sleep "setelah lagu ini" tersimpan', SET.ambilSet().tidurMode === 'lagu');
@@ -433,10 +435,17 @@ oke('satu lagu dapat dikeluarkan dari antrean', A.antreanLagu().length === 1);
 A.kosongkanAntrean();
 const dupeA = await S.tambahLagu(berkas, { nama: 'Night Song', durasi: 150 });
 const dupeB = await S.tambahLagu(berkas, { nama: 'Night Song', durasi: 151 });
-S.perbaruiLagu(dupeA.id, { artis: 'Test Artist', favorit: true });
-S.perbaruiLagu(dupeB.id, { artis: 'Test Artist' });
+S.perbaruiLagu(dupeA.id, { artis: 'Test Artist', album: 'Album A', lokasi: 'Music/Live/night.mp3', favorit: true });
+S.perbaruiLagu(dupeB.id, { artis: 'Test Artist', album: 'Album A', lokasi: 'Music/Studio/night.mp3' });
 go('musik-pustaka'); await tunggu();
-oke('pustaka menawarkan pencarian, filter favorit, dan pengurutan', !!q('[data-pustaka-cari]') && !!q('[data-pustaka-filter]') && !!q('[data-pustaka-sort]'));
+oke('pustaka menawarkan pencarian, filter favorit, pengurutan, dan kelompok', !!q('[data-pustaka-cari]') && !!q('[data-pustaka-filter]') && !!q('[data-pustaka-sort]') && !!q('[data-pustaka-group]'));
+q('[data-pustaka-group]').value = 'artis'; q('[data-pustaka-group]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
+oke('pustaka dapat dikelompokkan menurut artis', document.querySelectorAll('.mus-pustaka-grup').length > 0);
+q('[data-pustaka-group]').value = 'album'; q('[data-pustaka-group]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
+oke('pustaka dapat dikelompokkan menurut album', [...document.querySelectorAll('.mus-pustaka-grup h3')].some(e => e.textContent.includes('Album A')));
+q('[data-pustaka-group]').value = 'folder'; q('[data-pustaka-group]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
+oke('pustaka dapat dikelompokkan menurut folder berkas relatif', [...document.querySelectorAll('.mus-pustaka-grup h3')].some(e => e.textContent.includes('Music/Live')));
+q('[data-pustaka-group]').value = 'daftar'; q('[data-pustaka-group]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
 q('[data-pustaka-filter]').value = 'favorit'; q('[data-pustaka-filter]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
 oke('filter favorit hanya menampilkan lagu bertanda favorit', document.querySelectorAll('[data-pustaka-baris]').length === 1);
 q('[data-pustaka-filter]').value = 'semua'; q('[data-pustaka-filter]').dispatchEvent(new w.Event('change', { bubbles: true })); await tunggu();
@@ -451,6 +460,16 @@ oke('aturan daftar pintar disimpan dan diperlihatkan transparan', Pintar.semuaPi
 oke('hasil smart playlist hanya menampilkan favorit tanpa menyalin lagu', Pintar.laguPintar(Pintar.semuaPintar()[0], S.daftarLagu()).every(x => x.favorit));
 go('musik-riwayat'); await tunggu();
 oke('riwayat memberi kontrol privasi dan statistik lokal', !!q('[data-riwayat="toggle"]') && !!q('[data-riwayat="clear"]') && !!q('.mus-set-h'));
+go('musik-daftar'); await tunggu();
+oke('playlist menyediakan impor dan ekspor M3U beserta input berkas', !!q('[data-dl="m3u-impor"]') && !!q('[data-dl="m3u-ekspor-semua"]') && !!q('[data-dl-m3u]'));
+go('musik', { segar: true }); await tunggu();
+oke('penanda posisi dan editor metadata/sampul tersedia', !!q('[data-mus="penanda-tambah"]') && !!q('[data-mus-meta="nama"]') && !!q('[data-mus-meta="artis"]') && !!q('[data-mus-meta="album"]') && !!q('[data-mus="sampul-pilih"]'));
+oke('kontrol pemutar menamai shortcut papan ketik untuk aksesibilitas', q('[data-mus="putar"]')?.getAttribute('aria-keyshortcuts') === 'Space' && q('[data-mus-gel]')?.getAttribute('aria-keyshortcuts')?.includes('ArrowLeft'));
+q('[data-mus="penanda-tambah"]').click(); await tunggu();
+oke('posisi saat ini dapat ditandai tanpa mengubah berkas audio', S.daftarLagu().some(x => Array.isArray(x.penandaPosisi) && x.penandaPosisi.length === 1));
+const metaTitle = q('[data-mus-meta="nama"]'); const editedTrack = M.keadaan().id || S.terakhirId();
+if (metaTitle && editedTrack) { metaTitle.value = 'Judul hasil edit'; q('[data-mus-meta="artis"]').value = 'Artis hasil edit'; q('[data-mus-meta="album"]').value = 'Album hasil edit'; q('[data-mus="metadata-simpan"]').click(); await tunggu(); }
+oke('metadata lagu dapat diedit tanpa menyentuh data audio', editedTrack && S.laguById(editedTrack).nama === 'Judul hasil edit' && S.laguById(editedTrack).artis === 'Artis hasil edit');
 
 console.log(`\nmusik-layar: ${total - gagal}/${total} lulus`);
 if (gagal) process.exit(1);

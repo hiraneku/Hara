@@ -3,7 +3,7 @@ import { load, state } from './core/store.js?v=20261105210000';
 import { go, onAfterRender, kembali, cur, adaInduk } from './core/router.js?v=20261105210000';
 import { toast } from './core/toast.js?v=20261105210000';
 import { mulaiPembaruan } from './core/pembaruan.js?v=20261105210000';
-import { mulaiBeranda } from './home/beranda.js?v=20261105210000';
+import { mulaiBeranda } from './home/beranda.js?v=20261113230000';
 import { terapkan as terapkanTema, toggle as toggleTema } from './core/theme.js?v=20261105210000';
 import { initPalette, daftarkanSumber, bukaPalette } from './core/palette.js?v=20261105210000';
 import { daftarkanGrupFitur } from './core/menu-fitur.js?v=20261105210000';
@@ -13,7 +13,7 @@ import { notesModule } from './notes/index.js?v=20261105210000';
 import { bukaFokus, pasangFokus } from './notes/fokus.js?v=20261105210000';
 import { bukaAmbience, pasangAmbience } from './notes/ambience.js?v=20261105210000';
 import { renamerModule, unduhLogRenamerCsv, renamerAlatCtx } from './renamer/index.js?v=20261105210000';
-import { musikModule } from './musik/index.js?v=20261105210000';
+import { musikModule } from './musik/index.js?v=20261113230000';
 import { bukaRegex, bukaBelajarContoh, bukaSyaratAturan, eksporResep, pilihResepUntukImpor, bukaDuplikat } from './renamer/alat.js?v=20261105210000';
 import {
   bacaCatatanKeras, hentikanBaca, dikteCatatanBaru,

@@ -7,9 +7,9 @@
 
    Lagu tetap ada setelah aplikasi ditutup dan dibuka lagi. */
 
-import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261105210000';
-import { ambilSet } from './set.js?v=20261105210000';
-import { berkasAudioPerangkat } from './perangkat.js?v=20261105210000';
+import { normalisasiAtur, ATUR_AWAL } from './logika.js?v=20261113230000';
+import { ambilSet } from './set.js?v=20261113230000';
+import { berkasAudioPerangkat } from './perangkat.js?v=20261113230000';
 
 const DB = 'hara-musik';
 const TOKO = 'berkas';
@@ -98,6 +98,7 @@ export function sinkronkanLaguPerangkat(daftar) {
       ...(sblm || {}),
       id,
       nama: String(raw.title || namaBerkas),
+      namaBerkas,
       durasi: Math.max(0, Number(raw.duration) || 0) / 1000,
       ukuran: Math.max(0, Number(raw.size) || 0),
       tipe: String(raw.mimeType || 'audio/*'),
@@ -175,15 +176,19 @@ function idBaru() {
 }
 
 /* Simpan berkas + catat metadata. `durasi` harus sudah dibaca dari audionya. */
-export async function tambahLagu(berkas, { nama, durasi }) {
+export async function tambahLagu(berkas, { nama, durasi, lokasi = '', artis = '', album = '', namaBerkas = berkas.name || nama }) {
   const id = idBaru();
   await tx('readwrite', s => s.put(berkas, id));
   const rekaman = {
     id,
     nama,
+    namaBerkas: String(namaBerkas || nama || ''),
     durasi,
     ukuran: berkas.size || 0,
     tipe: berkas.type || '',
+    lokasi: String(lokasi || ''),
+    artis: String(artis || ''),
+    album: String(album || ''),
     ditambahkan: Date.now(),
     terakhirMain: 0,
     atur: null,

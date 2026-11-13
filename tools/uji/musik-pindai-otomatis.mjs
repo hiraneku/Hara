@@ -51,9 +51,11 @@ w.URL.revokeObjectURL = () => {};
 globalThis.URL = w.URL;
 w.HTMLCanvasElement.prototype.getContext = () => null;
 
-const version = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
+const version = fs.readFileSync('docs/musik/index.js', 'utf8').match(/\.\/mesin\.js\?v=(\d+)/)[1];
+const CORE_V = fs.readFileSync('docs/app.js', 'utf8').match(/\?v=(\d+)/)[1];
 await import(`${process.cwd()}/docs/app.js?v=${version}`);
-const router = await import(`${process.cwd()}/docs/core/router.js?v=${version}`);
+const router = await import(`${process.cwd()}/docs/core/router.js?v=${CORE_V}`);
+const perangkat = await import(`${process.cwd()}/docs/musik/perangkat.js?v=${version}`);
 const tunggu = (ms = 160) => new Promise(resolve => setTimeout(resolve, ms));
 let gagal = 0;
 function cek(label, kondisi) {
@@ -69,6 +71,7 @@ cek('plugin native audio dan kontrol media terdaftar lewat API Capacitor 8', plu
 cek('membuka Musik otomatis meminta izin audio', mintaIzin === 1);
 cek('membuka Musik otomatis menjalankan satu pemindaian MediaStore', jumlahPindai === 1);
 cek('semua audio yang tersedia muncul tanpa impor manual', judul.includes('Lagu di Music') && judul.includes('Rekaman lain') && judul.includes('Audio WebM'));
+cek('diagnostik pemindaian menampilkan jumlah hasil', perangkat.detailPustakaPerangkat().jumlah === 3 && perangkat.detailPustakaPerangkat().waktu > 0);
 cek('tombol pemindaian ulang diberi label yang benar', [...document.querySelectorAll('[data-mus="impor"]')].some(e => e.getAttribute('aria-label') === 'Pindai ulang penyimpanan' || e.textContent.includes('Pindai ulang')));
 
 document.querySelector('[data-mus="impor"]')?.click();

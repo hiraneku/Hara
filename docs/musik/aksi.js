@@ -4,15 +4,15 @@
 
 import { toast } from '../core/toast.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
-import * as M from './mesin.js?v=20261105210000';
-import * as S from './simpan.js?v=20261105210000';
-import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261105210000';
-import { ambilSampul, pembacaBlob } from './sampul.js?v=20261105210000';
-import * as D from './daftar.js?v=20261105210000';
-import * as T from './tidur.js?v=20261105210000';
-import { ambilSet, ubahSet } from './set.js?v=20261105210000';
-import { pindaiAudioPerangkat, pustakaPerangkatTersedia, statusPustakaPerangkat } from './perangkat.js?v=20261105210000';
-import { pilihBerikut, urutkanAcak } from './mode.js?v=20261105210000';
+import * as M from './mesin.js?v=20261113230000';
+import * as S from './simpan.js?v=20261113230000';
+import { namaDariBerkas, kemungkinanAudio } from './logika.js?v=20261113230000';
+import { ambilSampul, pembacaBlob } from './sampul.js?v=20261113230000';
+import * as D from './daftar.js?v=20261113230000';
+import * as T from './tidur.js?v=20261113230000';
+import { ambilSet, ubahSet } from './set.js?v=20261113230000';
+import { pindaiAudioPerangkat, pustakaPerangkatTersedia, statusPustakaPerangkat } from './perangkat.js?v=20261113230000';
+import { pilihBerikut, urutkanAcak } from './mode.js?v=20261113230000';
 
 let pindaiPerangkatAktif = null;
 export const bisaPindaiPustakaPerangkat = () => pustakaPerangkatTersedia();
@@ -302,7 +302,7 @@ export async function imporBerkas(files) {
     if (!kemungkinanAudio({ name: f.name, type: f.type })) { gagal++; continue; }
     try {
       const durasi = await M.bacaDurasi(f);
-      const rekaman = await S.tambahLagu(f, { nama: namaDariBerkas(f.name), durasi });
+      const rekaman = await S.tambahLagu(f, { nama: namaDariBerkas(f.name), durasi, lokasi: String(f.webkitRelativePath || ''), namaBerkas: f.name });
       masuk++;
       if (!pertama) pertama = rekaman.id;
       await ekstrakSampul(f, rekaman.id);

@@ -70,6 +70,8 @@ uji('mode acak, ulang, dan sleep timer dibersihkan; crossfade dijepit 1–10 det
   assert.equal(L.normalisasiSet({ crossfade: { detik: 0 } }).crossfade.detik, 1);
   assert.equal(L.normalisasiSet({ crossfade: 'x' }).crossfade.aktif, false);
   assert.equal(L.normalisasiSet({ tidurMenit: 'abc' }).tidurMenit, L.SET_AWAL.tidurMenit);
+  assert.equal(L.normalisasiSet({ tidurFadeDetik: 42 }).tidurFadeDetik, 30);
+  assert.equal(L.normalisasiSet({ tidurFadeDetik: -4 }).tidurFadeDetik, 0);
 });
 
 uji('siklus tombol berpindah ke langkah berikutnya lalu kembali ke awal', () => {

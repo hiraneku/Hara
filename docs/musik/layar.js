@@ -7,15 +7,15 @@ import { cur, go, onAfterRender } from '../core/router.js?v=20261105210000';
 import { esc } from '../core/dom.js?v=20261105210000';
 import { t as tr } from '../core/i18n.js?v=20261105210000';
 import { toast } from '../core/toast.js?v=20261105210000';
-import * as M from './mesin.js?v=20261105210000';
-import * as S from './simpan.js?v=20261105210000';
-import * as L from './logika.js?v=20261105210000';
-import * as A from './aksi.js?v=20261105210000';
-import { ikon } from './ikon.js?v=20261105210000';
-import { bukaDaftarSemua } from './daftar-layar.js?v=20261105210000';
-import { segarSampul } from './sampul-dom.js?v=20261105210000';
-import { ambilSet } from './set.js?v=20261105210000';
-import { parseLrc, lirikAktif } from './lirik.js?v=20261105210000';
+import * as M from './mesin.js?v=20261113230000';
+import * as S from './simpan.js?v=20261113230000';
+import * as L from './logika.js?v=20261113230000';
+import * as A from './aksi.js?v=20261113230000';
+import { ikon } from './ikon.js?v=20261113230000';
+import { bukaDaftarSemua } from './daftar-layar.js?v=20261113230000';
+import { segarSampul } from './sampul-dom.js?v=20261113230000';
+import { ambilSet } from './set.js?v=20261113230000';
+import { parseLrc, lirikAktif } from './lirik.js?v=20261113230000';
 
 /* Label tombol mode pemutar (urutan siklus sama dengan logika.js). */
 const LABEL_ACAK = {
@@ -83,7 +83,7 @@ const subLagu = v => (v.status === 'memuat'
 /* Seek bar: waveform di atas (seperti pemutar musik pada umumnya) dan bar garis
    dengan knob di bawahnya. Keduanya bisa diketuk dan digeser. */
 function gelHtml(v) {
-  return `<div class="mus-gel" data-mus-gel role="slider" tabindex="0" aria-label="${tr('Posisi lagu')}"
+  return `<div class="mus-gel" data-mus-gel role="slider" tabindex="0" aria-keyshortcuts="ArrowLeft ArrowRight" aria-label="${tr('Posisi lagu')}"
       aria-valuemin="0" aria-valuemax="${Math.round(v.durasi)}" aria-valuenow="${Math.round(v.posisi)}"
       aria-valuetext="${L.formatWaktu(v.posisi)}">
       <canvas aria-hidden="true"></canvas>
@@ -94,6 +94,15 @@ function gelHtml(v) {
       <span class="mus-jalur" aria-hidden="true"><span class="mus-isi" data-mus-isi></span></span>
       <span class="mus-knob-bulat" data-mus-knob2 aria-hidden="true"></span>
     </div>`;
+}
+
+function penandaHtml(lagu) {
+  const items = (Array.isArray(lagu.penandaPosisi) ? lagu.penandaPosisi : []).map((p, i) => ({ p, i })).sort((a, b) => a.p.detik - b.p.detik);
+  return `<section class="mus-kartu mus-markah" aria-labelledby="mus-h-markah"><header class="mus-kartu-kepala"><div><h3 id="mus-h-markah">${tr('Penanda posisi')}</h3><p class="mus-catatan">${tr('Simpan bagian penting untuk dibuka lagi nanti.')}</p></div><button type="button" class="mus-ikon-btn mus-ikon-kecil" data-mus="penanda-tambah" aria-label="${tr('Tandai posisi saat ini')}" title="${tr('Tandai posisi saat ini')}">${ikon('plus')}</button></header>${items.length ? `<ul class="mus-daftar">${items.map(({p, i}, urut) => `<li class="mus-item"><button type="button" class="mus-item-buka" data-mus="penanda-main" data-waktu="${Number(p.detik)}"><span class="mus-item-teks"><span class="mus-item-judul">${esc(p.nama || tr('Penanda'))}</span><span class="mus-item-sub">${L.formatWaktu(p.detik)}</span></span></button><button type="button" class="mus-ikon-btn mus-ikon-kecil" data-mus="penanda-hapus" data-indeks="${i}" aria-label="${tr('Hapus penanda')} ${urut+1}">${ikon('x')}</button></li>`).join('')}</ul>` : `<p class="mus-kosong-kecil">${tr('Belum ada penanda posisi.')}</p>`}</section>`;
+}
+
+function metadataHtml(lagu) {
+  return `<details class="mus-kartu mus-metadata"><summary>${tr('Detail lagu & sampul')}</summary><div class="mus-metadata-form"><label>${tr('Judul')}<input class="mus-teks" data-mus-meta="nama" maxlength="180" value="${esc(lagu.nama || '')}"></label><label>${tr('Artis')}<input class="mus-teks" data-mus-meta="artis" maxlength="180" value="${esc(lagu.artis || '')}"></label><label>${tr('Album')}<input class="mus-teks" data-mus-meta="album" maxlength="180" value="${esc(lagu.album || '')}"></label><div class="mus-aksi-baris"><button type="button" class="mus-tombol" data-mus="metadata-simpan">${ikon('check')}<span>${tr('Simpan detail')}</span></button><button type="button" class="mus-chip" data-mus="sampul-pilih">${ikon('sampul')}<span>${tr(lagu.sampulKustom ? 'Ganti sampul pilihan' : 'Pilih sampul dari perangkat')}</span></button></div><p class="mus-catatan">${tr('Perubahan hanya berlaku di pustaka Hara; berkas audio asli tidak diubah.')}</p></div></details>`;
 }
 
 function pemutarHtml(v) {
@@ -123,15 +132,18 @@ function pemutarHtml(v) {
       ${gelHtml(v)}
       <div class="mus-waktu"><span data-mus-out="posisi">${L.formatWaktu(v.posisi)}</span><span data-mus-out="sisa">−${L.formatWaktu(Math.max(0, v.durasi - v.posisi))}</span></div>
     </div>
-    <div class="mus-transport">
-      <button type="button" class="mus-btn" data-mus="sebelumnya" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
+    <div class="mus-transport" role="group" aria-label="${tr('Kontrol pemutaran')}" aria-describedby="mus-pintasan">
+      <button type="button" class="mus-btn" data-mus="sebelumnya" aria-keyshortcuts="P" aria-label="${tr('Sebelumnya')}">${ikon('prev')}</button>
       <button type="button" class="mus-btn" data-mus="mundur" aria-label="${tr('Mundur 10 detik')}">${ikon('mundur')}</button>
-      <button type="button" class="mus-play" data-mus="putar" data-mus-out="putar" aria-label="${putar ? tr('Jeda') : tr('Putar')}">${ikon(putar ? 'pause' : 'play')}</button>
+      <button type="button" class="mus-play" data-mus="putar" data-mus-out="putar" aria-keyshortcuts="Space" aria-label="${putar ? tr('Jeda') : tr('Putar')}">${ikon(putar ? 'pause' : 'play')}</button>
       <button type="button" class="mus-btn" data-mus="maju" aria-label="${tr('Maju 10 detik')}">${ikon('maju')}</button>
-      <button type="button" class="mus-btn" data-mus="berikutnya" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
+      <button type="button" class="mus-btn" data-mus="berikutnya" aria-keyshortcuts="N" aria-label="${tr('Berikutnya')}">${ikon('next')}</button>
     </div>
+    <p id="mus-pintasan" class="mus-sr-only">${tr('Pintasan keyboard: Spasi putar atau jeda, panah kiri dan kanan mundur atau maju 5 detik, N lagu berikutnya, P lagu sebelumnya.')}</p>
     ${modeHtml()}
     <section class="mus-lirik" aria-label="${tr('Lirik lokal')}" aria-live="polite"><p data-mus-lirik>${esc(lirikAktif(parseLrc(v.sel.lirikLrc || ''), v.posisi)?.teks || (v.sel.lirikLrc ? tr('Lirik akan muncul saat diputar.') : tr('Lirik lokal belum ditambahkan.')))}</p><button type="button" class="mus-chip mus-chip-hantu" data-mus="lirik-impor">${ikon('plus')}<span>${tr(v.sel.lirikLrc ? 'Ganti berkas LRC' : 'Muat berkas LRC')}</span></button>${v.sel.lirikLrc ? `<button type="button" class="mus-chip mus-chip-hantu" data-mus="lirik-hapus">${tr('Hapus lirik')}</button>` : ''}</section>
+    ${penandaHtml(v.sel)}
+    ${metadataHtml(v.sel)}
     <div class="mus-loop" role="group" aria-label="${tr('Loop A-B')}">
       <button type="button" class="mus-chip" data-mus="loop-a">A <span data-mus-out="a">${pa ? L.formatWaktu(v.loop.a) : '–'}</span></button>
       <button type="button" class="mus-chip" data-mus="loop-b">B <span data-mus-out="b">${pb ? L.formatWaktu(v.loop.b) : '–'}</span></button>
@@ -231,6 +243,7 @@ function pustakaHtml(v) {
       <div><h3 id="mus-h-pustaka">${tr('Pustaka')}</h3><p class="mus-catatan">${v.daftar.length} ${tr('lagu')}</p></div>
       <button type="button" class="mus-tombol" data-mus="impor">${ikon(langsung ? 'repeat' : 'plus')}<span>${tr(langsung ? 'Pindai ulang' : 'Impor')}</span></button>
     </header>
+    ${!langsung ? `<button type="button" class="mus-chip mus-chip-hantu" data-mus="folder-impor">${ikon('list')}<span>${tr('Impor folder musik')}</span></button>` : ''}
     ${langsung ? `<p class="mus-pustaka-batas">${tr('Audio yang diindeks Android muncul otomatis. Berkas privat atau belum diindeks tidak dapat dipindai Hara; WebM di koleksi video memerlukan izin video.')}</p>` : ''}
     ${items
       ? `<ul class="mus-daftar">${items}</ul>`
@@ -261,7 +274,9 @@ export function musikView() {
     <div class="mus-kolom mus-kiri">${pemutarHtml(v)}</div>
     <div class="mus-kolom mus-kanan">${kontrolHtml(v)}${pustakaHtml(v)}</div>
     <input type="file" accept=".lrc,text/plain" class="mus-berkas" data-mus-lrc hidden>
+    <input type="file" accept="image/*" class="mus-berkas" data-mus-cover hidden>
     <input type="file" accept="audio/*,video/webm,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.webm,.aif,.aiff,.caf,.3gp" multiple class="mus-berkas" data-mus-berkas hidden>
+    <input type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.flac,.webm,.aif,.aiff" multiple webkitdirectory directory class="mus-berkas" data-mus-folder hidden>
   </div>`;
 }
 
@@ -493,6 +508,36 @@ function onClick(e) {
       document.querySelector('[data-mus-lrc]')?.click();
       return;
     case 'lirik-hapus': { const v = tampilan(); if (v.sel) { S.perbaruiLagu(v.sel.id, { lirikLrc: '' }); render(); } return; }
+    case 'penanda-tambah': {
+      const v = tampilan(); if (!v.sel) return;
+      const detik = Math.max(0, Math.min(v.durasi || v.sel.durasi || 0, v.posisi || 0));
+      const list = Array.isArray(v.sel.penandaPosisi) ? v.sel.penandaPosisi.slice() : [];
+      if (list.some(p => Math.abs(p.detik - detik) < 2)) { toast(tr('Sudah ada penanda di dekat posisi ini')); return; }
+      if (list.length >= 30) { toast(tr('Maksimal 30 penanda per lagu')); return; }
+      list.push({ detik, nama: `${tr('Penanda')} ${L.formatWaktu(detik)}` });
+      S.perbaruiLagu(v.sel.id, { penandaPosisi: list }); render(); return;
+    }
+    case 'penanda-main': {
+      const v = tampilan(), detik = Number(b.dataset.waktu) || 0;
+      if (!v.sel) return;
+      if (M.keadaan().id === v.sel.id && M.keadaan().status !== 'kosong') M.seek(detik);
+      else { S.simpanAtur(v.sel.id, { ...S.aturLagu(v.sel.id), posisi: detik }); A.mainkanLagu(v.sel.id); }
+      return;
+    }
+    case 'penanda-hapus': {
+      const v = tampilan(); if (!v.sel) return;
+      const list = Array.isArray(v.sel.penandaPosisi) ? v.sel.penandaPosisi.slice() : [];
+      list.splice(Number(b.dataset.indeks), 1); S.perbaruiLagu(v.sel.id, { penandaPosisi: list }); render(); return;
+    }
+    case 'metadata-simpan': {
+      const v = tampilan(); if (!v.sel) return;
+      const nilai = key => document.querySelector(`[data-mus-meta="${key}"]`)?.value.trim() || '';
+      const nama = nilai('nama'); if (!nama) { toast(tr('Judul lagu tidak boleh kosong')); return; }
+      S.perbaruiLagu(v.sel.id, { nama, artis: nilai('artis'), album: nilai('album') }); M.beritahu('metadata');
+      toast(tr('Detail lagu disimpan')); render(); return;
+    }
+    case 'sampul-pilih': document.querySelector('[data-mus-cover]')?.click(); return;
+    case 'folder-impor': document.querySelector('[data-mus-folder]')?.click(); return;
     case 'impor':
       if (A.bisaPindaiPustakaPerangkat()) {
         A.pindaiPustakaPerangkat({ pesan: true }).then(render);
@@ -605,7 +650,15 @@ function onChange(e) {
     }).catch(() => toast(tr('Berkas LRC tidak dapat dibaca')));
     return;
   }
-  if (t.matches('[data-mus-berkas]')) {
+  if (t.matches('[data-mus-cover]')) {
+    const file = t.files?.[0]; t.value = '';
+    const v = tampilan();
+    if (!file || !v.sel) return;
+    if (!/^image\/(jpeg|png|webp|gif)$/i.test(file.type) || file.size > 8 * 1024 * 1024) { toast(tr('Sampul harus JPEG, PNG, WebP, atau GIF di bawah 8 MB')); return; }
+    S.simpanSampul(v.sel.id, file).then(() => { S.perbaruiLagu(v.sel.id, { sampulAda: true, sampulDiperiksa: true, sampulKustom: true }); M.beritahu('sampul'); render(); }).catch(() => toast(tr('Sampul tidak dapat disimpan')));
+    return;
+  }
+  if (t.matches('[data-mus-berkas], [data-mus-folder]')) {
     const berkas = Array.from(t.files || []);
     t.value = '';
     A.imporBerkas(berkas).then(render);
@@ -680,8 +733,10 @@ function onKey(e) {
     seekDenganMuat(tampilan().posisi + arah);
     return;
   }
-  if (e.key === ' ' && !(t && t.closest && t.closest('input, textarea, button, select, [contenteditable]'))) {
-    e.preventDefault();
-    putarSel();
-  }
+  if (t && t.closest && t.closest('input, textarea, button, select, [contenteditable]')) return;
+  if (e.key === ' ' ) { e.preventDefault(); putarSel(); return; }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); seekDenganMuat(tampilan().posisi + (e.key === 'ArrowLeft' ? -5 : 5)); return; }
+  if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
+  if (e.key.toLowerCase() === 'n') { e.preventDefault(); A.gantiLagu(1); }
+  if (e.key.toLowerCase() === 'p') { e.preventDefault(); A.gantiLagu(-1); }
 }
